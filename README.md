@@ -40,7 +40,7 @@ Currently, only the replay processes are Python-based, with all of the accuracy 
 
 ## Project Structure
 
-```
+``` Markdown
 txr_automation/
 ├── vba/                    # Legacy VBA macros
 ├── python/                 # Python automation scripts
