@@ -40,11 +40,13 @@ Currently, only the replay processes are Python-based, with all of the accuracy 
 
 ## Project Structure
 
+```
 txr_automation/
 ├── vba/                    # Legacy VBA macros
 ├── python/                 # Python automation scripts
 ├── documentation/          # Reference data and documentation
 └── README.md
+```
 
 ## Key Components
 
