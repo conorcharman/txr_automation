@@ -1,0 +1,5 @@
+User input of FY and Q to determine which filepath the script looks in, without having to change the code
+
+Later, user input of phase to determine which phase script is run.
+
+Final stage - application with GUI that holds accuracy testing, replay, monthly rec in one place. Also generate extracts, final AT files etc
