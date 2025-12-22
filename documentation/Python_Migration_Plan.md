@@ -979,8 +979,11 @@ txr_automation/
 
 ## Timeline Summary
 
+### **Complete Project Timeline**
+
 | Phase | Duration | Focus | Key Deliverables |
 |-------|----------|-------|------------------|
+| **0. Python Refactoring** | 8 weeks | Refactor existing scripts | txr_replay_core, consistent CLI, tests |
 | **1. Foundation** | 2 weeks | Core library, schemas, tests | txr_core package, CSV schemas, test framework |
 | **2. Simple Scripts** | 2 weeks | Easy conversions | Pricing validation, SQL generators |
 | **3. DM Validation** | 2 weeks | Medium complexity | FTBDM, FTSDM validation scripts |
@@ -988,45 +991,110 @@ txr_automation/
 | **5. Data Operations** | 2 weeks | Lookups, data push | Incident lookup, data push scripts |
 | **6. Integration & Testing** | 2 weeks | E2E tests, UAT | Complete test suite, documentation |
 | **7. Deployment** | 2 weeks | Production rollout | Training, parallel running, cutover |
-| **Total** | **16 weeks** | **4 months** | **Fully migrated system** |
+| **Total** | **24 weeks** | **6 months** | **Fully migrated system** |
+
+### **Phase Breakdown:**
+
+- **Weeks 1-8:** Refactor existing Python replay scripts (see [Existing_Python_Scripts_Refactoring_Plan.md](Existing_Python_Scripts_Refactoring_Plan.md))
+- **Weeks 9-10:** Foundation for VBA migration
+- **Weeks 11-22:** VBA conversion (12 weeks)
+- **Weeks 23-24:** Final integration and deployment
+
+**Critical Path:** Phase 0 (refactoring) must complete before VBA migration begins.
+
+---
+
+## Prerequisites: Existing Python Scripts Refactoring
+
+⚠️ **IMPORTANT:** Before starting the VBA migration, the existing Python replay scripts must be refactored to establish consistent architecture and shared libraries.
+
+### **Refactoring Timeline: 8 weeks (2 months)**
+
+This work is detailed in **[Existing_Python_Scripts_Refactoring_Plan.md](Existing_Python_Scripts_Refactoring_Plan.md)** and must be completed first because:
+
+1. **Establishes Shared Core Library** - The VBA conversion will use `txr_core` modules
+2. **Defines Architecture Patterns** - CLI interfaces, configuration management, logging
+3. **Creates Testing Framework** - Patterns to be reused for VBA conversions
+4. **Eliminates Technical Debt** - Fixes inconsistencies before adding more code
+
+### **Key Deliverables from Refactoring:**
+
+- `txr_replay_core/` package with shared utilities
+- Consistent CLI interfaces for all scripts
+- Configuration management system
+- CSV schema validation framework
+- Comprehensive test suite
+- Updated documentation
+
+**Timeline Adjustment:** Add 8 weeks to the beginning of the project for refactoring.
+
+**New Total Timeline:** 24 weeks (6 months) = 8 weeks refactoring + 16 weeks VBA migration
 
 ---
 
 ## Next Steps
 
-### **Immediate Actions (Week 1)**
+### **Phase 0: Refactor Existing Python Scripts (Weeks 1-8)**
+
+See **[Existing_Python_Scripts_Refactoring_Plan.md](Existing_Python_Scripts_Refactoring_Plan.md)** for detailed plan.
+
+**Summary:**
+- Weeks 1-2: Extract shared core library (`txr_replay_core`)
+- Weeks 3-6: Refactor individual scripts (Phase 2, 3, 3 Final, XLSX Converter)
+- Week 7: Integration testing and parallel running
+- Week 8: Documentation and training
+
+**Critical Success Factor:** All existing scripts must work identically after refactoring before proceeding to VBA migration.
+
+---
+
+### **Phase 1: Foundation (Weeks 9-10, formerly Weeks 1-2)**
+
+**Note:** This phase now builds on the `txr_replay_core` library created during refactoring.
+
+**Objectives:**
+- Extend `txr_replay_core` for accuracy testing workflows
+- Create `txr_core` package for VBA conversion
+- Establish testing framework for VBA conversions
+- Document all business rules and CSV schemas
+
+**Activities:**
 
 1. **Environment Setup**
-   - [ ] Set up Python 3.10+ on development machine
-   - [ ] Create virtual environment
-   - [ ] Install initial dependencies (`pandas`, `pytest`, `click`)
-   - [ ] Set up IDE/editor with Python support
+   - [ ] Verify Python 3.10+ environment
+   - [ ] Extend virtual environment with VBA conversion dependencies
+   - [ ] Install additional dependencies (if needed)
+   - [ ] Verify IDE setup for VBA conversion work
 
-2. **Project Initialization**
-   - [ ] Create `txr_core/` directory structure
-   - [ ] Initialize git repository (if not already done)
-   - [ ] Create `requirements.txt`
-   - [ ] Set up CI/CD pipeline (GitHub Actions, etc.)
+2. **Core Library Extension**
+   - [ ] Create `txr_core/` directory structure (separate from `txr_replay_core`)
+   - [ ] Identify shared code between replay and accuracy testing
+   - [ ] Create adapter layer between `txr_replay_core` and `txr_core`
+   - [ ] Port relevant utilities to `txr_core`
 
-3. **Planning**
-   - [ ] Review and approve this migration plan
-   - [ ] Schedule kickoff meeting
-   - [ ] Identify stakeholders
-   - [ ] Set up project tracking (GitHub Projects, Jira, etc.)
+3. **Project Initialization**
+   - [ ] Extend git repository structure
+   - [ ] Update `requirements.txt` with VBA conversion needs
+   - [ ] Extend CI/CD pipeline for VBA conversions
+   - [ ] Set up project tracking for VBA migration phase
 
-4. **Documentation**
-   - [ ] Review existing VBA code
+4. **Planning & Documentation**
+   - [ ] Review and approve VBA migration plan (this document)
+   - [ ] Schedule kickoff meeting for VBA migration
+   - [ ] Identify additional stakeholders
+   - [ ] Review existing VBA code in detail
    - [ ] Document current workflows
-   - [ ] Create CSV templates for each workflow
-   - [ ] Define CSV schemas
+   - [ ] Create CSV templates for accuracy testing workflows
+   - [ ] Define CSV schemas for accuracy testing
 
-### **Week 1 Deliverables**
+### **Week 9-10 Deliverables**
 
-- Initialized `txr_core` package
-- Basic `ReferenceDataManager` class working
-- CSV utilities implemented
-- First unit tests passing
-- Development environment documented
+- `txr_core` package initialized (builds on `txr_replay_core`)
+- `ReferenceDataManager` class implemented
+- CSV utilities for accuracy testing
+- VBA→Python function mapping document
+- Test framework extended for VBA conversions
+- Development environment fully documented
 
 ---
 
