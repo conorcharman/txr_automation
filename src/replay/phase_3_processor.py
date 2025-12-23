@@ -1,27 +1,44 @@
 #!/usr/bin/env python3
 """
-Phase 3 Processor v4.2
-ULTRA-OPTIMIZED VERSION with indexing, batch processing, and algorithmic improvements.
+Phase 3 Processor v5.0
+Refactored version using shared txr_replay_core library.
+Leverages ConfigManager, StructuredLogger, DateParser, and shared data structures.
 
 Author: GitHub Copilot
-Date: October 8, 2025
-Version: 4.2 - Ultra Performance Optimized
+Date: December 23, 2025
+Version: 5.0 - Refactored to use txr_replay_core library
+
+CHANGES IN v5.0:
+- Migrated to txr_replay_core library (ConfigManager, StructuredLogger, DateParser)
+- Replaced hardcoded paths with configuration file
+- Added CLI interface with argparse
+- Using shared ReplayRecord, LookupResult, ProcessingStats
+- Eliminated duplicate DateParser class
+- Improved logging with structured logger
 """
 
 import csv
 import os
 import glob
+import argparse
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any, Set
-import logging
 from dataclasses import dataclass
 import re
 from difflib import SequenceMatcher
 from collections import defaultdict
+from pathlib import Path
 
+# Import from txr_replay_core library
+from txr_replay_core.data_structures import ReplayRecord, LookupResult, ProcessingStats
+from txr_replay_core.config import ConfigManager
+from txr_replay_core.logger import create_logger
+from txr_replay_core.utils import DateParser, CharacterReplacement
+
+# Local dataclass for Phase 3 specific client records
 @dataclass
 class ClientRecord:
-    """Represents a client record with parsed details"""
+    """Represents a client record with parsed details for Phase 3"""
     first_name: str
     surname: str
     date_of_birth: str
@@ -33,62 +50,13 @@ class ClientRecord:
     file_type: str
     all_ids: Optional[List[str]] = None
 
-@dataclass
-class LookupResult:
-    """Represents the result of a client lookup"""
-    found: bool
-    correction: str = ""
-    correction_field: str = ""
-    error_flag: str = ""
-    transaction_ref: str = ""
-    match_type: str = ""
-
-class DateParser:
-    """Handles various date format parsing with caching"""
-    
-    _date_cache = {}  # Cache parsed dates
-    
-    @classmethod
-    def parse_date(cls, date_str: str) -> Optional[str]:
-        """Parse date with caching for performance"""
-        if not date_str or date_str.strip() == "":
-            return None
-            
-        date_str = date_str.strip()
-        
-        # Check cache first
-        if date_str in cls._date_cache:
-            return cls._date_cache[date_str]
-        
-        # Common date formats to try
-        date_formats = [
-            '%Y-%m-%d',  # YYYY-MM-DD
-            '%d/%m/%Y',  # DD/MM/YYYY
-            '%m/%d/%Y',  # MM/DD/YYYY
-            '%d-%m-%Y',  # DD-MM-YYYY
-            '%m-%d-%Y',  # MM-DD-YYYY
-            '%Y/%m/%d',  # YYYY/MM/DD
-        ]
-        
-        for fmt in date_formats:
-            try:
-                parsed_date = datetime.strptime(date_str, fmt)
-                result = parsed_date.strftime('%Y-%m-%d')
-                cls._date_cache[date_str] = result
-                return result
-            except ValueError:
-                continue
-        
-        # Cache miss result too
-        cls._date_cache[date_str] = None
-        return None
-
 class IncidentFileIndex:
     """Optimized incident file with pre-built indexes for fast lookups"""
     
-    def __init__(self, file_path: str):
+    def __init__(self, file_path: str, logger=None):
         self.file_path = file_path
         self.data_rows = []
+        self.logger = logger
         
         # Pre-built indexes for O(1) lookups
         self.buyer_id_index = {}      # id -> row_indices
@@ -118,14 +86,16 @@ class IncidentFileIndex:
             self._build_indexes()
             
             # Log index sizes for diagnostics
-            logging.info(f"Loaded {os.path.basename(self.file_path)}: {len(self.data_rows)} rows")
-            logging.info(f"  - Buyer IDs: {len(self.buyer_id_index)}, Seller IDs: {len(self.seller_id_index)}")
-            logging.info(f"  - Buyer DM IDs: {len(self.buyer_dm_id_index)}, Seller DM IDs: {len(self.seller_dm_id_index)}")
-            logging.info(f"  - Buyer Names: {len(self.buyer_name_index)}, Seller Names: {len(self.seller_name_index)}")
-            logging.info(f"  - Buyer DM Names: {len(self.buyer_dm_name_index)}, Seller DM Names: {len(self.seller_dm_name_index)}")
+            if self.logger:
+                self.logger.info(f"Loaded {os.path.basename(self.file_path)}: {len(self.data_rows)} rows")
+                self.logger.info(f"  - Buyer IDs: {len(self.buyer_id_index)}, Seller IDs: {len(self.seller_id_index)}")
+                self.logger.info(f"  - Buyer DM IDs: {len(self.buyer_dm_id_index)}, Seller DM IDs: {len(self.seller_dm_id_index)}")
+                self.logger.info(f"  - Buyer Names: {len(self.buyer_name_index)}, Seller Names: {len(self.seller_name_index)}")
+                self.logger.info(f"  - Buyer DM Names: {len(self.buyer_dm_name_index)}, Seller DM Names: {len(self.seller_dm_name_index)}")
             
         except Exception as e:
-            logging.error(f"Error loading {self.file_path}: {e}")
+            if self.logger:
+                self.logger.error(f"Error loading {self.file_path}: {e}")
     
     def _build_indexes(self):
         """Build all lookup indexes"""
@@ -205,7 +175,8 @@ class IncidentFileIndex:
     
     def lookup_by_id(self, client_ids: List[str]) -> Optional[Tuple[int, str]]:
         """Fast O(1) ID lookup using indexes"""
-        logging.debug(f"Looking up IDs: {client_ids}")
+        if self.logger:
+            self.logger.debug(f"Looking up IDs: {client_ids}")
         
         for client_id in client_ids:
             if not client_id:
@@ -215,28 +186,33 @@ class IncidentFileIndex:
             # Check buyer index
             if client_id_lower in self.buyer_id_index:
                 row_idx = self.buyer_id_index[client_id_lower][0]  # Take first match
-                logging.debug(f"Found ID '{client_id}' in buyer_id_index")
+                if self.logger:
+                    self.logger.debug(f"Found ID '{client_id}' in buyer_id_index")
                 return (row_idx, "id_buyer")
             
             # Check seller index
             if client_id_lower in self.seller_id_index:
                 row_idx = self.seller_id_index[client_id_lower][0]  # Take first match
-                logging.debug(f"Found ID '{client_id}' in seller_id_index")
+                if self.logger:
+                    self.logger.debug(f"Found ID '{client_id}' in seller_id_index")
                 return (row_idx, "id_seller")
             
             # Check buyer decision maker index (fallback)
             if client_id_lower in self.buyer_dm_id_index:
                 row_idx = self.buyer_dm_id_index[client_id_lower][0]
-                logging.debug(f"Found ID '{client_id}' in buyer_dm_id_index")
+                if self.logger:
+                    self.logger.debug(f"Found ID '{client_id}' in buyer_dm_id_index")
                 return (row_idx, "id_buyer_dm")
             
             # Check seller decision maker index (fallback)
             if client_id_lower in self.seller_dm_id_index:
                 row_idx = self.seller_dm_id_index[client_id_lower][0]
-                logging.debug(f"Found ID '{client_id}' in seller_dm_id_index")
+                if self.logger:
+                    self.logger.debug(f"Found ID '{client_id}' in seller_dm_id_index")
                 return (row_idx, "id_seller_dm")
         
-        logging.debug(f"ID lookup failed for: {client_ids}")
+        if self.logger:
+            self.logger.debug(f"ID lookup failed for: {client_ids}")
         return None
     
     def lookup_by_name(self, first_name: str, surname: str, dob: str) -> Optional[Tuple[int, str]]:
@@ -246,18 +222,21 @@ class IncidentFileIndex:
         dob_parsed = DateParser.parse_date(dob) if dob else ""
         
         name_key = (first_lower, surname_lower, dob_parsed or "")
-        logging.debug(f"Looking up name: {name_key}")
+        if self.logger:
+            self.logger.debug(f"Looking up name: {name_key}")
         
         # Check buyer index
         if name_key in self.buyer_name_index:
             row_idx = self.buyer_name_index[name_key][0]  # Take first match
-            logging.debug(f"Found name in buyer_name_index")
+            if self.logger:
+                self.logger.debug(f"Found name in buyer_name_index")
             return (row_idx, "name_buyer")
         
         # Check seller index  
         if name_key in self.seller_name_index:
             row_idx = self.seller_name_index[name_key][0]  # Take first match
-            logging.debug(f"Found name in seller_name_index")
+            if self.logger:
+                self.logger.debug(f"Found name in seller_name_index")
             return (row_idx, "name_seller")
         
         # Try without DOB if no exact match
@@ -294,58 +273,60 @@ class IncidentFileIndex:
                 row_idx = self.seller_dm_name_index[name_key_no_dob][0]
                 return (row_idx, "name_seller_dm")
         
-        logging.debug(f"Name lookup failed for: {name_key}")
+        if self.logger:
+            self.logger.debug(f"Name lookup failed for: {name_key}")
         return None
 
-class Phase3ProcessorUltraOptimized:
-    """Ultra-optimized Phase 3 processor with indexing and batch processing"""
+class Phase3Processor:
+    """Phase 3 processor with configuration management and core library integration"""
     
-    def __init__(self):
-        # File paths
-        self.replay_input_path = r"C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii\FY25\Q3\reference\csv"
-        self.incident_files_path = r"C:\Users\ccharm\Desktop\Data\txr_replay_automation\reference\FY25\Q3\incident_code_files\csv"
-        self.replay_output_path = r"C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii\FY25\Q3\output"
-        self.log_output_path = r"C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii\FY25\Q3\output\logs"
+    def __init__(self, config_path: Optional[str] = None, config_dict: Optional[Dict] = None):
+        """
+        Initialize Phase 3 Processor
         
-        self.replay_files = [
-            "Replay_2025Q2_PHASE 3_Inconsistent_IDs_Summary_FINAL.csv",
-            "Replay_2025Q2_PHASE 3_Inconsistent_Names_Summary_FINAL.csv"
-        ]
+        Args:
+            config_path: Path to YAML configuration file
+            config_dict: Configuration dictionary (overrides config_path)
+        """
+        # Load configuration
+        if config_dict:
+            self.config = config_dict
+        elif config_path:
+            self.config = ConfigManager.load_from_yaml(config_path)
+        else:
+            raise ValueError("Must provide either config_path or config_dict")
         
-        self.setup_logging()
+        # Get typed configuration objects
+        self.path_config = ConfigManager.get_path_config(self.config)
+        self.proc_config = ConfigManager.get_processor_config(self.config)
         
-        # Statistics
-        self.stats = {
-            'processed_records': 0,
-            'successful_matches': 0,
-            'not_found': 0,
-            'no_corrections': 0,
-            'inconsistent_corrections': 0,
-            'errors': 0,
-            'partial_matches': []
-        }
+        # Setup logging
+        self.logger = create_logger(
+            name="phase3_processor",
+            log_dir=self.path_config.log_output,
+            level=self.proc_config.log_level
+        )
+        
+        # Get replay files from config
+        self.replay_files = self.config.get('processor', {}).get('replay_files', [])
+        if not self.replay_files:
+            raise ValueError("No replay files specified in configuration")
+        
+        # Statistics using ProcessingStats from core library
+        self.stats = ProcessingStats()
+        
+        # Character replacement utility
+        self.char_replacer = CharacterReplacement()
         
         # Ultra-optimized: Pre-indexed incident files
         self.incident_indexes = {}  # incident_code -> IncidentFileIndex
         
-    def setup_logging(self):
-        """Setup logging configuration"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_filename = f"phase_3_processor_v42_log_{timestamp}.txt"
-        log_filepath = os.path.join(self.log_output_path, log_filename)
+        # Output filename replacement pattern
+        self.replace_from = self.config.get('processor', {}).get('replace_pattern', {}).get('from', 'KR')
+        self.replace_to = self.config.get('processor', {}).get('replace_pattern', {}).get('to', 'AJB')
         
-        os.makedirs(self.log_output_path, exist_ok=True)
-        
-        logging.basicConfig(
-            level=logging.DEBUG,  # Changed to DEBUG for detailed diagnostics
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(log_filepath, encoding='utf-8'),
-                logging.StreamHandler()
-            ]
-        )
-        self.logger = logging.getLogger(__name__)
-        self.log_filepath = log_filepath
+        # Similarity threshold for fuzzy matching
+        self.similarity_threshold = self.config.get('processor', {}).get('similarity_threshold', 0.85)
     
     def preload_and_index_incident_files(self):
         """Preload and index all required incident files"""
@@ -355,7 +336,7 @@ class Phase3ProcessorUltraOptimized:
         incident_codes = set()
         
         for replay_filename in self.replay_files:
-            replay_filepath = os.path.join(self.replay_input_path, replay_filename)
+            replay_filepath = os.path.join(self.path_config.replay_input, replay_filename)
             if os.path.exists(replay_filepath):
                 try:
                     with open(replay_filepath, 'r', encoding='utf-8', newline='') as f:
@@ -378,7 +359,7 @@ class Phase3ProcessorUltraOptimized:
             incident_file = self.find_incident_file(incident_code)
             if incident_file:
                 self.logger.debug(f"Indexing {incident_code}...")
-                self.incident_indexes[incident_code] = IncidentFileIndex(incident_file)
+                self.incident_indexes[incident_code] = IncidentFileIndex(incident_file, self.logger)
                 loaded_count += 1
         
         self.logger.info(f"Successfully indexed {loaded_count} incident files")
@@ -386,13 +367,13 @@ class Phase3ProcessorUltraOptimized:
     def find_incident_file(self, incident_code: str) -> Optional[str]:
         """Find incident file for given code"""
         pattern = f"FY25 Q3 - {incident_code}.csv"
-        filepath = os.path.join(self.incident_files_path, pattern)
+        filepath = os.path.join(self.path_config.incident_files, pattern)
         
         if os.path.exists(filepath):
             return filepath
         
         # Fallback glob search
-        glob_pattern = os.path.join(self.incident_files_path, f"*{incident_code}*.csv")
+        glob_pattern = os.path.join(self.path_config.incident_files, f"*{incident_code}*.csv")
         matches = glob.glob(glob_pattern)
         return matches[0] if matches else None
     
@@ -548,13 +529,13 @@ class Phase3ProcessorUltraOptimized:
                 all_corrections.append(correction_pair)
         
         if not all_corrections:
-            self.stats['not_found'] += 1
+            self.stats.increment('not_found')
             return "Client not found", ""
         
         # Handle multiple corrections
         unique_corrections = list(set(all_corrections))
         if len(unique_corrections) > 1:
-            self.stats['inconsistent_corrections'] += 1
+            self.stats.increment('inconsistent_corrections')
             return "|".join(unique_corrections), ""
         else:
             correction_data = unique_corrections[0]
@@ -566,9 +547,9 @@ class Phase3ProcessorUltraOptimized:
     
     def process_replay_file(self, filename: str):
         """Process replay file with batch optimizations"""
-        input_filepath = os.path.join(self.replay_input_path, filename)
+        input_filepath = os.path.join(self.path_config.replay_input, filename)
         output_filename = filename.replace('_FINAL.csv', '_AJB.csv')
-        output_filepath = os.path.join(self.replay_output_path, output_filename)
+        output_filepath = os.path.join(self.path_config.replay_output, output_filename)
         
         self.logger.info(f"Processing replay file: {filename}")
         
@@ -616,26 +597,26 @@ class Phase3ProcessorUltraOptimized:
                         row[7] = correction_field
                         
                         processed_rows.append(row)
-                        self.stats['processed_records'] += 1
+                        self.stats.increment('processed_records')
                         
                         if correction != "Client not found":
-                            self.stats['successful_matches'] += 1
+                            self.stats.increment('successful_matches')
                             if correction == "No Change":
-                                self.stats['no_corrections'] += 1
+                                self.stats.increment('no_corrections')
                     
                     except Exception as e:
                         self.logger.error(f"Error processing row {i + 1}: {e}")
                         row[6] = "Processing Error"
                         row[7] = ""
                         processed_rows.append(row)
-                        self.stats['errors'] += 1
+                        self.stats.increment('errors')
                 
                 # Progress report
                 progress = ((batch_end / total_rows) * 100)
                 self.logger.info(f"Progress: {batch_end}/{total_rows} ({progress:.1f}%)")
             
             # Write output
-            os.makedirs(self.replay_output_path, exist_ok=True)
+            os.makedirs(self.path_config.replay_output, exist_ok=True)
             with open(output_filepath, 'w', encoding='utf-8', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerows(processed_rows)
@@ -644,7 +625,7 @@ class Phase3ProcessorUltraOptimized:
             
         except Exception as e:
             self.logger.error(f"Error processing {filename}: {e}")
-            self.stats['errors'] += 1
+            self.stats.increment('errors')
     
     def generate_summary_log(self):
         """Generate processing summary"""
@@ -678,18 +659,21 @@ class Phase3ProcessorUltraOptimized:
         """Main execution with ultra optimizations"""
         start_time = datetime.now()
         
-        self.logger.info("Starting Phase 3 Processor v4.2 (Ultra-Optimized)")
+        self.logger.section_header("PHASE 3 PROCESSOR v5.0")
+        self.logger.info(f"Replay input path: {self.path_config.replay_input}")
+        self.logger.info(f"Incident files path: {self.path_config.incident_files}")
+        self.logger.info(f"Output path: {self.path_config.replay_output}")
         
         # Ensure directories exist
-        os.makedirs(self.replay_output_path, exist_ok=True)
-        os.makedirs(self.log_output_path, exist_ok=True)
+        os.makedirs(self.path_config.replay_output, exist_ok=True)
+        os.makedirs(self.path_config.log_output, exist_ok=True)
         
         # Preload and index everything upfront
         self.preload_and_index_incident_files()
         
         # Process files
         for filename in self.replay_files:
-            input_path = os.path.join(self.replay_input_path, filename)
+            input_path = os.path.join(self.path_config.replay_input, filename)
             if os.path.exists(input_path):
                 self.process_replay_file(filename)
             else:
@@ -697,19 +681,103 @@ class Phase3ProcessorUltraOptimized:
         
         # Summary
         end_time = datetime.now()
-        self.logger.info(f"Total time: {end_time - start_time}")
-        self.generate_summary_log()
+        duration = end_time - start_time
+        self.logger.info(f"Total processing time: {duration}")
+        
+        self.logger.section_header("PROCESSING SUMMARY")
+        self.logger.log_stats(self.stats)
+        
+        # Additional metrics
+        total_indexed = sum(len(idx.buyer_id_index) + len(idx.seller_id_index) for idx in self.incident_indexes.values())
+        self.logger.info(f"Incident files indexed: {len(self.incident_indexes)}")
+        self.logger.info(f"Total IDs indexed: {total_indexed}")
+        
+        self.logger.info("Phase 3 Processor v5.0 completed successfully")
+
+
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="Phase 3 Processor v5.0 - Inconsistent IDs/Names Processor",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run with configuration file
+  python phase_3_processor.py --config config/phase3.yaml
+  
+  # Run with environment variables
+  export TXR_PATHS_REPLAY_INPUT="/path/to/replay"
+  export TXR_PATHS_INCIDENT_FILES="/path/to/incidents"
+  python phase_3_processor.py --use-env
+  
+  # Override log level
+  python phase_3_processor.py --config config/phase3.yaml --log-level DEBUG
+        """
+    )
+    
+    parser.add_argument(
+        '--config',
+        type=str,
+        help='Path to YAML configuration file (default: config/phase3.yaml)'
+    )
+    
+    parser.add_argument(
+        '--use-env',
+        action='store_true',
+        help='Load configuration from environment variables (TXR_* prefix)'
+    )
+    
+    parser.add_argument(
+        '--log-level',
+        type=str,
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+        help='Override log level from configuration'
+    )
+    
+    return parser.parse_args()
+
 
 def main():
-    """Main entry point"""
+    """Main entry point with CLI support"""
+    args = parse_args()
+    
     try:
-        processor = Phase3ProcessorUltraOptimized()
+        # Determine configuration source
+        if args.use_env:
+            print("Loading configuration from environment variables...")
+            config = ConfigManager.load_from_env("TXR_")
+        elif args.config:
+            print(f"Loading configuration from {args.config}...")
+            config = ConfigManager.load_from_yaml(args.config)
+        else:
+            # Default configuration path
+            default_config = Path(__file__).parent.parent.parent / "config" / "phase3.yaml"
+            if default_config.exists():
+                print(f"Loading default configuration from {default_config}...")
+                config = ConfigManager.load_from_yaml(str(default_config))
+            else:
+                print("Error: No configuration specified and default config not found")
+                print("Use --config or --use-env to specify configuration")
+                return 1
+        
+        # Override log level if specified
+        if args.log_level:
+            if 'processor' not in config:
+                config['processor'] = {}
+            config['processor']['log_level'] = args.log_level
+        
+        # Create and run processor
+        processor = Phase3Processor(config_dict=config)
         processor.run()
+        
+        return 0
+        
     except Exception as e:
         print(f"Fatal error: {e}")
-        logging.error(f"Fatal error: {e}")
+        import traceback
+        traceback.print_exc()
         return 1
-    return 0
+
 
 if __name__ == "__main__":
     exit(main())
