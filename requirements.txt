@@ -1,0 +1,16 @@
+# TXR Automation Requirements
+
+# Core dependencies
+pyyaml>=6.0
+
+# Optional development dependencies
+# Install with: pip install -e ".[dev]"
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
+# Code quality
+black>=23.0.0
+flake8>=6.0.0
+mypy>=1.4.0
