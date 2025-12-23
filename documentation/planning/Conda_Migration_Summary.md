@@ -76,16 +76,19 @@ python -m pytest tests/test_core/ -v
 ## What This Solves
 
 ### SSL Restrictions ✅
+
 - Conda can install packages from local channels or mirrors
 - No direct PyPI access needed
 - Works behind corporate firewalls
 
 ### Package Management ✅
+
 - All dependencies specified in one file
 - Reproducible environments across machines
 - Easy updates with `conda env update`
 
 ### Production Deployment ✅
+
 - Standard Conda workflow
 - No special pip configuration needed
 - Works on restricted machines
@@ -110,11 +113,13 @@ dependencies:
 ## Usage After Installation
 
 ### Activate Environment First
+
 ```bash
 conda activate txr_automation
 ```
 
 ### Then Use Normally
+
 ```bash
 # Run scripts
 python src/replay/phase_2_processor.py --config config/environments/phase2.yaml
@@ -132,6 +137,7 @@ python -m pytest tests/ -v
 When you need to add a new dependency:
 
 1. Add to `environment.yml`:
+
    ```yaml
    dependencies:
      - python>=3.10
@@ -140,6 +146,7 @@ When you need to add a new dependency:
    ```
 
 2. Update environment:
+
    ```bash
    conda env update -f environment.yml --prune
    ```
@@ -147,16 +154,19 @@ When you need to add a new dependency:
 ## Benefits for Your Workflow
 
 ### Development
+
 - Still works with your existing .venv (for now)
 - Can switch to Conda when ready
 - All scripts work the same way
 
 ### Testing
+
 - Test with Conda to match production
 - Catch environment issues early
 - Same environment as production machines
 
 ### Production
+
 - Direct deployment to restricted machines
 - No SSL certificate worries
 - Standard enterprise Python workflow
@@ -164,12 +174,14 @@ When you need to add a new dependency:
 ## Backward Compatibility
 
 ### Still Works With
+
 - ✅ Your existing .venv setup
 - ✅ pip/UV for development
 - ✅ All existing scripts
 - ✅ All existing tests
 
 ### New Additions
+
 - ✅ Conda environment specification
 - ✅ Conda setup script
 - ✅ Conda documentation
@@ -178,6 +190,7 @@ When you need to add a new dependency:
 ## Next Steps for You
 
 1. **Test Conda setup locally** (now):
+
    ```bash
    ./scripts/setup_conda_env.sh
    conda activate txr_automation
@@ -185,6 +198,7 @@ When you need to add a new dependency:
    ```
 
 2. **Verify everything works**:
+
    ```bash
    # Should see all 35 tests pass
    ```
@@ -206,6 +220,7 @@ When you need to add a new dependency:
 ## Status
 
 ✅ **Complete and Ready**
+
 - environment.yml created
 - All documentation updated
 - Setup script created and tested

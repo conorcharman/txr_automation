@@ -40,7 +40,7 @@ Currently, only the replay processes are Python-based, with all of the accuracy 
 
 ## Project Structure
 
-```
+```markdown
 txr_automation/
 ├── src/                          # All source code
 │   ├── txr_replay_core/         # Shared core library
@@ -168,23 +168,27 @@ Located in the `documentation/reference_data/` folder:
 ### Setup with Conda (Recommended)
 
 1. **Clone the repository**:
+
    ```bash
    cd /path/to/txr_automation
    ```
 
 2. **Create and activate Conda environment**:
+
    ```bash
    conda env create -f environment.yml
    conda activate txr_automation
    ```
 
    Or use the setup script:
+
    ```bash
    ./scripts/setup_conda_env.sh
    conda activate txr_automation
    ```
 
 3. **Run tests**:
+
    ```bash
    python -m pytest tests/test_core/ -v
    ```
@@ -194,18 +198,21 @@ Located in the `documentation/reference_data/` folder:
 For development on machines without SSL restrictions:
 
 1. **Install with UV**:
+
    ```bash
    uv pip install -e .
    uv pip install pytest pytest-cov black flake8 mypy
    ```
 
    Or with pip:
+
    ```bash
    pip install -e .
    pip install pytest pytest-cov black flake8 mypy
    ```
 
 2. **Run tests**:
+
    ```bash
    python -m pytest tests/test_core/ -v
    ```
@@ -247,6 +254,7 @@ This project uses feature branches to organize work:
 See [Git_Branching_Guide.md](documentation/guides/Git_Branching_Guide.md) for detailed workflow instructions.
 
 **Quick Start:**
+
 ```bash
 # Create Phase 0 branch (if not already created)
 git checkout -b phase0-refactoring

@@ -5,6 +5,7 @@ This guide shows how to use the `txr_replay_core` library in your scripts.
 ## Prerequisites
 
 **Ensure Conda environment is activated:**
+
 ```bash
 conda activate txr_automation
 ```
@@ -31,7 +32,7 @@ from txr_replay_core.logger import create_logger
 
 ### 2. Set Up Configuration
 
-**Option A: Using YAML File**
+#### YAML File
 
 ```python
 # Load configuration from YAML
@@ -45,7 +46,7 @@ print(path_config.replay_input)  # /path/to/replay/input
 print(proc_config.batch_size)     # 50
 ```
 
-**Option B: Using Environment Variables**
+#### Option B: Using Environment Variables
 
 ```python
 # Load from environment (TXR_* variables)
@@ -56,7 +57,7 @@ path_config = ConfigManager.get_path_config(env_config)
 proc_config = ConfigManager.get_processor_config(env_config)
 ```
 
-**Option C: Hybrid Approach (Recommended)**
+#### Option C: Hybrid Approach (Recommended)
 
 ```python
 # Load both and merge (env overrides YAML)
