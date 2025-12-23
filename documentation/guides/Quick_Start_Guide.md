@@ -2,6 +2,15 @@
 
 This guide shows how to use the `txr_replay_core` library in your scripts.
 
+## Prerequisites
+
+**Ensure Conda environment is activated:**
+```bash
+conda activate txr_automation
+```
+
+If you haven't set up the environment yet, see [Conda_Setup_Guide.md](Conda_Setup_Guide.md).
+
 ## Basic Usage
 
 ### 1. Import the Library
