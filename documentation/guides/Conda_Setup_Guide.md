@@ -9,8 +9,9 @@ This project uses Conda for package management to ensure compatibility with prod
 ### 1. Install Conda (If Not Already Installed)
 
 If you don't have Conda installed:
-- Download Miniconda: https://docs.conda.io/en/latest/miniconda.html
-- Or use Anaconda: https://www.anaconda.com/download
+
+- Download Miniconda: <https://docs.conda.io/en/latest/miniconda.html>
+- Or use Anaconda: <https://www.anaconda.com/download>
 
 ### 2. Create Environment from File
 
@@ -90,6 +91,7 @@ conda env update -f environment.yml --prune
 To add a new package to the project:
 
 1. Add it to `environment.yml`:
+
    ```yaml
    dependencies:
      - python>=3.10
@@ -98,6 +100,7 @@ To add a new package to the project:
    ```
 
 2. Update environment:
+
    ```bash
    conda env update -f environment.yml --prune
    ```
@@ -177,6 +180,7 @@ conda activate txr_automation
 ### On Restricted Machines
 
 1. **Copy project to machine**:
+
    ```bash
    # Use approved file transfer method
    ```
@@ -184,24 +188,28 @@ conda activate txr_automation
 2. **Ensure Conda is installed** (usually pre-installed on enterprise machines)
 
 3. **Create environment**:
+
    ```bash
    cd /path/to/txr_automation
    conda env create -f environment.yml
    ```
 
 4. **Activate and verify**:
+
    ```bash
    conda activate txr_automation
    python -m pytest tests/test_core/ -v
    ```
 
 5. **Configure paths**:
+
    ```bash
    cp config/templates/phase2_template.yaml config/environments/phase2.yaml
    # Edit config/environments/phase2.yaml with production paths
    ```
 
 6. **Run scripts**:
+
    ```bash
    python src/replay/phase_2_processor.py --config config/environments/phase2.yaml
    ```
@@ -251,7 +259,7 @@ dependencies:
 ## Quick Reference
 
 | Task | Command |
-|------|---------|
+| ---- | ------- |
 | Create environment | `conda env create -f environment.yml` |
 | Activate environment | `conda activate txr_automation` |
 | Deactivate environment | `conda deactivate` |
@@ -283,6 +291,7 @@ python src/utils/xlsx_csv_converter.py input.xlsx output.csv
 ## Support
 
 For issues with:
-- **Conda itself**: See https://docs.conda.io/
+
+- **Conda itself**: See <https://docs.conda.io/>
 - **This project**: See README.md or contact the team
 - **SSL restrictions**: Contact your IT department
