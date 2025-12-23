@@ -40,28 +40,56 @@ Currently, only the replay processes are Python-based, with all of the accuracy 
 
 ## Project Structure
 
-``` Markdown
+```
 txr_automation/
-├── txr_replay_core/        # Shared core library (NEW - Phase 0)
-│   ├── data_structures.py  # Common dataclasses
-│   ├── utils.py            # Utility functions (DateParser, etc.)
-│   ├── config.py           # Configuration management
-│   ├── logger.py           # Structured logging
-│   └── README.md           # Core library documentation
-├── config/                 # Configuration templates (NEW - Phase 0)
-│   ├── phase2_template.yaml
-│   ├── phase3_template.yaml
-│   └── phase3_final_template.yaml
-├── tests/                  # Test suite
-│   └── test_core/          # Core library tests (35 tests, 100% pass)
-├── vba/                    # Legacy VBA macros (to be migrated)
-├── python/                 # Python automation scripts (being refactored)
-├── documentation/          # Reference data, plans, and documentation
-│   ├── Python_Migration_Plan.md
-│   ├── Existing_Python_Scripts_Refactoring_Plan.md
-│   └── Phase_0_Progress.md
-├── setup.py                # Package installation
-├── requirements.txt        # Dependencies
+├── src/                          # All source code
+│   ├── txr_replay_core/         # Shared core library
+│   │   ├── data_structures.py   # Common dataclasses
+│   │   ├── utils.py             # Utility functions
+│   │   ├── config.py            # Configuration management
+│   │   ├── logger.py            # Structured logging
+│   │   └── README.md
+│   ├── replay/                   # Replay processing scripts
+│   │   ├── phase_2_processor.py
+│   │   ├── phase_3_processor.py
+│   │   └── phase_3_final_lookup.py
+│   ├── accuracy_testing/         # Accuracy testing (VBA conversions)
+│   │   ├── validation/          # ID validation scripts
+│   │   ├── extracts/            # SQL extract generators
+│   │   └── pricing/             # Pricing validation
+│   └── utils/                    # Standalone utilities
+│       └── xlsx_csv_converter.py
+├── tests/                        # Test suite
+│   ├── test_core/               # Core library tests (35 tests)
+│   ├── test_replay/             # Replay script tests
+│   └── test_accuracy_testing/   # Accuracy testing tests
+├── config/                       # Configuration files
+│   ├── templates/               # Template configurations
+│   │   ├── phase2_template.yaml
+│   │   ├── phase3_template.yaml
+│   │   └── phase3_final_template.yaml
+│   └── environments/            # Environment-specific configs
+├── documentation/
+│   ├── reference_data/          # CSV reference files
+│   │   ├── country_codes.csv
+│   │   ├── id_formats.csv
+│   │   └── incident_fields.csv
+│   ├── planning/                # Planning documents
+│   │   ├── Python_Migration_Plan.md
+│   │   ├── Existing_Python_Scripts_Refactoring_Plan.md
+│   │   └── Phase_0_Progress.md
+│   └── guides/                  # User guides
+│       ├── Git_Branching_Guide.md
+│       ├── Quick_Start_Guide.md
+│       └── Git_Workflow_Summary.md
+├── legacy/                      # Legacy code (archived)
+│   └── vba/                    # VBA macros for reference
+├── scripts/                     # Build/deployment scripts
+│   ├── run_tests.sh
+│   └── run_tests_with_coverage.sh
+├── .gitignore
+├── setup.py
+├── requirements.txt
 └── README.md
 ```
 
@@ -113,7 +141,7 @@ txr_automation/
 
 ### Core Library (NEW - Phase 0)
 
-The `txr_replay_core` package provides shared functionality across all processing scripts:
+The `src/txr_replay_core` package provides shared functionality across all processing scripts:
 
 - **data_structures.py**: Common dataclasses (ReplayRecord, LookupResult, UnaVistaTransaction, ProcessingStats)
 - **utils.py**: Utility functions including DateParser (with caching), CharacterReplacement, and FileDiscovery
@@ -124,12 +152,11 @@ The `txr_replay_core` package provides shared functionality across all processin
 
 ### Reference Data
 
-Located in the `documentation/` folder:
+Located in the `documentation/reference_data/` folder:
 
 - **country_codes.csv**: ISO country code mappings for nationality validation.
 - **id_formats.csv**: Regular expression patterns and validation rules for different ID types (NIDN, CCPT, CONCAT, etc.) across various countries.
 - **incident_fields.csv**: Field definitions and incident code mappings for template-based lookups.
-- **Agenda.txt**: Project planning and milestone tracking.
 
 ## Installation
 
@@ -175,9 +202,9 @@ Located in the `documentation/` folder:
 Copy and customize configuration templates:
 
 ```bash
-cp config/phase2_template.yaml config/phase2.yaml
-cp config/phase3_template.yaml config/phase3.yaml
-cp config/phase3_final_template.yaml config/phase3_final.yaml
+cp config/templates/phase2_template.yaml config/environments/phase2.yaml
+cp config/templates/phase3_template.yaml config/environments/phase3.yaml
+cp config/templates/phase3_final_template.yaml config/environments/phase3_final.yaml
 ```
 
 Edit the YAML files with your specific paths. Alternatively, use environment variables:
@@ -191,6 +218,23 @@ export TXR_LOG_LEVEL=INFO
 ```
 
 ## Development Status
+
+### Git Workflow
+
+This project uses feature branches to organize work:
+
+- **`main`**: Stable, production-ready code
+- **`phase0-refactoring`**: All replay script refactoring work (current)
+- **`vba-migration`**: VBA conversion work (created after Phase 0)
+
+See [Git_Branching_Guide.md](documentation/guides/Git_Branching_Guide.md) for detailed workflow instructions.
+
+**Quick Start:**
+```bash
+# Create Phase 0 branch (if not already created)
+git checkout -b phase0-refactoring
+git push -u origin phase0-refactoring
+```
 
 ### Phase 0: Refactoring (In Progress)
 
@@ -216,8 +260,8 @@ export TXR_LOG_LEVEL=INFO
 - Documentation updates
 - User acceptance testing
 
-See [Phase_0_Progress.md](documentation/Phase_0_Progress.md) for detailed progress.
+See [Phase_0_Progress.md](documentation/planning/Phase_0_Progress.md) for detailed progress.
 
 ### Phase 1-7: VBA Migration (Planned)
 
-After Phase 0 completes, VBA macros will be migrated to Python. See [Python_Migration_Plan.md](documentation/Python_Migration_Plan.md) for details.
+After Phase 0 completes, VBA macros will be migrated to Python. See [Python_Migration_Plan.md](documentation/planning/Python_Migration_Plan.md) for details.

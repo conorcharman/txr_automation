@@ -1,8 +1,32 @@
 # Transaction Reporting Automation: VBA to Python Migration Plan
 
-**Version:** 2.0  
-**Date:** 22 December 2025  
-**Status:** Ready to Execute  
+**Version:** 2.1  
+**Date:** 23 December 2025  
+**Status:** Phase 0 In Progress  
+
+---
+
+## Git Branch Strategy
+
+**Phase 0 (Refactoring):** Use `phase0-refactoring` branch  
+**Phases 1-7 (VBA Migration):** Use `vba-migration` branch (created after Phase 0 completes)
+
+See [Git_Branching_Guide.md](Git_Branching_Guide.md) for detailed instructions on:
+- Branch creation and workflow
+- Commit best practices
+- Merging strategies
+
+**Quick Reference:**
+```bash
+# Currently on Phase 0
+git checkout phase0-refactoring
+
+# When starting VBA migration (after Phase 0 merges to main)
+git checkout main
+git pull origin main
+git checkout -b vba-migration
+git push -u origin vba-migration
+```
 
 ---
 
