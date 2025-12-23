@@ -42,9 +42,26 @@ Currently, only the replay processes are Python-based, with all of the accuracy 
 
 ``` Markdown
 txr_automation/
-├── vba/                    # Legacy VBA macros
-├── python/                 # Python automation scripts
-├── documentation/          # Reference data and documentation
+├── txr_replay_core/        # Shared core library (NEW - Phase 0)
+│   ├── data_structures.py  # Common dataclasses
+│   ├── utils.py            # Utility functions (DateParser, etc.)
+│   ├── config.py           # Configuration management
+│   ├── logger.py           # Structured logging
+│   └── README.md           # Core library documentation
+├── config/                 # Configuration templates (NEW - Phase 0)
+│   ├── phase2_template.yaml
+│   ├── phase3_template.yaml
+│   └── phase3_final_template.yaml
+├── tests/                  # Test suite
+│   └── test_core/          # Core library tests (35 tests, 100% pass)
+├── vba/                    # Legacy VBA macros (to be migrated)
+├── python/                 # Python automation scripts (being refactored)
+├── documentation/          # Reference data, plans, and documentation
+│   ├── Python_Migration_Plan.md
+│   ├── Existing_Python_Scripts_Refactoring_Plan.md
+│   └── Phase_0_Progress.md
+├── setup.py                # Package installation
+├── requirements.txt        # Dependencies
 └── README.md
 ```
 
@@ -94,6 +111,17 @@ txr_automation/
 
 - **xlsx_csv_converter.py**: Converts Excel files to CSV format and handles multi-line cells by splitting them into separate rows.
 
+### Core Library (NEW - Phase 0)
+
+The `txr_replay_core` package provides shared functionality across all processing scripts:
+
+- **data_structures.py**: Common dataclasses (ReplayRecord, LookupResult, UnaVistaTransaction, ProcessingStats)
+- **utils.py**: Utility functions including DateParser (with caching), CharacterReplacement, and FileDiscovery
+- **config.py**: Configuration management supporting YAML files and environment variables
+- **logger.py**: Structured logging with file and console output
+
+**Status**: ✅ Complete and tested (35 tests, 100% pass rate)
+
 ### Reference Data
 
 Located in the `documentation/` folder:
@@ -102,3 +130,94 @@ Located in the `documentation/` folder:
 - **id_formats.csv**: Regular expression patterns and validation rules for different ID types (NIDN, CCPT, CONCAT, etc.) across various countries.
 - **incident_fields.csv**: Field definitions and incident code mappings for template-based lookups.
 - **Agenda.txt**: Project planning and milestone tracking.
+
+## Installation
+
+### Prerequisites
+
+- Python 3.10 or higher
+- UV (recommended) or pip
+
+### Setup
+
+1. **Clone the repository**:
+
+   ```bash
+   cd /path/to/txr_automation
+   ```
+
+2. **Install the package** (using UV):
+
+   ```bash
+   uv pip install -e .
+   ```
+
+   Or using traditional pip:
+
+   ```bash
+   pip install -e .
+   ```
+
+3. **Install development dependencies**:
+
+   ```bash
+   uv pip install pytest pytest-cov black flake8 mypy
+   ```
+
+4. **Run tests**:
+
+   ```bash
+   python -m pytest tests/test_core/ -v
+   ```
+
+### Configuration
+
+Copy and customize configuration templates:
+
+```bash
+cp config/phase2_template.yaml config/phase2.yaml
+cp config/phase3_template.yaml config/phase3.yaml
+cp config/phase3_final_template.yaml config/phase3_final.yaml
+```
+
+Edit the YAML files with your specific paths. Alternatively, use environment variables:
+
+```bash
+export TXR_REPLAY_INPUT=/path/to/input
+export TXR_INCIDENT_FILES=/path/to/incident
+export TXR_REPLAY_OUTPUT=/path/to/output
+export TXR_LOG_OUTPUT=/path/to/logs
+export TXR_LOG_LEVEL=INFO
+```
+
+## Development Status
+
+### Phase 0: Refactoring (In Progress)
+
+**Week 1** ✅ Complete:
+
+- Created `txr_replay_core` shared library
+- Implemented configuration management
+- Implemented structured logging
+- Created 35 unit tests (100% pass rate)
+- Documentation and templates
+
+**Week 2-4** (Upcoming):
+
+- Refactor Phase 2 Processor
+- Refactor Phase 3 Processor
+- Refactor Phase 3 Final Lookup
+- Add CLI interfaces to all scripts
+
+**Week 5-8** (Upcoming):
+
+- Integration testing
+- Performance benchmarking
+- Documentation updates
+- User acceptance testing
+
+See [Phase_0_Progress.md](documentation/Phase_0_Progress.md) for detailed progress.
+
+### Phase 1-7: VBA Migration (Planned)
+
+After Phase 0 completes, VBA macros will be migrated to Python. See [Python_Migration_Plan.md](documentation/Python_Migration_Plan.md) for details.

@@ -1,0 +1,28 @@
+# Example YAML configuration for Phase 3 Processor
+# Copy this file and modify paths as needed
+
+paths:
+  # Input directory containing replay CSV files (IDs and Names)
+  replay_input: /path/to/replay/input
+  
+  # Directory containing incident files
+  incident_files: /path/to/incident/files
+  
+  # Output directory for processed replay files
+  replay_output: /path/to/replay/output
+  
+  # Directory for log files
+  log_output: /path/to/logs
+
+processing:
+  # Number of records to process per batch (for progress reporting)
+  batch_size: 50
+  
+  # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_level: INFO
+  
+  # Enable/disable progress reporting
+  enable_progress_reporting: true
+  
+  # File encoding
+  encoding: utf-8
