@@ -1,0 +1,32 @@
+# Phase 3 Final Lookup Configuration
+# Configure paths and behavior for Phase 3 Final Lookup validation
+
+paths:
+  # Base path for all Phase 3 Final data
+  base: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3"
+  
+  # Reference data directory (CSV files)
+  data_reference: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\reference\\csv"
+  
+  # Output directory for results
+  output: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\output"
+  
+  # Log output directory
+  log_output: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\output\\logs"
+
+files:
+  # File patterns for discovery (using glob)
+  unavista_pattern: "UnaVista_MiFIR_Manual_Corrections_*.csv"
+  replay_ids_pattern: "Replay_*_Inconsistent_IDs_Summary_FINAL*.csv"
+  replay_names_pattern: "Replay_*_Inconsistent_Names_Summary_FINAL*.csv"
+  incident_matrix: "incident_code_matrix.csv"
+
+processor:
+  # Batch size for progress reporting
+  batch_size: 100
+  
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  log_level: "INFO"
+  
+  # Skip duplicate client records in Replay files
+  skip_duplicates: true
