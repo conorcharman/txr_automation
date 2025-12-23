@@ -163,59 +163,76 @@ Located in the `documentation/reference_data/` folder:
 ### Prerequisites
 
 - Python 3.10 or higher
-- UV (recommended) or pip
+- Conda (required for production environments)
 
-### Setup
+### Setup with Conda (Recommended)
 
 1. **Clone the repository**:
-
    ```bash
    cd /path/to/txr_automation
    ```
 
-2. **Install the package** (using UV):
+2. **Create and activate Conda environment**:
+   ```bash
+   conda env create -f environment.yml
+   conda activate txr_automation
+   ```
 
+   Or use the setup script:
+   ```bash
+   ./scripts/setup_conda_env.sh
+   conda activate txr_automation
+   ```
+
+3. **Run tests**:
+   ```bash
+   python -m pytest tests/test_core/ -v
+   ```
+
+### Alternative: Setup with pip/UV (Development Only)
+
+For development on machines without SSL restrictions:
+
+1. **Install with UV**:
    ```bash
    uv pip install -e .
-   ```
-
-   Or using traditional pip:
-
-   ```bash
-   pip install -e .
-   ```
-
-3. **Install development dependencies**:
-
-   ```bash
    uv pip install pytest pytest-cov black flake8 mypy
    ```
 
-4. **Run tests**:
+   Or with pip:
+   ```bash
+   pip install -e .
+   pip install pytest pytest-cov black flake8 mypy
+   ```
 
+2. **Run tests**:
    ```bash
    python -m pytest tests/test_core/ -v
    ```
 
 ### Configuration
 
-Copy and customize configuration templates:
+1. **Copy and customize configuration templates**:
 
-```bash
-cp config/templates/phase2_template.yaml config/environments/phase2.yaml
-cp config/templates/phase3_template.yaml config/environments/phase3.yaml
-cp config/templates/phase3_final_template.yaml config/environments/phase3_final.yaml
-```
+   ```bash
+   # Ensure conda environment is activated
+   conda activate txr_automation
+   
+   # Copy templates
+   cp config/templates/phase2_template.yaml config/environments/phase2.yaml
+   cp config/templates/phase3_template.yaml config/environments/phase3.yaml
+   cp config/templates/phase3_final_template.yaml config/environments/phase3_final.yaml
+   ```
 
-Edit the YAML files with your specific paths. Alternatively, use environment variables:
+2. **Edit the YAML files** with your specific paths, or use environment variables:
 
-```bash
-export TXR_REPLAY_INPUT=/path/to/input
-export TXR_INCIDENT_FILES=/path/to/incident
-export TXR_REPLAY_OUTPUT=/path/to/output
-export TXR_LOG_OUTPUT=/path/to/logs
-export TXR_LOG_LEVEL=INFO
-```
+   ```bash
+   export TXR_REPLAY_INPUT=/path/to/input
+   export TXR_INCIDENT_FILES=/path/to/incident
+   export TXR_REPLAY_OUTPUT=/path/to/output
+   export TXR_LOG_OUTPUT=/path/to/logs
+   export TXR_LOG_LEVEL=INFO
+   ```
 
 ## Development Status
 
