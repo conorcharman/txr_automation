@@ -1,8 +1,31 @@
 # Existing Python Scripts Refactoring Plan
 
-**Version:** 1.0  
-**Date:** 22 December 2025  
+**Version:** 1.1  
+**Date:** 23 December 2025  
 **Purpose:** Analysis and plan to refactor existing Python replay scripts with consistent architecture
+
+---
+
+## Git Branch Strategy
+
+**All Phase 0 refactoring work should be done on the `phase0-refactoring` branch.**
+
+See [Git_Branching_Guide.md](Git_Branching_Guide.md) for detailed instructions on:
+- Creating and working with branches
+- Commit best practices
+- Merging completed work
+
+**Quick Start:**
+```bash
+# Create Phase 0 branch
+git checkout -b phase0-refactoring
+git push -u origin phase0-refactoring
+
+# Work on refactoring, commit regularly
+git add .
+git commit -m "Descriptive message"
+git push origin phase0-refactoring
+```
 
 ---
 

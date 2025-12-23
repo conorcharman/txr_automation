@@ -1,20 +1,21 @@
 """
-TXR Replay Core Library Setup
+TXR Automation Package Setup
 """
 
 from setuptools import setup, find_packages
 
-with open("txr_replay_core/README.md", "r", encoding="utf-8") as fh:
+with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="txr-replay-core",
+    name="txr-automation",
     version="1.0.0",
     author="Transaction Reporting Team",
-    description="Shared utilities and core functionality for transaction replay processing",
+    description="Transaction reporting automation suite",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    packages=find_packages(),
+    package_dir={"": "src"},
+    packages=find_packages(where="src"),
     python_requires=">=3.10",
     install_requires=[
         "pyyaml>=6.0",

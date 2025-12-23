@@ -1,6 +1,20 @@
 # Phase 0 Progress Report
 
-## Date: 22 December 2025
+## Date: 23 December 2025
+
+## Git Branch Strategy
+
+**All Phase 0 work is tracked on the `phase0-refactoring` branch.**
+
+```bash
+# Create and switch to Phase 0 branch
+git checkout -b phase0-refactoring
+git push -u origin phase0-refactoring
+```
+
+See [Git_Branching_Guide.md](Git_Branching_Guide.md) for complete workflow details.
+
+---
 
 ## Completed Tasks
 
