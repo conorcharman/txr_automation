@@ -23,6 +23,8 @@ from .data_structures import (
     ProcessingStats,
 )
 from .utils import DateParser, CharacterReplacement, FileDiscovery
+from .config import ConfigManager, PathConfig, ProcessorConfig
+from .logger import StructuredLogger, create_logger
 
 __all__ = [
     "ReplayRecord",
@@ -32,4 +34,9 @@ __all__ = [
     "DateParser",
     "CharacterReplacement",
     "FileDiscovery",
+    "ConfigManager",
+    "PathConfig",
+    "ProcessorConfig",
+    "StructuredLogger",
+    "create_logger",
 ]
