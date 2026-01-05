@@ -5,16 +5,16 @@ Fund Trade Decision Maker - Seller - 21_17,,,,,,,,,,,,,,,,,,,,,,,,,,
 Transaction Reference:1,Account ID:2,Buyer ID Code:3,Type of Buyer ID Code:4,Buyer DM Code:5,Type of Buyer DM Code:6,Product:7,Account Type:8,Service Level:9,Branch Code:10,Error:11,Correction:12,Correction field:13,VLOOKUP:14,Transaction Reference:1:15,,,,,,,,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,,,,,
 "Identification Code - Buyer - 7_35, 7_37, 7_39",,,,,,,,,,,,,,,,,,,,,,,,,,
-Transaction Reference:1,Account ID:2,BEN Link:3,OWN Link:4,TPA Link:5,Person Code:6,Account Type:7,Buyer ID Code:8,Type of Buyer ID Code:9,Buyer - First Name(s):10,Buyer - Surname(s):11,Buyer - DOB:12,Buyer - Gender:13,Nationality 1:14,Nationality 2:15,DM ID Code:16,Type of DM ID Code:17,DM - First Name(s):18,DM - Surname(s):19,DM - DOB:20,Correction:21,Correction Field:22,Tracker Status:23,Actions:24,Error?,Kaizen Error,Match?
+Transaction Reference:1,Account ID:2,BEN Link:3,OWN Link:4,TPA Link:5,Person Code:6,Account Type:7,Buyer ID Code:8,Type of Buyer ID Code:9,Buyer - First Name(s):10,Buyer - Surname(s):11,Buyer - DOB:12,Buyer - Gender:13,Nationality:14,Nationality:15,DM ID Code:16,Type of DM ID Code:17,DM - First Name(s):18,DM - Surname(s):19,DM - DOB:20,Correction:21,Correction Field:22,Tracker Status:23,Actions:24,Error?,Kaizen Error,Match?
 ,,,,,,,,,,,,,,,,,,,,,,,,,,
 "Identification Code - Seller - 16_19, 16_21, 16_23",,,,,,,,,,,,,,,,,,,,,,,,,,
-Transaction Reference:1,Account ID:2,BEN Link:3,OWN Link:4,TPA Link:5,Person Code:6,Account Type:7,Buyer ID Code:8,Type of Buyer ID Code:9,Buyer - First Name(s):10,Buyer - Surname(s):11,Buyer - DOB:12,Buyer - Gender:13,Nationality 1:14,Nationality 2:15,DM ID Code:16,Type of DM ID Code:17,DM - First Name(s):18,DM - Surname(s):19,DM - DOB:20,Correction:21,Correction Field:22,Tracker Status:23,Actions:24,Error?,Kaizen Error,Match?
+Transaction Reference:1,Account ID:2,BEN Link:3,OWN Link:4,TPA Link:5,Person Code:6,Account Type:7,Buyer ID Code:8,Type of Buyer ID Code:9,Buyer - First Name(s):10,Buyer - Surname(s):11,Buyer - DOB:12,Buyer - Gender:13,Nationality:14,Nationality:15,DM ID Code:16,Type of DM ID Code:17,DM - First Name(s):18,DM - Surname(s):19,DM - DOB:20,Correction:21,Correction Field:22,Tracker Status:23,Actions:24,Error?,Kaizen Error,Match?
 ,,,,,,,,,,,,,,,,,,,,,,,,,,
 Inconsistent Identification Code - Buyer - 7_66,,,,,,,,,,,,,,,,,,,,,,,,,,
-Transaction Reference:1,Account ID:2,BEN Link:3,OWN Link:4,Person Code:5,Account Type:6,Buyer ID Code:7,Type of Buyer ID Code:8,Buyer - First Name(s):9,Buyer - Surname(s):10,Buyer - DOB:11,Buyer - Gender:12,Nationality 1:13,Nationality 2:14,Trade_Date_Time:15,Correction:16,Correction Field:17,Tracker Status:18,Actions:19,Error?,Kaizen Error,Match?,,,,,
+Transaction Reference:1,Account ID:2,BEN Link:3,OWN Link:4,Person Code:5,Account Type:6,Buyer ID Code:7,Type of Buyer ID Code:8,Buyer - First Name(s):9,Buyer - Surname(s):10,Buyer - DOB:11,Buyer - Gender:12,Nationality:13,Nationality:14,Trade_Date_Time:15,Correction:16,Correction Field:17,Tracker Status:18,Actions:19,Error?,Kaizen Error,Match?,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,,,,,
 Inconsistent Identification Code - Seller - 16_20,,,,,,,,,,,,,,,,,,,,,,,,,,
-Transaction Reference:1,Account ID:2,BEN Link:3,OWN Link:4,Person Code:5,Account Type:6,Seller ID Code:7,Type of Seller ID Code:8,Seller - First Name(s):9,Seller - Surname(s):10,Seller - DOB:11,Seller - Gender:12,Nationality 1:13,Nationality 2:14,Trade_Date_Time:15,Correction:16,Correction Field:17,Tracker Status:18,Actions:19,Error?,Kaizen Error,Match?,,,,,
+Transaction Reference:1,Account ID:2,BEN Link:3,OWN Link:4,Person Code:5,Account Type:6,Seller ID Code:7,Type of Seller ID Code:8,Seller - First Name(s):9,Seller - Surname(s):10,Seller - DOB:11,Seller - Gender:12,Nationality:13,Nationality:14,Trade_Date_Time:15,Correction:16,Correction Field:17,Tracker Status:18,Actions:19,Error?,Kaizen Error,Match?,,,,,
 ,,,,,,,,,,,,,,,,,,,,,,,,,,
 Incorrect Net Amount - 35_3,,,,,,,,,,,,,,,,,,,,,,,,,,
 Transaction Reference,Error,Correction,Correction Field,Comments,Net amount,Consideration,Interest,Total,Expected Interest,Net Amount difference,,,,,,,,,,,,,,,,
