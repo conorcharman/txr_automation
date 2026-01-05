@@ -106,7 +106,7 @@ class Phase2Processor:
         self.logger = create_logger(
             name="phase2_processor",
             log_dir=self.path_config.log_output,
-            level=self.proc_config.log_level
+            log_level=self.proc_config.log_level
         )
         
         # Statistics using ProcessingStats from core library
@@ -208,7 +208,7 @@ class Phase2Processor:
     
     def preload_and_index_incident_files(self):
         """Preload and index all required incident files"""
-        self.logger.section_header("INCIDENT FILE INDEXING")
+        self.logger.log_header("INCIDENT FILE INDEXING")
         self.logger.info("Analyzing replay files for incident codes...")
         
         # Collect all incident codes from replay files
@@ -418,7 +418,7 @@ class Phase2Processor:
         """Main execution method"""
         start_time = datetime.now()
         
-        self.logger.section_header("PHASE 2 PROCESSOR v4.0")
+        self.logger.log_header("PHASE 2 PROCESSOR v4.0")
         self.logger.info(f"Replay input path: {self.path_config.replay_input}")
         self.logger.info(f"Incident files path: {self.path_config.incident_files}")
         self.logger.info(f"Output path: {self.path_config.replay_output}")
@@ -437,7 +437,7 @@ class Phase2Processor:
             self.logger.error("No CSV replay files found in input directory")
             return
         
-        self.logger.section_header(f"PROCESSING {len(replay_files)} REPLAY FILES")
+        self.logger.log_header(f"PROCESSING {len(replay_files)} REPLAY FILES")
         
         # Process each replay file
         for filename in replay_files:
@@ -449,7 +449,7 @@ class Phase2Processor:
         duration = end_time - start_time
         self.logger.info(f"Total processing time: {duration}")
         
-        self.logger.section_header("PROCESSING SUMMARY")
+        self.logger.log_header("PROCESSING SUMMARY")
         self.logger.log_stats(self.stats)
         
         # Additional metrics
