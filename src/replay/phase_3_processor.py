@@ -304,7 +304,7 @@ class Phase3Processor:
         self.logger = create_logger(
             name="phase3_processor",
             log_dir=self.path_config.log_output,
-            level=self.proc_config.log_level
+            log_level=self.proc_config.log_level
         )
         
         # Get replay files from config
@@ -659,7 +659,7 @@ class Phase3Processor:
         """Main execution with ultra optimizations"""
         start_time = datetime.now()
         
-        self.logger.section_header("PHASE 3 PROCESSOR v5.0")
+        self.logger.log_header("PHASE 3 PROCESSOR v5.0")
         self.logger.info(f"Replay input path: {self.path_config.replay_input}")
         self.logger.info(f"Incident files path: {self.path_config.incident_files}")
         self.logger.info(f"Output path: {self.path_config.replay_output}")
@@ -684,7 +684,7 @@ class Phase3Processor:
         duration = end_time - start_time
         self.logger.info(f"Total processing time: {duration}")
         
-        self.logger.section_header("PROCESSING SUMMARY")
+        self.logger.log_header("PROCESSING SUMMARY")
         self.logger.log_stats(self.stats)
         
         # Additional metrics

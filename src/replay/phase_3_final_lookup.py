@@ -648,7 +648,7 @@ class Phase3FinalLookup:
         self.logger = create_logger(
             name="phase3_final_lookup",
             log_dir=self.log_output_path,
-            level=log_level
+            log_level=log_level
         )
         
         # Statistics using ProcessingStats from core library
@@ -1156,7 +1156,7 @@ class Phase3FinalLookup:
         start_time = datetime.now()
         
         try:
-            self.logger.section_header("PHASE 3 FINAL LOOKUP v2.0")
+            self.logger.log_header("PHASE 3 FINAL LOOKUP v2.0")
             self.logger.info(f"Base path: {self.base_path}")
             self.logger.info(f"Data reference path: {self.data_reference_path}")
             self.logger.info(f"Output path: {self.output_path}")
@@ -1175,7 +1175,7 @@ class Phase3FinalLookup:
             elapsed = end_time - start_time
             self.logger.info(f"Total processing time: {elapsed}")
             
-            self.logger.section_header("PROCESSING SUMMARY")
+            self.logger.log_header("PROCESSING SUMMARY")
             self.logger.log_stats(self.stats)
             
             # Log additional detailed stats

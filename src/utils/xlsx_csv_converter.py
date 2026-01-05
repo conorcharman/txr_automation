@@ -271,7 +271,9 @@ def main():
     logger = create_logger('xlsx_csv_converter', log_output, args.log_level)
     
     # Log startup information
-    logger.log_section_header("XLSX to CSV Converter v2.0")
+    logger.info("=" * 80)
+    logger.info("XLSX to CSV Converter v2.0")
+    logger.info("=" * 80)
     logger.info(f"Input directory:  {input_dir}")
     logger.info(f"Output directory: {output_dir}")
     logger.info(f"Log level:        {args.log_level}")
@@ -281,7 +283,9 @@ def main():
     successful, total = converter.convert_all()
     
     # Log final summary
-    logger.log_section_header("Conversion Complete")
+    logger.info("=" * 80)
+    logger.info("Conversion Complete")
+    logger.info("=" * 80)
     logger.info(f"Successfully converted: {successful}/{total} files")
     
     return 0 if successful == total else 1
