@@ -33,7 +33,7 @@ from pathlib import Path
 from txr_replay_core.data_structures import ReplayRecord, LookupResult, ProcessingStats
 from txr_replay_core.config import ConfigManager
 from txr_replay_core.logger import create_logger
-from txr_replay_core.utils import DateParser, CharacterReplacement
+from txr_replay_core.utils import DateParser, CharacterReplacement, safe_open_csv
 
 # Local dataclass for Phase 3 specific client records
 @dataclass
@@ -75,7 +75,8 @@ class IncidentFileIndex:
     def load_and_index(self):
         """Load file and build all indexes"""
         try:
-            with open(self.file_path, 'r', encoding='utf-8', newline='') as f:
+            f, encoding = safe_open_csv(self.file_path, 'r', newline='')
+            with f:
                 reader = csv.reader(f)
                 rows = list(reader)
             
@@ -339,7 +340,8 @@ class Phase3Processor:
             replay_filepath = os.path.join(self.path_config.replay_input, replay_filename)
             if os.path.exists(replay_filepath):
                 try:
-                    with open(replay_filepath, 'r', encoding='utf-8', newline='') as f:
+                    f, encoding = safe_open_csv(Path(replay_filepath), 'r', newline='')
+                    with f:
                         reader = csv.reader(f)
                         rows = list(reader)
                     
@@ -555,7 +557,8 @@ class Phase3Processor:
         
         try:
             # Read file
-            with open(input_filepath, 'r', encoding='utf-8', newline='') as f:
+            f, encoding = safe_open_csv(Path(input_filepath), 'r', newline='')
+            with f:
                 reader = csv.reader(f)
                 rows = list(reader)
             

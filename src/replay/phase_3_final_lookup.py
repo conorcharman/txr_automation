@@ -23,7 +23,7 @@ from pathlib import Path
 from txr_replay_core.data_structures import ProcessingStats, UnaVistaTransaction
 from txr_replay_core.config import ConfigManager
 from txr_replay_core.logger import create_logger
-from txr_replay_core.utils import DateParser
+from txr_replay_core.utils import DateParser, safe_open_csv
 
 # ============================================================================
 # Data Classes
@@ -194,7 +194,8 @@ class UnaVistaIndex:
     def load_and_index(self):
         """Load UnaVista file and build all indexes"""
         try:
-            with open(self.file_path, 'r', encoding='utf-8', newline='') as f:
+            f, encoding = safe_open_csv(self.file_path, 'r', newline='')
+            with f:
                 reader = csv.reader(f)
                 rows = list(reader)
             
@@ -362,7 +363,8 @@ class ReplayRecordIndex:
     def load_incident_matrix(self, file_path: str):
         """Load incident code matrix"""
         try:
-            with open(file_path, 'r', encoding='utf-8-sig', newline='') as f:
+            f, encoding = safe_open_csv(Path(file_path), 'r', newline='')
+            with f:
                 reader = csv.DictReader(f)
                 row_count = 0
                 for row in reader:
@@ -389,7 +391,8 @@ class ReplayRecordIndex:
             self.logger.error(f"Error loading incident matrix - missing column: {e}")
             # Try to show available columns from first row
             try:
-                with open(file_path, 'r', encoding='utf-8-sig', newline='') as f:
+                f, encoding = safe_open_csv(Path(file_path), 'r', newline='')
+                with f:
                     reader = csv.DictReader(f)
                     first_row = next(reader, None)
                     if first_row:
@@ -408,7 +411,8 @@ class ReplayRecordIndex:
             file_type: 'IDs' or 'Names'
         """
         try:
-            with open(file_path, 'r', encoding='utf-8', newline='') as f:
+            f, encoding = safe_open_csv(Path(file_path), 'r', newline='')
+            with f:
                 reader = csv.reader(f)
                 rows = list(reader)
             
