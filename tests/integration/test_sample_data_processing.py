@@ -179,9 +179,9 @@ class TestPhase3ProcessorWithSampleData:
     
     def test_phase3_sample_files_exist(self):
         """Verify Phase 3 sample files exist."""
-        phase3_dir = SAMPLE_DATA_DIR / "phase_iii"
+        phase3_dir = SAMPLE_DATA_DIR / "phase_iii" / "xlsx"
         
-        assert phase3_dir.exists(), f"Phase III directory not found: {phase3_dir}"
+        assert phase3_dir.exists(), f"Phase III XLSX directory not found: {phase3_dir}"
         
         # Check for XLSX files
         xlsx_files = list(phase3_dir.glob("*.xlsx"))
@@ -191,7 +191,7 @@ class TestPhase3ProcessorWithSampleData:
         """Test Phase 3 XLSX files can be read."""
         import pandas as pd
         
-        phase3_dir = SAMPLE_DATA_DIR / "phase_iii"
+        phase3_dir = SAMPLE_DATA_DIR / "phase_iii" / "xlsx"
         xlsx_files = list(phase3_dir.glob("*.xlsx"))
         
         for xlsx_file in xlsx_files:
@@ -209,11 +209,11 @@ class TestXLSXConverterWithSampleData:
     
     def test_xlsx_converter_with_phase3_files(self, tmp_path):
         """Test XLSX converter can process Phase 3 XLSX files."""
-        phase3_dir = SAMPLE_DATA_DIR / "phase_iii"
+        phase3_xlsx_dir = SAMPLE_DATA_DIR / "phase_iii" / "xlsx"
         output_dir = tmp_path / "csv_output"
         output_dir.mkdir()
         
-        xlsx_files = list(phase3_dir.glob("*.xlsx"))
+        xlsx_files = list(phase3_xlsx_dir.glob("*.xlsx"))
         
         if len(xlsx_files) == 0:
             pytest.skip("No XLSX files found for testing")
@@ -222,7 +222,7 @@ class TestXLSXConverterWithSampleData:
         result = subprocess.run(
             [
                 sys.executable, "-m", "src.utils.xlsx_csv_converter",
-                "--input-dir", str(phase3_dir),
+                "--input-dir", str(phase3_xlsx_dir),
                 "--output-dir", str(output_dir),
                 "--log-level", "INFO"
             ],

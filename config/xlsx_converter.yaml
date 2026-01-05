@@ -4,13 +4,13 @@
 
 paths:
   # Directory containing XLSX files to convert
-  input_dir: /path/to/xlsx/input
+  input_dir: /Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii/xlsx
   
   # Directory where CSV files will be saved
-  output_dir: /path/to/csv/output
+  output_dir: /Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii/csv
   
   # Directory for log files (defaults to output_dir if not specified)
-  log_output: /path/to/logs
+  log_output: /Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs
 
 processing:
   # Encoding for CSV output files
