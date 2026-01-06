@@ -22,7 +22,7 @@ from .data_structures import (
     UnaVistaTransaction,
     ProcessingStats,
 )
-from .utils import DateParser, CharacterReplacement, FileDiscovery
+from .utils import DateParser, CharacterReplacement, FileDiscovery, safe_open_csv
 from .config import ConfigManager, PathConfig, ProcessorConfig
 from .logger import StructuredLogger, create_logger
 
@@ -34,6 +34,7 @@ __all__ = [
     "DateParser",
     "CharacterReplacement",
     "FileDiscovery",
+    "safe_open_csv",
     "ConfigManager",
     "PathConfig",
     "ProcessorConfig",

@@ -48,7 +48,7 @@ This CLI tool is designed to evolve into a **Graphical User Interface (GUI)** in
 
 ### Workflow 1: Main Menu Selection
 
-```
+```md
 $ txr-automation
 
 ╔════════════════════════════════════════════════════════════════╗
@@ -69,7 +69,7 @@ Select an option:
 
 ### Workflow 2A: Accuracy Testing Path
 
-```
+```md
 Select an option: 2
 
 ╔════════════════════════════════════════════════════════════════╗
@@ -94,7 +94,7 @@ Select incident:
 
 After selecting an incident:
 
-```
+```md
 Select incident: 1
 
 Incident: 7_37 - Inconsistent Buyer Identification Codes
@@ -117,7 +117,7 @@ Proceed with accuracy testing? [Y/n]:
 
 ### Workflow 2B: Replay Processing Path
 
-```
+```md
 Select an option: 3
 
 ╔════════════════════════════════════════════════════════════════╗
@@ -137,7 +137,7 @@ Select phase:
 
 After selecting a phase:
 
-```
+```md
 Select phase: 2
 
 Phase: Phase 2 - Initial Processing
@@ -159,7 +159,7 @@ Proceed with Phase 2 processing? [Y/n]:
 
 ### Workflow 3: Extract Generation Path
 
-```
+```md
 Select an option: 1
 
 ╔════════════════════════════════════════════════════════════════╗
@@ -183,7 +183,7 @@ Select type:
 
 ### Layered Architecture (GUI-Ready)
 
-```
+```md
 ┌─────────────────────────────────────────────────────────────┐
 │                    Presentation Layer                        │
 │  ┌──────────────────────┐      ┌──────────────────────┐    │
@@ -221,7 +221,7 @@ Select type:
 
 ### Project Structure
 
-```
+```md
 txr_automation/
 ├── txr_cli/                              # New CLI tool package
 │   ├── __init__.py

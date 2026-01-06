@@ -29,7 +29,7 @@ from pathlib import Path
 from txr_replay_core.data_structures import ReplayRecord, LookupResult, ProcessingStats
 from txr_replay_core.config import ConfigManager
 from txr_replay_core.logger import create_logger
-from txr_replay_core.utils import CharacterReplacement
+from txr_replay_core.utils import CharacterReplacement, safe_open_csv
 
 class IncidentFileIndex:
     """Optimized incident file with pre-built indexes for O(1) transaction reference lookups"""
@@ -47,7 +47,8 @@ class IncidentFileIndex:
     def load_and_index(self):
         """Load file and build transaction reference index"""
         try:
-            with open(self.file_path, 'r', encoding='utf-8', newline='') as f:
+            f, encoding = safe_open_csv(self.file_path, 'r', newline='')
+            with f:
                 reader = csv.reader(f)
                 rows = list(reader)
             
@@ -222,7 +223,8 @@ class Phase2Processor:
             col_map = self.get_column_mapping(file_type)
             
             try:
-                with open(replay_filepath, 'r', encoding='utf-8', newline='') as f:
+                f, encoding = safe_open_csv(Path(replay_filepath), 'r', newline='')
+                with f:
                     reader = csv.reader(f)
                     rows = list(reader)
                 
@@ -352,7 +354,8 @@ class Phase2Processor:
         
         try:
             # Read input file
-            with open(input_filepath, 'r', encoding='utf-8', newline='') as f:
+            f, encoding = safe_open_csv(Path(input_filepath), 'r', newline='')
+            with f:
                 reader = csv.reader(f)
                 rows = list(reader)
             
