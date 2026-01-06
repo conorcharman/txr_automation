@@ -3,19 +3,19 @@
 
 paths:
   # Input replay files (CSV format)
-  replay_input: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\replay"
+  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii/csv"
   
   # Incident code reference files (CSV format)
-  incident_files: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\reference\\csv"
+  incident_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files"
   
   # UnaVista reference files (CSV format)
-  unavista_files: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\reference\\csv"
+  unavista_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii_final_lookup"
   
   # Output directory for processed replay files
-  replay_output: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\output"
+  replay_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii_final_lookup"
   
   # Log output directory
-  log_output: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\output\\logs"
+  log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
 
 files:
   # File patterns for discovery (using glob)
