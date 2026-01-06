@@ -2,14 +2,17 @@
 # Configure paths and behavior for Phase 3 Final Lookup validation
 
 paths:
-  # Base path for all Phase 3 Final data
-  base: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3"
+  # Input replay files (CSV format)
+  replay_input: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\replay"
   
-  # Reference data directory (CSV files)
-  data_reference: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\reference\\csv"
+  # Incident code reference files (CSV format)
+  incident_files: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\reference\\csv"
   
-  # Output directory for results
-  output: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\output"
+  # UnaVista reference files (CSV format)
+  unavista_files: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\reference\\csv"
+  
+  # Output directory for processed replay files
+  replay_output: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\output"
   
   # Log output directory
   log_output: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii_final_lookup\\FY25\\Q3\\output\\logs"

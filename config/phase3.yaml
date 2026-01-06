@@ -3,16 +3,25 @@
 
 paths:
   # Input replay files (CSV format)
-  replay_input: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii\\FY25\\Q3\\reference\\csv"
+  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii/csv"
   
   # Incident code reference files (CSV format)
-  incident_files: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\reference\\FY25\\Q3\\incident_code_files\\csv"
+  incident_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files"
   
   # Output directory for processed replay files
-  replay_output: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii\\FY25\\Q3\\output"
+  replay_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii"
   
   # Log output directory
-  log_output: "C:\\Users\\ccharm\\Desktop\\Data\\txr_replay_automation\\phase_iii\\FY25\\Q3\\output\\logs"
+  log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
+
+files:
+  # Replay file patterns (glob syntax supported)
+  replay_patterns:
+    - "Replay_*_PHASE 3_Inconsistent_IDs_Summary_FINAL.csv"
+    - "Replay_*_PHASE 3_Inconsistent_Names_Summary_FINAL.csv"
+  
+  # Incident file pattern
+  incident_pattern: "FY25 Q3 - *.csv"
 
 processor:
   # Batch size for progress reporting
@@ -23,11 +32,6 @@ processor:
   
   # Similarity threshold for fuzzy name matching (0.0 - 1.0)
   similarity_threshold: 0.85
-  
-  # Replay files to process
-  replay_files:
-    - "Replay_2025Q2_PHASE 3_Inconsistent_IDs_Summary_FINAL.csv"
-    - "Replay_2025Q2_PHASE 3_Inconsistent_Names_Summary_FINAL.csv"
   
   # Output filename pattern (e.g., replace KR with AJB)
   replace_pattern:

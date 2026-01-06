@@ -14,6 +14,14 @@ paths:
   # Log output directory
   log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
 
+files:
+  # Replay file patterns (glob syntax supported)
+  replay_patterns:
+    - "*.csv"
+  
+  # Incident file pattern
+  incident_pattern: "FY25 Q3 - *.csv"
+
 processor:
   # Batch size for progress reporting
   batch_size: 50

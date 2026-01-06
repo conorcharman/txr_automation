@@ -308,10 +308,16 @@ class Phase3Processor:
             log_level=self.proc_config.log_level
         )
         
-        # Get replay files from config
-        self.replay_files = self.config.get('processor', {}).get('replay_files', [])
+        # Get replay file patterns from config and discover files
+        replay_patterns = self.config.get('files', {}).get('replay_patterns', ['*.csv'])
+        self.replay_files = []
+        for pattern in replay_patterns:
+            pattern_path = os.path.join(self.path_config.replay_input, pattern)
+            matches = glob.glob(pattern_path)
+            self.replay_files.extend([os.path.basename(f) for f in matches])
+        
         if not self.replay_files:
-            raise ValueError("No replay files specified in configuration")
+            raise ValueError(f"No replay files found matching patterns: {replay_patterns}")
         
         # Statistics using ProcessingStats from core library
         self.stats = ProcessingStats()
@@ -527,7 +533,7 @@ class Phase3Processor:
             result = self.lookup_client(client, incident_code)
             
             if result.found:
-                correction_pair = f"{result.correction}:{result.correction_field}" if result.correction_field else result.correction
+                correction_pair = f"{result.correction}~{result.correction_field}" if result.correction_field else result.correction
                 all_corrections.append(correction_pair)
         
         if not all_corrections:
@@ -541,8 +547,8 @@ class Phase3Processor:
             return "|".join(unique_corrections), ""
         else:
             correction_data = unique_corrections[0]
-            if ':' in correction_data and correction_data != "No Change":
-                parts = correction_data.split(':', 1)
+            if '~' in correction_data and correction_data != "No Change":
+                parts = correction_data.split('~', 1)
                 return parts[0], parts[1]
             else:
                 return correction_data, ""

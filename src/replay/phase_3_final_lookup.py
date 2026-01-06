@@ -628,10 +628,11 @@ class Phase3FinalLookup:
         else:
             raise ValueError("Must provide either config_path or config_dict")
         
-        # Get paths from config
-        self.base_path = self.config.get('paths', {}).get('base', '')
-        self.data_reference_path = self.config.get('paths', {}).get('data_reference', '')
-        self.output_path = self.config.get('paths', {}).get('output', '')
+        # Get paths from config using standardized names
+        self.replay_input_path = self.config.get('paths', {}).get('replay_input', '')
+        self.data_reference_path = self.config.get('paths', {}).get('unavista_files', 
+                                   self.config.get('paths', {}).get('incident_files', ''))
+        self.output_path = self.config.get('paths', {}).get('replay_output', '')
         self.log_output_path = self.config.get('paths', {}).get('log_output', self.output_path)
         
         # File patterns from config
@@ -677,9 +678,9 @@ class Phase3FinalLookup:
         """Find required files using glob patterns"""
         self.logger.info("Discovering input files...")
         
-        # Helper function to find file in reference folder
-        def find_file(pattern, description):
-            matches = glob.glob(os.path.join(self.data_reference_path, pattern))
+        # Helper function to find file with custom search path
+        def find_file(search_path, pattern, description):
+            matches = glob.glob(os.path.join(search_path, pattern))
             if matches:
                 # Use the most recent file if multiple matches
                 file_path = max(matches, key=os.path.getmtime)
@@ -689,12 +690,12 @@ class Phase3FinalLookup:
             self.logger.error(f"Could not find {description} matching pattern: {pattern}")
             return None
         
-        # Find files
-        self.unavista_path = find_file(self.unavista_pattern, "UnaVista file")
-        self.replay_ids_path = find_file(self.replay_ids_pattern, "Replay IDs file")
-        self.replay_names_path = find_file(self.replay_names_pattern, "Replay Names file")
+        # Find files in their respective directories
+        self.unavista_path = find_file(self.data_reference_path, self.unavista_pattern, "UnaVista file")
+        self.replay_ids_path = find_file(self.replay_input_path, self.replay_ids_pattern, "Replay IDs file")
+        self.replay_names_path = find_file(self.replay_input_path, self.replay_names_pattern, "Replay Names file")
         
-        # Incident matrix
+        # Incident matrix (in reference data)
         self.incident_matrix_path = os.path.join(self.data_reference_path, self.incident_matrix_filename)
         if os.path.exists(self.incident_matrix_path):
             self.logger.info(f"Found incident matrix: {os.path.basename(self.incident_matrix_path)}")
@@ -1161,8 +1162,8 @@ class Phase3FinalLookup:
         
         try:
             self.logger.log_header("PHASE 3 FINAL LOOKUP v2.0")
-            self.logger.info(f"Base path: {self.base_path}")
-            self.logger.info(f"Data reference path: {self.data_reference_path}")
+            self.logger.info(f"Replay input path: {self.replay_input_path}")
+            self.logger.info(f"Reference files path: {self.data_reference_path}")
             self.logger.info(f"Output path: {self.output_path}")
             
             # Discover input files
