@@ -235,6 +235,15 @@ def main():
     elif args.use_env:
         # Load from environment variables
         config_dict = ConfigManager.load_from_env()
+    else:
+        # Default configuration path (use local config)
+        default_config = Path(__file__).parent.parent.parent / "config" / "local" / "utils" / "xlsx_converter.yaml"
+        if default_config.exists():
+            print(f"Loading default configuration from {default_config}...")
+            config_dict = ConfigManager.load_from_yaml(str(default_config))
+        else:
+            # Continue without config - will require command line args
+            config_dict = {}
     
     # Override with command line arguments if provided
     if not config_dict.get('paths'):

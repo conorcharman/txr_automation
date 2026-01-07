@@ -517,8 +517,8 @@ def main():
             print(f"Loading configuration from {args.config}...")
             config = ConfigManager.load_from_yaml(args.config)
         else:
-            # Default configuration path
-            default_config = Path(__file__).parent.parent.parent / "config" / "phase2.yaml"
+            # Default configuration path (use local config)
+            default_config = Path(__file__).parent.parent.parent / "config" / "local" / "replay" / "phase2.yaml"
             if default_config.exists():
                 print(f"Loading default configuration from {default_config}...")
                 config = ConfigManager.load_from_yaml(str(default_config))
