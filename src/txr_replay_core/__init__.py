@@ -25,6 +25,15 @@ from .data_structures import (
 from .utils import DateParser, CharacterReplacement, FileDiscovery, safe_open_csv
 from .config import ConfigManager, PathConfig, ProcessorConfig
 from .logger import StructuredLogger, create_logger
+from .incident_codes import (
+    INCIDENT_CODE_MATRIX,
+    get_client_types,
+    is_buyer_incident,
+    is_seller_incident,
+    get_all_incident_codes,
+    get_buyer_incident_codes,
+    get_seller_incident_codes,
+)
 
 __all__ = [
     "ReplayRecord",
@@ -40,4 +49,11 @@ __all__ = [
     "ProcessorConfig",
     "StructuredLogger",
     "create_logger",
+    "INCIDENT_CODE_MATRIX",
+    "get_client_types",
+    "is_buyer_incident",
+    "is_seller_incident",
+    "get_all_incident_codes",
+    "get_buyer_incident_codes",
+    "get_seller_incident_codes",
 ]
