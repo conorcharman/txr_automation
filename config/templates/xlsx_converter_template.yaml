@@ -1,0 +1,35 @@
+# Example YAML configuration for XLSX to CSV Converter
+# Copy this file and modify paths as needed
+
+paths:
+  # Directory containing XLSX files to convert
+  input_dir: /Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii/xlsx
+  
+  # Directory where CSV files will be saved
+  output_dir: /Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii/csv
+  
+  # Directory for log files (defaults to output_dir if not specified)
+  log_output: /Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs
+
+processing:
+  # Encoding for CSV output files
+  # utf-8-sig adds BOM for proper Excel UTF-8 recognition
+  encoding: utf-8-sig
+  
+  # Whether to split multi-line cells into separate rows
+  split_multiline: true
+
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: INFO
+  
+  # Enable structured logging
+  structured: true
+
+# Example usage:
+# python -m src.utils.xlsx_csv_converter --config config/xlsx_converter.yaml
+#
+# Or use environment variables:
+# export TXR_INPUT_DIR=/path/to/xlsx/input
+# export TXR_OUTPUT_DIR=/path/to/csv/output
+# python -m src.utils.xlsx_csv_converter --use-env
