@@ -7,6 +7,9 @@ You're ready to create the Phase 0 branch and start refactoring work.
 ## Commands to Run Now
 
 ```bash
+# 0. Configure git to rebase on pull (prevents merge commits)
+git config --global pull.rebase true
+
 # 1. Make sure you're on main and everything is committed
 git status  # Should show "nothing to commit, working tree clean"
 
@@ -106,6 +109,34 @@ All planning documents now include branching strategy:
 | Push | `git push origin phase0-refactoring` |
 | Pull latest | `git pull origin phase0-refactoring` |
 | See commit history | `git log --oneline` |
+| View graph | `git log --oneline --graph -20` |
+| Clean history | `git rebase -i <commit>` |
+
+## Best Practices
+
+### Keeping Clean History
+
+- ✅ **DO**: Use `pull.rebase true` configuration
+- ✅ **DO**: Pull with `--rebase` flag when needed
+- ✅ **DO**: Use `git log --graph` to visualize history
+- ❌ **DON'T**: Use VS Code Sync button without rebase configured
+- ❌ **DON'T**: Create merge commits for simple updates
+
+### Why Rebase?
+
+When you and remote both have new commits:
+
+**Without rebase** (creates merge commit):
+```
+A -- B -- C -- D (remote)
+     \         \
+      E -------- M (messy merge commit)
+```
+
+**With rebase** (clean linear history):
+```
+A -- B -- C -- D -- E' (your commit rebased on top)
+```
 
 ## Next Steps
 
