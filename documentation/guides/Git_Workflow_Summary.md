@@ -64,7 +64,7 @@ git push origin phase0-refactoring
 
 ## Branch Visualization
 
-```
+```md
 main (stable)
 │
 └─── phase0-refactoring (you work here during Phase 0)
@@ -79,7 +79,7 @@ main (stable)
 
 When Phase 0 is complete:
 
-```
+```md
 main (merge Phase 0 here)
 │
 ├─── phase0-refactoring (completed, can be deleted)
@@ -100,7 +100,7 @@ All planning documents now include branching strategy:
 ## Quick Reference Card
 
 | What I Want to Do | Command |
-|-------------------|---------|
+| ------------------- | --------- |
 | See current branch | `git branch` |
 | Switch to Phase 0 | `git checkout phase0-refactoring` |
 | See what changed | `git status` |
@@ -127,14 +127,16 @@ All planning documents now include branching strategy:
 When you and remote both have new commits:
 
 **Without rebase** (creates merge commit):
-```
+
+```md
 A -- B -- C -- D (remote)
      \         \
       E -------- M (messy merge commit)
 ```
 
 **With rebase** (clean linear history):
-```
+
+```md
 A -- B -- C -- D -- E' (your commit rebased on top)
 ```
 
@@ -147,6 +149,7 @@ A -- B -- C -- D -- E' (your commit rebased on top)
 ## Need Help?
 
 See the full [Git_Branching_Guide.md](Git_Branching_Guide.md) for:
+
 - Troubleshooting common issues
 - How to undo mistakes
 - How to compare branches
