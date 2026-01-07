@@ -3,12 +3,13 @@
 ## Overview
 
 This project uses a feature branch strategy to organize two parallel streams of work:
+
 1. **Phase 0**: Refactoring existing Python replay scripts
 2. **Phases 1-7**: VBA to Python migration
 
 ## Branch Structure
 
-```
+```md
 main (stable, production-ready code)
 ├── phase0-refactoring (all replay script refactoring work)
 └── vba-migration (VBA conversion work - created after Phase 0 completes)
@@ -122,6 +123,7 @@ git push -u origin vba-migration
 Use clear, descriptive commit messages:
 
 **Good**:
+
 - `"Create txr_replay_core package with shared utilities"`
 - `"Refactor phase_2_processor to use ConfigManager"`
 - `"Add CLI interface to phase_3_processor"`
@@ -129,6 +131,7 @@ Use clear, descriptive commit messages:
 - `"Add 35 unit tests for core library (100% pass)"`
 
 **Bad**:
+
 - `"Fixed stuff"`
 - `"Updates"`
 - `"WIP"`
@@ -136,6 +139,7 @@ Use clear, descriptive commit messages:
 ### Commit Frequency
 
 Commit frequently with logical chunks:
+
 - After completing a module
 - After tests pass
 - Before trying something experimental
@@ -253,7 +257,7 @@ git push origin phase0-refactoring
 ## Quick Reference
 
 | Task | Command |
-|------|---------|
+| ------ | --------- |
 | Check current branch | `git branch` |
 | Switch branch | `git checkout branch-name` |
 | Create and switch | `git checkout -b new-branch-name` |

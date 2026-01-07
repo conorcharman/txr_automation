@@ -26,6 +26,7 @@ paths:
 ## Ignored Files
 
 The following patterns are in `.gitignore` to prevent committing local paths:
+
 - `config/environments/local.yaml`
 - `config/local*.yaml`
 
