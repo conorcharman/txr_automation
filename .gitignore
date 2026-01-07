@@ -64,6 +64,11 @@ logs/
 config/environments/local.yaml
 config/local*.yaml
 
+#Configuration
+
+config/phase*.yaml
+config/xlsx_converter*.yaml
+
 # Output files (generated during processing)
 output/
 replay_output/
