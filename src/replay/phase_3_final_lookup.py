@@ -24,6 +24,7 @@ from txr_replay_core.data_structures import ProcessingStats, UnaVistaTransaction
 from txr_replay_core.config import ConfigManager
 from txr_replay_core.logger import create_logger
 from txr_replay_core.utils import DateParser, safe_open_csv
+from txr_replay_core.incident_codes import INCIDENT_CODE_MATRIX, get_client_types
 
 # ============================================================================
 # Data Classes
@@ -352,55 +353,13 @@ class UnaVistaIndex:
 class ReplayRecordIndex:
     """Index of client correction records from Replay files"""
     
-    def __init__(self, incident_matrix_path: str, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger):
         self.logger = logger
         self.records = []  # List of ReplayRecord objects
         self.client_records = defaultdict(list)  # ClientKey -> List[ReplayRecord]
-        self.incident_matrix = {}  # incident_code -> set of 'buyer' and/or 'seller'
-        
-        self.load_incident_matrix(incident_matrix_path)
-    
-    def load_incident_matrix(self, file_path: str):
-        """Load incident code matrix"""
-        try:
-            f, encoding = safe_open_csv(Path(file_path), 'r', newline='')
-            with f:
-                reader = csv.DictReader(f)
-                row_count = 0
-                for row in reader:
-                    # Read buyer incidents
-                    buyer_incident = row.get('buyer_incidents', '').strip()
-                    if buyer_incident:
-                        if buyer_incident not in self.incident_matrix:
-                            self.incident_matrix[buyer_incident] = set()
-                        self.incident_matrix[buyer_incident].add('buyer')
-                    
-                    # Read seller incidents
-                    seller_incident = row.get('seller_incidents', '').strip()
-                    if seller_incident:
-                        if seller_incident not in self.incident_matrix:
-                            self.incident_matrix[seller_incident] = set()
-                        self.incident_matrix[seller_incident].add('seller')
-                    
-                    row_count += 1
-            
-            self.logger.info(f"Loaded {len(self.incident_matrix)} incident code mappings from {row_count} rows")
-            if len(self.incident_matrix) == 0:
-                self.logger.warning("Incident matrix is empty - no client types will be determined")
-        except KeyError as e:
-            self.logger.error(f"Error loading incident matrix - missing column: {e}")
-            # Try to show available columns from first row
-            try:
-                f, encoding = safe_open_csv(Path(file_path), 'r', newline='')
-                with f:
-                    reader = csv.DictReader(f)
-                    first_row = next(reader, None)
-                    if first_row:
-                        self.logger.error(f"Available columns: {list(first_row.keys())}")
-            except:
-                pass
-        except Exception as e:
-            self.logger.error(f"Error loading incident matrix: {e}")
+        # Use incident matrix from core library
+        self.incident_matrix = INCIDENT_CODE_MATRIX
+        self.logger.info(f"Loaded {len(self.incident_matrix)} incident code mappings from core library")
     
     def load_replay_file(self, file_path: str, file_type: str):
         """
@@ -640,13 +599,12 @@ class Phase3FinalLookup:
         self.unavista_pattern = files_config.get('unavista_pattern', 'UnaVista_MiFIR_Manual_Corrections_*.csv')
         self.replay_ids_pattern = files_config.get('replay_ids_pattern', 'Replay_*_Inconsistent_IDs_Summary_FINAL*.csv')
         self.replay_names_pattern = files_config.get('replay_names_pattern', 'Replay_*_Inconsistent_Names_Summary_FINAL*.csv')
-        self.incident_matrix_filename = files_config.get('incident_matrix', 'incident_code_matrix.csv')
+        # Note: incident_matrix no longer loaded from file - in core library
         
         # Actual file paths (will be set by find_files)
         self.unavista_path = None
         self.replay_ids_path = None
         self.replay_names_path = None
-        self.incident_matrix_path = None
         
         # Setup logging using core library
         log_level = self.config.get('processor', {}).get('log_level', 'INFO')
@@ -695,16 +653,10 @@ class Phase3FinalLookup:
         self.replay_ids_path = find_file(self.replay_input_path, self.replay_ids_pattern, "Replay IDs file")
         self.replay_names_path = find_file(self.replay_input_path, self.replay_names_pattern, "Replay Names file")
         
-        # Incident matrix (in reference data)
-        self.incident_matrix_path = os.path.join(self.data_reference_path, self.incident_matrix_filename)
-        if os.path.exists(self.incident_matrix_path):
-            self.logger.info(f"Found incident matrix: {os.path.basename(self.incident_matrix_path)}")
-        else:
-            self.logger.error(f"Could not find incident matrix: {self.incident_matrix_filename}")
-            self.incident_matrix_path = None
+        # Note: Incident matrix no longer loaded from CSV - now in core library
         
         # Verify all files found
-        if not all([self.unavista_path, self.replay_ids_path, self.replay_names_path, self.incident_matrix_path]):
+        if not all([self.unavista_path, self.replay_ids_path, self.replay_names_path]):
             raise FileNotFoundError("Required input files not found. Please check file paths and patterns.")
         
         self.logger.info("All required files discovered successfully")
@@ -714,24 +666,22 @@ class Phase3FinalLookup:
         self.logger.info("Loading indexes...")
         
         # Verify all paths are set (should be guaranteed by find_files)
-        if not all([self.incident_matrix_path, self.replay_ids_path, 
-                   self.replay_names_path, self.unavista_path]):
+        if not all([self.replay_ids_path, self.replay_names_path, self.unavista_path]):
             raise ValueError("File paths not properly initialized. Call find_files() first.")
         
         # Type assertions for type checker (paths verified above)
-        assert self.incident_matrix_path is not None
         assert self.replay_ids_path is not None
         assert self.replay_names_path is not None
         assert self.unavista_path is not None
         
-        # Load incident matrix and replay records
-        self.replay_index = ReplayRecordIndex(self.incident_matrix_path, self.logger)
+        # Load replay records (incident matrix loaded from core library)
+        self.replay_index = ReplayRecordIndex(self.logger)
         
         # Load both replay files
         self.replay_index.load_replay_file(self.replay_ids_path, 'IDs')
         self.replay_index.load_replay_file(self.replay_names_path, 'Names')
         
-        self.stats['total_replay_records'] = len(self.replay_index.records)
+        self.stats.custom_stats['total_replay_records'] = len(self.replay_index.records)
         
         # Load UnaVista file
         self.unavista_index = UnaVistaIndex(self.unavista_path, self.logger)
@@ -984,9 +934,9 @@ class Phase3FinalLookup:
                 
                 # Track buyer/seller stats
                 if client_type == 'buyer':
-                    self.stats['buyer_stats']['tested'] += 1
+                    self.buyer_stats['tested'] += 1
                 else:
-                    self.stats['seller_stats']['tested'] += 1
+                    self.seller_stats['tested'] += 1
                 
                 # Test each field
                 test_results = []
@@ -1007,9 +957,9 @@ class Phase3FinalLookup:
                     
                     # Update field stats
                     if result.passed:
-                        self.stats['field_stats'][field_name]['pass'] += 1
+                        self.field_stats[field_name]['pass'] += 1
                     else:
-                        self.stats['field_stats'][field_name]['fail'] += 1
+                        self.field_stats[field_name]['fail'] += 1
                 
                 # Categorize overall result
                 passed_count = sum(1 for r in test_results if r.passed)
@@ -1018,17 +968,17 @@ class Phase3FinalLookup:
                 if passed_count == total_count:
                     self.stats.increment('full_pass')
                     if client_type == 'buyer':
-                        self.stats['buyer_stats']['pass'] += 1
+                        self.buyer_stats['pass'] += 1
                     else:
-                        self.stats['seller_stats']['pass'] += 1
+                        self.seller_stats['pass'] += 1
                 elif passed_count > 0:
                     self.stats.increment('partial_pass')
                 else:
                     self.stats.increment('full_fail')
                     if client_type == 'buyer':
-                        self.stats['buyer_stats']['fail'] += 1
+                        self.buyer_stats['fail'] += 1
                     else:
-                        self.stats['seller_stats']['fail'] += 1
+                        self.seller_stats['fail'] += 1
                 
                 # Format results
                 results_by_type = {client_type: test_results}
@@ -1114,29 +1064,29 @@ class Phase3FinalLookup:
             f"Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             "",
             "PROCESSING STATISTICS:",
-            f"  Total replay records processed: {self.stats['total_replay_records']}",
-            f"  Skipped duplicates: {self.stats['skipped_duplicates']}",
-            f"  Total UnaVista transactions tested: {self.stats['total_unavista_tested']}",
+            f"  Total replay records processed: {self.stats.custom_stats.get('total_replay_records', 0)}",
+            f"  Skipped duplicates: {self.stats.custom_stats.get('skipped_duplicates', 0)}",
+            f"  Total UnaVista transactions tested: {self.stats.custom_stats.get('total_unavista_tested', 0)}",
             "",
             "TEST RESULTS:",
-            f"  Full pass: {self.stats['full_pass']}",
-            f"  Partial pass: {self.stats['partial_pass']}",
-            f"  Full fail: {self.stats['full_fail']}",
-            f"  Client not found: {self.stats['not_found']}",
-            f"  Inconsistent corrections: {self.stats['inconsistent_corrections']}",
+            f"  Full pass: {self.stats.custom_stats.get('full_pass', 0)}",
+            f"  Partial pass: {self.stats.custom_stats.get('partial_pass', 0)}",
+            f"  Full fail: {self.stats.custom_stats.get('full_fail', 0)}",
+            f"  Client not found: {self.stats.not_found}",
+            f"  Inconsistent corrections: {self.stats.custom_stats.get('inconsistent_corrections', 0)}",
             "",
             "BUYER/SELLER BREAKDOWN:",
-            f"  Buyer transactions tested: {self.stats['buyer_stats']['tested']}",
-            f"    - Pass: {self.stats['buyer_stats']['pass']}",
-            f"    - Fail: {self.stats['buyer_stats']['fail']}",
-            f"  Seller transactions tested: {self.stats['seller_stats']['tested']}",
-            f"    - Pass: {self.stats['seller_stats']['pass']}",
-            f"    - Fail: {self.stats['seller_stats']['fail']}",
+            f"  Buyer transactions tested: {self.buyer_stats['tested']}",
+            f"    - Pass: {self.buyer_stats['pass']}",
+            f"    - Fail: {self.buyer_stats['fail']}",
+            f"  Seller transactions tested: {self.seller_stats['tested']}",
+            f"    - Pass: {self.seller_stats['pass']}",
+            f"    - Fail: {self.seller_stats['fail']}",
             "",
             "FIELD-LEVEL STATISTICS:",
         ]
         
-        for field, stats in sorted(self.stats['field_stats'].items()):
+        for field, stats in sorted(self.field_stats.items()):
             summary_lines.append(f"  {field}:")
             summary_lines.append(f"    - Pass: {stats['pass']}")
             summary_lines.append(f"    - Fail: {stats['fail']}")
@@ -1186,7 +1136,7 @@ class Phase3FinalLookup:
             # Log additional detailed stats
             self.logger.info(f"Buyer stats: {self.buyer_stats}")
             self.logger.info(f"Seller stats: {self.seller_stats}")
-            self.logger.info(f"Date cache entries: {len(DateParser.cache_size())}")
+            self.logger.info(f"Date cache entries: {DateParser.cache_size()}")
             
             self.logger.info("Processing completed successfully")
             return 0

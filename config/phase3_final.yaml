@@ -3,7 +3,7 @@
 
 paths:
   # Input replay files (CSV format)
-  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii/csv"
+  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii"
   
   # Incident code reference files (CSV format)
   incident_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files"
@@ -20,9 +20,9 @@ paths:
 files:
   # File patterns for discovery (using glob)
   unavista_pattern: "UnaVista_MiFIR_Manual_Corrections_*.csv"
-  replay_ids_pattern: "Replay_*_Inconsistent_IDs_Summary_FINAL*.csv"
-  replay_names_pattern: "Replay_*_Inconsistent_Names_Summary_FINAL*.csv"
-  incident_matrix: "incident_code_matrix.csv"
+  replay_ids_pattern: "Replay_*_Inconsistent_IDs_Summary_*.csv"
+  replay_names_pattern: "Replay_*_Inconsistent_Names_Summary_*.csv"
+  # Note: incident_matrix is no longer needed - now in txr_replay_core.incident_codes
 
 processor:
   # Batch size for progress reporting

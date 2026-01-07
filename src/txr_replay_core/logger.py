@@ -82,27 +82,41 @@ class StructuredLogger:
     def debug(self, message: str, **kwargs: Any) -> None:
         """Log debug message with optional structured data"""
         if self.logger:
-            self.logger.debug(message, extra=kwargs)
+            # Extract special logging parameters
+            exc_info = kwargs.pop('exc_info', False)
+            stack_info = kwargs.pop('stack_info', False)
+            self.logger.debug(message, extra=kwargs, exc_info=exc_info, stack_info=stack_info)
     
     def info(self, message: str, **kwargs: Any) -> None:
         """Log info message with optional structured data"""
         if self.logger:
-            self.logger.info(message, extra=kwargs)
+            # Extract special logging parameters
+            exc_info = kwargs.pop('exc_info', False)
+            stack_info = kwargs.pop('stack_info', False)
+            self.logger.info(message, extra=kwargs, exc_info=exc_info, stack_info=stack_info)
     
     def warning(self, message: str, **kwargs: Any) -> None:
         """Log warning message with optional structured data"""
         if self.logger:
-            self.logger.warning(message, extra=kwargs)
+            # Extract special logging parameters
+            exc_info = kwargs.pop('exc_info', False)
+            stack_info = kwargs.pop('stack_info', False)
+            self.logger.warning(message, extra=kwargs, exc_info=exc_info, stack_info=stack_info)
     
     def error(self, message: str, **kwargs: Any) -> None:
         """Log error message with optional structured data"""
         if self.logger:
-            self.logger.error(message, extra=kwargs)
+            # Extract exc_info if present (special logging parameter)
+            exc_info = kwargs.pop('exc_info', False)
+            self.logger.error(message, extra=kwargs, exc_info=exc_info)
     
     def critical(self, message: str, **kwargs: Any) -> None:
         """Log critical message with optional structured data"""
         if self.logger:
-            self.logger.critical(message, extra=kwargs)
+            # Extract special logging parameters
+            exc_info = kwargs.pop('exc_info', False)
+            stack_info = kwargs.pop('stack_info', False)
+            self.logger.critical(message, extra=kwargs, exc_info=exc_info, stack_info=stack_info)
     
     def log_stats(self, stats: ProcessingStats) -> None:
         """
