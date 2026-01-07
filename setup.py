@@ -20,6 +20,14 @@ setup(
     install_requires=[
         "pyyaml>=6.0",
     ],
+    entry_points={
+        "console_scripts": [
+            "replay-phase2=replay.phase_2_processor:main",
+            "replay-phase3=replay.phase_3_processor:main",
+            "replay-phase3-final=replay.phase_3_final_lookup:main",
+            "replay-xlsx-converter=utils.xlsx_csv_converter:main",
+        ],
+    },
     classifiers=[
         "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",

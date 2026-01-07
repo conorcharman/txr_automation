@@ -60,12 +60,25 @@ conda info --envs  # * indicates active environment
 
 ### Running Scripts
 
+The package provides console scripts for easy access:
+
 ```bash
 # Make sure environment is activated first
 conda activate txr_automation
 
-# Run your scripts
-python src/replay/phase_2_processor.py --config config/environments/phase2.yaml
+# Run using console scripts (recommended)
+replay-phase2           # Automatically uses config/local/replay/phase2.yaml
+replay-phase3           # Automatically uses config/local/replay/phase3.yaml
+replay-phase3-final     # Automatically uses config/local/replay/phase3_final.yaml
+replay-xlsx-converter   # Automatically uses config/local/utils/xlsx_converter.yaml
+
+# Override with custom config
+replay-phase2 --config config/custom/phase2.yaml
+replay-phase3 --log-level DEBUG
+
+# Or run as Python modules
+python -m src.replay.phase_2_processor
+python -m src.replay.phase_3_processor
 ```
 
 ### Running Tests

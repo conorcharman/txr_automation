@@ -12,6 +12,42 @@ conda activate txr_automation
 
 If you haven't set up the environment yet, see [Conda_Setup_Guide.md](Conda_Setup_Guide.md).
 
+## Running Processors
+
+### Console Scripts (Recommended)
+
+The package installs console scripts for easy command-line access:
+
+```bash
+# Activate environment first
+conda activate txr_automation
+
+# Run processors using console scripts
+replay-phase2           # Phase 2 processor
+replay-phase3           # Phase 3 processor
+replay-phase3-final     # Phase 3 final lookup
+replay-xlsx-converter   # XLSX to CSV converter
+```
+
+These commands automatically use your local configuration files from `config/local/`.
+
+**Override with custom config:**
+```bash
+replay-phase2 --config config/custom/phase2.yaml
+replay-phase3 --log-level DEBUG
+```
+
+### Alternative: Run as Module
+
+You can also run scripts directly as Python modules:
+
+```bash
+python -m src.replay.phase_2_processor
+python -m src.replay.phase_3_processor
+python -m src.replay.phase_3_final_lookup
+python -m src.utils.xlsx_csv_converter
+```
+
 ## Basic Usage
 
 ### 1. Import the Library
