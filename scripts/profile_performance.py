@@ -295,22 +295,22 @@ def main():
         "phase2": {
             "name": "Phase 2 Processor",
             "script": project_root / "src" / "replay" / "phase_2_processor.py",
-            "config": project_root / "config" / "replay" / "phase2.yaml",
+            "config": project_root / "config" / "local" / "replay" / "phase2.yaml",
         },
         "phase3": {
             "name": "Phase 3 Processor",
             "script": project_root / "src" / "replay" / "phase_3_processor.py",
-            "config": project_root / "config" / "replay" / "phase3.yaml",
+            "config": project_root / "config" / "local" / "replay" / "phase3.yaml",
         },
         "phase3final": {
             "name": "Phase 3 Final Lookup",
             "script": project_root / "src" / "replay" / "phase_3_final_lookup.py",
-            "config": project_root / "config" / "replay" / "phase3_final.yaml",
+            "config": project_root / "config" / "local" / "replay" / "phase3_final.yaml",
         },
         "xlsx": {
             "name": "XLSX Converter",
             "script": project_root / "src" / "utils" / "xlsx_csv_converter.py",
-            "config": project_root / "config" / "utils" / "xlsx_converter.yaml",
+            "config": project_root / "config" / "local" / "utils" / "xlsx_converter.yaml",
         },
     }
     
