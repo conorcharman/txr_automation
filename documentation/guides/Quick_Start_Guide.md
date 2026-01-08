@@ -5,11 +5,48 @@ This guide shows how to use the `txr_replay_core` library in your scripts.
 ## Prerequisites
 
 **Ensure Conda environment is activated:**
+
 ```bash
 conda activate txr_automation
 ```
 
 If you haven't set up the environment yet, see [Conda_Setup_Guide.md](Conda_Setup_Guide.md).
+
+## Running Processors
+
+### Console Scripts (Recommended)
+
+The package installs console scripts for easy command-line access:
+
+```bash
+# Activate environment first
+conda activate txr_automation
+
+# Run processors using console scripts
+replay-phase2           # Phase 2 processor
+replay-phase3           # Phase 3 processor
+replay-phase3-final     # Phase 3 final lookup
+replay-xlsx-converter   # XLSX to CSV converter
+```
+
+These commands automatically use your local configuration files from `config/local/`.
+
+**Override with custom config:**
+```bash
+replay-phase2 --config config/custom/phase2.yaml
+replay-phase3 --log-level DEBUG
+```
+
+### Alternative: Run as Module
+
+You can also run scripts directly as Python modules:
+
+```bash
+python -m src.replay.phase_2_processor
+python -m src.replay.phase_3_processor
+python -m src.replay.phase_3_final_lookup
+python -m src.utils.xlsx_csv_converter
+```
 
 ## Basic Usage
 
@@ -31,7 +68,7 @@ from txr_replay_core.logger import create_logger
 
 ### 2. Set Up Configuration
 
-**Option A: Using YAML File**
+#### YAML File
 
 ```python
 # Load configuration from YAML
@@ -45,7 +82,7 @@ print(path_config.replay_input)  # /path/to/replay/input
 print(proc_config.batch_size)     # 50
 ```
 
-**Option B: Using Environment Variables**
+#### Option B: Using Environment Variables
 
 ```python
 # Load from environment (TXR_* variables)
@@ -56,7 +93,7 @@ path_config = ConfigManager.get_path_config(env_config)
 proc_config = ConfigManager.get_processor_config(env_config)
 ```
 
-**Option C: Hybrid Approach (Recommended)**
+#### Option C: Hybrid Approach (Recommended)
 
 ```python
 # Load both and merge (env overrides YAML)

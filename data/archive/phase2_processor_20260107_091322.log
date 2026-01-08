@@ -1,0 +1,105 @@
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - PHASE 2 PROCESSOR v4.0
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Replay input path: /Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_ii
+2026-01-07 09:13:22 - phase2_processor - INFO - Incident files path: /Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files
+2026-01-07 09:13:22 - phase2_processor - INFO - Output path: /Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_ii
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - INCIDENT FILE INDEXING
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Analyzing replay files for incident codes...
+2026-01-07 09:13:22 - phase2_processor - INFO - Loading and indexing 1 incident files...
+2026-01-07 09:13:22 - phase2_processor - INFO - Successfully indexed 1 incident files
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - PROCESSING 1 REPLAY FILES
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Processing single incident replay file: 1903a~G14~P2_8-19~12_1~KR Final Analysis_Data_1 OF 1_anon_sample.csv
+2026-01-07 09:13:22 - phase2_processor - INFO - Progress: 4/4 (100.0%)
+2026-01-07 09:13:22 - phase2_processor - INFO - Completed 1903a~G14~P2_8-19~12_1~KR Final Analysis_Data_1 OF 1_anon_sample.csv -> 1903a~G14~P2_8-19~12_1~AJB Final Analysis_Data_1 OF 1_anon_sample.csv
+2026-01-07 09:13:22 - phase2_processor - INFO - Total processing time: 0:00:00.002781
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - PROCESSING SUMMARY
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Processing Statistics: {
+  "processed_files": 1,
+  "processed_records": 4,
+  "successful_matches": 4,
+  "not_found": 0,
+  "no_corrections": 0,
+  "inconsistent_corrections": 0,
+  "errors": 0,
+  "single_incident_files": 1
+}
+2026-01-07 09:13:22 - phase2_processor - INFO - Incident files indexed: 1
+2026-01-07 09:13:22 - phase2_processor - INFO - Total transaction references indexed: 4
+2026-01-07 09:13:22 - phase2_processor - INFO - Phase 2 Processor v4.0 completed successfully
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - PHASE 2 PROCESSOR v4.0
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Replay input path: /Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_ii
+2026-01-07 09:13:22 - phase2_processor - INFO - Incident files path: /Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files
+2026-01-07 09:13:22 - phase2_processor - INFO - Output path: /Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_ii
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - INCIDENT FILE INDEXING
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Analyzing replay files for incident codes...
+2026-01-07 09:13:22 - phase2_processor - INFO - Loading and indexing 1 incident files...
+2026-01-07 09:13:22 - phase2_processor - INFO - Successfully indexed 1 incident files
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - PROCESSING 1 REPLAY FILES
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Processing single incident replay file: 1903a~G14~P2_8-19~12_1~KR Final Analysis_Data_1 OF 1_anon_sample.csv
+2026-01-07 09:13:22 - phase2_processor - INFO - Progress: 4/4 (100.0%)
+2026-01-07 09:13:22 - phase2_processor - INFO - Completed 1903a~G14~P2_8-19~12_1~KR Final Analysis_Data_1 OF 1_anon_sample.csv -> 1903a~G14~P2_8-19~12_1~AJB Final Analysis_Data_1 OF 1_anon_sample.csv
+2026-01-07 09:13:22 - phase2_processor - INFO - Total processing time: 0:00:00.002400
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - PROCESSING SUMMARY
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Processing Statistics: {
+  "processed_files": 1,
+  "processed_records": 4,
+  "successful_matches": 4,
+  "not_found": 0,
+  "no_corrections": 0,
+  "inconsistent_corrections": 0,
+  "errors": 0,
+  "single_incident_files": 1
+}
+2026-01-07 09:13:22 - phase2_processor - INFO - Incident files indexed: 1
+2026-01-07 09:13:22 - phase2_processor - INFO - Total transaction references indexed: 4
+2026-01-07 09:13:22 - phase2_processor - INFO - Phase 2 Processor v4.0 completed successfully
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - PHASE 2 PROCESSOR v4.0
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Replay input path: /Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_ii
+2026-01-07 09:13:22 - phase2_processor - INFO - Incident files path: /Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files
+2026-01-07 09:13:22 - phase2_processor - INFO - Output path: /Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_ii
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - INCIDENT FILE INDEXING
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Analyzing replay files for incident codes...
+2026-01-07 09:13:22 - phase2_processor - INFO - Loading and indexing 1 incident files...
+2026-01-07 09:13:22 - phase2_processor - INFO - Successfully indexed 1 incident files
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - PROCESSING 1 REPLAY FILES
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Processing single incident replay file: 1903a~G14~P2_8-19~12_1~KR Final Analysis_Data_1 OF 1_anon_sample.csv
+2026-01-07 09:13:22 - phase2_processor - INFO - Progress: 4/4 (100.0%)
+2026-01-07 09:13:22 - phase2_processor - INFO - Completed 1903a~G14~P2_8-19~12_1~KR Final Analysis_Data_1 OF 1_anon_sample.csv -> 1903a~G14~P2_8-19~12_1~AJB Final Analysis_Data_1 OF 1_anon_sample.csv
+2026-01-07 09:13:22 - phase2_processor - INFO - Total processing time: 0:00:00.002977
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - PROCESSING SUMMARY
+2026-01-07 09:13:22 - phase2_processor - INFO - ================================================================================
+2026-01-07 09:13:22 - phase2_processor - INFO - Processing Statistics: {
+  "processed_files": 1,
+  "processed_records": 4,
+  "successful_matches": 4,
+  "not_found": 0,
+  "no_corrections": 0,
+  "inconsistent_corrections": 0,
+  "errors": 0,
+  "single_incident_files": 1
+}
+2026-01-07 09:13:22 - phase2_processor - INFO - Incident files indexed: 1
+2026-01-07 09:13:22 - phase2_processor - INFO - Total transaction references indexed: 4
+2026-01-07 09:13:22 - phase2_processor - INFO - Phase 2 Processor v4.0 completed successfully

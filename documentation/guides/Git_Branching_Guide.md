@@ -3,18 +3,30 @@
 ## Overview
 
 This project uses a feature branch strategy to organize two parallel streams of work:
+
 1. **Phase 0**: Refactoring existing Python replay scripts
 2. **Phases 1-7**: VBA to Python migration
 
 ## Branch Structure
 
-```
+```md
 main (stable, production-ready code)
 ├── phase0-refactoring (all replay script refactoring work)
 └── vba-migration (VBA conversion work - created after Phase 0 completes)
 ```
 
 ## Setup Commands
+
+### Initial Configuration (Do This Once)
+
+```bash
+# Configure git to rebase instead of merge when pulling
+# This prevents unnecessary merge commits and keeps history clean
+git config --global pull.rebase true
+
+# Or configure just for this repository:
+git config pull.rebase true
+```
 
 ### Creating Phase 0 Branch (Do This Now)
 
@@ -111,6 +123,7 @@ git push -u origin vba-migration
 Use clear, descriptive commit messages:
 
 **Good**:
+
 - `"Create txr_replay_core package with shared utilities"`
 - `"Refactor phase_2_processor to use ConfigManager"`
 - `"Add CLI interface to phase_3_processor"`
@@ -118,6 +131,7 @@ Use clear, descriptive commit messages:
 - `"Add 35 unit tests for core library (100% pass)"`
 
 **Bad**:
+
 - `"Fixed stuff"`
 - `"Updates"`
 - `"WIP"`
@@ -125,6 +139,7 @@ Use clear, descriptive commit messages:
 ### Commit Frequency
 
 Commit frequently with logical chunks:
+
 - After completing a module
 - After tests pass
 - Before trying something experimental
@@ -165,6 +180,29 @@ git push origin phase0-refactoring
 ```
 
 ## Troubleshooting
+
+### If Your History Has Unnecessary Merge Commits
+
+Merge commits from improper push/pull/sync can clutter your history. Here's how to clean them up:
+
+```bash
+# 1. Create a backup branch first
+git branch phase0-refactoring-backup
+
+# 2. Find the commit before the messy merges started
+git log --oneline --graph -20
+
+# 3. Interactive rebase from that commit (e.g., abc1234)
+git rebase -i abc1234
+
+# 4. In the editor, keep 'pick' for all real commits, 
+#    the merge commits will be automatically removed
+
+# 5. Force push the cleaned history
+git push --force-with-lease origin phase0-refactoring
+```
+
+**Prevention**: The `pull.rebase true` configuration prevents these merge commits from occurring in the first place.
 
 ### If You Forgot to Create a Branch
 
@@ -219,7 +257,7 @@ git push origin phase0-refactoring
 ## Quick Reference
 
 | Task | Command |
-|------|---------|
+| ------ | --------- |
 | Check current branch | `git branch` |
 | Switch branch | `git checkout branch-name` |
 | Create and switch | `git checkout -b new-branch-name` |
