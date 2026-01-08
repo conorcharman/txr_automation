@@ -9,6 +9,7 @@ import os
 import yaml
 from dataclasses import dataclass
 from typing import Dict, Any, Optional
+from functools import lru_cache
 
 
 @dataclass
@@ -64,13 +65,17 @@ class ConfigManager:
     3. Default values
     """
     
+    # Cache for loaded YAML configs to avoid re-parsing
+    _config_cache: Dict[str, Dict[str, Any]] = {}
+    
     @classmethod
-    def load_from_yaml(cls, config_path: str) -> Dict[str, Any]:
+    def load_from_yaml(cls, config_path: str, use_cache: bool = True) -> Dict[str, Any]:
         """
-        Load configuration from YAML file.
+        Load configuration from YAML file with optional caching.
         
         Args:
             config_path: Path to YAML configuration file
+            use_cache: If True, cache the parsed config for subsequent calls (default: True)
             
         Returns:
             Configuration dictionary
@@ -82,10 +87,29 @@ class ConfigManager:
         if not os.path.exists(config_path):
             raise FileNotFoundError(f"Configuration file not found: {config_path}")
         
+        # Get absolute path for consistent cache keys
+        abs_path = os.path.abspath(config_path)
+        
+        # Check cache first
+        if use_cache and abs_path in cls._config_cache:
+            return cls._config_cache[abs_path]
+        
+        # Load from file
         with open(config_path, 'r') as f:
             config = yaml.safe_load(f)
         
-        return config if config else {}
+        result = config if config else {}
+        
+        # Cache the result
+        if use_cache:
+            cls._config_cache[abs_path] = result
+        
+        return result
+    
+    @classmethod
+    def clear_cache(cls):
+        """Clear the configuration cache. Useful for testing or when configs change."""
+        cls._config_cache.clear()
     
     @classmethod
     def load_from_env(cls, prefix: str = "TXR_") -> Dict[str, Any]:

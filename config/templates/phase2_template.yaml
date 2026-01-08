@@ -2,27 +2,35 @@
 # Copy this file and modify paths as needed
 
 paths:
-  # Input directory containing replay CSV files
-  replay_input: /path/to/replay/input
+  # Input replay files (CSV format)
+  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_ii"
   
-  # Directory containing incident files
-  incident_files: /path/to/incident/files
+  # Incident code reference files (CSV format)
+  incident_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files"
   
   # Output directory for processed replay files
-  replay_output: /path/to/replay/output
+  replay_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_ii"
   
-  # Directory for log files
-  log_output: /path/to/logs
+  # Log output directory
+  log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
 
-processing:
-  # Number of records to process per batch (for progress reporting)
+files:
+  # Replay file patterns (glob syntax supported)
+  replay_patterns:
+    - "*.csv"
+  
+  # Incident file pattern
+  incident_pattern: "FY25 Q3 - *.csv"
+
+processor:
+  # Batch size for progress reporting
   batch_size: 50
   
-  # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  log_level: INFO
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  log_level: "INFO"
   
-  # Enable/disable progress reporting
-  enable_progress_reporting: true
-  
-  # File encoding
-  encoding: utf-8
+  # Output filename pattern (e.g., replace KR with AJB)
+  replace_pattern:
+    from: "KR"
+    to: "AJB"
+

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """
-Phase 3 Final Lookup Script
-Validates client corrections in Replay files against UnaVista transaction data.
+Phase 3 Final Lookup Script v2.0
+Refactored version using shared txr_replay_core library.
 
 Author: GitHub Copilot
-Date: November 13, 2025
-Version: 1.0
+Date: December 23, 2025
+Version: 2.0 - Refactored to use txr_replay_core library
 """
 
 import csv
@@ -16,6 +16,15 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any, Set
 from dataclasses import dataclass, field
 from collections import defaultdict
+import argparse
+from pathlib import Path
+
+# Import from txr_replay_core library
+from txr_replay_core.data_structures import ProcessingStats, UnaVistaTransaction
+from txr_replay_core.config import ConfigManager
+from txr_replay_core.logger import create_logger
+from txr_replay_core.utils import DateParser, safe_open_csv
+from txr_replay_core.incident_codes import INCIDENT_CODE_MATRIX, get_client_types
 
 # ============================================================================
 # Data Classes
@@ -62,69 +71,12 @@ class TestResult:
     passed: bool
     source: str  # 'IDs' or 'Names'
 
-@dataclass
-class UnaVistaTransaction:
-    """Represents a UnaVista transaction record"""
-    transaction_ref: str
-    row_data: List[str]
-    row_index: int
 
 # ============================================================================
 # Date Parser (from phase_3_processor_v4_2.py)
 # ============================================================================
 
-class DateParser:
-    """Handles various date format parsing with caching"""
-    
-    _date_cache = {}  # Cache parsed dates
-    
-    @classmethod
-    def parse_date(cls, date_str: str) -> Optional[str]:
-        """Parse date with caching for performance"""
-        if not date_str or date_str.strip() == "":
-            return None
-            
-        date_str = date_str.strip()
-        
-        # Check cache first
-        if date_str in cls._date_cache:
-            return cls._date_cache[date_str]
-        
-        # Strip time portion if present (e.g., "08/09/1984 00:00:00" -> "08/09/1984")
-        # Look for common time patterns and remove them
-        if ' ' in date_str:
-            parts = date_str.split(' ', 1)
-            # Check if second part looks like time (contains : or is all digits)
-            time_part = parts[1].strip()
-            if ':' in time_part or time_part.replace(':', '').isdigit():
-                date_str = parts[0]  # Use only the date portion
-        
-        # Common date formats to try
-        date_formats = [
-            '%Y-%m-%d',  # YYYY-MM-DD
-            '%d/%m/%Y',  # DD/MM/YYYY
-            '%m/%d/%Y',  # MM/DD/YYYY
-            '%d-%m-%Y',  # DD-MM-YYYY
-            '%m-%d-%Y',  # MM-DD-YYYY
-            '%Y/%m/%d',  # YYYY/MM/DD
-        ]
-        
-        for fmt in date_formats:
-            try:
-                parsed_date = datetime.strptime(date_str, fmt)
-                result = parsed_date.strftime('%Y-%m-%d')
-                cls._date_cache[date_str] = result
-                return result
-            except ValueError:
-                continue
-        
-        # Cache miss result too
-        cls._date_cache[date_str] = None
-        return None
 
-# ============================================================================
-# Field Mapping
-# ============================================================================
 
 class FieldMapper:
     """Maps correction field names to UnaVista column indices"""
@@ -243,7 +195,8 @@ class UnaVistaIndex:
     def load_and_index(self):
         """Load UnaVista file and build all indexes"""
         try:
-            with open(self.file_path, 'r', encoding='utf-8', newline='') as f:
+            f, encoding = safe_open_csv(self.file_path, 'r', newline='')
+            with f:
                 reader = csv.reader(f)
                 rows = list(reader)
             
@@ -400,53 +353,13 @@ class UnaVistaIndex:
 class ReplayRecordIndex:
     """Index of client correction records from Replay files"""
     
-    def __init__(self, incident_matrix_path: str, logger: logging.Logger):
+    def __init__(self, logger: logging.Logger):
         self.logger = logger
         self.records = []  # List of ReplayRecord objects
         self.client_records = defaultdict(list)  # ClientKey -> List[ReplayRecord]
-        self.incident_matrix = {}  # incident_code -> set of 'buyer' and/or 'seller'
-        
-        self.load_incident_matrix(incident_matrix_path)
-    
-    def load_incident_matrix(self, file_path: str):
-        """Load incident code matrix"""
-        try:
-            with open(file_path, 'r', encoding='utf-8-sig', newline='') as f:
-                reader = csv.DictReader(f)
-                row_count = 0
-                for row in reader:
-                    # Read buyer incidents
-                    buyer_incident = row.get('buyer_incidents', '').strip()
-                    if buyer_incident:
-                        if buyer_incident not in self.incident_matrix:
-                            self.incident_matrix[buyer_incident] = set()
-                        self.incident_matrix[buyer_incident].add('buyer')
-                    
-                    # Read seller incidents
-                    seller_incident = row.get('seller_incidents', '').strip()
-                    if seller_incident:
-                        if seller_incident not in self.incident_matrix:
-                            self.incident_matrix[seller_incident] = set()
-                        self.incident_matrix[seller_incident].add('seller')
-                    
-                    row_count += 1
-            
-            self.logger.info(f"Loaded {len(self.incident_matrix)} incident code mappings from {row_count} rows")
-            if len(self.incident_matrix) == 0:
-                self.logger.warning("Incident matrix is empty - no client types will be determined")
-        except KeyError as e:
-            self.logger.error(f"Error loading incident matrix - missing column: {e}")
-            # Try to show available columns from first row
-            try:
-                with open(file_path, 'r', encoding='utf-8-sig', newline='') as f:
-                    reader = csv.DictReader(f)
-                    first_row = next(reader, None)
-                    if first_row:
-                        self.logger.error(f"Available columns: {list(first_row.keys())}")
-            except:
-                pass
-        except Exception as e:
-            self.logger.error(f"Error loading incident matrix: {e}")
+        # Use incident matrix from core library
+        self.incident_matrix = INCIDENT_CODE_MATRIX
+        self.logger.info(f"Loaded {len(self.incident_matrix)} incident code mappings from core library")
     
     def load_replay_file(self, file_path: str, file_type: str):
         """
@@ -457,7 +370,8 @@ class ReplayRecordIndex:
             file_type: 'IDs' or 'Names'
         """
         try:
-            with open(file_path, 'r', encoding='utf-8', newline='') as f:
+            f, encoding = safe_open_csv(Path(file_path), 'r', newline='')
+            with f:
                 reader = csv.reader(f)
                 rows = list(reader)
             
@@ -655,76 +569,76 @@ class ReplayRecordIndex:
 # ============================================================================
 
 class Phase3FinalLookup:
-    """Main processor for Phase 3 Final Lookup"""
+    """Main processor for Phase 3 Final Lookup with configuration management"""
     
-    def __init__(self):
-        # File paths
-        self.base_path = r"C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii_final_lookup\FY25\Q3"
-        self.data_reference_path = os.path.join(self.base_path, "reference", "csv")
-        self.output_path = os.path.join(self.base_path, "output")
+    def __init__(self, config_path: Optional[str] = None, config_dict: Optional[Dict] = None):
+        """
+        Initialize Phase 3 Final Lookup
         
-        # File patterns (will be discovered using glob)
-        self.unavista_pattern = "UnaVista_MiFIR_Manual_Corrections_*.csv"
-        self.replay_ids_pattern = "Replay_*_Inconsistent_IDs_Summary_FINAL*.csv"
-        self.replay_names_pattern = "Replay_*_Inconsistent_Names_Summary_FINAL*.csv"
-        self.incident_matrix_filename = "incident_code_matrix.csv"
+        Args:
+            config_path: Path to YAML configuration file
+            config_dict: Configuration dictionary (overrides config_path)
+        """
+        # Load configuration
+        if config_dict:
+            self.config = config_dict
+        elif config_path:
+            self.config = ConfigManager.load_from_yaml(config_path)
+        else:
+            raise ValueError("Must provide either config_path or config_dict")
+        
+        # Get paths from config using standardized names
+        self.replay_input_path = self.config.get('paths', {}).get('replay_input', '')
+        self.data_reference_path = self.config.get('paths', {}).get('unavista_files', 
+                                   self.config.get('paths', {}).get('incident_files', ''))
+        self.output_path = self.config.get('paths', {}).get('replay_output', '')
+        self.log_output_path = self.config.get('paths', {}).get('log_output', self.output_path)
+        
+        # File patterns from config
+        files_config = self.config.get('files', {})
+        self.unavista_pattern = files_config.get('unavista_pattern', 'UnaVista_MiFIR_Manual_Corrections_*.csv')
+        self.replay_ids_pattern = files_config.get('replay_ids_pattern', 'Replay_*_Inconsistent_IDs_Summary_FINAL*.csv')
+        self.replay_names_pattern = files_config.get('replay_names_pattern', 'Replay_*_Inconsistent_Names_Summary_FINAL*.csv')
+        # Note: incident_matrix no longer loaded from file - in core library
         
         # Actual file paths (will be set by find_files)
         self.unavista_path = None
         self.replay_ids_path = None
         self.replay_names_path = None
-        self.incident_matrix_path = None
         
-        self.setup_logging()
+        # Setup logging using core library
+        log_level = self.config.get('processor', {}).get('log_level', 'INFO')
+        self.logger = create_logger(
+            name="phase3_final_lookup",
+            log_dir=self.log_output_path,
+            log_level=log_level
+        )
         
-        # Statistics
-        self.stats = {
-            'total_replay_records': 0,
-            'skipped_duplicates': 0,
-            'total_unavista_tested': 0,
-            'full_pass': 0,
-            'partial_pass': 0,
-            'full_fail': 0,
-            'not_found': 0,
-            'inconsistent_corrections': 0,
-            'field_stats': defaultdict(lambda: {'pass': 0, 'fail': 0}),
-            'buyer_stats': {'tested': 0, 'pass': 0, 'fail': 0},
-            'seller_stats': {'tested': 0, 'pass': 0, 'fail': 0},
-        }
+        # Statistics using ProcessingStats from core library
+        self.stats = ProcessingStats()
+        # Add custom stats
+        self.stats.increment('skipped_duplicates', 0)
+        self.stats.increment('full_pass', 0)
+        self.stats.increment('partial_pass', 0)
+        self.stats.increment('full_fail', 0)
+        self.stats.increment('inconsistent_corrections', 0)
+        
+        # Additional detailed stats (will use dict for complex nested stats)
+        self.field_stats = defaultdict(lambda: {'pass': 0, 'fail': 0})
+        self.buyer_stats = {'tested': 0, 'pass': 0, 'fail': 0}
+        self.seller_stats = {'tested': 0, 'pass': 0, 'fail': 0}
         
         # Indexes
         self.replay_index = None
         self.unavista_index = None
     
-    def setup_logging(self):
-        """Setup logging configuration"""
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        log_filename = f"phase_3_final_lookup_log_{timestamp}.txt"
-        log_filepath = os.path.join(self.output_path, log_filename)
-        
-        os.makedirs(self.output_path, exist_ok=True)
-        
-        logging.basicConfig(
-            level=logging.INFO,
-            format='%(asctime)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler(log_filepath, encoding='utf-8'),
-                logging.StreamHandler()
-            ]
-        )
-        self.logger = logging.getLogger(__name__)
-        self.log_filepath = log_filepath
-        self.logger.info("=" * 80)
-        self.logger.info("Phase 3 Final Lookup Script - Started")
-        self.logger.info("=" * 80)
-    
     def find_files(self):
         """Find required files using glob patterns"""
         self.logger.info("Discovering input files...")
         
-        # Helper function to find file in reference folder
-        def find_file(pattern, description):
-            matches = glob.glob(os.path.join(self.data_reference_path, pattern))
+        # Helper function to find file with custom search path
+        def find_file(search_path, pattern, description):
+            matches = glob.glob(os.path.join(search_path, pattern))
             if matches:
                 # Use the most recent file if multiple matches
                 file_path = max(matches, key=os.path.getmtime)
@@ -734,21 +648,15 @@ class Phase3FinalLookup:
             self.logger.error(f"Could not find {description} matching pattern: {pattern}")
             return None
         
-        # Find files
-        self.unavista_path = find_file(self.unavista_pattern, "UnaVista file")
-        self.replay_ids_path = find_file(self.replay_ids_pattern, "Replay IDs file")
-        self.replay_names_path = find_file(self.replay_names_pattern, "Replay Names file")
+        # Find files in their respective directories
+        self.unavista_path = find_file(self.data_reference_path, self.unavista_pattern, "UnaVista file")
+        self.replay_ids_path = find_file(self.replay_input_path, self.replay_ids_pattern, "Replay IDs file")
+        self.replay_names_path = find_file(self.replay_input_path, self.replay_names_pattern, "Replay Names file")
         
-        # Incident matrix
-        self.incident_matrix_path = os.path.join(self.data_reference_path, self.incident_matrix_filename)
-        if os.path.exists(self.incident_matrix_path):
-            self.logger.info(f"Found incident matrix: {os.path.basename(self.incident_matrix_path)}")
-        else:
-            self.logger.error(f"Could not find incident matrix: {self.incident_matrix_filename}")
-            self.incident_matrix_path = None
+        # Note: Incident matrix no longer loaded from CSV - now in core library
         
         # Verify all files found
-        if not all([self.unavista_path, self.replay_ids_path, self.replay_names_path, self.incident_matrix_path]):
+        if not all([self.unavista_path, self.replay_ids_path, self.replay_names_path]):
             raise FileNotFoundError("Required input files not found. Please check file paths and patterns.")
         
         self.logger.info("All required files discovered successfully")
@@ -758,24 +666,22 @@ class Phase3FinalLookup:
         self.logger.info("Loading indexes...")
         
         # Verify all paths are set (should be guaranteed by find_files)
-        if not all([self.incident_matrix_path, self.replay_ids_path, 
-                   self.replay_names_path, self.unavista_path]):
+        if not all([self.replay_ids_path, self.replay_names_path, self.unavista_path]):
             raise ValueError("File paths not properly initialized. Call find_files() first.")
         
         # Type assertions for type checker (paths verified above)
-        assert self.incident_matrix_path is not None
         assert self.replay_ids_path is not None
         assert self.replay_names_path is not None
         assert self.unavista_path is not None
         
-        # Load incident matrix and replay records
-        self.replay_index = ReplayRecordIndex(self.incident_matrix_path, self.logger)
+        # Load replay records (incident matrix loaded from core library)
+        self.replay_index = ReplayRecordIndex(self.logger)
         
         # Load both replay files
         self.replay_index.load_replay_file(self.replay_ids_path, 'IDs')
         self.replay_index.load_replay_file(self.replay_names_path, 'Names')
         
-        self.stats['total_replay_records'] = len(self.replay_index.records)
+        self.stats.custom_stats['total_replay_records'] = len(self.replay_index.records)
         
         # Load UnaVista file
         self.unavista_index = UnaVistaIndex(self.unavista_path, self.logger)
@@ -965,7 +871,7 @@ class Phase3FinalLookup:
         merged_corrections, inconsistencies = self.merge_duplicate_records(records)
         
         if inconsistencies:
-            self.stats['inconsistent_corrections'] += 1
+            self.stats.increment('inconsistent_corrections')
             # Find transactions to mark with inconsistency message
             all_incident_codes = []
             for record in records:
@@ -1014,7 +920,7 @@ class Phase3FinalLookup:
         matches_by_type = self.find_matching_transactions(records[0], client_types)
         
         if not matches_by_type:
-            self.stats['not_found'] += 1
+            self.stats.increment('not_found')
             # Return "No match" for this client - but we need transaction indices
             # We'll handle this differently - store client info for later
             return {}
@@ -1024,13 +930,13 @@ class Phase3FinalLookup:
         
         for client_type, transactions in matches_by_type.items():
             for transaction in transactions:
-                self.stats['total_unavista_tested'] += 1
+                self.stats.increment('total_unavista_tested')
                 
                 # Track buyer/seller stats
                 if client_type == 'buyer':
-                    self.stats['buyer_stats']['tested'] += 1
+                    self.buyer_stats['tested'] += 1
                 else:
-                    self.stats['seller_stats']['tested'] += 1
+                    self.seller_stats['tested'] += 1
                 
                 # Test each field
                 test_results = []
@@ -1051,28 +957,28 @@ class Phase3FinalLookup:
                     
                     # Update field stats
                     if result.passed:
-                        self.stats['field_stats'][field_name]['pass'] += 1
+                        self.field_stats[field_name]['pass'] += 1
                     else:
-                        self.stats['field_stats'][field_name]['fail'] += 1
+                        self.field_stats[field_name]['fail'] += 1
                 
                 # Categorize overall result
                 passed_count = sum(1 for r in test_results if r.passed)
                 total_count = len(test_results)
                 
                 if passed_count == total_count:
-                    self.stats['full_pass'] += 1
+                    self.stats.increment('full_pass')
                     if client_type == 'buyer':
-                        self.stats['buyer_stats']['pass'] += 1
+                        self.buyer_stats['pass'] += 1
                     else:
-                        self.stats['seller_stats']['pass'] += 1
+                        self.seller_stats['pass'] += 1
                 elif passed_count > 0:
-                    self.stats['partial_pass'] += 1
+                    self.stats.increment('partial_pass')
                 else:
-                    self.stats['full_fail'] += 1
+                    self.stats.increment('full_fail')
                     if client_type == 'buyer':
-                        self.stats['buyer_stats']['fail'] += 1
+                        self.buyer_stats['fail'] += 1
                     else:
-                        self.stats['seller_stats']['fail'] += 1
+                        self.seller_stats['fail'] += 1
                 
                 # Format results
                 results_by_type = {client_type: test_results}
@@ -1099,7 +1005,7 @@ class Phase3FinalLookup:
         
         for client_key, records in self.replay_index.client_records.items():
             if client_key in processed_clients:
-                self.stats['skipped_duplicates'] += 1
+                self.stats.increment('skipped_duplicates')
                 continue
             
             processed_clients.add(client_key)
@@ -1158,29 +1064,29 @@ class Phase3FinalLookup:
             f"Completed: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             "",
             "PROCESSING STATISTICS:",
-            f"  Total replay records processed: {self.stats['total_replay_records']}",
-            f"  Skipped duplicates: {self.stats['skipped_duplicates']}",
-            f"  Total UnaVista transactions tested: {self.stats['total_unavista_tested']}",
+            f"  Total replay records processed: {self.stats.custom_stats.get('total_replay_records', 0)}",
+            f"  Skipped duplicates: {self.stats.custom_stats.get('skipped_duplicates', 0)}",
+            f"  Total UnaVista transactions tested: {self.stats.custom_stats.get('total_unavista_tested', 0)}",
             "",
             "TEST RESULTS:",
-            f"  Full pass: {self.stats['full_pass']}",
-            f"  Partial pass: {self.stats['partial_pass']}",
-            f"  Full fail: {self.stats['full_fail']}",
-            f"  Client not found: {self.stats['not_found']}",
-            f"  Inconsistent corrections: {self.stats['inconsistent_corrections']}",
+            f"  Full pass: {self.stats.custom_stats.get('full_pass', 0)}",
+            f"  Partial pass: {self.stats.custom_stats.get('partial_pass', 0)}",
+            f"  Full fail: {self.stats.custom_stats.get('full_fail', 0)}",
+            f"  Client not found: {self.stats.not_found}",
+            f"  Inconsistent corrections: {self.stats.custom_stats.get('inconsistent_corrections', 0)}",
             "",
             "BUYER/SELLER BREAKDOWN:",
-            f"  Buyer transactions tested: {self.stats['buyer_stats']['tested']}",
-            f"    - Pass: {self.stats['buyer_stats']['pass']}",
-            f"    - Fail: {self.stats['buyer_stats']['fail']}",
-            f"  Seller transactions tested: {self.stats['seller_stats']['tested']}",
-            f"    - Pass: {self.stats['seller_stats']['pass']}",
-            f"    - Fail: {self.stats['seller_stats']['fail']}",
+            f"  Buyer transactions tested: {self.buyer_stats['tested']}",
+            f"    - Pass: {self.buyer_stats['pass']}",
+            f"    - Fail: {self.buyer_stats['fail']}",
+            f"  Seller transactions tested: {self.seller_stats['tested']}",
+            f"    - Pass: {self.seller_stats['pass']}",
+            f"    - Fail: {self.seller_stats['fail']}",
             "",
             "FIELD-LEVEL STATISTICS:",
         ]
         
-        for field, stats in sorted(self.stats['field_stats'].items()):
+        for field, stats in sorted(self.field_stats.items()):
             summary_lines.append(f"  {field}:")
             summary_lines.append(f"    - Pass: {stats['pass']}")
             summary_lines.append(f"    - Fail: {stats['fail']}")
@@ -1205,6 +1111,11 @@ class Phase3FinalLookup:
         start_time = datetime.now()
         
         try:
+            self.logger.log_header("PHASE 3 FINAL LOOKUP v2.0")
+            self.logger.info(f"Replay input path: {self.replay_input_path}")
+            self.logger.info(f"Reference files path: {self.data_reference_path}")
+            self.logger.info(f"Output path: {self.output_path}")
+            
             # Discover input files
             self.find_files()
             
@@ -1219,7 +1130,13 @@ class Phase3FinalLookup:
             elapsed = end_time - start_time
             self.logger.info(f"Total processing time: {elapsed}")
             
-            self.generate_summary()
+            self.logger.log_header("PROCESSING SUMMARY")
+            self.logger.log_stats(self.stats)
+            
+            # Log additional detailed stats
+            self.logger.info(f"Buyer stats: {self.buyer_stats}")
+            self.logger.info(f"Seller stats: {self.seller_stats}")
+            self.logger.info(f"Date cache entries: {DateParser.cache_size()}")
             
             self.logger.info("Processing completed successfully")
             return 0
@@ -1232,10 +1149,87 @@ class Phase3FinalLookup:
 # Main Entry Point
 # ============================================================================
 
+def parse_args():
+    """Parse command line arguments"""
+    parser = argparse.ArgumentParser(
+        description="Phase 3 Final Lookup v2.0 - Validate client corrections against UnaVista data",
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog="""
+Examples:
+  # Run with configuration file
+  python phase_3_final_lookup.py --config config/phase3_final.yaml
+  
+  # Run with environment variables
+  export TXR_PATHS_BASE="/path/to/base"
+  export TXR_PATHS_DATA_REFERENCE="/path/to/reference"
+  python phase_3_final_lookup.py --use-env
+  
+  # Override log level
+  python phase_3_final_lookup.py --config config/phase3_final.yaml --log-level DEBUG
+        """
+    )
+    
+    parser.add_argument(
+        '--config',
+        type=str,
+        help='Path to YAML configuration file (default: config/phase3_final.yaml)'
+    )
+    
+    parser.add_argument(
+        '--use-env',
+        action='store_true',
+        help='Load configuration from environment variables (TXR_* prefix)'
+    )
+    
+    parser.add_argument(
+        '--log-level',
+        type=str,
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+        help='Override log level from configuration'
+    )
+    
+    return parser.parse_args()
+
+
 def main():
-    """Main entry point"""
-    processor = Phase3FinalLookup()
-    return processor.run()
+    """Main entry point with CLI support"""
+    args = parse_args()
+    
+    try:
+        # Determine configuration source
+        if args.use_env:
+            print("Loading configuration from environment variables...")
+            config = ConfigManager.load_from_env("TXR_")
+        elif args.config:
+            print(f"Loading configuration from {args.config}...")
+            config = ConfigManager.load_from_yaml(args.config)
+        else:
+            # Default configuration path (use local config)
+            default_config = Path(__file__).parent.parent.parent / "config" / "local" / "replay" / "phase3_final.yaml"
+            if default_config.exists():
+                print(f"Loading default configuration from {default_config}...")
+                config = ConfigManager.load_from_yaml(str(default_config))
+            else:
+                print("Error: No configuration specified and default config not found")
+                print("Use --config or --use-env to specify configuration")
+                return 1
+        
+        # Override log level if specified
+        if args.log_level:
+            if 'processor' not in config:
+                config['processor'] = {}
+            config['processor']['log_level'] = args.log_level
+        
+        # Create and run processor
+        processor = Phase3FinalLookup(config_dict=config)
+        return processor.run()
+        
+    except Exception as e:
+        print(f"Fatal error: {e}")
+        import traceback
+        traceback.print_exc()
+        return 1
+
 
 if __name__ == "__main__":
     exit(main())

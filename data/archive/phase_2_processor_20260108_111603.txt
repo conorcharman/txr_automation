@@ -1,0 +1,90 @@
+Performance Profile: Phase 2 Processor
+Generated: 2026-01-08 11:16:03
+================================================================================
+
+TOP 20 FUNCTIONS BY CUMULATIVE TIME
+--------------------------------------------------------------------------------
+         40482 function calls (39374 primitive calls) in 0.332 seconds
+
+   Ordered by: cumulative time
+   List reduced from 768 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+     42/1    0.002    0.000    0.325    0.325 {built-in method builtins.exec}
+        1    0.000    0.000    0.325    0.325 phase_2_processor.py:1(<module>)
+        1    0.000    0.000    0.220    0.220 phase_2_processor.py:507(main)
+        8    0.203    0.025    0.203    0.025 {built-in method _io.open}
+        4    0.000    0.000    0.195    0.049 __init__.py:1(<module>)
+        1    0.000    0.000    0.194    0.194 traceback.py:208(print_exc)
+        1    0.000    0.000    0.194    0.194 traceback.py:119(print_exception)
+        1    0.000    0.000    0.185    0.185 traceback.py:1044(__init__)
+        1    0.000    0.000    0.185    0.185 traceback.py:459(_extract_from_extended_frame_gen)
+       40    0.000    0.000    0.185    0.005 traceback.py:373(line)
+      120    0.000    0.000    0.185    0.002 traceback.py:344(_set_lines)
+       22    0.000    0.000    0.184    0.008 linecache.py:22(getline)
+       22    0.000    0.000    0.184    0.008 linecache.py:32(getlines)
+        7    0.000    0.000    0.184    0.026 linecache.py:112(updatecache)
+        7    0.000    0.000    0.183    0.026 tokenize.py:457(open)
+     43/2    0.000    0.000    0.105    0.052 <frozen importlib._bootstrap>:1360(_find_and_load)
+     43/2    0.000    0.000    0.105    0.052 <frozen importlib._bootstrap>:1308(_find_and_load_unlocked)
+     42/2    0.000    0.000    0.104    0.052 <frozen importlib._bootstrap>:914(_load_unlocked)
+     35/2    0.000    0.000    0.104    0.052 <frozen importlib._bootstrap_external>:753(exec_module)
+    108/3    0.000    0.000    0.104    0.035 <frozen importlib._bootstrap>:483(_call_with_frames_removed)
+
+
+
+
+TOP 20 FUNCTIONS BY OWN TIME
+--------------------------------------------------------------------------------
+         40482 function calls (39374 primitive calls) in 0.332 seconds
+
+   Ordered by: internal time
+   List reduced from 768 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        8    0.203    0.025    0.203    0.025 {built-in method _io.open}
+        1    0.052    0.052    0.052    0.052 {built-in method _imp.create_dynamic}
+       35    0.013    0.000    0.013    0.000 {built-in method _io.open_code}
+       41    0.008    0.000    0.008    0.000 {built-in method builtins.compile}
+      118    0.006    0.000    0.007    0.000 _compiler.py:248(_optimize_charset)
+       24    0.004    0.000    0.004    0.000 {built-in method builtins.print}
+       35    0.004    0.000    0.004    0.000 {built-in method marshal.loads}
+      167    0.003    0.000    0.003    0.000 {built-in method nt.stat}
+      157    0.002    0.000    0.013    0.000 {built-in method builtins.__build_class__}
+     42/1    0.002    0.000    0.325    0.325 {built-in method builtins.exec}
+       35    0.002    0.000    0.002    0.000 {method 'read' of '_io.BufferedReader' objects}
+      385    0.002    0.000    0.003    0.000 <frozen importlib._bootstrap_external>:101(_path_join)
+   129/17    0.002    0.000    0.004    0.000 _parser.py:512(_parse)
+        7    0.001    0.000    0.001    0.000 {method 'readlines' of '_io._IOBase' objects}
+   200/17    0.001    0.000    0.005    0.000 _compiler.py:39(_compile)
+       42    0.001    0.000    0.001    0.000 {method '__exit__' of '_io._IOBase' objects}
+       20    0.001    0.000    0.004    0.000 traceback.py:528(format_frame_summary)
+     4654    0.001    0.000    0.001    0.000 {method 'append' of 'list' objects}
+       13    0.001    0.000    0.001    0.000 {method 'readline' of '_io.BufferedReader' objects}
+       77    0.001    0.000    0.006    0.000 <frozen importlib._bootstrap_external>:1357(find_spec)
+
+
+
+
+CALLERS OF TOP 10 FUNCTIONS
+--------------------------------------------------------------------------------
+   Ordered by: cumulative time
+   List reduced from 768 to 10 due to restriction <10>
+
+Function                                            was called by...
+                                                        ncalls  tottime  cumtime
+{built-in method builtins.exec}                     <-    35/2    0.000    0.103  <frozen importlib._bootstrap>:483(_call_with_frames_removed)
+                                                             6    0.002    0.002  dataclasses.py:478(add_fns_to_class)
+phase_2_processor.py:1(<module>)                    <-       1    0.000    0.325  {built-in method builtins.exec}
+phase_2_processor.py:507(main)                      <-       1    0.000    0.220  phase_2_processor.py:1(<module>)
+{built-in method _io.open}                          <-       1    0.022    0.022  config.py:67(load_from_yaml)
+                                                             7    0.181    0.181  tokenize.py:457(open)
+__init__.py:1(<module>)                             <-       4    0.000    0.195  {built-in method builtins.exec}
+traceback.py:208(print_exc)                         <-       1    0.000    0.194  phase_2_processor.py:507(main)
+traceback.py:119(print_exception)                   <-       1    0.000    0.194  traceback.py:208(print_exc)
+traceback.py:1044(__init__)                         <-       1    0.000    0.185  traceback.py:119(print_exception)
+traceback.py:459(_extract_from_extended_frame_gen)  <-       1    0.000    0.185  traceback.py:1044(__init__)
+traceback.py:373(line)                              <-      20    0.000    0.185  traceback.py:459(_extract_from_extended_frame_gen)
+                                                            20    0.000    0.000  traceback.py:1213(_load_lines)
+
+

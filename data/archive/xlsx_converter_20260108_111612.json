@@ -1,0 +1,412 @@
+{
+  "script": "XLSX Converter",
+  "timestamp": "2026-01-08T11:16:12.095460",
+  "summary": {
+    "total_time": 8.2088,
+    "total_calls": 146817
+  },
+  "top_functions_by_cumulative_time": [
+    {
+      "function": "<module>",
+      "file": "__init__.py",
+      "line": 1,
+      "ncalls": 95,
+      "tottime": 0.0029,
+      "tottime_pct": 0.04,
+      "cumtime": 12.3355,
+      "cumtime_pct": 150.27,
+      "percall_tot": 3e-05,
+      "percall_cum": 0.129847
+    },
+    {
+      "function": "<built-in method builtins.exec>",
+      "file": "~",
+      "line": 0,
+      "ncalls": "605/1",
+      "tottime": 0.006,
+      "tottime_pct": 0.07,
+      "cumtime": 8.2106,
+      "cumtime_pct": 100.02,
+      "percall_tot": 1e-05,
+      "percall_cum": 0.013571
+    },
+    {
+      "function": "<module>",
+      "file": "xlsx_csv_converter.py",
+      "line": 1,
+      "ncalls": 1,
+      "tottime": 0.0,
+      "tottime_pct": 0.0,
+      "cumtime": 8.2106,
+      "cumtime_pct": 100.02,
+      "percall_tot": 4e-05,
+      "percall_cum": 8.210587
+    },
+    {
+      "function": "main",
+      "file": "xlsx_csv_converter.py",
+      "line": 224,
+      "ncalls": 1,
+      "tottime": 0.0001,
+      "tottime_pct": 0.0,
+      "cumtime": 4.4653,
+      "cumtime_pct": 54.4,
+      "percall_tot": 0.0001,
+      "percall_cum": 4.465316
+    },
+    {
+      "function": "convert_all",
+      "file": "xlsx_csv_converter.py",
+      "line": 142,
+      "ncalls": 1,
+      "tottime": 0.0015,
+      "tottime_pct": 0.02,
+      "cumtime": 4.4326,
+      "cumtime_pct": 54.0,
+      "percall_tot": 0.001548,
+      "percall_cum": 4.43258
+    },
+    {
+      "function": "convert_file",
+      "file": "xlsx_csv_converter.py",
+      "line": 100,
+      "ncalls": 2,
+      "tottime": 0.003,
+      "tottime_pct": 0.04,
+      "cumtime": 4.4297,
+      "cumtime_pct": 53.96,
+      "percall_tot": 0.001506,
+      "percall_cum": 2.214869
+    },
+    {
+      "function": "_find_and_load",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 1360,
+      "ncalls": "706/9",
+      "tottime": 0.0047,
+      "tottime_pct": 0.06,
+      "cumtime": 4.2409,
+      "cumtime_pct": 51.66,
+      "percall_tot": 7e-06,
+      "percall_cum": 0.006007
+    },
+    {
+      "function": "_find_and_load_unlocked",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 1308,
+      "ncalls": "705/8",
+      "tottime": 0.0045,
+      "tottime_pct": 0.06,
+      "cumtime": 4.2403,
+      "cumtime_pct": 51.66,
+      "percall_tot": 6e-06,
+      "percall_cum": 0.006015
+    },
+    {
+      "function": "_load_unlocked",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 914,
+      "ncalls": "685/5",
+      "tottime": 0.0029,
+      "tottime_pct": 0.03,
+      "cumtime": 4.2376,
+      "cumtime_pct": 51.62,
+      "percall_tot": 4e-06,
+      "percall_cum": 0.006186
+    },
+    {
+      "function": "exec_module",
+      "file": "<frozen importlib._bootstrap_external>",
+      "line": 753,
+      "ncalls": "600/5",
+      "tottime": 0.0019,
+      "tottime_pct": 0.02,
+      "cumtime": 4.2373,
+      "cumtime_pct": 51.62,
+      "percall_tot": 3e-06,
+      "percall_cum": 0.007062
+    },
+    {
+      "function": "_call_with_frames_removed",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 483,
+      "ncalls": "1936/13",
+      "tottime": 0.0016,
+      "tottime_pct": 0.02,
+      "cumtime": 4.2323,
+      "cumtime_pct": 51.56,
+      "percall_tot": 1e-06,
+      "percall_cum": 0.002186
+    },
+    {
+      "function": "module_from_spec",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 809,
+      "ncalls": "685/679",
+      "tottime": 0.0018,
+      "tottime_pct": 0.02,
+      "cumtime": 3.403,
+      "cumtime_pct": 41.46,
+      "percall_tot": 3e-06,
+      "percall_cum": 0.004968
+    },
+    {
+      "function": "create_module",
+      "file": "<frozen importlib._bootstrap_external>",
+      "line": 1051,
+      "ncalls": 72,
+      "tottime": 0.0006,
+      "tottime_pct": 0.01,
+      "cumtime": 3.3816,
+      "cumtime_pct": 41.19,
+      "percall_tot": 9e-06,
+      "percall_cum": 0.046966
+    },
+    {
+      "function": "<built-in method _imp.create_dynamic>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 72,
+      "tottime": 3.371,
+      "tottime_pct": 41.07,
+      "cumtime": 3.3805,
+      "cumtime_pct": 41.18,
+      "percall_tot": 0.046819,
+      "percall_cum": 0.046952
+    },
+    {
+      "function": "<built-in method builtins.__import__>",
+      "file": "~",
+      "line": 0,
+      "ncalls": "800/181",
+      "tottime": 0.0017,
+      "tottime_pct": 0.02,
+      "cumtime": 2.9391,
+      "cumtime_pct": 35.8,
+      "percall_tot": 2e-06,
+      "percall_cum": 0.003674
+    },
+    {
+      "function": "<module>",
+      "file": "api.py",
+      "line": 1,
+      "ncalls": 8,
+      "tottime": 0.0002,
+      "tottime_pct": 0.0,
+      "cumtime": 2.7693,
+      "cumtime_pct": 33.74,
+      "percall_tot": 2.9e-05,
+      "percall_cum": 0.346164
+    },
+    {
+      "function": "read_excel",
+      "file": "_base.py",
+      "line": 451,
+      "ncalls": 2,
+      "tottime": 0.0001,
+      "tottime_pct": 0.0,
+      "cumtime": 2.7173,
+      "cumtime_pct": 33.1,
+      "percall_tot": 3.1e-05,
+      "percall_cum": 1.358634
+    },
+    {
+      "function": "_handle_fromlist",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 1401,
+      "ncalls": "907/574",
+      "tottime": 0.0015,
+      "tottime_pct": 0.02,
+      "cumtime": 2.0071,
+      "cumtime_pct": 24.45,
+      "percall_tot": 2e-06,
+      "percall_cum": 0.002213
+    },
+    {
+      "function": "split_multiline_rows",
+      "file": "xlsx_csv_converter.py",
+      "line": 39,
+      "ncalls": 2,
+      "tottime": 0.0824,
+      "tottime_pct": 1.0,
+      "cumtime": 1.6463,
+      "cumtime_pct": 20.06,
+      "percall_tot": 0.041219,
+      "percall_cum": 0.823162
+    },
+    {
+      "function": "exec_module",
+      "file": "<frozen importlib._bootstrap_external>",
+      "line": 1059,
+      "ncalls": "72/43",
+      "tottime": 0.0002,
+      "tottime_pct": 0.0,
+      "cumtime": 1.5887,
+      "cumtime_pct": 19.35,
+      "percall_tot": 3e-06,
+      "percall_cum": 0.022066
+    }
+  ],
+  "top_functions_by_own_time": [
+    {
+      "function": "<built-in method _imp.create_dynamic>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 72,
+      "tottime": 3.371,
+      "tottime_pct": 41.07
+    },
+    {
+      "function": "<method 'feed' of 'xml.etree.ElementTree.XMLParser' objects>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 511,
+      "tottime": 0.4378,
+      "tottime_pct": 5.33
+    },
+    {
+      "function": "_cells_by_row",
+      "file": "_read_only.py",
+      "line": 60,
+      "ncalls": 17394,
+      "tottime": 0.2617,
+      "tottime_pct": 3.19
+    },
+    {
+      "function": "<built-in method _io.open_code>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 600,
+      "tottime": 0.2002,
+      "tottime_pct": 2.44
+    },
+    {
+      "function": "<built-in method builtins.isinstance>",
+      "file": "~",
+      "line": 0,
+      "ncalls": "1585534/1585528",
+      "tottime": 0.1785,
+      "tottime_pct": 2.17
+    },
+    {
+      "function": "read_events",
+      "file": "ElementTree.py",
+      "line": 1319,
+      "ncalls": 334417,
+      "tottime": 0.1364,
+      "tottime_pct": 1.66
+    },
+    {
+      "function": "__init__",
+      "file": "series.py",
+      "line": 392,
+      "ncalls": "17396/17394",
+      "tottime": 0.1213,
+      "tottime_pct": 1.48
+    },
+    {
+      "function": "_get_row",
+      "file": "_read_only.py",
+      "line": 105,
+      "ncalls": 17392,
+      "tottime": 0.1173,
+      "tottime_pct": 1.43
+    },
+    {
+      "function": "from_tree",
+      "file": "serialisable.py",
+      "line": 46,
+      "ncalls": "36803/36071",
+      "tottime": 0.1165,
+      "tottime_pct": 1.42
+    },
+    {
+      "function": "__set__",
+      "file": "sequence.py",
+      "line": 24,
+      "ncalls": 72064,
+      "tottime": 0.0958,
+      "tottime_pct": 1.17
+    },
+    {
+      "function": "split_multiline_rows",
+      "file": "xlsx_csv_converter.py",
+      "line": 39,
+      "ncalls": 2,
+      "tottime": 0.0824,
+      "tottime_pct": 1.0
+    },
+    {
+      "function": "<built-in method _io.open>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 8,
+      "tottime": 0.0824,
+      "tottime_pct": 1.0
+    },
+    {
+      "function": "<built-in method marshal.loads>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 600,
+      "tottime": 0.0774,
+      "tottime_pct": 0.94
+    },
+    {
+      "function": "_convert_cell",
+      "file": "_openpyxl.py",
+      "line": 589,
+      "ncalls": 156528,
+      "tottime": 0.0774,
+      "tottime_pct": 0.94
+    },
+    {
+      "function": "sanitize_array",
+      "file": "construction.py",
+      "line": 517,
+      "ncalls": 17438,
+      "tottime": 0.0725,
+      "tottime_pct": 0.88
+    },
+    {
+      "function": "get_sheet_data",
+      "file": "_openpyxl.py",
+      "line": 607,
+      "ncalls": 2,
+      "tottime": 0.0721,
+      "tottime_pct": 0.88
+    },
+    {
+      "function": "__iter__",
+      "file": "base.py",
+      "line": 840,
+      "ncalls": 53286,
+      "tottime": 0.072,
+      "tottime_pct": 0.88
+    },
+    {
+      "function": "read_string_table",
+      "file": "strings.py",
+      "line": 10,
+      "ncalls": 2,
+      "tottime": 0.0711,
+      "tottime_pct": 0.87
+    },
+    {
+      "function": "maybe_infer_to_datetimelike",
+      "file": "cast.py",
+      "line": 1166,
+      "ncalls": 17434,
+      "tottime": 0.071,
+      "tottime_pct": 0.87
+    },
+    {
+      "function": "maybe_box_native",
+      "file": "cast.py",
+      "line": 182,
+      "ncalls": 146817,
+      "tottime": 0.0638,
+      "tottime_pct": 0.78
+    }
+  ]
+}
