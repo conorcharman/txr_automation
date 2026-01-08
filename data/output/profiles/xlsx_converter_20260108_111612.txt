@@ -1,0 +1,252 @@
+Performance Profile: XLSX Converter
+Generated: 2026-01-08 11:16:12
+================================================================================
+
+TOP 20 FUNCTIONS BY CUMULATIVE TIME
+--------------------------------------------------------------------------------
+         8099672 function calls (8019216 primitive calls) in 8.209 seconds
+
+   Ordered by: cumulative time
+   List reduced from 3889 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       95    0.003    0.000   12.335    0.130 __init__.py:1(<module>)
+    605/1    0.006    0.000    8.211    8.211 {built-in method builtins.exec}
+        1    0.000    0.000    8.211    8.211 xlsx_csv_converter.py:1(<module>)
+        1    0.000    0.000    4.465    4.465 xlsx_csv_converter.py:224(main)
+        1    0.002    0.002    4.433    4.433 xlsx_csv_converter.py:142(convert_all)
+        2    0.003    0.002    4.430    2.215 xlsx_csv_converter.py:100(convert_file)
+    706/9    0.005    0.000    4.241    0.471 <frozen importlib._bootstrap>:1360(_find_and_load)
+    705/8    0.005    0.000    4.240    0.530 <frozen importlib._bootstrap>:1308(_find_and_load_unlocked)
+    685/5    0.003    0.000    4.238    0.848 <frozen importlib._bootstrap>:914(_load_unlocked)
+    600/5    0.002    0.000    4.237    0.847 <frozen importlib._bootstrap_external>:753(exec_module)
+  1936/13    0.002    0.000    4.232    0.326 <frozen importlib._bootstrap>:483(_call_with_frames_removed)
+  685/679    0.002    0.000    3.403    0.005 <frozen importlib._bootstrap>:809(module_from_spec)
+       72    0.001    0.000    3.382    0.047 <frozen importlib._bootstrap_external>:1051(create_module)
+       72    3.371    0.047    3.381    0.047 {built-in method _imp.create_dynamic}
+  800/181    0.002    0.000    2.939    0.016 {built-in method builtins.__import__}
+        8    0.000    0.000    2.769    0.346 api.py:1(<module>)
+        2    0.000    0.000    2.717    1.359 _base.py:451(read_excel)
+  907/574    0.001    0.000    2.007    0.003 <frozen importlib._bootstrap>:1401(_handle_fromlist)
+        2    0.082    0.041    1.646    0.823 xlsx_csv_converter.py:39(split_multiline_rows)
+    72/43    0.000    0.000    1.589    0.037 <frozen importlib._bootstrap_external>:1059(exec_module)
+
+
+
+
+TOP 20 FUNCTIONS BY OWN TIME
+--------------------------------------------------------------------------------
+         8099672 function calls (8019216 primitive calls) in 8.209 seconds
+
+   Ordered by: internal time
+   List reduced from 3889 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+       72    3.371    0.047    3.381    0.047 {built-in method _imp.create_dynamic}
+      511    0.438    0.001    0.438    0.001 {method 'feed' of 'xml.etree.ElementTree.XMLParser' objects}
+    17394    0.262    0.000    1.091    0.000 _read_only.py:60(_cells_by_row)
+      600    0.200    0.000    0.200    0.000 {built-in method _io.open_code}
+1585534/1585528    0.178    0.000    0.205    0.000 {built-in method builtins.isinstance}
+   334417    0.136    0.000    0.203    0.000 ElementTree.py:1319(read_events)
+17396/17394    0.121    0.000    0.864    0.000 series.py:392(__init__)
+    17392    0.117    0.000    0.180    0.000 _read_only.py:105(_get_row)
+36803/36071    0.116    0.000    0.538    0.000 serialisable.py:46(from_tree)
+    72064    0.096    0.000    0.123    0.000 sequence.py:24(__set__)
+        2    0.082    0.041    1.646    0.823 xlsx_csv_converter.py:39(split_multiline_rows)
+        8    0.082    0.010    0.082    0.010 {built-in method _io.open}
+      600    0.077    0.000    0.077    0.000 {built-in method marshal.loads}
+   156528    0.077    0.000    0.096    0.000 _openpyxl.py:589(_convert_cell)
+    17438    0.072    0.000    0.286    0.000 construction.py:517(sanitize_array)
+        2    0.072    0.036    1.283    0.642 _openpyxl.py:607(get_sheet_data)
+    53286    0.072    0.000    0.137    0.000 base.py:840(__iter__)
+        2    0.071    0.036    0.836    0.418 strings.py:10(read_string_table)
+    17434    0.071    0.000    0.117    0.000 cast.py:1166(maybe_infer_to_datetimelike)
+   146817    0.064    0.000    0.073    0.000 cast.py:182(maybe_box_native)
+
+
+
+
+CALLERS OF TOP 10 FUNCTIONS
+--------------------------------------------------------------------------------
+   Ordered by: cumulative time
+   List reduced from 3889 to 10 due to restriction <10>
+
+Function                                                     was called by...
+                                                                 ncalls  tottime  cumtime
+__init__.py:1(<module>)                                      <-      95    0.003   12.335  {built-in method builtins.exec}
+{built-in method builtins.exec}                              <-   600/5    0.005    4.232  <frozen importlib._bootstrap>:483(_call_with_frames_removed)
+                                                                      3    0.001    0.001  dataclasses.py:478(add_fns_to_class)
+                                                                      1    0.000    0.000  six.py:1(<module>)
+xlsx_csv_converter.py:1(<module>)                            <-       1    0.000    8.211  {built-in method builtins.exec}
+xlsx_csv_converter.py:224(main)                              <-       1    0.000    4.465  xlsx_csv_converter.py:1(<module>)
+xlsx_csv_converter.py:142(convert_all)                       <-       1    0.002    4.433  xlsx_csv_converter.py:224(main)
+xlsx_csv_converter.py:100(convert_file)                      <-       2    0.003    4.430  xlsx_csv_converter.py:142(convert_all)
+<frozen importlib._bootstrap>:1360(_find_and_load)           <-       8    0.000    0.719  <frozen importlib._bootstrap>:1386(_gcd_import)
+                                                                      1    0.000    0.141  ElementTree.py:1(<module>)
+                                                                      1    0.000    0.013  _3d.py:1(<module>)
+                                                                      1    0.000    0.099  __config__.py:1(<module>)
+                                                                      1    0.000    0.001  __init__.py:1(<module>)
+                                                                      1    0.000    0.000  __init__.py:8(lxml_available)
+                                                                      1    0.000    0.000  __init__.py:29(defusedxml_available)
+                                                                      1    0.000    0.070  __init__.py:35(__enter__)
+                                                                      1    0.000    0.000  __init__.py:395(_init_non_posix)
+                                                                      3    0.000    0.550  __init__.py:707(__getattr__)
+                                                                      3    0.000    0.002  _array_like.py:1(<module>)
+                                                                      1    0.000    0.087  _arraypad_impl.py:1(<module>)
+                                                                      1    0.000    0.001  _base.py:1(<module>)
+                                                                      5    0.000    0.004  _base.py:1435(ExcelFile)
+                                                                      5    0.000    0.019  _chart.py:1(<module>)
+                                                                      1    0.000    0.077  _distributor_init.py:1(<module>)
+                                                                      1    0.000    0.068  _format_impl.py:1(<module>)
+                                                                      1    0.000    0.001  _function_base_impl.py:1(<module>)
+                                                                      1    0.000    0.001  _globals.py:1(<module>)
+                                                                      3    0.000    0.086  _index_tricks_impl.py:1(<module>)
+                                                                      1    0.000    0.001  _io.py:1(<module>)
+                                                                      4    0.000    0.095  _json.py:1(<module>)
+                                                                      3    0.000    0.021  _linalg.py:1(<module>)
+                                                                      2    0.000    0.009  _machar.py:1(<module>)
+                                                                      1    0.000    0.003  _methods.py:1(<module>)
+                                                                      1    0.000    0.001  _mixins.py:1(<module>)
+                                                                      2    0.000    0.003  _npyio_impl.py:1(<module>)
+                                                                      4    0.000    0.322  _pickle.py:1(<module>)
+                                                                      1    0.000    0.002  _polynomial_impl.py:1(<module>)
+                                                                      1    0.000    0.052  _read_only.py:1(<module>)
+                                                                      1    0.000    0.002  _strptime.py:1(<module>)
+                                                                      1    0.000    0.001  _twodim_base_impl.py:1(<module>)
+                                                                      1    0.000    0.001  _type_check_impl.py:1(<module>)
+                                                                      1    0.000    0.068  _utils_impl.py:1(<module>)
+                                                                      1    0.000    0.041  _write_only.py:1(<module>)
+                                                                      2    0.000    0.006  _writer.py:1(<module>)
+                                                                      1    0.000    0.038  accessor.py:1(<module>)
+                                                                      5    0.000    0.018  algorithms.py:1(<module>)
+                                                                      1    0.000    0.000  align.py:1(<module>)
+                                                                      2    0.000    0.158  alignment.py:1(<module>)
+                                                                     13    0.000    0.021  api.py:1(<module>)
+                                                                      2    0.000    0.058  apply.py:1(<module>)
+                                                                      3    0.000    0.022  area_chart.py:1(<module>)
+                                                                      1    0.000    0.037  array.py:1(<module>)
+                                                                      2    0.000    0.003  array_manager.py:1(<module>)
+                                                                      3    0.000    0.003  array_ops.py:1(<module>)
+                                                                      1    0.000    0.001  array_utils.py:1(<module>)
+                                                                      1    0.000    0.002  arrow_parser_wrapper.py:1(<module>)
+                                                                      1    0.000    0.048  asserters.py:1(<module>)
+                                                                      1    0.000    0.001  autotimeit.py:1(<module>)
+                                                                      2    0.000    0.002  base.py:1(<module>)
+                                                                      1    0.000    0.002  bench.py:1(<module>)
+                                                                      1    0.000    0.000  bisect.py:1(<module>)
+                                                                      1    0.000    0.001  borders.py:1(<module>)
+                                                                      1    0.000    0.003  cast.py:1(<module>)
+                                                                      2    0.000    0.003  categorical.py:1(<module>)
+                                                                      1    0.000    0.001  category.py:1(<module>)
+                                                                      5    0.000    0.191  cell.py:1(<module>)
+                                                                      1    0.000    0.000  cell_style.py:1(<module>)
+                                                                      7    0.000    0.005  chartsheet.py:1(<module>)
+                                                                      3    0.000    0.002  chartspace.py:1(<module>)
+                                                                      1    0.000    0.002  child.py:1(<module>)
+                                                                      2    0.000    0.001  comment_sheet.py:1(<module>)
+                                                                      6    0.000    0.014  common.py:1(<module>)
+                                                                      1    0.000    0.001  concat.py:1(<module>)
+                                                                      2    0.000    0.548  config.py:1(<module>)
+                                                                      1    0.000    0.001  connector.py:1(<module>)
+                                                                      1    0.000    0.001  construction.py:1(<module>)
+                                                                      1    0.000    0.001  contexts.py:1(<module>)
+                                                                      2    0.000    0.003  datetimelike.py:1(<module>)
+                                                                      1    0.000    0.001  datetimes.py:1(<module>)
+                                                                      1    0.000    0.039  decimal.py:1(<module>)
+                                                                      1    0.000    0.080  defmatrix.py:1(<module>)
+                                                                      2    0.000    0.020  describe.py:1(<module>)
+                                                                      2    0.000    0.001  dimensions.py:1(<module>)
+                                                                      2    0.000    0.003  drawings.py:1(<module>)
+                                                                      3    0.000    0.004  dtypes.py:1(<module>)
+                                                                      1    0.000    0.007  einsumfunc.py:1(<module>)
+                                                                      2    0.000    0.003  engines.py:1(<module>)
+                                                                      2    0.000    0.006  eval.py:1(<module>)
+                                                                      8    0.000    0.105  ewm.py:1(<module>)
+                                                                      5    0.000    0.077  excel.py:1(<module>)
+                                                                      1    0.000    0.001  expr.py:1(<module>)
+                                                                      1    0.000    0.050  expressions.py:1(<module>)
+                                                                      1    0.000    0.001  fill.py:1(<module>)
+                                                                      1    0.000    0.001  floating.py:1(<module>)
+                                                                      1    0.000    0.001  fonts.py:1(<module>)
+                                                                      1    0.000    0.069  format.py:1(<module>)
+                                                                      1    0.000    0.002  format.py:965(to_csv)
+                                                                      1    0.000    0.001  formatting.py:1(<module>)
+                                                                      1    0.000    0.003  formulas.py:1(<module>)
+                                                                      3    0.000    0.459  frame.py:1(<module>)
+                                                                      1    0.000    0.001  from_dataframe.py:1(<module>)
+                                                                      3    0.000    0.151  functions.py:1(<module>)
+                                                                      5    0.000    0.147  generic.py:1(<module>)
+                                                                      2    0.000    0.001  graphic.py:1(<module>)
+                                                                      1    0.000    0.001  groupby.py:1(<module>)
+                                                                      1    0.000    0.001  grouper.py:1(<module>)
+                                                                      1    0.000    0.035  hashing.py:1(<module>)
+                                                                      1    0.000    0.000  hashlib.py:82(__get_builtin_constructor)
+                                                                      1    0.000    0.000  header_footer.py:1(<module>)
+                                                                      2    0.000    0.068  hmac.py:1(<module>)
+                                                                      1    0.000    0.000  image.py:1(<module>)
+                                                                      2    0.000    0.250  indexing.py:1(<module>)
+                                                                      1    0.000    0.001  interval.py:1(<module>)
+                                                                      1    0.000    0.001  line_chart.py:1(<module>)
+                                                                      1    0.000    0.003  localization.py:1(<module>)
+                                                                      1    0.000    0.001  managers.py:1(<module>)
+                                                                      1    0.000    0.001  manifest.py:1(<module>)
+                                                                      5    0.000    0.013  marker.py:1(<module>)
+                                                                      1    0.000    0.037  masked.py:1(<module>)
+                                                                      2    0.000    0.001  melt.py:1(<module>)
+                                                                      1    0.000    0.036  merge.py:1(<module>)
+                                                                      1    0.000    0.001  missing.py:1(<module>)
+                                                                      2    0.000    0.002  named_styles.py:1(<module>)
+                                                                      1    0.000    0.002  necompiler.py:1(<module>)
+                                                                      3    0.000    0.003  numerictypes.py:1(<module>)
+                                                                      2    0.000    0.005  numpy_.py:1(<module>)
+                                                                      1    0.000    0.001  object_array.py:1(<module>)
+                                                                      1    0.000    0.037  objects.py:1(<module>)
+                                                                      1    0.000    0.073  ops.py:1(<module>)
+                                                                      1    0.000    0.001  overrides.py:1(<module>)
+                                                                      1    0.000    0.004  parse.py:1(<module>)
+                                                                      2    0.000    0.001  pickle.py:1(<module>)
+                                                                      1    0.000    0.066  platform.py:1(<module>)
+                                                                      1    0.000    0.001  printing.py:1(<module>)
+                                                                      1    0.000    0.002  printoptions.py:1(<module>)
+                                                                      1    0.000    0.001  protection.py:1(<module>)
+                                                                      1    0.000    0.001  pyarrow.py:1(<module>)
+                                                                      1    0.000    0.001  pytables.py:1(<module>)
+                                                                      1    0.000    0.000  random.py:1(<module>)
+                                                                      4    0.000    0.056  readers.py:1(<module>)
+                                                                      1    0.000    0.000  relationship.py:1(<module>)
+                                                                      1    0.000    0.000  relativedelta.py:1(<module>)
+                                                                      1    0.000    0.001  rich_text.py:1(<module>)
+                                                                      1    0.000    0.001  rule.py:1(<module>)
+                                                                      1    0.000    0.001  scimath.py:1(<module>)
+                                                                      1    0.000    0.001  scope.py:1(<module>)
+                                                                      2    0.000    0.072  secrets.py:1(<module>)
+                                                                      2    0.000    0.153  sequence.py:1(<module>)
+                                                                      2    0.000    0.001  series.py:1(<module>)
+                                                                      1    0.000    0.002  series_factory.py:1(<module>)
+                                                                      4    0.000    0.007  shapes.py:1(<module>)
+                                                                      5    0.000    0.035  spreadsheet_drawing.py:1(<module>)
+                                                                      5    0.000    0.045  string_.py:1(<module>)
+                                                                      2    0.000    0.017  styleable.py:1(<module>)
+                                                                      1    0.000    0.001  stylesheet.py:1(<module>)
+                                                                      3    0.000    0.002  subprocess.py:1(<module>)
+                                                                      1    0.000    0.001  table.py:1(<module>)
+                                                                      1    0.000    0.008  take.py:1(<module>)
+                                                                      2    0.000    0.001  tarfile.py:1(<module>)
+                                                                      1    0.000    0.053  testing.py:1(<module>)
+                                                                      2    0.000    0.003  text.py:1(<module>)
+                                                                      1    0.000    0.000  timeit.py:1(<module>)
+                                                                      5    0.000    0.012  tz.py:1(<module>)
+                                                                      1    0.000    0.001  tzinfo.py:1(<module>)
+                                                                      1    0.000    0.035  uuid.py:1(<module>)
+                                                                      3    0.000    0.004  workbook.py:1(<module>)
+                                                                     19    0.000    0.284  worksheet.py:1(<module>)
+                                                                      1    0.000    3.745  xlsx_csv_converter.py:1(<module>)
+                                                                      5    0.000    0.008  {built-in method _imp.create_dynamic}
+                                                                  37/12    0.000    1.574  {built-in method _imp.exec_dynamic}
+                                                                      1    0.000    0.001  {built-in method builtins.__build_class__}
+                                                                 125/57    0.001    2.935  {built-in method builtins.__import__}
+<frozen importlib._bootstrap>:1308(_find_and_load_unlocked)  <-   705/8    0.005    4.240  <frozen importlib._bootstrap>:1360(_find_and_load)
+<frozen importlib._bootstrap>:914(_load_unlocked)            <-   685/5    0.003    4.238  <frozen importlib._bootstrap>:1308(_find_and_load_unlocked)
+<frozen importlib._bootstrap_external>:753(exec_module)      <-   600/5    0.002    4.237  <frozen importlib._bootstrap>:914(_load_unlocked)
+
+
