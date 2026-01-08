@@ -132,22 +132,19 @@ class ProfileAnalyzer:
         stats.strip_dirs()
         stats.sort_stats('cumulative')
         
-        # Capture stats to string
-        s = io.StringIO()
-        ps = pstats.Stats(stats.stats, stream=s)
-        ps.strip_dirs()
-        ps.sort_stats('cumulative')
-        
-        # Get total time
-        total_time = sum(func[2] for func in stats.stats.values())
-        total_calls = sum(func[0] for func in stats.stats.values())
+        # Get total time - func format: (primitive_calls, total_calls, tottime, cumtime, callers)
+        total_time = sum(func[2] for func in stats.stats.values())  # tottime
+        total_calls = sum(func[1] for func in stats.stats.values())  # total_calls
         
         # Get top functions by cumulative time
         top_funcs_cumtime = []
         stats_sorted = sorted(stats.stats.items(), key=lambda x: x[1][3], reverse=True)
         for func_key, func_stats in stats_sorted[:top_n]:
             filename, line, func_name = func_key
-            ncalls, tottime, cumtime, callers = func_stats
+            primitive_calls, total_calls, tottime, cumtime, callers = func_stats
+            
+            # Use total_calls for ncalls
+            ncalls = total_calls if primitive_calls == total_calls else f"{total_calls}/{primitive_calls}"
             
             # Calculate percentage
             pct_cumtime = (cumtime / total_time * 100) if total_time > 0 else 0
@@ -162,17 +159,18 @@ class ProfileAnalyzer:
                 "tottime_pct": round(pct_tottime, 2),
                 "cumtime": round(cumtime, 4),
                 "cumtime_pct": round(pct_cumtime, 2),
-                "percall_tot": round(tottime / ncalls, 6) if ncalls > 0 else 0,
-                "percall_cum": round(cumtime / ncalls, 6) if ncalls > 0 else 0,
+                "percall_tot": round(tottime / total_calls, 6) if total_calls > 0 else 0,
+                "percall_cum": round(cumtime / total_calls, 6) if total_calls > 0 else 0,
             })
         
         # Get top functions by own time
         top_funcs_tottime = []
-        stats_sorted = sorted(stats.stats.items(), key=lambda x: x[1][1], reverse=True)
+        stats_sorted = sorted(stats.stats.items(), key=lambda x: x[1][2], reverse=True)
         for func_key, func_stats in stats_sorted[:top_n]:
             filename, line, func_name = func_key
-            ncalls, tottime, cumtime, callers = func_stats
+            primitive_calls, total_calls, tottime, cumtime, callers = func_stats
             
+            ncalls = total_calls if primitive_calls == total_calls else f"{total_calls}/{primitive_calls}"
             pct_tottime = (tottime / total_time * 100) if total_time > 0 else 0
             
             top_funcs_tottime.append({
@@ -202,36 +200,32 @@ class ProfileAnalyzer:
             f.write(f"Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
             f.write("=" * 80 + "\n\n")
             
-            # Redirect stats output to file
-            stats_stream = io.StringIO()
-            ps = pstats.Stats(stats.stats, stream=stats_stream)
-            ps.strip_dirs()
-            
             # Top functions by cumulative time
+            stats_stream = io.StringIO()
+            stats.stream = stats_stream
+            stats.strip_dirs()
             f.write(f"TOP {top_n} FUNCTIONS BY CUMULATIVE TIME\n")
             f.write("-" * 80 + "\n")
-            ps.sort_stats('cumulative')
-            ps.print_stats(top_n)
+            stats.sort_stats('cumulative')
+            stats.print_stats(top_n)
             f.write(stats_stream.getvalue())
             
             # Top functions by own time
             stats_stream = io.StringIO()
-            ps = pstats.Stats(stats.stats, stream=stats_stream)
-            ps.strip_dirs()
+            stats.stream = stats_stream
             f.write(f"\n\nTOP {top_n} FUNCTIONS BY OWN TIME\n")
             f.write("-" * 80 + "\n")
-            ps.sort_stats('tottime')
-            ps.print_stats(top_n)
+            stats.sort_stats('tottime')
+            stats.print_stats(top_n)
             f.write(stats_stream.getvalue())
             
             # Callers
             stats_stream = io.StringIO()
-            ps = pstats.Stats(stats.stats, stream=stats_stream)
-            ps.strip_dirs()
+            stats.stream = stats_stream
             f.write(f"\n\nCALLERS OF TOP {min(10, top_n)} FUNCTIONS\n")
             f.write("-" * 80 + "\n")
-            ps.sort_stats('cumulative')
-            ps.print_callers(min(10, top_n))
+            stats.sort_stats('cumulative')
+            stats.print_callers(min(10, top_n))
             f.write(stats_stream.getvalue())
     
     def print_summary(self, results: List[Dict[str, Any]]):
