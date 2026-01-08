@@ -9,10 +9,20 @@ Date: 24 December 2025
 Version: 2.0
 """
 
-import pandas as pd
+import csv
 import argparse
 from pathlib import Path
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List, Any
+from datetime import datetime
+
+try:
+    from openpyxl import load_workbook
+    from openpyxl.utils.datetime import from_excel
+    OPENPYXL_AVAILABLE = True
+except ImportError:
+    OPENPYXL_AVAILABLE = False
+    # Fallback to pandas if openpyxl not available
+    import pandas as pd
 
 from txr_replay_core import ConfigManager, ProcessingStats, create_logger
 
@@ -37,7 +47,7 @@ class XLSXConverter:
         self.stats = ProcessingStats()
     
     @staticmethod
-    def split_multiline_rows(df: pd.DataFrame) -> pd.DataFrame:
+    def split_multiline_rows(rows: List[List[Any]]) -> List[List[Any]]:
         """
         Split rows containing multi-line cells (cells with newlines) into separate rows.
         For each row, if any cell contains newlines, create multiple rows where:
@@ -45,61 +55,118 @@ class XLSXConverter:
         - Cells without newlines are copied to all new rows
         
         Args:
-            df: pandas DataFrame to process
+            rows: List of row lists to process
             
         Returns:
-            pandas DataFrame with multi-line cells split into separate rows
+            List of rows with multi-line cells split into separate rows
         """
         new_rows = []
         
-        for idx, row in df.iterrows():
+        for row in rows:
             # Check if any cell in this row contains newlines
             has_newlines = any(isinstance(val, str) and '\n' in val for val in row)
             
             if not has_newlines:
                 # No newlines, keep row as is
-                new_rows.append(row.to_dict())
+                new_rows.append(row)
             else:
                 # Split cells with newlines
                 # First, determine the maximum number of lines in any cell
                 max_lines = 1
-                split_cells = {}
+                split_cells = []
                 
-                for col in df.columns:
-                    val = row[col]
+                for val in row:
                     if isinstance(val, str) and '\n' in val:
                         # Split by newline
                         lines = val.split('\n')
-                        split_cells[col] = lines
+                        split_cells.append(lines)
                         max_lines = max(max_lines, len(lines))
                     else:
                         # Single value, will be repeated
-                        split_cells[col] = [val]
+                        split_cells.append([val])
                 
                 # Create new rows
                 for line_idx in range(max_lines):
-                    new_row = {}
-                    for col in df.columns:
-                        cell_lines = split_cells[col]
+                    new_row = []
+                    for cell_lines in split_cells:
                         if line_idx < len(cell_lines):
                             # Use the corresponding line
-                            new_row[col] = cell_lines[line_idx]
+                            new_row.append(cell_lines[line_idx])
                         else:
-                            # Use the last line if we've run out (shouldn't happen often)
-                            new_row[col] = cell_lines[-1]
+                            # Use the last line if we've run out
+                            new_row.append(cell_lines[-1])
                     new_rows.append(new_row)
         
-        # Create new DataFrame from the rows
-        result_df = pd.DataFrame(new_rows)
-        
-        # Preserve the original column order
-        result_df = result_df[df.columns]
-        
-        return result_df
+        return new_rows
     
-    def convert_file(self, xlsx_file: Path) -> bool:
+    def convert_file_openpyxl(self, xlsx_file: Path) -> bool:
         """
-        Convert a single XLSX file to CSV.
+        Convert a single XLSX file to CSV using openpyxl (faster, no pandas overhead).
+        
+        Args:
+            xlsx_file: Path to XLSX file
+            
+        Returns:
+            True if conversion successful, False otherwise
+        """
+        try:
+            self.logger.info(f"Converting: {xlsx_file.name}")
+            
+            # Load workbook in read-only mode for better performance
+            wb = load_workbook(filename=xlsx_file, read_only=True, data_only=True)
+            ws = wb.active
+            
+            # Read all rows into memory
+            rows = []
+            headers = None
+            
+            for row_idx, row in enumerate(ws.iter_rows(values_only=True)):
+                if row_idx == 0:
+                    # Store headers
+                    headers = list(row)
+                    rows.append(headers)
+                else:
+                    # Process data rows
+                    processed_row = []
+                    for cell_value in row:
+                        # Format dates to DD/MM/YYYY
+                        if isinstance(cell_value, datetime):
+                            processed_row.append(cell_value.strftime('%d/%m/%Y'))
+                        elif cell_value is None:
+                            processed_row.append('')
+                        else:
+                            processed_row.append(str(cell_value) if not isinstance(cell_value, str) else cell_value)
+                    rows.append(processed_row)
+            
+            wb.close()
+            
+            # Split multi-line rows
+            if len(rows) > 1:  # Has data beyond headers
+                headers = rows[0]
+                data_rows = rows[1:]
+                data_rows = self.split_multiline_rows(data_rows)
+                rows = [headers] + data_rows
+            
+            # Write to CSV
+            csv_filename = xlsx_file.stem + ".csv"
+            csv_filepath = self.output_dir / csv_filename
+            
+            with open(csv_filepath, 'w', newline='', encoding='utf-8-sig') as f:
+                writer = csv.writer(f)
+                writer.writerows(rows)
+            
+            self.logger.info(f"  ✓ Successfully converted to: {csv_filename}")
+            self.stats.successful_matches += 1
+            return True
+            
+        except Exception as e:
+            self.logger.logger.error(f"  ✗ Error converting {xlsx_file.name}: {str(e)}")
+            self.stats.errors += 1
+            return False
+    
+    def convert_file_pandas(self, xlsx_file: Path) -> bool:
+        """
+        Convert a single XLSX file to CSV using pandas (fallback method).
         
         Args:
             xlsx_file: Path to XLSX file
@@ -119,16 +186,20 @@ class XLSXConverter:
                     # Convert datetime columns to DD/MM/YYYY format
                     df[col] = pd.to_datetime(df[col], errors='coerce').dt.strftime('%d/%m/%Y')
             
-            # Split rows with multi-line cells into separate rows
-            df = self.split_multiline_rows(df)
+            # Convert dataframe to list of lists for split_multiline_rows
+            headers = df.columns.tolist()
+            data_rows = df.values.tolist()
+            data_rows = self.split_multiline_rows(data_rows)
             
             # Create the output filename by changing the extension
             csv_filename = xlsx_file.stem + ".csv"
             csv_filepath = self.output_dir / csv_filename
             
-            # Save the data as a CSV file
-            # encoding='utf-8-sig' adds BOM for proper UTF-8 recognition in Excel
-            df.to_csv(csv_filepath, index=False, encoding='utf-8-sig')
+            # Write to CSV
+            with open(csv_filepath, 'w', newline='', encoding='utf-8-sig') as f:
+                writer = csv.writer(f)
+                writer.writerow(headers)
+                writer.writerows(data_rows)
             
             self.logger.info(f"  ✓ Successfully converted to: {csv_filename}")
             self.stats.successful_matches += 1
@@ -156,9 +227,17 @@ class XLSXConverter:
         self.logger.info(f"Found {len(xlsx_files)} XLSX file(s) to convert")
         self.stats.processed_files = len(xlsx_files)
         
+        # Choose conversion method based on availability
+        if OPENPYXL_AVAILABLE:
+            self.logger.info("Using openpyxl (optimized)")
+            convert_method = self.convert_file_openpyxl
+        else:
+            self.logger.info("Using pandas (fallback)")
+            convert_method = self.convert_file_pandas
+        
         # Convert each file
         for xlsx_file in xlsx_files:
-            self.convert_file(xlsx_file)
+            convert_method(xlsx_file)
         
         # Log summary statistics
         self.logger.log_stats(self.stats)
