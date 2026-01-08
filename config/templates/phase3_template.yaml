@@ -2,27 +2,38 @@
 # Copy this file and modify paths as needed
 
 paths:
-  # Input directory containing replay CSV files (IDs and Names)
-  replay_input: /path/to/replay/input
+  # Input replay files (CSV format)
+  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii/csv"
   
-  # Directory containing incident files
-  incident_files: /path/to/incident/files
+  # Incident code reference files (CSV format)
+  incident_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files"
   
   # Output directory for processed replay files
-  replay_output: /path/to/replay/output
+  replay_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii"
   
-  # Directory for log files
-  log_output: /path/to/logs
+  # Log output directory
+  log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
 
-processing:
-  # Number of records to process per batch (for progress reporting)
-  batch_size: 50
+files:
+  # Replay file patterns (glob syntax supported)
+  replay_patterns:
+    - "Replay_*_PHASE 3_Inconsistent_IDs_Summary_FINAL.csv"
+    - "Replay_*_PHASE 3_Inconsistent_Names_Summary_FINAL.csv"
   
-  # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  log_level: INFO
+  # Incident file pattern
+  incident_pattern: "FY25 Q3 - *.csv"
+
+processor:
+  # Batch size for progress reporting
+  batch_size: 100
   
-  # Enable/disable progress reporting
-  enable_progress_reporting: true
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  log_level: "INFO"
   
-  # File encoding
-  encoding: utf-8
+  # Similarity threshold for fuzzy name matching (0.0 - 1.0)
+  similarity_threshold: 0.85
+  
+  # Output filename pattern (e.g., replace KR with AJB)
+  replace_pattern:
+    from: "KR"
+    to: "AJB"

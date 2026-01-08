@@ -1,0 +1,6 @@
+﻿Reported Name & DOB,Reported IDs,Suggested Correction (Best Efforts),Incident Types,Incident Codes,Totals,Client Confirmed Correction,Client Confirmed Correction Fields,Client Comments
+"JON,ROBERT~FREDWELL~1969-03-11",CONCAT:AF19690311IAN##FREDW,,Non-applicable ID type,7_36,14,,,
+"LINDA,JUNE,DEBBIE~CLASP~1943-06-09",CONCAT:NL19430609LINDACLASP,,Non-applicable ID type,16_18,9,,,
+"HAROLD,JAMES~JOHNSON,RE,THE,HAROLD,JAMES,JOHNSON,SIPP~1956-01-12",NIDN:GBYS123456A,,Inconsistent FN/SN/DOB|Invalid SN,7_68|10_1|19_1,37,,,
+HAROLD~JOHNSON~1956-01-12,NIDN:GBYS123456A,,Inconsistent FN/SN/DOB,7_68,2,,,
+ARLA~BELROY~2007-05-01,NIDN:GBPP789654A,,Incorrect NIDN,7_37,3,,,

@@ -1,0 +1,88 @@
+Performance Profile: Phase 3 Final Lookup
+Generated: 2026-01-08 11:16:03
+================================================================================
+
+TOP 20 FUNCTIONS BY CUMULATIVE TIME
+--------------------------------------------------------------------------------
+         7023 function calls (7015 primitive calls) in 0.043 seconds
+
+   Ordered by: cumulative time
+   List reduced from 343 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      4/1    0.001    0.000    0.033    0.033 {built-in method builtins.exec}
+        1    0.000    0.000    0.033    0.033 phase_3_final_lookup.py:1(<module>)
+        1    0.000    0.000    0.031    0.031 phase_3_final_lookup.py:1194(main)
+        1    0.000    0.000    0.023    0.023 config.py:67(load_from_yaml)
+        2    0.022    0.011    0.022    0.011 {built-in method _io.open}
+       41    0.011    0.000    0.011    0.000 {built-in method builtins.compile}
+        1    0.000    0.000    0.006    0.006 traceback.py:208(print_exc)
+        1    0.000    0.000    0.006    0.006 traceback.py:119(print_exception)
+        1    0.000    0.000    0.005    0.005 traceback.py:1569(print)
+       23    0.000    0.000    0.003    0.000 traceback.py:1468(format)
+        1    0.000    0.000    0.002    0.002 traceback.py:745(format)
+       20    0.000    0.000    0.002    0.000 traceback.py:528(format_frame_summary)
+       24    0.002    0.000    0.002    0.000 {built-in method builtins.print}
+        1    0.000    0.000    0.002    0.002 phase_3_final_lookup.py:1152(parse_args)
+        1    0.000    0.000    0.002    0.002 traceback.py:1044(__init__)
+        1    0.000    0.000    0.001    0.001 traceback.py:459(_extract_from_extended_frame_gen)
+        3    0.000    0.000    0.001    0.000 dataclasses.py:1414(dataclass)
+        3    0.000    0.000    0.001    0.000 dataclasses.py:1431(wrap)
+        3    0.000    0.000    0.001    0.000 dataclasses.py:986(_process_class)
+        4    0.000    0.000    0.001    0.000 argparse.py:1505(add_argument)
+
+
+
+
+TOP 20 FUNCTIONS BY OWN TIME
+--------------------------------------------------------------------------------
+         7023 function calls (7015 primitive calls) in 0.043 seconds
+
+   Ordered by: internal time
+   List reduced from 343 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        2    0.022    0.011    0.022    0.011 {built-in method _io.open}
+       41    0.011    0.000    0.011    0.000 {built-in method builtins.compile}
+       24    0.002    0.000    0.002    0.000 {built-in method builtins.print}
+      4/1    0.001    0.000    0.033    0.033 {built-in method builtins.exec}
+       20    0.000    0.000    0.002    0.000 traceback.py:528(format_frame_summary)
+        1    0.000    0.000    0.000    0.000 {method 'readlines' of '_io._IOBase' objects}
+        7    0.000    0.000    0.000    0.000 {built-in method nt.stat}
+       16    0.000    0.000    0.000    0.000 {built-in method nt._supports_virtual_terminal}
+       20    0.000    0.000    0.000    0.000 {built-in method builtins.next}
+       13    0.000    0.000    0.000    0.000 {built-in method nt._path_exists}
+        3    0.000    0.000    0.001    0.000 dataclasses.py:986(_process_class)
+        8    0.000    0.000    0.000    0.000 {built-in method nt.get_terminal_size}
+       40    0.000    0.000    0.000    0.000 textwrap.py:416(dedent)
+       22    0.000    0.000    0.000    0.000 traceback.py:640(output_line)
+      807    0.000    0.000    0.000    0.000 {method 'append' of 'list' objects}
+       20    0.000    0.000    0.001    0.000 traceback.py:712(_should_show_carets)
+       42    0.000    0.000    0.000    0.000 textwrap.py:447(indent)
+       20    0.000    0.000    0.001    0.000 traceback.py:812(_extract_caret_anchors_from_line_segment)
+        2    0.000    0.000    0.000    0.000 {method 'read' of '_io.TextIOWrapper' objects}
+        7    0.000    0.000    0.000    0.000 {built-in method builtins.__build_class__}
+
+
+
+
+CALLERS OF TOP 10 FUNCTIONS
+--------------------------------------------------------------------------------
+   Ordered by: cumulative time
+   List reduced from 343 to 10 due to restriction <10>
+
+Function                             was called by...
+                                         ncalls  tottime  cumtime
+{built-in method builtins.exec}      <-       3    0.001    0.001  dataclasses.py:478(add_fns_to_class)
+phase_3_final_lookup.py:1(<module>)  <-       1    0.000    0.033  {built-in method builtins.exec}
+phase_3_final_lookup.py:1194(main)   <-       1    0.000    0.031  phase_3_final_lookup.py:1(<module>)
+config.py:67(load_from_yaml)         <-       1    0.000    0.023  phase_3_final_lookup.py:1194(main)
+{built-in method _io.open}           <-       1    0.022    0.022  config.py:67(load_from_yaml)
+                                              1    0.000    0.000  tokenize.py:457(open)
+{built-in method builtins.compile}   <-      40    0.001    0.001  ast.py:26(parse)
+traceback.py:208(print_exc)          <-       1    0.000    0.006  phase_3_final_lookup.py:1194(main)
+traceback.py:119(print_exception)    <-       1    0.000    0.006  traceback.py:208(print_exc)
+traceback.py:1569(print)             <-       1    0.000    0.005  traceback.py:119(print_exception)
+traceback.py:1468(format)            <-      23    0.000    0.003  traceback.py:1569(print)
+
+

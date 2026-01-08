@@ -1,0 +1,412 @@
+{
+  "script": "Phase 3 Processor",
+  "timestamp": "2026-01-08T11:16:03.675785",
+  "summary": {
+    "total_time": 0.049,
+    "total_calls": 13
+  },
+  "top_functions_by_cumulative_time": [
+    {
+      "function": "<built-in method builtins.exec>",
+      "file": "~",
+      "line": 0,
+      "ncalls": "4/1",
+      "tottime": 0.0004,
+      "tottime_pct": 0.75,
+      "cumtime": 0.0424,
+      "cumtime_pct": 86.57,
+      "percall_tot": 9.2e-05,
+      "percall_cum": 0.0106
+    },
+    {
+      "function": "<module>",
+      "file": "phase_3_processor.py",
+      "line": 1,
+      "ncalls": 1,
+      "tottime": 0.0001,
+      "tottime_pct": 0.12,
+      "cumtime": 0.0424,
+      "cumtime_pct": 86.54,
+      "percall_tot": 5.9e-05,
+      "percall_cum": 0.042387
+    },
+    {
+      "function": "main",
+      "file": "phase_3_processor.py",
+      "line": 749,
+      "ncalls": 1,
+      "tottime": 0.0001,
+      "tottime_pct": 0.17,
+      "cumtime": 0.0378,
+      "cumtime_pct": 77.22,
+      "percall_tot": 8.5e-05,
+      "percall_cum": 0.037824
+    },
+    {
+      "function": "load_from_yaml",
+      "file": "config.py",
+      "line": 67,
+      "ncalls": 1,
+      "tottime": 0.0001,
+      "tottime_pct": 0.19,
+      "cumtime": 0.0263,
+      "cumtime_pct": 53.74,
+      "percall_tot": 9.4e-05,
+      "percall_cum": 0.026323
+    },
+    {
+      "function": "<built-in method _io.open>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 2,
+      "tottime": 0.0252,
+      "tottime_pct": 51.37,
+      "cumtime": 0.0252,
+      "cumtime_pct": 51.38,
+      "percall_tot": 0.012582,
+      "percall_cum": 0.012583
+    },
+    {
+      "function": "print_exc",
+      "file": "traceback.py",
+      "line": 208,
+      "ncalls": 1,
+      "tottime": 0.0,
+      "tottime_pct": 0.06,
+      "cumtime": 0.0088,
+      "cumtime_pct": 18.05,
+      "percall_tot": 2.8e-05,
+      "percall_cum": 0.008842
+    },
+    {
+      "function": "print_exception",
+      "file": "traceback.py",
+      "line": 119,
+      "ncalls": 1,
+      "tottime": 0.0,
+      "tottime_pct": 0.05,
+      "cumtime": 0.0088,
+      "cumtime_pct": 17.99,
+      "percall_tot": 2.4e-05,
+      "percall_cum": 0.008813
+    },
+    {
+      "function": "<built-in method builtins.compile>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 41,
+      "tottime": 0.008,
+      "tottime_pct": 16.42,
+      "cumtime": 0.008,
+      "cumtime_pct": 16.42,
+      "percall_tot": 0.000196,
+      "percall_cum": 0.000196
+    },
+    {
+      "function": "print",
+      "file": "traceback.py",
+      "line": 1569,
+      "ncalls": 1,
+      "tottime": 0.0001,
+      "tottime_pct": 0.11,
+      "cumtime": 0.0067,
+      "cumtime_pct": 13.69,
+      "percall_tot": 5.5e-05,
+      "percall_cum": 0.006705
+    },
+    {
+      "function": "format",
+      "file": "traceback.py",
+      "line": 1468,
+      "ncalls": 23,
+      "tottime": 0.0001,
+      "tottime_pct": 0.12,
+      "cumtime": 0.0046,
+      "cumtime_pct": 9.39,
+      "percall_tot": 3e-06,
+      "percall_cum": 0.0002
+    },
+    {
+      "function": "format",
+      "file": "traceback.py",
+      "line": 745,
+      "ncalls": 1,
+      "tottime": 0.0001,
+      "tottime_pct": 0.16,
+      "cumtime": 0.0042,
+      "cumtime_pct": 8.6,
+      "percall_tot": 8e-05,
+      "percall_cum": 0.004212
+    },
+    {
+      "function": "format_frame_summary",
+      "file": "traceback.py",
+      "line": 528,
+      "ncalls": 20,
+      "tottime": 0.0007,
+      "tottime_pct": 1.49,
+      "cumtime": 0.0041,
+      "cumtime_pct": 8.43,
+      "percall_tot": 3.7e-05,
+      "percall_cum": 0.000206
+    },
+    {
+      "function": "_find_and_load",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 1360,
+      "ncalls": "3/1",
+      "tottime": 0.0,
+      "tottime_pct": 0.05,
+      "cumtime": 0.0038,
+      "cumtime_pct": 7.74,
+      "percall_tot": 9e-06,
+      "percall_cum": 0.001263
+    },
+    {
+      "function": "_find_and_load_unlocked",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 1308,
+      "ncalls": "3/1",
+      "tottime": 0.0,
+      "tottime_pct": 0.02,
+      "cumtime": 0.0037,
+      "cumtime_pct": 7.58,
+      "percall_tot": 3e-06,
+      "percall_cum": 0.001238
+    },
+    {
+      "function": "_load_unlocked",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 914,
+      "ncalls": "3/1",
+      "tottime": 0.0,
+      "tottime_pct": 0.04,
+      "cumtime": 0.0034,
+      "cumtime_pct": 6.86,
+      "percall_tot": 6e-06,
+      "percall_cum": 0.00112
+    },
+    {
+      "function": "exec_module",
+      "file": "<frozen importlib._bootstrap_external>",
+      "line": 753,
+      "ncalls": "2/1",
+      "tottime": 0.0,
+      "tottime_pct": 0.02,
+      "cumtime": 0.0033,
+      "cumtime_pct": 6.65,
+      "percall_tot": 5e-06,
+      "percall_cum": 0.001629
+    },
+    {
+      "function": "<built-in method builtins.print>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 24,
+      "tottime": 0.0025,
+      "tottime_pct": 5.05,
+      "cumtime": 0.0025,
+      "cumtime_pct": 5.05,
+      "percall_tot": 0.000103,
+      "percall_cum": 0.000103
+    },
+    {
+      "function": "get_code",
+      "file": "<frozen importlib._bootstrap_external>",
+      "line": 826,
+      "ncalls": 2,
+      "tottime": 0.0,
+      "tottime_pct": 0.08,
+      "cumtime": 0.0024,
+      "cumtime_pct": 4.92,
+      "percall_tot": 2.1e-05,
+      "percall_cum": 0.001205
+    },
+    {
+      "function": "parse_args",
+      "file": "phase_3_processor.py",
+      "line": 707,
+      "ncalls": 1,
+      "tottime": 0.0,
+      "tottime_pct": 0.03,
+      "cumtime": 0.0021,
+      "cumtime_pct": 4.35,
+      "percall_tot": 1.5e-05,
+      "percall_cum": 0.002129
+    },
+    {
+      "function": "__init__",
+      "file": "traceback.py",
+      "line": 1044,
+      "ncalls": 1,
+      "tottime": 0.0,
+      "tottime_pct": 0.1,
+      "cumtime": 0.0021,
+      "cumtime_pct": 4.24,
+      "percall_tot": 4.8e-05,
+      "percall_cum": 0.002077
+    }
+  ],
+  "top_functions_by_own_time": [
+    {
+      "function": "<built-in method _io.open>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 2,
+      "tottime": 0.0252,
+      "tottime_pct": 51.37
+    },
+    {
+      "function": "<built-in method builtins.compile>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 41,
+      "tottime": 0.008,
+      "tottime_pct": 16.42
+    },
+    {
+      "function": "<built-in method builtins.print>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 24,
+      "tottime": 0.0025,
+      "tottime_pct": 5.05
+    },
+    {
+      "function": "<built-in method _io.open_code>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 2,
+      "tottime": 0.0015,
+      "tottime_pct": 3.01
+    },
+    {
+      "function": "format_frame_summary",
+      "file": "traceback.py",
+      "line": 528,
+      "ncalls": 20,
+      "tottime": 0.0007,
+      "tottime_pct": 1.49
+    },
+    {
+      "function": "<built-in method nt.stat>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 19,
+      "tottime": 0.0005,
+      "tottime_pct": 1.02
+    },
+    {
+      "function": "<built-in method nt._supports_virtual_terminal>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 16,
+      "tottime": 0.0004,
+      "tottime_pct": 0.81
+    },
+    {
+      "function": "<built-in method builtins.exec>",
+      "file": "~",
+      "line": 0,
+      "ncalls": "4/1",
+      "tottime": 0.0004,
+      "tottime_pct": 0.75
+    },
+    {
+      "function": "<built-in method marshal.loads>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 2,
+      "tottime": 0.0004,
+      "tottime_pct": 0.75
+    },
+    {
+      "function": "<built-in method builtins.next>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 20,
+      "tottime": 0.0003,
+      "tottime_pct": 0.67
+    },
+    {
+      "function": "<method 'readlines' of '_io._IOBase' objects>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 1,
+      "tottime": 0.0003,
+      "tottime_pct": 0.64
+    },
+    {
+      "function": "<method 'read' of '_io.BufferedReader' objects>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 2,
+      "tottime": 0.0003,
+      "tottime_pct": 0.53
+    },
+    {
+      "function": "<built-in method nt.get_terminal_size>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 8,
+      "tottime": 0.0003,
+      "tottime_pct": 0.52
+    },
+    {
+      "function": "_extract_caret_anchors_from_line_segment",
+      "file": "traceback.py",
+      "line": 812,
+      "ncalls": 20,
+      "tottime": 0.0002,
+      "tottime_pct": 0.46
+    },
+    {
+      "function": "dedent",
+      "file": "textwrap.py",
+      "line": 416,
+      "ncalls": 40,
+      "tottime": 0.0002,
+      "tottime_pct": 0.45
+    },
+    {
+      "function": "_path_join",
+      "file": "<frozen importlib._bootstrap_external>",
+      "line": 101,
+      "ncalls": 40,
+      "tottime": 0.0002,
+      "tottime_pct": 0.44
+    },
+    {
+      "function": "output_line",
+      "file": "traceback.py",
+      "line": 640,
+      "ncalls": 22,
+      "tottime": 0.0002,
+      "tottime_pct": 0.43
+    },
+    {
+      "function": "<method 'read' of '_io.TextIOWrapper' objects>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 2,
+      "tottime": 0.0002,
+      "tottime_pct": 0.4
+    },
+    {
+      "function": "_should_show_carets",
+      "file": "traceback.py",
+      "line": 712,
+      "ncalls": 20,
+      "tottime": 0.0002,
+      "tottime_pct": 0.35
+    },
+    {
+      "function": "<built-in method nt._path_exists>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 13,
+      "tottime": 0.0002,
+      "tottime_pct": 0.35
+    }
+  ]
+}

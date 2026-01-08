@@ -57,18 +57,32 @@ coverage.xml
 .env.local
 
 # Logs
-*.log
-logs/
+# *.log
+# logs/
 
 # Configuration (local overrides)
 config/environments/local.yaml
 config/local*.yaml
 
+# Configuration (folders with environment-specific settings)
+# Track the folders but ignore files within them (except .gitkeep)
+
+!config/templates
+
+config/local/environments/*
+!config/local/environments/.gitkeep
+
+config/local/replay/*
+!config/local/replay/.gitkeep
+
+config/local/utils/*
+!config/local/utils/.gitkeep
+
 # Output files (generated during processing)
-output/
-replay_output/
-*.output.csv
-*_processed.csv
+# output/
+# replay_output/
+# *.output.csv
+# *_processed.csv
 
 # Temporary files
 tmp/

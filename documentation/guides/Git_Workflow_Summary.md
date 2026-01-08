@@ -7,6 +7,9 @@ You're ready to create the Phase 0 branch and start refactoring work.
 ## Commands to Run Now
 
 ```bash
+# 0. Configure git to rebase on pull (prevents merge commits)
+git config --global pull.rebase true
+
 # 1. Make sure you're on main and everything is committed
 git status  # Should show "nothing to commit, working tree clean"
 
@@ -61,7 +64,7 @@ git push origin phase0-refactoring
 
 ## Branch Visualization
 
-```
+```md
 main (stable)
 │
 └─── phase0-refactoring (you work here during Phase 0)
@@ -76,7 +79,7 @@ main (stable)
 
 When Phase 0 is complete:
 
-```
+```md
 main (merge Phase 0 here)
 │
 ├─── phase0-refactoring (completed, can be deleted)
@@ -97,7 +100,7 @@ All planning documents now include branching strategy:
 ## Quick Reference Card
 
 | What I Want to Do | Command |
-|-------------------|---------|
+| ------------------- | --------- |
 | See current branch | `git branch` |
 | Switch to Phase 0 | `git checkout phase0-refactoring` |
 | See what changed | `git status` |
@@ -106,6 +109,36 @@ All planning documents now include branching strategy:
 | Push | `git push origin phase0-refactoring` |
 | Pull latest | `git pull origin phase0-refactoring` |
 | See commit history | `git log --oneline` |
+| View graph | `git log --oneline --graph -20` |
+| Clean history | `git rebase -i <commit>` |
+
+## Best Practices
+
+### Keeping Clean History
+
+- ✅ **DO**: Use `pull.rebase true` configuration
+- ✅ **DO**: Pull with `--rebase` flag when needed
+- ✅ **DO**: Use `git log --graph` to visualize history
+- ❌ **DON'T**: Use VS Code Sync button without rebase configured
+- ❌ **DON'T**: Create merge commits for simple updates
+
+### Why Rebase?
+
+When you and remote both have new commits:
+
+**Without rebase** (creates merge commit):
+
+```md
+A -- B -- C -- D (remote)
+     \         \
+      E -------- M (messy merge commit)
+```
+
+**With rebase** (clean linear history):
+
+```md
+A -- B -- C -- D -- E' (your commit rebased on top)
+```
 
 ## Next Steps
 
@@ -116,6 +149,7 @@ All planning documents now include branching strategy:
 ## Need Help?
 
 See the full [Git_Branching_Guide.md](Git_Branching_Guide.md) for:
+
 - Troubleshooting common issues
 - How to undo mistakes
 - How to compare branches

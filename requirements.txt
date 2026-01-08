@@ -1,4 +1,11 @@
 # TXR Automation Requirements
+# 
+# NOTE: This project uses Conda for environment management.
+# For full setup, use environment.yml instead:
+#   conda env create -f environment.yml
+#   conda activate txr_automation
+#
+# This file is provided for reference and pip-only installations.
 
 # Core dependencies
 pyyaml>=6.0

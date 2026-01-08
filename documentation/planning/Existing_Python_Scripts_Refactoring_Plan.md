@@ -11,6 +11,7 @@
 **All Phase 0 refactoring work should be done on the `phase0-refactoring` branch.**
 
 See [Git_Branching_Guide.md](Git_Branching_Guide.md) for detailed instructions on:
+
 - Creating and working with branches
 - Commit best practices
 - Merging completed work
