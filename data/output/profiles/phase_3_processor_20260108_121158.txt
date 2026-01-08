@@ -1,0 +1,91 @@
+Performance Profile: Phase 3 Processor
+Generated: 2026-01-08 12:11:58
+================================================================================
+
+TOP 20 FUNCTIONS BY CUMULATIVE TIME
+--------------------------------------------------------------------------------
+         7733 function calls (7714 primitive calls) in 0.063 seconds
+
+   Ordered by: cumulative time
+   List reduced from 446 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+      4/1    0.001    0.000    0.052    0.052 {built-in method builtins.exec}
+        1    0.000    0.000    0.052    0.052 phase_3_processor.py:1(<module>)
+        1    0.000    0.000    0.045    0.045 phase_3_processor.py:749(main)
+        1    0.000    0.000    0.032    0.032 config.py:71(load_from_yaml)
+        2    0.030    0.015    0.030    0.015 {built-in method _io.open}
+       41    0.013    0.000    0.013    0.000 {built-in method builtins.compile}
+        1    0.000    0.000    0.009    0.009 traceback.py:208(print_exc)
+        1    0.000    0.000    0.009    0.009 traceback.py:119(print_exception)
+        1    0.000    0.000    0.007    0.007 traceback.py:1569(print)
+      3/1    0.000    0.000    0.006    0.006 <frozen importlib._bootstrap>:1360(_find_and_load)
+      3/1    0.000    0.000    0.005    0.005 <frozen importlib._bootstrap>:1308(_find_and_load_unlocked)
+      3/1    0.000    0.000    0.005    0.005 <frozen importlib._bootstrap>:914(_load_unlocked)
+       23    0.000    0.000    0.005    0.000 traceback.py:1468(format)
+      2/1    0.000    0.000    0.005    0.005 <frozen importlib._bootstrap_external>:753(exec_module)
+        1    0.000    0.000    0.004    0.004 traceback.py:745(format)
+       20    0.001    0.000    0.004    0.000 traceback.py:528(format_frame_summary)
+        1    0.000    0.000    0.003    0.003 phase_3_processor.py:707(parse_args)
+        2    0.000    0.000    0.003    0.002 <frozen importlib._bootstrap_external>:826(get_code)
+       24    0.003    0.000    0.003    0.000 {built-in method builtins.print}
+      6/2    0.000    0.000    0.003    0.001 <frozen importlib._bootstrap>:483(_call_with_frames_removed)
+
+
+
+
+TOP 20 FUNCTIONS BY OWN TIME
+--------------------------------------------------------------------------------
+         7733 function calls (7714 primitive calls) in 0.063 seconds
+
+   Ordered by: internal time
+   List reduced from 446 to 20 due to restriction <20>
+
+   ncalls  tottime  percall  cumtime  percall filename:lineno(function)
+        2    0.030    0.015    0.030    0.015 {built-in method _io.open}
+       41    0.013    0.000    0.013    0.000 {built-in method builtins.compile}
+       24    0.003    0.000    0.003    0.000 {built-in method builtins.print}
+        2    0.002    0.001    0.002    0.001 {built-in method _io.open_code}
+      4/1    0.001    0.000    0.052    0.052 {built-in method builtins.exec}
+       20    0.001    0.000    0.004    0.000 traceback.py:528(format_frame_summary)
+       16    0.001    0.000    0.001    0.000 {built-in method nt._supports_virtual_terminal}
+       19    0.001    0.000    0.001    0.000 {built-in method nt.stat}
+        2    0.001    0.000    0.001    0.000 {built-in method marshal.loads}
+        8    0.000    0.000    0.000    0.000 {built-in method nt.get_terminal_size}
+       20    0.000    0.000    0.000    0.000 {built-in method builtins.next}
+       40    0.000    0.000    0.000    0.000 <frozen importlib._bootstrap_external>:101(_path_join)
+        2    0.000    0.000    0.000    0.000 {method 'read' of '_io.BufferedReader' objects}
+       20    0.000    0.000    0.001    0.000 traceback.py:812(_extract_caret_anchors_from_line_segment)
+        1    0.000    0.000    0.000    0.000 {method 'readlines' of '_io._IOBase' objects}
+       13    0.000    0.000    0.000    0.000 {built-in method nt._path_exists}
+        1    0.000    0.000    0.000    0.000 {built-in method builtins.eval}
+       40    0.000    0.000    0.000    0.000 textwrap.py:416(dedent)
+       22    0.000    0.000    0.000    0.000 traceback.py:640(output_line)
+        3    0.000    0.000    0.000    0.000 {method '__exit__' of '_io._IOBase' objects}
+
+
+
+
+CALLERS OF TOP 10 FUNCTIONS
+--------------------------------------------------------------------------------
+   Ordered by: cumulative time
+   List reduced from 446 to 10 due to restriction <10>
+
+Function                                            was called by...
+                                                        ncalls  tottime  cumtime
+{built-in method builtins.exec}                     <-     2/1    0.000    0.003  <frozen importlib._bootstrap>:483(_call_with_frames_removed)
+                                                             1    0.001    0.001  dataclasses.py:478(add_fns_to_class)
+phase_3_processor.py:1(<module>)                    <-       1    0.000    0.052  {built-in method builtins.exec}
+phase_3_processor.py:749(main)                      <-       1    0.000    0.045  phase_3_processor.py:1(<module>)
+config.py:71(load_from_yaml)                        <-       1    0.000    0.032  phase_3_processor.py:749(main)
+{built-in method _io.open}                          <-       1    0.030    0.030  config.py:71(load_from_yaml)
+                                                             1    0.000    0.000  tokenize.py:457(open)
+{built-in method builtins.compile}                  <-      40    0.001    0.001  ast.py:26(parse)
+traceback.py:208(print_exc)                         <-       1    0.000    0.009  phase_3_processor.py:749(main)
+traceback.py:119(print_exception)                   <-       1    0.000    0.009  traceback.py:208(print_exc)
+traceback.py:1569(print)                            <-       1    0.000    0.007  traceback.py:119(print_exception)
+<frozen importlib._bootstrap>:1360(_find_and_load)  <-       1    0.000    0.002  difflib.py:1(<module>)
+                                                             1    0.000    0.000  heapq.py:1(<module>)
+                                                             1    0.000    0.006  phase_3_processor.py:1(<module>)
+
+
