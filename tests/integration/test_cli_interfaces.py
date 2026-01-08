@@ -90,7 +90,7 @@ class TestCLIArgumentParsing:
     """Test argument parsing for CLI interfaces."""
     
     def test_xlsx_converter_missing_required_args(self):
-        """Test XLSX Converter fails gracefully without required arguments."""
+        """Test XLSX Converter loads default config when no args provided."""
         result = subprocess.run(
             [sys.executable, "-m", "src.utils.xlsx_csv_converter"],
             cwd=PROJECT_ROOT,
@@ -99,10 +99,15 @@ class TestCLIArgumentParsing:
             env={**subprocess.os.environ, 'PYTHONPATH': str(SRC_DIR)}
         )
         
-        # Should fail with non-zero exit code
-        assert result.returncode != 0
-        # Should mention missing input_dir or output_dir
-        assert "input_dir" in result.stdout.lower() or "output_dir" in result.stdout.lower()
+        # Should succeed with default config (if it exists)
+        default_config = PROJECT_ROOT / "config" / "local" / "utils" / "xlsx_converter.yaml"
+        if default_config.exists():
+            assert result.returncode == 0
+            assert "Loading default configuration" in result.stdout
+        else:
+            # Should fail if no default config exists
+            assert result.returncode != 0
+            assert "input_dir" in result.stdout.lower() or "output_dir" in result.stdout.lower()
     
     def test_invalid_log_level(self, tmp_path):
         """Test that invalid log level is rejected."""
