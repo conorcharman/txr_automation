@@ -2,27 +2,34 @@
 # Copy this file and modify paths as needed
 
 paths:
-  # Input directory containing Phase 2 and Phase 3 output files
-  replay_input: /path/to/replay/output
+  # Input replay files (CSV format)
+  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii"
   
-  # UnaVista export file path
-  unavista_file: /path/to/UnaVista_MiFIR_Manual_Corrections.csv
+  # Incident code reference files (CSV format)
+  incident_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files"
   
-  # Output directory for final lookup results
-  replay_output: /path/to/final/output
+  # UnaVista reference files (CSV format)
+  unavista_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii_final_lookup"
   
-  # Directory for log files
-  log_output: /path/to/logs
+  # Output directory for processed replay files
+  replay_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii_final_lookup"
+  
+  # Log output directory
+  log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
 
-processing:
-  # Number of records to process per batch (for progress reporting)
-  batch_size: 50
+files:
+  # File patterns for discovery (using glob)
+  unavista_pattern: "UnaVista_MiFIR_Manual_Corrections_*.csv"
+  replay_ids_pattern: "Replay_*_Inconsistent_IDs_Summary_*.csv"
+  replay_names_pattern: "Replay_*_Inconsistent_Names_Summary_*.csv"
+  # Note: incident_matrix is no longer needed - now in txr_replay_core.incident_codes
+
+processor:
+  # Batch size for progress reporting
+  batch_size: 100
   
-  # Logging level: DEBUG, INFO, WARNING, ERROR, CRITICAL
-  log_level: INFO
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  log_level: "INFO"
   
-  # Enable/disable progress reporting
-  enable_progress_reporting: true
-  
-  # File encoding
-  encoding: utf-8
+  # Skip duplicate client records in Replay files
+  skip_duplicates: true

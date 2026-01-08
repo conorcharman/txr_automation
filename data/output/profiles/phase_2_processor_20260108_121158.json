@@ -1,0 +1,412 @@
+{
+  "script": "Phase 2 Processor",
+  "timestamp": "2026-01-08T12:11:58.161811",
+  "summary": {
+    "total_time": 0.4318,
+    "total_calls": 4654
+  },
+  "top_functions_by_cumulative_time": [
+    {
+      "function": "<built-in method builtins.exec>",
+      "file": "~",
+      "line": 0,
+      "ncalls": "42/1",
+      "tottime": 0.0023,
+      "tottime_pct": 0.53,
+      "cumtime": 0.4251,
+      "cumtime_pct": 98.45,
+      "percall_tot": 5.5e-05,
+      "percall_cum": 0.010122
+    },
+    {
+      "function": "<module>",
+      "file": "phase_2_processor.py",
+      "line": 1,
+      "ncalls": 1,
+      "tottime": 0.0001,
+      "tottime_pct": 0.01,
+      "cumtime": 0.4251,
+      "cumtime_pct": 98.45,
+      "percall_tot": 6.2e-05,
+      "percall_cum": 0.425106
+    },
+    {
+      "function": "<module>",
+      "file": "__init__.py",
+      "line": 1,
+      "ncalls": 4,
+      "tottime": 0.0004,
+      "tottime_pct": 0.1,
+      "cumtime": 0.304,
+      "cumtime_pct": 70.4,
+      "percall_tot": 0.000107,
+      "percall_cum": 0.076005
+    },
+    {
+      "function": "main",
+      "file": "phase_2_processor.py",
+      "line": 507,
+      "ncalls": 1,
+      "tottime": 0.0001,
+      "tottime_pct": 0.02,
+      "cumtime": 0.2597,
+      "cumtime_pct": 60.13,
+      "percall_tot": 0.0001,
+      "percall_cum": 0.25967
+    },
+    {
+      "function": "<built-in method _io.open>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 9,
+      "tottime": 0.2213,
+      "tottime_pct": 51.25,
+      "cumtime": 0.2213,
+      "cumtime_pct": 51.25,
+      "percall_tot": 0.02459,
+      "percall_cum": 0.02459
+    },
+    {
+      "function": "print_exc",
+      "file": "traceback.py",
+      "line": 208,
+      "ncalls": 1,
+      "tottime": 0.0,
+      "tottime_pct": 0.01,
+      "cumtime": 0.1949,
+      "cumtime_pct": 45.14,
+      "percall_tot": 3e-05,
+      "percall_cum": 0.194941
+    },
+    {
+      "function": "print_exception",
+      "file": "traceback.py",
+      "line": 119,
+      "ncalls": 1,
+      "tottime": 0.0,
+      "tottime_pct": 0.01,
+      "cumtime": 0.1949,
+      "cumtime_pct": 45.14,
+      "percall_tot": 4.1e-05,
+      "percall_cum": 0.19491
+    },
+    {
+      "function": "__init__",
+      "file": "traceback.py",
+      "line": 1044,
+      "ncalls": 1,
+      "tottime": 0.0,
+      "tottime_pct": 0.01,
+      "cumtime": 0.1895,
+      "cumtime_pct": 43.88,
+      "percall_tot": 4.7e-05,
+      "percall_cum": 0.189475
+    },
+    {
+      "function": "_extract_from_extended_frame_gen",
+      "file": "traceback.py",
+      "line": 459,
+      "ncalls": 1,
+      "tottime": 0.0001,
+      "tottime_pct": 0.03,
+      "cumtime": 0.1894,
+      "cumtime_pct": 43.85,
+      "percall_tot": 0.00013,
+      "percall_cum": 0.189367
+    },
+    {
+      "function": "line",
+      "file": "traceback.py",
+      "line": 373,
+      "ncalls": 40,
+      "tottime": 0.0001,
+      "tottime_pct": 0.02,
+      "cumtime": 0.1888,
+      "cumtime_pct": 43.71,
+      "percall_tot": 2e-06,
+      "percall_cum": 0.004719
+    },
+    {
+      "function": "_set_lines",
+      "file": "traceback.py",
+      "line": 344,
+      "ncalls": 120,
+      "tottime": 0.0001,
+      "tottime_pct": 0.03,
+      "cumtime": 0.1887,
+      "cumtime_pct": 43.69,
+      "percall_tot": 1e-06,
+      "percall_cum": 0.001572
+    },
+    {
+      "function": "getline",
+      "file": "linecache.py",
+      "line": 22,
+      "ncalls": 22,
+      "tottime": 0.0001,
+      "tottime_pct": 0.01,
+      "cumtime": 0.1885,
+      "cumtime_pct": 43.66,
+      "percall_tot": 3e-06,
+      "percall_cum": 0.00857
+    },
+    {
+      "function": "getlines",
+      "file": "linecache.py",
+      "line": 32,
+      "ncalls": 22,
+      "tottime": 0.0001,
+      "tottime_pct": 0.02,
+      "cumtime": 0.1885,
+      "cumtime_pct": 43.64,
+      "percall_tot": 4e-06,
+      "percall_cum": 0.008566
+    },
+    {
+      "function": "updatecache",
+      "file": "linecache.py",
+      "line": 112,
+      "ncalls": 7,
+      "tottime": 0.0002,
+      "tottime_pct": 0.04,
+      "cumtime": 0.1884,
+      "cumtime_pct": 43.62,
+      "percall_tot": 2.4e-05,
+      "percall_cum": 0.02691
+    },
+    {
+      "function": "open",
+      "file": "tokenize.py",
+      "line": 457,
+      "ncalls": 7,
+      "tottime": 0.0003,
+      "tottime_pct": 0.07,
+      "cumtime": 0.1865,
+      "cumtime_pct": 43.19,
+      "percall_tot": 4.4e-05,
+      "percall_cum": 0.026642
+    },
+    {
+      "function": "_find_and_load",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 1360,
+      "ncalls": "43/2",
+      "tottime": 0.0005,
+      "tottime_pct": 0.11,
+      "cumtime": 0.1652,
+      "cumtime_pct": 38.25,
+      "percall_tot": 1.1e-05,
+      "percall_cum": 0.003841
+    },
+    {
+      "function": "_find_and_load_unlocked",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 1308,
+      "ncalls": "43/2",
+      "tottime": 0.0003,
+      "tottime_pct": 0.06,
+      "cumtime": 0.165,
+      "cumtime_pct": 38.22,
+      "percall_tot": 6e-06,
+      "percall_cum": 0.003838
+    },
+    {
+      "function": "_load_unlocked",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 914,
+      "ncalls": "42/2",
+      "tottime": 0.0002,
+      "tottime_pct": 0.04,
+      "cumtime": 0.1645,
+      "cumtime_pct": 38.09,
+      "percall_tot": 5e-06,
+      "percall_cum": 0.003916
+    },
+    {
+      "function": "exec_module",
+      "file": "<frozen importlib._bootstrap_external>",
+      "line": 753,
+      "ncalls": "35/2",
+      "tottime": 0.0002,
+      "tottime_pct": 0.04,
+      "cumtime": 0.1644,
+      "cumtime_pct": 38.07,
+      "percall_tot": 5e-06,
+      "percall_cum": 0.004697
+    },
+    {
+      "function": "_call_with_frames_removed",
+      "file": "<frozen importlib._bootstrap>",
+      "line": 483,
+      "ncalls": "109/3",
+      "tottime": 0.0001,
+      "tottime_pct": 0.02,
+      "cumtime": 0.1628,
+      "cumtime_pct": 37.71,
+      "percall_tot": 1e-06,
+      "percall_cum": 0.001494
+    }
+  ],
+  "top_functions_by_own_time": [
+    {
+      "function": "<built-in method _io.open>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 9,
+      "tottime": 0.2213,
+      "tottime_pct": 51.25
+    },
+    {
+      "function": "<built-in method _imp.create_dynamic>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 1,
+      "tottime": 0.0845,
+      "tottime_pct": 19.56
+    },
+    {
+      "function": "<built-in method _io.open_code>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 36,
+      "tottime": 0.0262,
+      "tottime_pct": 6.07
+    },
+    {
+      "function": "<built-in method nt._supports_virtual_terminal>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 16,
+      "tottime": 0.0177,
+      "tottime_pct": 4.1
+    },
+    {
+      "function": "<built-in method builtins.compile>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 42,
+      "tottime": 0.0093,
+      "tottime_pct": 2.17
+    },
+    {
+      "function": "_optimize_charset",
+      "file": "_compiler.py",
+      "line": 248,
+      "ncalls": 118,
+      "tottime": 0.0072,
+      "tottime_pct": 1.66
+    },
+    {
+      "function": "<built-in method marshal.loads>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 34,
+      "tottime": 0.0052,
+      "tottime_pct": 1.2
+    },
+    {
+      "function": "<built-in method nt.get_terminal_size>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 8,
+      "tottime": 0.0042,
+      "tottime_pct": 0.98
+    },
+    {
+      "function": "<built-in method nt.stat>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 169,
+      "tottime": 0.004,
+      "tottime_pct": 0.93
+    },
+    {
+      "function": "<built-in method builtins.print>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 24,
+      "tottime": 0.0033,
+      "tottime_pct": 0.76
+    },
+    {
+      "function": "<built-in method builtins.__build_class__>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 157,
+      "tottime": 0.0026,
+      "tottime_pct": 0.61
+    },
+    {
+      "function": "<method 'read' of '_io.BufferedReader' objects>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 36,
+      "tottime": 0.0026,
+      "tottime_pct": 0.6
+    },
+    {
+      "function": "<built-in method builtins.exec>",
+      "file": "~",
+      "line": 0,
+      "ncalls": "42/1",
+      "tottime": 0.0023,
+      "tottime_pct": 0.53
+    },
+    {
+      "function": "<method '__exit__' of '_io._IOBase' objects>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 44,
+      "tottime": 0.0023,
+      "tottime_pct": 0.52
+    },
+    {
+      "function": "_path_join",
+      "file": "<frozen importlib._bootstrap_external>",
+      "line": 101,
+      "ncalls": 385,
+      "tottime": 0.0021,
+      "tottime_pct": 0.49
+    },
+    {
+      "function": "_parse",
+      "file": "_parser.py",
+      "line": 512,
+      "ncalls": "129/17",
+      "tottime": 0.002,
+      "tottime_pct": 0.45
+    },
+    {
+      "function": "<built-in method nt.replace>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 1,
+      "tottime": 0.0013,
+      "tottime_pct": 0.29
+    },
+    {
+      "function": "_compile",
+      "file": "_compiler.py",
+      "line": 39,
+      "ncalls": "200/17",
+      "tottime": 0.001,
+      "tottime_pct": 0.24
+    },
+    {
+      "function": "<method 'readlines' of '_io._IOBase' objects>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 7,
+      "tottime": 0.0008,
+      "tottime_pct": 0.19
+    },
+    {
+      "function": "<method 'append' of 'list' objects>",
+      "file": "~",
+      "line": 0,
+      "ncalls": 4654,
+      "tottime": 0.0008,
+      "tottime_pct": 0.17
+    }
+  ]
+}
