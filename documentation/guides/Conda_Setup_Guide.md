@@ -70,7 +70,14 @@ conda activate txr_automation
 replay-phase2           # Automatically uses config/local/replay/phase2.yaml
 replay-phase3           # Automatically uses config/local/replay/phase3.yaml
 replay-phase3-final     # Automatically uses config/local/replay/phase3_final.yaml
-replay-xlsx-converter   # Automatically uses config/local/utils/xlsx_converter.yaml
+replay-xlsx-converter   # Single directory XLSX converter
+replay-xlsx-converter-v2  # Enhanced recursive XLSX converter with filters
+
+# XLSX Converter v2 examples:
+replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation --recursive
+replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation \
+                         --filter-year FY25 --filter-quarter Q3
+replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation --dry-run
 
 # Override with custom config
 replay-phase2 --config config/custom/phase2.yaml
@@ -79,6 +86,7 @@ replay-phase3 --log-level DEBUG
 # Or run as Python modules
 python -m src.replay.phase_2_processor
 python -m src.replay.phase_3_processor
+python -m src.utils.xlsx_csv_converter_v2
 ```
 
 ### Running Tests

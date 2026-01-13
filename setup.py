@@ -26,6 +26,7 @@ setup(
             "replay-phase3=replay.phase_3_processor:main",
             "replay-phase3-final=replay.phase_3_final_lookup:main",
             "replay-xlsx-converter=utils.xlsx_csv_converter:main",
+            "replay-xlsx-converter-v2=utils.xlsx_csv_converter_v2:main",
         ],
     },
     classifiers=[
