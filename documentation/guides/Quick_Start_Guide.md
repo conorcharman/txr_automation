@@ -26,7 +26,8 @@ conda activate txr_automation
 replay-phase2           # Phase 2 processor
 replay-phase3           # Phase 3 processor
 replay-phase3-final     # Phase 3 final lookup
-replay-xlsx-converter   # XLSX to CSV converter
+replay-xlsx-converter   # XLSX to CSV converter (single directory)
+replay-xlsx-converter-v2  # XLSX to CSV converter v2 (recursive with filters)
 ```
 
 These commands automatically use your local configuration files from `config/local/`.
@@ -35,6 +36,23 @@ These commands automatically use your local configuration files from `config/loc
 ```bash
 replay-phase2 --config config/custom/phase2.yaml
 replay-phase3 --log-level DEBUG
+```
+
+**XLSX Converter v2 - Enhanced Features:**
+```bash
+# Convert all FY25 Q3 data across all phases
+replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation \
+                         --filter-year FY25 --filter-quarter Q3
+
+# Preview what would be converted (dry run)
+replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation --dry-run
+
+# Convert specific phases only
+replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation \
+                         --filter-phase phase_ii phase_iii
+
+# Force overwrite existing CSV files
+replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation --force
 ```
 
 ### Alternative: Run as Module
