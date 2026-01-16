@@ -68,13 +68,13 @@ config/local*.yaml
 # Track the folders but ignore files within them (except .gitkeep)
 
 # Ignore all files in these directories
-config/local/environments/*
+config/local/environments/*.yaml
 !config/local/environments/.gitkeep
 
-config/local/replay/*
+config/local/replay/*.yaml
 !config/local/replay/.gitkeep
 
-config/local/utils/*
+config/local/utils/*.yaml
 !config/local/utils/.gitkeep
 
 # Ignore local config files specifically (move this here or make it more specific)
