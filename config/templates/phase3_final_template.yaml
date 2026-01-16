@@ -1,0 +1,35 @@
+# Example YAML configuration for Phase 3 Final Lookup
+# Copy this file and modify paths as needed
+
+paths:
+  # Input replay files (CSV format)
+  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii"
+  
+  # Incident code reference files (CSV format)
+  incident_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files"
+  
+  # UnaVista reference files (CSV format)
+  unavista_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii_final_lookup"
+  
+  # Output directory for processed replay files
+  replay_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii_final_lookup"
+  
+  # Log output directory
+  log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
+
+files:
+  # File patterns for discovery (using glob)
+  unavista_pattern: "UnaVista_MiFIR_Manual_Corrections_*.csv"
+  replay_ids_pattern: "Replay_*_Inconsistent_IDs_Summary_*.csv"
+  replay_names_pattern: "Replay_*_Inconsistent_Names_Summary_*.csv"
+  # Note: incident_matrix is no longer needed - now in txr_replay_core.incident_codes
+
+processor:
+  # Batch size for progress reporting
+  batch_size: 100
+  
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  log_level: "INFO"
+  
+  # Skip duplicate client records in Replay files
+  skip_duplicates: true

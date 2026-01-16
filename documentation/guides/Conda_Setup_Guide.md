@@ -33,7 +33,31 @@ conda activate txr_automation
 
 You should see `(txr_automation)` in your terminal prompt.
 
-### 4. Verify Installation
+### 4. Install Package in Editable Mode
+
+After creating and activating the environment, install the package using pip:
+
+```bash
+# Make sure environment is activated
+conda activate txr_automation
+
+# Install in editable mode (recommended for development)
+pip install -e .
+```
+
+**Note**: This step requires `setuptools` to be installed in your environment. If you encounter a `ModuleNotFoundError: No module named 'setuptools'` error, install it first:
+
+```bash
+conda install setuptools
+pip install -e .
+```
+
+The `-e` flag installs the package in "editable" mode, meaning:
+- Changes to source code are immediately available without reinstalling
+- Console scripts (`replay-phase2`, `replay-phase3`, etc.) are added to your PATH
+- The package can be imported from anywhere: `import replay`, `import utils`
+
+### 5. Verify Installation
 
 ```bash
 # Check Python version
@@ -41,6 +65,10 @@ python --version  # Should be 3.10+
 
 # Check installed packages
 conda list
+
+# Verify console scripts are available
+replay-phase2 --help
+replay-phase3 --help
 
 # Run tests
 python -m pytest tests/test_core/ -v

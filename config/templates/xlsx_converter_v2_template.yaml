@@ -1,0 +1,110 @@
+# XLSX to CSV Converter v2.0 Configuration Template
+# Copy this file to config/local/utils/xlsx_converter_v2.yaml and customize
+
+# Mode 1: Recursive parent directory mode (xlsx → csv in same structure)
+# Use this when you have a structured hierarchy with xlsx/csv folders
+paths:
+  parent_dir: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation
+  
+  # Optional: specify log output directory
+  log_output: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation/logs
+
+# Mode 2: Single directory mode (original behavior)
+# Uncomment these and comment out parent_dir to use single directory mode
+# paths:
+#   input_dir: C:/Users/YOUR_USERNAME/Documents/data/xlsx
+#   output_dir: C:/Users/YOUR_USERNAME/Documents/data/csv
+#   log_output: C:/Users/YOUR_USERNAME/Documents/data/logs
+
+processing:
+  # Enable recursive scanning of subdirectories
+  recursive: true
+  
+  # Encoding for CSV output files (utf-8-sig adds BOM for Excel)
+  encoding: utf-8-sig
+  
+  # Whether to split multi-line cells into separate rows
+  split_multiline: true
+  
+  # Dry run mode - preview what would be converted without actually converting
+  dry_run: false
+  
+  # Force overwrite existing CSV files without prompting
+  force: false
+
+# Optional filters (only applies in parent_dir mode)
+filters:
+  # Filter by fiscal year (e.g., FY25, FY26)
+  # fiscal_year: FY25
+  
+  # Filter by quarter (e.g., Q1, Q2, Q3, Q4)
+  # quarter: Q3
+  
+  # Filter by specific phases (list of phase names)
+  # phases:
+  #   - phase_ii
+  #   - phase_iii
+  #   - phase_iii_final_lookup
+  #   - reference
+
+logging:
+  # Log level: DEBUG, INFO, WARNING, ERROR
+  level: INFO
+  
+  # Enable structured logging
+  structured: true
+
+# =============================================================================
+# Example Usage:
+# =============================================================================
+#
+# 1. Convert all FY25 Q3 data across all phases:
+#    replay-xlsx-converter-v2 --config config/local/utils/xlsx_converter_v2.yaml
+#
+# 2. Convert with command-line filters:
+#    replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation \
+#                             --filter-year FY25 --filter-quarter Q3
+#
+# 3. Preview what would be converted (dry run):
+#    replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation --dry-run
+#
+# 4. Convert specific phases only:
+#    replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation \
+#                             --filter-phase phase_ii phase_iii
+#
+# 5. Single directory mode:
+#    replay-xlsx-converter-v2 --input-dir ./data/xlsx --output-dir ./data/csv
+#
+# =============================================================================
+# Directory Structure Examples:
+# =============================================================================
+#
+# Input structure:
+#   txr_replay_automation/
+#     ├── phase_ii/
+#     │   └── FY25/
+#     │       └── Q3/
+#     │           └── reference/
+#     │               └── xlsx/
+#     │                   └── file.xlsx
+#     └── reference/
+#         └── FY25/
+#             └── Q3/
+#                 └── incident_code_files/
+#                     └── xlsx/
+#                         └── file.xlsx
+#
+# Output structure (xlsx → csv):
+#   txr_replay_automation/
+#     ├── phase_ii/
+#     │   └── FY25/
+#     │       └── Q3/
+#     │           └── reference/
+#     │               └── csv/        <- Created here
+#     │                   └── file.csv
+#     └── reference/
+#         └── FY25/
+#             └── Q3/
+#                 └── incident_code_files/
+#                     └── csv/        <- Created here
+#                         └── file.csv
