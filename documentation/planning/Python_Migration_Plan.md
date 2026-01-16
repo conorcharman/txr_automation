@@ -12,11 +12,13 @@
 **Phases 1-7 (VBA Migration):** Use `vba-migration` branch (created after Phase 0 completes)
 
 See [Git_Branching_Guide.md](Git_Branching_Guide.md) for detailed instructions on:
+
 - Branch creation and workflow
 - Commit best practices
 - Merging strategies
 
 **Quick Reference:**
+
 ```bash
 # Currently on Phase 0
 git checkout phase0-refactoring
@@ -338,21 +340,21 @@ class ReferenceDataManager:
 
 #### 1. **Pricing Data Validation** (pricing_data_validation_v1.0.vb → pricing_validation.py)
 
-   - **VBA Lines:** 120
-   - **Complexity:** LOW
-   - **Why First:** Pure calculation logic, no complex lookups
-   - **Input:** CSV with columns: Transaction_Ref, Net_Amount, Consideration, Interest
-   - **Output:** CSV with added columns: Error, Correction, Correction_Field, Total, Expected_Interest, Net_Difference
+- **VBA Lines:** 120
+- **Complexity:** LOW
+- **Why First:** Pure calculation logic, no complex lookups
+- **Input:** CSV with columns: Transaction_Ref, Net_Amount, Consideration, Interest
+- **Output:** CSV with added columns: Error, Correction, Correction_Field, Total, Expected_Interest, Net_Difference
 
 #### 2. **SQL Extract Generators**
 
-   - **ExtractBuyerID4_1.vb → extract_buyer_id.py**
-   - **ExtractInconsistentBuyerID1_0.vb → extract_inconsistent_buyer_id.py**
-   - **SCR_extract_generator_v1_0.vb → scr_extract_generator.py**
-   - **Complexity:** LOW-MEDIUM
-   - **Why Next:** String manipulation, file generation, no validation logic
-   - **Input:** CSV with transaction references
-   - **Output:** SQL files grouped by batch size
+- **ExtractBuyerID4_1.vb → extract_buyer_id.py**
+- **ExtractInconsistentBuyerID1_0.vb → extract_inconsistent_buyer_id.py**
+- **SCR_extract_generator_v1_0.vb → scr_extract_generator.py**
+- **Complexity:** LOW-MEDIUM
+- **Why Next:** String manipulation, file generation, no validation logic
+- **Input:** CSV with transaction references
+- **Output:** SQL files grouped by batch size
 
 **Approach for Each:**
 
@@ -456,38 +458,38 @@ Branch_Code,LEI
 
 #### 1. **BuyerIDValidation5_6.vb → buyer_id_validation.py** (Week 7-8)
 
-   - **VBA Lines:** 1,853
-   - **Complexity:** HIGH
-   - **Key Features:**
-     - Multi-step validation (format → logic → alternative types)
-     - CONCAT generation and validation
-     - Swedish century logic for NIDN
-     - Joint account aggregation
-     - Tracker file lookups (from CSV, not Excel)
-     - Template lookups (deprecated - removed)
-     - Correction priority hierarchy
+- **VBA Lines:** 1,853
+- **Complexity:** HIGH
+- **Key Features:**
+  - Multi-step validation (format → logic → alternative types)
+  - CONCAT generation and validation
+  - Swedish century logic for NIDN
+  - Joint account aggregation
+  - Tracker file lookups (from CSV, not Excel)
+  - Template lookups (deprecated - removed)
+  - Correction priority hierarchy
 
 #### 2. **SellerIDValidation5_6.vb → seller_id_validation.py** (Week 8-9)
 
-   - **VBA Lines:** 1,780
-   - **Complexity:** HIGH
-   - **Similar to Buyer but with seller-specific logic**
+- **VBA Lines:** 1,780
+- **Complexity:** HIGH
+- **Similar to Buyer but with seller-specific logic**
 
 #### 3. **InconsistentBuyerIDValidation1_3.vb → inconsistent_buyer_id_validation.py** (Week 9-10)
 
-   - **VBA Lines:** 2,548
-   - **Complexity:** VERY HIGH
-   - **Key Features:**
-     - Groups records by Person Code
-     - Chronological sorting by Trade_Date_Time
-     - Identifies inconsistent IDs across time
-     - Only corrects invalid IDs
-     - Uses most recent valid ID for correction
-     - Alternating row highlighting (can be CSV metadata)
+- **VBA Lines:** 2,548
+- **Complexity:** VERY HIGH
+- **Key Features:**
+  - Groups records by Person Code
+  - Chronological sorting by Trade_Date_Time
+  - Identifies inconsistent IDs across time
+  - Only corrects invalid IDs
+  - Uses most recent valid ID for correction
+  - Alternating row highlighting (can be CSV metadata)
 
 #### 4. **InconsistentSellerIDValidation1_3.vb → inconsistent_seller_id_validation.py** (Week 10)
 
-   - Similar to inconsistent buyer
+- Similar to inconsistent buyer
 
 **CSV Structures:**
 
@@ -500,6 +502,7 @@ DM_ID_Code,DM_ID_Type,DM_First_Name,DM_Surname,DM_DOB
 ```
 
 **Tracker CSV (replaces Excel tracker):**
+
 ```csv
 Transaction_Reference,Tracker_Status,Comments,Last_Updated
 ```
@@ -585,12 +588,12 @@ class ClientRecordIndex:
 
 #### 1. **IncidentLookup1_1.vb → incident_lookup.py** (Week 11)
 
-   - **Complexity:** MEDIUM
-   - **Function:** Looks up transaction references in validation CSVs
-   - **Changes:** 
-     - No Excel file to open - direct CSV reads
-     - Much simpler without Excel COM operations
-     - Can use pandas merge operations
+- **Complexity:** MEDIUM
+- **Function:** Looks up transaction references in validation CSVs
+- **Changes:**
+  - No Excel file to open - direct CSV reads
+  - Much simpler without Excel COM operations
+  - Can use pandas merge operations
 
 **Input:**
 
@@ -605,19 +608,20 @@ Transaction_Reference,Account_ID,Person_Code,Correction,Correction_Field,Tracker
 ```
 
 **Output:**
+
 ```csv
 Transaction_Reference,Account_ID,Person_Code,Correction,Correction_Field,Tracker_Status,Actions
 ```
 
 #### 2. **DataPush1_0.vb → data_push.py** (Week 11-12)
 
-   - **Complexity:** MEDIUM
-   - **Function:** Pushes data from source to target CSV files
-   - **Changes:**
-     - No Excel file locking issues
-     - Simple CSV read → merge → write
-     - Can process in batch
-     - Much faster than Excel
+- **Complexity:** MEDIUM
+- **Function:** Pushes data from source to target CSV files
+- **Changes:**
+  - No Excel file locking issues
+  - Simple CSV read → merge → write
+  - Can process in batch
+  - Much faster than Excel
 
 **Approach:**
 
@@ -702,7 +706,7 @@ def data_push(source_csv: str, target_csv: str,
 
 **Test Suite Structure:**
 
-```
+```md
 tests/
 ├── unit/                          # Fast isolated tests
 │   ├── test_validators.py
@@ -792,7 +796,7 @@ tests/
 ### **High Priority Risks**
 
 | Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
+| ------ | -------- | ------------- | ------------ |
 | **Logic Errors in Conversion** | High | Medium | - Extensive testing with known datasets<br>- Side-by-side comparison (VBA vs Python)<br>- Independent code review<br>- 2-week parallel running period |
 | **CSV Format Inconsistencies** | Medium | Medium | - Define strict CSV schemas<br>- Implement schema validation<br>- Provide CSV export templates<br>- Validate inputs before processing |
 | **Data Migration Issues** | High | Low | - Create Excel→CSV conversion utilities<br>- Validate all converted data<br>- Keep Excel files as backup during transition |
@@ -800,7 +804,7 @@ tests/
 ### **Medium Priority Risks**
 
 | Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
+| ------ | -------- | ------------- | ------------ |
 | **Regex Pattern Differences** | Medium | Low | - Test all patterns extensively<br>- Document Python regex differences<br>- Use raw strings consistently |
 | **Date Parsing Edge Cases** | Low | Medium | - Implement robust DateParser class<br>- Test with various formats<br>- Handle missing/invalid dates gracefully |
 | **Performance Issues** | Medium | Low | - Use indexing patterns (Phase 3 style)<br>- Profile and optimize<br>- Batch processing for large datasets |
@@ -809,7 +813,7 @@ tests/
 ### **Low Priority Risks**
 
 | Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
+| ------ |--------|-------------|------------|
 | **Library Dependencies** | Low | Low | - Use standard libraries where possible<br>- Pin versions in requirements.txt<br>- Test in clean environment |
 | **Platform Compatibility** | Low | Low | - Test on user machines early<br>- Document system requirements<br>- Use virtual environments |
 | **Network Path Access** | Low | Low | - Test network access early<br>- Implement retry logic<br>- Consider local caching |
@@ -1006,7 +1010,7 @@ txr_automation/
 ### **Complete Project Timeline**
 
 | Phase | Duration | Focus | Key Deliverables |
-|-------|----------|-------|------------------|
+| ------- | ---------- | ------- | ------------------ |
 | **0. Python Refactoring** | 8 weeks | Refactor existing scripts | txr_replay_core, consistent CLI, tests |
 | **1. Foundation** | 2 weeks | Core library, schemas, tests | txr_core package, CSV schemas, test framework |
 | **2. Simple Scripts** | 2 weeks | Easy conversions | Pricing validation, SQL generators |
@@ -1063,6 +1067,7 @@ This work is detailed in **[Existing_Python_Scripts_Refactoring_Plan.md](Existin
 See **[Existing_Python_Scripts_Refactoring_Plan.md](Existing_Python_Scripts_Refactoring_Plan.md)** for detailed plan.
 
 **Summary:**
+
 - Weeks 1-2: Extract shared core library (`txr_replay_core`)
 - Weeks 3-6: Refactor individual scripts (Phase 2, 3, 3 Final, XLSX Converter)
 - Week 7: Integration testing and parallel running
@@ -1077,6 +1082,7 @@ See **[Existing_Python_Scripts_Refactoring_Plan.md](Existing_Python_Scripts_Refa
 **Note:** This phase now builds on the `txr_replay_core` library created during refactoring.
 
 **Objectives:**
+
 - Extend `txr_replay_core` for accuracy testing workflows
 - Create `txr_core` package for VBA conversion
 - Establish testing framework for VBA conversions
