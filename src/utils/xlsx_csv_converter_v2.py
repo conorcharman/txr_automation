@@ -81,55 +81,45 @@ class XLSXConverterV2:
             raise ValueError("Must specify either parent_dir or input_dir")
     
     @staticmethod
-    def split_multiline_rows(rows: List[List[Any]]) -> List[List[Any]]:
+    def split_multiline_row(row: List[Any]) -> List[List[Any]]:
         """
-        Split rows containing multi-line cells (cells with newlines) into separate rows.
-        For each row, if any cell contains newlines, create multiple rows where:
-        - Cells with newlines are split across the new rows
-        - Cells without newlines are copied to all new rows
+        Split a single row containing multi-line cells into multiple rows.
+        Optimized for streaming processing (processes one row at a time).
         
         Args:
-            rows: List of row lists to process
+            row: Single row to process
             
         Returns:
-            List of rows with multi-line cells split into separate rows
+            List of rows (1 or more) after splitting multi-line cells
         """
-        new_rows = []
+        # Check if any cell contains newlines
+        has_newlines = any(isinstance(val, str) and '\n' in val for val in row)
         
-        for row in rows:
-            # Check if any cell in this row contains newlines
-            has_newlines = any(isinstance(val, str) and '\n' in val for val in row)
-            
-            if not has_newlines:
-                # No newlines, keep row as is
-                new_rows.append(row)
+        if not has_newlines:
+            return [row]
+        
+        # Split cells with newlines
+        max_lines = 1
+        split_cells = []
+        
+        for val in row:
+            if isinstance(val, str) and '\n' in val:
+                lines = val.split('\n')
+                split_cells.append(lines)
+                max_lines = max(max_lines, len(lines))
             else:
-                # Split cells with newlines
-                # First, determine the maximum number of lines in any cell
-                max_lines = 1
-                split_cells = []
-                
-                for val in row:
-                    if isinstance(val, str) and '\n' in val:
-                        # Split by newline
-                        lines = val.split('\n')
-                        split_cells.append(lines)
-                        max_lines = max(max_lines, len(lines))
-                    else:
-                        # Single value, will be repeated
-                        split_cells.append([val])
-                
-                # Create new rows
-                for line_idx in range(max_lines):
-                    new_row = []
-                    for cell_lines in split_cells:
-                        if line_idx < len(cell_lines):
-                            # Use the corresponding line
-                            new_row.append(cell_lines[line_idx])
-                        else:
-                            # Use the last line if we've run out
-                            new_row.append(cell_lines[-1])
-                    new_rows.append(new_row)
+                split_cells.append([val])
+        
+        # Create new rows
+        new_rows = []
+        for line_idx in range(max_lines):
+            new_row = []
+            for cell_lines in split_cells:
+                if line_idx < len(cell_lines):
+                    new_row.append(cell_lines[line_idx])
+                else:
+                    new_row.append(cell_lines[-1])
+            new_rows.append(new_row)
         
         return new_rows
     
@@ -234,7 +224,8 @@ class XLSXConverterV2:
     
     def convert_file_openpyxl(self, xlsx_file: Path, csv_file: Path) -> bool:
         """
-        Convert a single XLSX file to CSV using openpyxl (faster, no pandas overhead).
+        Convert a single XLSX file to CSV using openpyxl with streaming processing.
+        Optimized for large files - processes rows one at a time instead of loading all into memory.
         
         Args:
             xlsx_file: Path to XLSX file
@@ -244,12 +235,19 @@ class XLSXConverterV2:
             True if conversion successful, False otherwise
         """
         try:
+            # Get file size for progress tracking
+            file_size_mb = xlsx_file.stat().st_size / (1024 * 1024)
+            
             base_dir = self.parent_dir if self.parent_dir else self.input_dir
             if base_dir:
                 rel_path = xlsx_file.relative_to(base_dir)
-                self.logger.info(f"Converting: {rel_path}")
+                self.logger.info(f"Converting: {rel_path} ({file_size_mb:.1f} MB)")
             else:
-                self.logger.info(f"Converting: {xlsx_file.name}")
+                self.logger.info(f"Converting: {xlsx_file.name} ({file_size_mb:.1f} MB)")
+            
+            # Warn about large files
+            if file_size_mb > 50:
+                self.logger.warning(f"  ⚠ Large file detected - this may take several minutes")
             
             if self.dry_run:
                 self.logger.info(f"  [DRY RUN] Would create: {csv_file}")
@@ -262,48 +260,54 @@ class XLSXConverterV2:
                 self.stats.errors += 1
                 return False
             
+            # Create output directory if needed
+            csv_file.parent.mkdir(parents=True, exist_ok=True)
+            
             # Load workbook in read-only mode for better performance
             wb = load_workbook(filename=xlsx_file, read_only=True, data_only=True)
             ws = wb.active
             
-            # Read all rows into memory
-            rows = []
-            
-            for row_idx, row in enumerate(ws.iter_rows(values_only=True)):
-                if row_idx == 0:
-                    # Store headers
-                    rows.append(list(row))
-                else:
-                    # Process data rows
-                    processed_row = []
-                    for cell_value in row:
-                        # Format dates to DD/MM/YYYY
-                        if isinstance(cell_value, datetime):
-                            processed_row.append(cell_value.strftime('%d/%m/%Y'))
-                        elif cell_value is None:
-                            processed_row.append('')
-                        else:
-                            processed_row.append(str(cell_value) if not isinstance(cell_value, str) else cell_value)
-                    rows.append(processed_row)
-            
-            wb.close()
-            
-            # Split multi-line rows
-            if len(rows) > 1:  # Has data beyond headers
-                headers = rows[0]
-                data_rows = rows[1:]
-                data_rows = self.split_multiline_rows(data_rows)
-                rows = [headers] + data_rows
-            
-            # Create output directory if needed
-            csv_file.parent.mkdir(parents=True, exist_ok=True)
-            
-            # Write to CSV
+            # Open CSV file for streaming write
             with open(csv_file, 'w', newline='', encoding='utf-8-sig') as f:
                 writer = csv.writer(f)
-                writer.writerows(rows)
+                
+                row_count = 0
+                output_row_count = 0
+                progress_interval = 10000  # Log progress every 10k rows
+                
+                # Process rows in streaming fashion
+                for row_idx, row in enumerate(ws.iter_rows(values_only=True)):
+                    row_count += 1
+                    
+                    if row_idx == 0:
+                        # Write headers directly (no splitting)
+                        writer.writerow(list(row))
+                        output_row_count += 1
+                    else:
+                        # Process data row
+                        processed_row = []
+                        for cell_value in row:
+                            # Format dates to DD/MM/YYYY
+                            if isinstance(cell_value, datetime):
+                                processed_row.append(cell_value.strftime('%d/%m/%Y'))
+                            elif cell_value is None:
+                                processed_row.append('')
+                            else:
+                                processed_row.append(str(cell_value) if not isinstance(cell_value, str) else cell_value)
+                        
+                        # Split multi-line cells and write immediately
+                        split_rows = self.split_multiline_row(processed_row)
+                        writer.writerows(split_rows)
+                        output_row_count += len(split_rows)
+                    
+                    # Progress logging for large files
+                    if row_count % progress_interval == 0:
+                        self.logger.info(f"  Processing... {row_count:,} rows read, {output_row_count:,} rows written")
             
-            self.logger.info(f"  ✓ Created: {csv_file.name}")
+            # Close workbook to free memory
+            wb.close()
+            
+            self.logger.info(f"  ✓ Created: {csv_file.name} ({row_count:,} input rows → {output_row_count:,} output rows)")
             self.stats.successful_matches += 1
             return True
             
@@ -663,4 +667,3 @@ def main():
 
 if __name__ == "__main__":
     exit(main())
-    input("\nPress Enter to close...")

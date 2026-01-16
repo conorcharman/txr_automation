@@ -67,8 +67,7 @@ config/local*.yaml
 # Configuration (folders with environment-specific settings)
 # Track the folders but ignore files within them (except .gitkeep)
 
-!config/templates
-
+# Ignore all files in these directories
 config/local/environments/*
 !config/local/environments/.gitkeep
 
@@ -77,6 +76,10 @@ config/local/replay/*
 
 config/local/utils/*
 !config/local/utils/.gitkeep
+
+# Ignore local config files specifically (move this here or make it more specific)
+config/local*.yaml
+config/environments/local.yaml
 
 # Output files (generated during processing)
 # output/
