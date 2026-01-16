@@ -265,7 +265,7 @@ class XLSXConverterV2:
             
             # Load workbook in read-only mode for better performance
             wb = load_workbook(filename=xlsx_file, read_only=True, data_only=True)
-            ws = wb.active
+            ws = wb.worksheets[0]
             
             # Open CSV file for streaming write
             with open(csv_file, 'w', newline='', encoding='utf-8-sig') as f:
