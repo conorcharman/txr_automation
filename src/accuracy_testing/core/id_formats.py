@@ -36,6 +36,73 @@ class IDPattern:
         """Check if value matches this pattern."""
         return bool(self.compiled_pattern.match(value))
     
+    def get_mismatch_reason(self, value: str) -> Optional[str]:
+        """Get detailed reason why value doesn't match pattern."""
+        if self.matches(value):
+            return None
+        
+        # Analyze common failure patterns
+        reasons = []
+        actual_len = len(value)
+        
+        # Determine expected length from pattern
+        expected_len = None
+        
+        # Unified approach: capture all length specifiers in the pattern
+        # This handles patterns like:
+        # - ^\d{13}$ (simple digit-only)
+        # - ^\d{7}[A-Z]{1}$ (mixed digit and character class)
+        # - ^[A-Z]{3}[A-Z0-9]{5}$ (character classes only)
+        # - ^\d{6}\d{3}\d{2}$ (multiple digit groups)
+        
+        total_length = 0
+        
+        # Find all \d{n} patterns
+        digit_groups = re.findall(r'\\d\{(\d+)\}', self.regex_pattern)
+        if digit_groups:
+            total_length += sum(int(n) for n in digit_groups)
+        
+        # Find all [character_class]{n} patterns like [A-Z]{1}, [A-Z0-9]{5}, etc.
+        char_class_groups = re.findall(r'\[(?:[^\]]+)\]\{(\d+)\}', self.regex_pattern)
+        if char_class_groups:
+            total_length += sum(int(n) for n in char_class_groups)
+        
+        # Only set expected_len if we found any length specifiers
+        if total_length > 0:
+            expected_len = total_length
+        
+        # Check length
+        if expected_len and actual_len != expected_len:
+            reasons.append(f"Expected {expected_len} characters, got {actual_len}")
+        
+        # Check character types
+        if r'^\d' in self.regex_pattern or self.regex_pattern.startswith(r'^\d'):
+            if not value.isdigit():
+                # Find first non-digit
+                for i, ch in enumerate(value):
+                    if not ch.isdigit():
+                        reasons.append(f"Contains non-digit character '{ch}' at position {i+1}")
+                        break
+                else:
+                    reasons.append(f"Contains non-digit characters")
+        
+        # Check if should start with letters
+        if r'^[A-Z]{' in self.regex_pattern:
+            match = re.search(r'^\[A-Z\]\{(\d+)\}', self.regex_pattern)
+            if match:
+                prefix_len = int(match.group(1))
+                if len(value) < prefix_len or not value[:prefix_len].isalpha():
+                    reasons.append(f"Must start with {prefix_len} letters")
+        
+        # If no specific reason found, provide generic info
+        if not reasons:
+            if expected_len:
+                reasons.append(f"Does not match expected {expected_len}-character format")
+            else:
+                reasons.append(f"Does not match expected format pattern")
+        
+        return "; ".join(reasons)
+    
     def __str__(self) -> str:
         return f"{self.country_code}-{self.id_type}: {self.regex_pattern}"
 
@@ -194,6 +261,40 @@ class IDFormatManager:
         
         # Check if value matches any pattern for this country/type
         return any(pattern.matches(id_value) for pattern in patterns)
+    
+    def validate_with_details(self, country_code: str, id_type: str, id_value: str) -> Tuple[bool, Optional[str]]:
+        """
+        Validate an ID value and provide detailed error message if it fails.
+        
+        Args:
+            country_code: Two-letter country code (e.g., "GB")
+            id_type: ID type (NIDN, CONCAT, CCPT, LEI)
+            id_value: The ID value to validate
+        
+        Returns:
+            Tuple of (is_valid, error_message)
+            error_message is None if valid, detailed reason if invalid
+        """
+        key = (country_code.upper(), id_type.upper())
+        patterns = self._patterns_by_key.get(key, [])
+        
+        if not patterns:
+            return (False, f"No {id_type} format patterns defined for {country_code}")
+        
+        # Try each pattern and collect failure reasons
+        for pattern in patterns:
+            if pattern.matches(id_value):
+                return (True, None)
+        
+        # All patterns failed - provide detailed reason from first pattern
+        # (or combine if multiple patterns exist)
+        if len(patterns) == 1:
+            reason = patterns[0].get_mismatch_reason(id_value)
+            return (False, f"Invalid {id_type} format for {country_code}: {reason}")
+        else:
+            # Multiple patterns - provide summary
+            reasons = [p.get_mismatch_reason(id_value) for p in patterns]
+            return (False, f"Invalid {id_type} format for {country_code} (tried {len(patterns)} patterns): {reasons[0]}")
     
     def validate_any_type(self, country_code: str, id_value: str) -> Optional[str]:
         """

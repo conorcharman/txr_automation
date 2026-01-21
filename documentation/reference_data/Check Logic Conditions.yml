@@ -1,0 +1,212 @@
+ID_Logic_Definitions:
+  DOB_Logic:
+    description: >
+      Check that the date of birth embedded in the ID matches the client's recorded date of birth.
+      This typically applies when the ID includes a YYMMDD, CCYYMMDD, DDMMYY or DDMMYYY pattern.
+      
+  DOB_Gender_Logic:
+    description: >
+      Part of the date of birth embedded in the client's ID will be offset, depending on their gender (e.g., MM+50 for females).
+      DOB_Gender_Position is the same as DOB_Position.
+      The macro must decode and validate it against the client's date of birth and gender.
+  
+  Gender_Code_Logic:
+    description: >
+      ID includes a code that represents the person's gender (e.g., by an odd/even digit or specific letter).
+      This code must be extracted and validated against the client's gender.
+
+  Gender_and_Century_Code_Logic:
+    description: >
+      ID includes a code that represents both the person's gender and the century of birth (e.g., 1 = male born 1900–1999).
+      This code must be extracted and validated against client date of birth and gender.
+
+  Birth_Year_Code_Logic:
+    description: >
+      ID includes a code that represents the birth year (e.g., + = born in the range of 1800-1899).
+      The macro must decode and validate it against the client's year of birth and gender.
+
+  Birth_Century_Code_Logic:
+    description: >
+      A specific part of the ID indicates the century of birth. It must align with the full year in the client date of birth.
+
+  Check_Digit_Logic:
+    description: >
+      ID includes one or more check digits that validate the authenticity of the ID using a mathematical algorithm.
+      The check digit(s) must be calculated from other parts of the ID and compared against the actual check digit(s) in the ID.
+      Common algorithms include Luhn, modulus 11, weighted sum, etc.
+
+ID_Logic_Table:
+  - Country Code: BE
+    ID_Type: NIDN
+    Regex: "^\d{6}\d{3}\d{2}$"
+    DOB_Logic: True
+    DOB_Format: "YYMMDD"
+    DOB_Position: "1-6"
+    Gender_Code_Logic: True
+    Gender_Code_Position: "7-9"
+    Gender_Code_Conditions: "Odd for males, even for females."
+    Check_Digit_Logic: True
+    Check_Digit_Position: "10-11"
+    Check_Digit_Algorithm: "Modulus 97"
+    Check_Digit_Conditions: "Apply modulus 97 to first 9 digits. For birth years 2000+, prepend '2' before calculation. Check digit = 97 - (number mod 97). Must match last 2 digits."
+
+  - Country Code: BG
+    ID_Type: NIDN
+    Regex: "^\d{6}\d{2}\d{1}\d{1}$"
+    DOB_Logic: True
+    DOB_Format: "YYMMDD" 
+    DOB_Position: "1-6"
+    Gender_Code_Logic: True
+    Gender_Code_Position: "9-9"
+    Gender_Code_Conditions: "Even for males, odd for females."
+    Check_Digit_Logic: True
+    Check_Digit_Position: "10-10"
+    Check_Digit_Algorithm: "Weighted Sum Modulus 11"
+    Check_Digit_Conditions: "Apply weights [2,4,8,5,10,9,7,3,6] to first 9 digits. Sum mod 11: if result = 10, then check digit = 0; else check digit = result. Must match 10th digit."
+
+  - Country Code: CZ
+    ID_Type: NIDN
+    Regex: 
+        -"^\d{6}\d{3}$" 
+        -"^\d{6}\d{3}\d{1}$"
+    DOB_Logic: True
+    DOB_Format: "YYMMDD"
+    DOB_Position: "1-6" 
+    DOB_Gender_Logic: True
+    DOB_Gender_Conditions: "MM=MM for males, MM=MM+50 or +70 for females."
+    Check_Digit_Logic: True
+    Check_Digit_Position: "10-10"
+    Check_Digit_Algorithm: "Modulus 11"
+    Check_Digit_Conditions: "Only for 10-digit numbers (people born after 1 Jan 1954). Check digit = first 9 digits mod 11. If mod 11 = 10, then check digit = 0. Must match 10th digit."
+
+  - Country Code: DK
+    ID_Type: NIDN
+    Regex: "^\d{6}\d{4}$"
+    DOB_Logic: True
+    DOB_Format: "DDMMYY"
+    DOB_Position: "1-6"
+    Check_Digit_Logic: False
+
+  - Country Code: EE
+    ID_Type: NIDN
+    Regex: "^\d{1}\d{6}\d{3}\d{1}$"
+    DOB_Logic: True
+    DOB_Format: "YYMMDD"
+    DOB_Position: "2-7" 
+    Gender_and_Century_Code_Logic: True
+    Gender_and_Century_Code_Position: "1-1"
+    Gender_and_Century_Code_Conditions: "For persons born in the 19th century: 1 for males, 2 for females; in the 20th century: 3 for males, 4 for females; in the 21st century: 5 for males, 6 for females."
+    Check_Digit_Logic: True
+    Check_Digit_Position: "11-11"
+    Check_Digit_Algorithm: "Two-Stage Modulus 11"
+    Check_Digit_Conditions: "Stage 1: weights [1,2,3,4,5,6,7,8,9,1] on first 10 digits. If sum mod 11 < 10, that's the check digit. If sum mod 11 = 10: Stage 2 with weights [3,4,5,6,7,8,9,1,2,3]. If Stage 2 mod 11 = 10, then check digit = 0. Must match 11th digit."
+    
+  - Country Code: FI
+    ID_Type: NIDN
+    Regex: "^\d{6}[+\-A]\d{3}$"
+    DOB_Logic: True
+    DOB_Format: "DDMMYY"
+    DOB_Position: "1-6" 
+    Gender_Code_Logic: True
+    Gender_Code_Position: "8-10"
+    Gender_Code_Conditions: "Odd for males, even for females."
+    Birth_Year_Code_Position: "7-7"
+    Birth_Year_Code_Logic: True
+    Birth_Year_Code_Conditions: "+ for persons born in years 1800-1899, - in years 1900-1999, A in years 2000-2099."
+    Check_Digit_Logic: True
+    Check_Digit_Position: "11-11"
+    Check_Digit_Algorithm: "Modulus 31 Character Mapping"
+    Check_Digit_Conditions: "Concatenate DDMMYY + 3-digit sequence. Calculate mod 31. Map to character set: '0123456789ABCDEFHJKLMNPRSTUVWXY'. Must match final character."
+
+  - Country Code: IS
+    ID_Type: NIDN
+    Regex: "^\d{6}\d{4}$"
+    DOB_Logic: True
+    DOB_Format: "DDMMYY"
+    DOB_Position: "1-6" 
+    Check_Digit_Logic: False
+
+  - Country Code: LT
+    ID_Type: NIDN
+    Regex: "^\d{1}\d{6}\d{3}\d{1}"
+    DOB_Logic: True
+    DOB_Format: "YYMMDD"
+    DOB_Position: "2-7"
+    Gender_Code_Logic: True
+    Gender_Code_Position: "1-1"
+    Gender_Code_Conditions: "3 or 5 for males, 4 or 6 for females."
+    Check_Digit_Logic: False
+
+  - Country Code: LV
+    ID_Type: NIDN
+    Regex: "^\d{6}\d{1}\d{4}$"
+    DOB_Logic: True
+    DOB_Format: "DDMMYY"
+    DOB_Position: "1-6"
+    Birth_Century_Code_Logic: True
+    Birth_Century_Code_Position: "7"
+    Birth_Century_Code_Conditions: "0 for persons born in 19th century, 1 in 20th century, 2 in 21st century."
+    Check_Digit_Logic: False
+
+  - Country Code: NO
+    ID_Type: NIDN
+    Regex: "^\d{6}\d{5}$"
+    DOB_Logic: True
+    DOB_Format: "DDMMYY"
+    DOB_Position: "1-6" 
+    Check_Digit_Logic: False
+
+  - Country Code: RO
+    ID_Type: NIDN
+    Regex: "^\d{1}\d{6}\d{2}\d{3}\d{1}$"
+    DOB_Logic: True
+    DOB_Format: "YYMMDD"
+    DOB_Position: "2-7"
+    Gender_and_Century_Code_Logic: True
+    Gender_and_Century_Code_Position: "1"
+    Gender_and_Century_Code_Conditions: "For persons born in the 20th century: 1 for males, 2 for females; in the 19th century: 3 for males, 4 for females; in the 21st century: 5 for males, 6 for females."
+    Check_Digit_Logic: True
+    Check_Digit_Position: "13-13"
+    Check_Digit_Algorithm: "Weighted Sum Modulus 11"
+    Check_Digit_Conditions: "Apply weights [2,7,9,1,4,6,3,5,8,2,7,9] to first 12 digits. Sum mod 11: if result = 10, then check digit = 1; else check digit = result. Must match 13th digit."
+
+  - Country Code: SE
+    ID_Type: NIDN
+    Regex: "^\d{8}\d{3}\d{1}$"
+    DOB_Logic: True
+    DOB_Format: "CCYYMMDD"
+    DOB_Position: "1-8"
+    Gender_Code_Logic: True
+    Gender_Code_Position: "9-11"
+    Gender_Code_Conditions: "Odd for males, even for females."
+    Check_Digit_Logic: True
+    Check_Digit_Position: "12-12"
+    Check_Digit_Algorithm: "Luhn Algorithm"
+    Check_Digit_Conditions: "Apply Luhn algorithm to first 9 digits. Last digit is the check digit."
+
+  - Country Code: SI
+    ID_Type: NIDN
+    Regex: "^\d{7}\d{2}\d{3}\d{1}$"
+    DOB_Logic: True
+    DOB_Format: "DDMMYYY"
+    DOB_Position: "1-7"
+    Gender_Code_Logic: True
+    Gender_Code_Position: "10-12"
+    Gender_Code_Conditions: "In the range of 000-499 for males, 500-999 for females."
+    Check_Digit_Logic: True
+    Check_Digit_Position: "13-13"
+    Check_Digit_Algorithm: "Weighted Sum Modulus 11"
+    Check_Digit_Conditions: "Apply weights [7,6,5,4,3,2,7,6,5,4,3,2] to first 12 digits. Calculate 11 - (sum mod 11). If result = 1: ID is INVALID. If result = 11: check digit = 0. Else: check digit = result. Must match 13th digit."
+
+  - Country Code: SK
+    ID_Type: NIDN
+    Regex: "^\d{6}\d{3}\d{1}$"
+    DOB_Logic: True
+    DOB_Format: "YYMDD"
+    DOB_Position: "1-6"
+    DOB_Gender_Logic: True
+    DOB_Gender_Conditions: "MM=MM for males, MM=MM+50 for females."
+    Check_Digit_Logic: True
+    Check_Digit_Position: "1-10"
+    Check_Digit_Algorithm: "Divisibility by 11"
+    Check_Digit_Conditions: "Only for people born after 1 Jan 1954. Full 10-digit number (without slash) must be divisible by 11."

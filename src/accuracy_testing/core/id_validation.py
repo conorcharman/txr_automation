@@ -173,11 +173,11 @@ class IDValidator:
             result.add_error(f"Invalid ID type: {id_type}")
             return result
         
-        # Check format patterns
-        if not self.format_manager.validate(country_code or "", id_type, id_value):
-            result.add_error(
-                f"ID value does not match {id_type} format for country {country_code}"
-            )
+        # Check format patterns with detailed error reporting
+        is_valid, error_detail = self.format_manager.validate_with_details(country_code or "", id_type, id_value)
+        if not is_valid:
+            # Use detailed error message
+            result.add_error(error_detail if error_detail else f"ID value does not match {id_type} format for country {country_code}")
             
             # Suggest alternative if not strict
             if not strict:

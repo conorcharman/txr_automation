@@ -22,11 +22,15 @@ setup(
     ],
     entry_points={
         "console_scripts": [
+            # Replay scripts
             "replay-phase2=replay.phase_2_processor:main",
             "replay-phase3=replay.phase_3_processor:main",
             "replay-phase3-final=replay.phase_3_final_lookup:main",
             "replay-xlsx-converter=utils.xlsx_csv_converter:main",
             "replay-xlsx-converter-v2=utils.xlsx_csv_converter_v2:main",
+            # Accuracy testing scripts
+            "validate-buyer=accuracy_testing.scripts.buyer_id_validation:main",
+            "validate-seller=accuracy_testing.scripts.seller_id_validation:main",
         ],
     },
     classifiers=[

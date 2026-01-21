@@ -450,6 +450,13 @@ Examples:
     )
     
     parser.add_argument(
+        '--mode',
+        type=int,
+        choices=[1, 2],
+        help='Conversion mode: 1=Recursive parent directory, 2=Single directory'
+    )
+    
+    parser.add_argument(
         '--parent-dir',
         type=str,
         help='Parent directory to scan recursively (xlsx→csv in same structure)'
@@ -540,11 +547,29 @@ def main():
     if not config_dict.get('filters'):
         config_dict['filters'] = {}
     
-    # Command line overrides
+    # Handle mode selection
+    if args.mode:
+        config_dict['mode'] = args.mode
+    
+    # Apply mode-based configuration
+    selected_mode = config_dict.get('mode')
+    if selected_mode == 1:
+        # Mode 1: Use mode1_paths configuration
+        if 'mode1_paths' in config_dict:
+            config_dict['paths'] = config_dict['mode1_paths'].copy()
+    elif selected_mode == 2:
+        # Mode 2: Use mode2_paths configuration
+        if 'mode2_paths' in config_dict:
+            config_dict['paths'] = config_dict['mode2_paths'].copy()
+    
+    # Command line overrides (these take precedence over mode)
     if args.parent_dir:
         config_dict['paths']['parent_dir'] = args.parent_dir
+        config_dict['paths'].pop('input_dir', None)
+        config_dict['paths'].pop('output_dir', None)
     if args.input_dir:
         config_dict['paths']['input_dir'] = args.input_dir
+        config_dict['paths'].pop('parent_dir', None)
     if args.output_dir:
         config_dict['paths']['output_dir'] = args.output_dir
     if args.recursive:

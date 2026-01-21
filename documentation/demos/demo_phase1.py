@@ -2,14 +2,20 @@
 Phase 1 Demo - Core Library Functionality
 ==========================================
 
-Demonstrates the new Phase 1 functionality:
+ARCHIVED: This demo shows Phase 1 core library functionality.
+Phase 1 is complete and stable. This file is preserved for reference.
+
+Demonstrates the Phase 1 functionality:
 - Country code lookups (embedded data, no CSV)
 - ID format validation (embedded patterns, no CSV)
 - Core validation functions
 - ID validation with auto-detection
+
+Date Archived: January 19, 2026
+Phase 1 Status: Complete (v1.0.0)
 """
 
-from src.txr_replay_core import (
+from src.accuracy_testing.core import (
     country_manager,
     id_format_manager,
     validate_id,
@@ -28,8 +34,11 @@ def demo_country_codes():
     # Lookup by Alpha-2
     print("\n1. Lookup by Alpha-2 code:")
     uk = country_manager.get_by_alpha2("GB")
-    print(f"   GB → {uk.name}")
-    print(f"   EEA Member: {uk.is_eea}")
+    if uk:
+        print(f"   GB → {uk.name}")
+        print(f"   EEA Member: {uk.is_eea}")
+    else:
+        print("   GB → Not found")
     
     # Check EEA status
     print("\n2. Check EEA membership:")
@@ -109,7 +118,8 @@ def demo_core_validation():
         if result.is_valid:
             print(f"   ✓ '{date_str}' → {result.corrected_value}")
         else:
-            print(f"   ✗ '{date_str}' → {result.error_message[:40]}...")
+            error_msg = result.error_message or "Validation failed"
+            print(f"   ✗ '{date_str}' → {error_msg[:40]}...")
     
     # String validation
     print("\n2. String validation (trim whitespace):")
@@ -157,7 +167,7 @@ def main():
     """Run all demos."""
     print("\n" + "=" * 70)
     print("PHASE 1 FOUNDATION - CORE LIBRARY DEMO")
-    print("Version 1.1.0")
+    print("Version 1.1.0 (ARCHIVED)")
     print("=" * 70)
     
     demo_country_codes()
@@ -169,7 +179,7 @@ def main():
     print("DEMO COMPLETE")
     print("=" * 70)
     print("\nAll reference data is embedded - no CSV files required!")
-    print("Ready for Phase 2: VBA migration scripts\n")
+    print("Phase 1 complete - now integrated into Phase 2 scripts.\n")
 
 
 if __name__ == "__main__":
