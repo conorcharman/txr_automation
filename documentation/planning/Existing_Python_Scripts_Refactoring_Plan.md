@@ -1,8 +1,18 @@
 # Existing Python Scripts Refactoring Plan
 
-**Version:** 1.1  
-**Date:** 23 December 2025  
+**Version:** 1.2  
+**Date:** 19 January 2026  
 **Purpose:** Analysis and plan to refactor existing Python replay scripts with consistent architecture
+
+**Status Update (19 January 2026):**
+
+- ✅ **Phase 0**: Completed - Core library refactoring and performance optimizations (merged to main)
+- ✅ **Phase 1**: Completed - Accuracy testing core library created in `src/accuracy_testing/core/`
+  - Country codes reference data (249 countries with EEA status)
+  - ID format validation patterns (67 patterns across 40+ countries)
+  - ID validation logic (NIDN, CONCAT, CCPT, LEI)
+  - Core validators and CSV schema definitions
+  - Comprehensive test suite and demo script
 
 ---
 
@@ -17,6 +27,7 @@ See [Git_Branching_Guide.md](Git_Branching_Guide.md) for detailed instructions o
 - Merging completed work
 
 **Quick Start:**
+
 ```bash
 # Create Phase 0 branch
 git checkout -b phase0-refactoring
@@ -32,7 +43,10 @@ git push origin phase0-refactoring
 
 ## Executive Summary
 
-The existing Python scripts (Phase 2, Phase 3, Phase 3 Final Lookup, and XLSX Converter) were written independently and show significant architectural inconsistencies. This plan outlines how to refactor them using shared core libraries and consistent patterns to support the medium-term goal of building a unified Transaction Reporting tool.
+The existing Python scripts (Phase 2, Phase 3, Phase 3 Final Lookup, and XLSX Converter) were written
+independently and show significant architectural inconsistencies.
+This plan outlines how to refactor them using shared core libraries and consistent patterns to
+support the medium-term goal of building a unified Transaction Reporting tool.
 
 ### Key Findings
 
@@ -182,7 +196,7 @@ The existing Python scripts (Phase 2, Phase 3, Phase 3 Final Lookup, and XLSX Co
 ### **Major Issues:**
 
 | Issue | Impact | Affected Scripts |
-|-------|--------|------------------|
+| ------- | -------- | ------------------ |
 | **Hardcoded file paths** | Cannot run on different machines/environments | All 4 scripts |
 | **No configuration management** | Changes require code edits | All 4 scripts |
 | **Duplicated classes** | Code maintenance nightmare | Phase 2, 3, 3 Final |
@@ -195,7 +209,8 @@ The existing Python scripts (Phase 2, Phase 3, Phase 3 Final Lookup, and XLSX Co
 ### **Duplicated Code:**
 
 1. **`DateParser` class** (in Phase 3 and Phase 3 Final) - Identical functionality
-2. **`IncidentFileIndex` class** (in Phase 2 and Phase 3) - Similar functionality, different implementation details
+2. **`IncidentFileIndex` class** (in Phase 2 and Phase 3) - Similar functionality, different
+implementation details
 3. **Logging setup** - Repeated in all scripts with variations
 4. **Statistics tracking** - Similar patterns but different implementations
 5. **File discovery** - Only Phase 3 Final has glob patterns, others hardcoded
@@ -204,7 +219,7 @@ The existing Python scripts (Phase 2, Phase 3, Phase 3 Final Lookup, and XLSX Co
 ### **Design Pattern Inconsistencies:**
 
 | Pattern | Phase 2 | Phase 3 | Phase 3 Final | XLSX Converter |
-|---------|---------|---------|---------------|----------------|
+| --------- | --------- | --------- | --------------- | ---------------- |
 | **Main class** | `Phase2ProcessorOptimized` | `Phase3ProcessorUltraOptimized` | `Phase3FinalLookup` | Functions only |
 | **Configuration** | Hardcoded | Hardcoded | Hardcoded | Hardcoded |
 | **Logging setup** | Method in class | Method in class | Method in class | Not implemented |
@@ -215,9 +230,65 @@ The existing Python scripts (Phase 2, Phase 3, Phase 3 Final Lookup, and XLSX Co
 
 ## Refactoring Plan
 
-### **Phase 1: Extract Shared Core Library (Week 1-2)**
+### **Phase 1: Extract Shared Core Library** ✅ **COMPLETED (19 January 2026)**
 
-**Objective:** Create `txr_replay_core` package with shared functionality
+**Objective:** Create shared functionality for both replay and accuracy testing workflows
+
+**Status:** Phase 1 focused on accuracy testing core library rather than replay-specific refactoring.
+The accuracy testing foundation was successfully built in `src/accuracy_testing/core/`.
+
+#### **1.1 Accuracy Testing Core Library** ✅ **IMPLEMENTED**
+
+Located in `src/accuracy_testing/core/`:
+
+- ✅ **`country_codes.py`**: ISO 3166-1 country codes with EEA status (249 countries)
+  - `Country` dataclass, `CountryDataManager` singleton
+  - O(1) lookups by Alpha-2/Alpha-3, EEA membership checks
+  - No external CSV dependencies (embedded data)
+
+- ✅ **`id_formats.py`**: ID format validation patterns
+  - 67 regex patterns across 40+ countries
+  - Supports NIDN, CONCAT, CCPT, LEI identification types
+  - `IDFormatManager` singleton with pre-compiled patterns
+
+- ✅ **`id_validation.py`**: High-level ID validation logic
+  - Combines country codes, formats, and business rules
+  - `validate_id()`, `validate_id_auto()`, `validate_lei()` functions
+  - Comprehensive validation results with errors and warnings
+
+- ✅ **`validators.py`**: Core validation functions
+  - Date, string, numeric, choice, and country validators
+  - Consistent `ValidationResult` API
+  - Composable validators for complex rules
+
+- ✅ **`schema.py`**: CSV schema definitions
+  - `FieldSchema` and `CSVSchema` classes
+  - Predefined schemas for accuracy testing workflows
+
+- ✅ **`__init__.py`**: Clean public API with all exports
+
+#### **1.2 Testing & Documentation** ✅ **COMPLETED**
+
+- ✅ **Tests**: `tests/test_accuracy_testing/`
+  - `test_country_codes.py` (265 lines, comprehensive coverage)
+  - `test_id_formats.py` (295 lines, pattern validation)
+  - `test_validators.py` (352 lines, all validator functions)
+
+- ✅ **Demo**: `demo_phase1.py` (177 lines)
+  - Demonstrates all Phase 1 functionality
+  - Country lookups, ID validation, format matching
+
+- ✅ **Documentation**: `src/accuracy_testing/README.md`
+  - Complete module documentation
+  - Usage examples for all components
+  - Migration roadmap for VBA scripts
+
+#### **1.3 Replay Core Library** (Deferred)
+
+The original Phase 1 plan included creating common data structures for replay processing (see below).
+This was partially completed in Phase 0 but needs further work:
+
+**Original Phase 1 plan for replay (to be completed):**
 
 #### **1.1 Core Data Structures** (`txr_replay_core/data_structures.py`)
 
@@ -316,7 +387,7 @@ class PathConfig:
 
 @dataclass
 class ProcessorConfig:
-    """Configuration for processor behavior"""
+    """Configuration for processor behaviour"""
     batch_size: int = 50
     log_level: str = "INFO"
     enable_progress_reporting: bool = True
@@ -780,7 +851,7 @@ class Phase3Processor:
     # ... implementation using shared ClientRecordIndex
 ```
 
-**Similar CLI structure to Phase 2**
+***Similar CLI structure to Phase 2**
 
 ---
 
@@ -1047,7 +1118,7 @@ if __name__ == "__main__":
 ### **Code Quality:**
 
 | Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
+| -------- | -------- | ------- | ------------- |
 | **Total lines** | ~2,500 | ~1,200 | 52% reduction |
 | **Duplicated code** | ~500 lines | 0 | 100% elimination |
 | **Configuration** | 4 hardcoded | 1 unified | Centralized |
@@ -1187,7 +1258,7 @@ txr_automation/
 ## Timeline & Milestones
 
 | Week | Phase | Deliverables | Status |
-|------|-------|-------------|--------|
+| ------ | ------- | ------------- | -------- |
 | **1-2** | Phase 1 | Core library created and tested | Not started |
 | **3** | Phase 2 | Phase 2 Processor refactored | Not started |
 | **4** | Phase 2 | Phase 3 Processor refactored | Not started |
@@ -1231,11 +1302,11 @@ txr_automation/
 ## Risks & Mitigation
 
 | Risk | Impact | Probability | Mitigation |
-|------|--------|-------------|------------|
+| ------ | -------- | ------------- | ------------ |
 | **Regression bugs** | High | Medium | Parallel running, byte-by-byte output comparison |
 | **Performance degradation** | Medium | Low | Performance testing, profiling, optimization |
 | **User resistance to change** | Medium | Medium | Good documentation, training, gradual rollout |
-| **Breaking changes in workflow** | High | Low | Maintain backward compatibility, CLI mirrors old behavior |
+| **Breaking changes in workflow** | High | Low | Maintain backward compatibility, CLI mirrors old behaviour |
 | **Timeline overrun** | Low | Medium | Prioritize core library, can defer some refactoring |
 
 ---
@@ -1265,7 +1336,9 @@ txr_automation/
 
 ## Conclusion
 
-The existing Python replay scripts, while functionally correct and performant, suffer from significant architectural inconsistencies that will hinder the medium-term goal of building a unified Transaction Reporting tool. This refactoring plan addresses these issues by:
+The existing Python replay scripts, while functionally correct and performant, suffer from
+significant architectural inconsistencies that will hinder the medium-term goal of building a unified
+Transaction Reporting tool. This refactoring plan addresses these issues by:
 
 1. **Creating a shared core library** to eliminate code duplication
 2. **Implementing consistent CLI interfaces** for better usability
@@ -1283,7 +1356,8 @@ The existing Python replay scripts, while functionally correct and performant, s
 - Better user experience with CLI interfaces
 - Foundation for future unified tool development
 
-**This refactoring must be completed before starting the VBA migration,** as it will establish the architectural patterns and shared libraries that the converted VBA scripts will also use.
+**This refactoring must be completed before starting the VBA migration,** as it will establish the
+architectural patterns and shared libraries that the converted VBA scripts will also use.
 
 ---
 

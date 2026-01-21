@@ -6,7 +6,7 @@ Tests for CountryDataManager and country code lookups.
 """
 
 import pytest
-from src.txr_replay_core.country_codes import (
+from src.accuracy_testing.core.country_codes import (
     Country,
     CountryDataManager,
     country_manager,

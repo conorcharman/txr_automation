@@ -1,12 +1,16 @@
 # TXR Replay Core Library
 
-Shared utilities and core functionality for transaction replay processing and VBA migration scripts.
+Shared utilities and core functionality for transaction replay processing scripts.
 
 ## Overview
 
-The `txr_replay_core` package provides common functionality used across all processing scripts, eliminating code duplication and ensuring consistency. It includes embedded reference data (country codes, ID formats) removing CSV file dependencies.
+The `txr_replay_core` package provides common functionality used across replay processing scripts,
+eliminating code duplication and ensuring consistency.
 
-**Version:** 1.1.0  
+**Note:** Accuracy testing modules (country codes, ID formats, validators) have been moved to
+`src/accuracy_testing/core/` as of Phase 1 reorganization.
+
+**Version:** 1.2.0  
 **Last Updated:** January 2026
 
 ## Installation
@@ -28,121 +32,6 @@ Common dataclasses for replay processing:
 - **`LookupResult`**: Result of transaction/client lookups
 - **`UnaVistaTransaction`**: UnaVista transaction record
 - **`ProcessingStats`**: Standardized statistics tracking
-
-### Reference Data (Embedded - No CSV Dependencies)
-
-#### `country_codes.py`
-
-ISO 3166-1 country codes with EEA status:
-
-- **249 countries** with Alpha-2, Alpha-3 codes and EEA flag
-- **`Country`**: Immutable country data structure
-- **`CountryDataManager`**: Singleton manager with O(1) lookups
-- **`country_manager`**: Pre-instantiated singleton
-
-```python
-from txr_replay_core import country_manager
-
-# Lookup by Alpha-2 code
-uk = country_manager.get_by_alpha2("GB")
-print(uk.name)  # "United Kingdom..."
-print(uk.is_eea)  # True
-
-# Check EEA membership
-is_eea = country_manager.is_eea("DE")  # True
-
-# Convert codes
-alpha3 = country_manager.get_alpha3_from_alpha2("GB")  # "GBR"
-
-# Get all EEA countries
-eea_countries = country_manager.get_eea_countries()
-```
-
-#### `id_formats.py`
-
-ID format validation patterns (NIDN, CONCAT, CCPT, LEI):
-
-- **67 regex patterns** for validating ID codes across countries
-- **`IDPattern`**: Immutable pattern with compiled regex
-- **`IDFormatManager`**: Singleton manager for pattern matching
-- **`id_format_manager`**: Pre-instantiated singleton
-
-```python
-from txr_replay_core import id_format_manager
-
-# Validate ID against country and type
-is_valid = id_format_manager.validate("GB", "NIDN", "AB123456C")
-
-# Auto-detect ID type
-detected_type = id_format_manager.validate_any_type("GB", "AB123456C")
-print(detected_type)  # "NIDN"
-
-# Get supported types for country
-types = id_format_manager.get_id_types_for_country("GB")
-print(types)  # ["NIDN", "CONCAT"]
-
-# Validate LEI (country-independent)
-is_valid_lei = id_format_manager.validate_lei("ABCDEFGHIJKLMNOPQR12")
-```
-
-### Validation
-
-#### `validators.py`
-
-Core validation functions:
-
-- **`ValidationResult`**: Result object with success/failure and corrected value
-- Date validators: `validate_date_format`, `validate_date_range`, `validate_date_not_future`
-- String validators: `validate_not_empty`, `validate_length`, `validate_pattern`, `validate_alphanumeric`
-- Numeric validators: `validate_numeric_range`, `validate_positive`, `validate_non_negative`
-- Choice validators: `validate_in_list`
-- Combined validators: `validate_all`, `validate_any`
-- Special field validators: `validate_gender`, `validate_email`, `validate_phone`
-
-```python
-from txr_replay_core.validators import validate_date_format, validate_not_empty, validate_in_list
-
-# Date validation
-result = validate_date_format("2024-01-15")
-if result.is_valid:
-    print(result.corrected_value)  # date(2024, 1, 15)
-
-# String validation
-result = validate_not_empty("  Hello  ")
-print(result.corrected_value)  # "Hello" (trimmed)
-
-# Choice validation
-result = validate_in_list("red", ["RED", "GREEN", "BLUE"], case_sensitive=False)
-print(result.corrected_value)  # "RED" (normalized)
-```
-
-#### `id_validation.py`
-
-High-level ID validation combining country codes, formats, and validators:
-
-- **`IDType`**: Enum for ID types (NIDN, CONCAT, CCPT, LEI)
-- **`IDValidationResult`**: Comprehensive validation result
-- **`IDValidator`**: High-level validator
-- **`id_validator`**: Pre-instantiated singleton
-- Convenience functions: `validate_id`, `validate_id_auto`, `validate_lei`
-
-```python
-from txr_replay_core import validate_id, validate_id_auto, validate_lei
-
-# Validate with known type
-result = validate_id("GB", "NIDN", "AB123456C")
-if result.is_valid:
-    print("Valid ID")
-else:
-    print(result.primary_error)
-
-# Auto-detect type
-result = validate_id_auto("GB", "AB123456C")
-print(result.detected_type)  # "NIDN"
-
-# Validate LEI
-result = validate_lei("ABCDEFGHIJKLMNOPQR12")
-```
 
 ### CSV Utilities
 
@@ -175,25 +64,6 @@ reader = CSVReader(schema)
 df = reader.read_file("input.csv", validate=True)
 ```
 
-#### `schema.py`
-
-Predefined CSV schemas for transaction reporting:
-
-- **11+ predefined schemas** for common file formats
-- **`SCHEMA_REGISTRY`**: Central registry of all schemas
-- Functions: `get_schema()`, `list_schemas()`
-
-```python
-from txr_replay_core.schema import get_schema, list_schemas
-
-# Get predefined schema
-schema = get_schema("buyer_id_validation")
-
-# List all available schemas
-all_schemas = list_schemas()
-print(all_schemas)  # ["buyer_id_validation", "seller_id_validation", ...]
-```
-
 ### Configuration & Logging
 
 #### `config.py`
@@ -201,7 +71,7 @@ print(all_schemas)  # ["buyer_id_validation", "seller_id_validation", ...]
 Configuration management:
 
 - **`PathConfig`**: File path configuration
-- **`ProcessorConfig`**: Processor behavior configuration
+- **`ProcessorConfig`**: Processor behaviour configuration
 - **`ConfigManager`**: Load from YAML files and environment variables
 
 ```python
@@ -279,45 +149,45 @@ Run the test suite:
 
 ```bash
 # Run all tests
-pytest tests/test_core/
+pytest tests/test_replay/
 
 # Run specific test file
-pytest tests/test_core/test_country_codes.py
+pytest tests/test_replay/test_data_structures.py
 
 # Run with coverage
-pytest tests/test_core/ --cov=src/txr_replay_core --cov-report=html
+pytest tests/test_replay/ --cov=src/txr_replay_core --cov-report=html
 ```
 
 ## Key Features
 
-### ✅ **No External CSV Dependencies**
-- Country codes and ID formats are embedded as Python data
-- Eliminates file path issues and simplifies deployment
-- Data versioned with code
+### ✅ **Unified Data Structures**
 
-### ✅ **Singleton Managers with O(1) Lookups**
-- `CountryDataManager` and `IDFormatManager` use singleton pattern
-- Pre-compiled regex patterns cached in memory
-- Hash-based lookups for instant access
-
-### ✅ **Comprehensive Validation Framework**
-- Composable validators with consistent API
+- Common data structures across all replay scripts
 - Type-safe with full type hints
-- Detailed error messages and correction suggestions
+- Eliminates code duplication
 
-### ✅ **CSV Schema Validation**
-- Define schemas once, reuse across scripts
+### ✅ **Configuration Management**
+
+- YAML and environment variable support
+- Centralized configuration handling
+- Easy deployment across environments
+
+### ✅ **Structured Logging**
+
 - Automatic column validation and type checking
 - Registry of predefined schemas for common formats
 
 ### ✅ **Production-Ready**
+
 - Fully tested with pytest (90%+ coverage)
 - Comprehensive error handling
 - Structured logging throughout
 stats.successful_matches = 95
 logger.log_stats(stats)
 
-# Log structured data
+### Log structured data
+
+```python
 logger.log_dict({"input_files": 5, "output_files": 5}, "File Summary")
 ```
 

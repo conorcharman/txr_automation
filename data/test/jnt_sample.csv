@@ -1,0 +1,3 @@
+﻿Transaction Reference,Person Code,Account Type,Buyer ID Code,Type of Buyer ID Code,First Name,Surname,Date of Birth,Gender,Primary Nationality,Secondary Nationality,Correction Output,Correction Fields,Tracker Status,Actions Taken,Error,Kaizen Error,Match
+44625CGL4651,V01010,JNT,ITABCDE12345FGH,NIDN,JOHN,DOE,04/08/1954,M|M,IT,,V01010:NIDN,ID:IDT,Not On tracker,Pass - Check Tracker - Replaced With fallback,Y,GBAB123456D|ITABCDE12345FGH:NIDN|NIDN,FALSE
+44625CGL4651,V01011,JNT,GBAB123456D,NIDN,JANE,DOE,22/08/1956,M|M,GB,,,,Not On tracker,Pass,N,GBAB123456D|ITABCDE12345FGH:NIDN|NIDN,

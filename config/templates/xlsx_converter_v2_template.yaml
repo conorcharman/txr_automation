@@ -3,18 +3,17 @@
 
 # Mode 1: Recursive parent directory mode (xlsx → csv in same structure)
 # Use this when you have a structured hierarchy with xlsx/csv folders
-paths:
-  parent_dir: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation
-  
-  # Optional: specify log output directory
-  log_output: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation/logs
-
+# paths:
+#   parent_dir: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation
+#   
+#   # Optional: specify log output directory
+#   log_output: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation/logs
 # Mode 2: Single directory mode (original behavior)
 # Uncomment these and comment out parent_dir to use single directory mode
-# paths:
-#   input_dir: C:/Users/YOUR_USERNAME/Documents/data/xlsx
-#   output_dir: C:/Users/YOUR_USERNAME/Documents/data/csv
-#   log_output: C:/Users/YOUR_USERNAME/Documents/data/logs
+ paths:
+   input_dir: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing
+   output_dir: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing
+   log_output: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\logs
 
 processing:
   # Enable recursive scanning of subdirectories

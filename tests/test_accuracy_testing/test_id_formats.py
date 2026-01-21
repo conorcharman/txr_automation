@@ -6,7 +6,7 @@ Tests for IDFormatManager and ID pattern validation.
 """
 
 import pytest
-from src.txr_replay_core.id_formats import (
+from src.accuracy_testing.core.id_formats import (
     IDPattern,
     IDFormatManager,
     id_format_manager,

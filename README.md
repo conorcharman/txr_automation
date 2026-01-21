@@ -126,6 +126,49 @@ txr_automation/
 
 ### Python Scripts (Current)
 
+#### Accuracy Testing
+
+**Buyer and Seller ID Validation** (Migrated from VBA v5.6):
+
+- **buyer_id_validation.py**: Validates buyer identification codes against format and logic rules
+- **seller_id_validation.py**: Validates seller identification codes with identical functionality
+
+Features:
+
+- **Format Validation**: Validates ID codes against country-specific regular expressions with detailed error messages
+- **Logic Validation**: Checks date of birth and gender consistency for supported ID types
+- **Italian Tracker Integration**: Compares IT NIDNs against confirmed fiscal codes from tracker CSV
+- **Nationality Priority**: EEA nationalities prioritized over ROW, alphabetically sorted within groups
+- **Joint Account Aggregation**: Automatically aggregates JNT account pairs
+- **Swedish Century Logic**: Applies century markers for SE NIDN IDs based on date of birth
+- **CONCAT Generation**: Creates CONCAT IDs when valid format unavailable
+- **Template Lookups**: Incident code lookups for error flagging
+- **Error Reporting**:
+  - Detailed breakdowns by country, ID type, and failure reason
+  - Automatic generation of errors-only CSV for easy review
+  - Summary statistics including Italian tracker actions
+
+Console Commands:
+
+```bash
+# Validate buyer IDs
+validate-buyer --config config.yaml
+
+# Validate seller IDs
+validate-seller --config config.yaml
+
+# Preview changes without writing output
+validate-buyer --config config.yaml --dry-run
+
+# Show progress bar during processing
+validate-buyer --config config.yaml --progress
+```
+
+Output Files:
+
+- Main output: `{output_file}.csv` - All records with validation results
+- Errors only: `{output_file}_errors_only.csv` - Only invalid records for review
+
 #### Phase 2 Processor
 
 - **phase_2_processor_v3_1.py**: Ultra-optimized processor for Phase II replay files using transaction reference lookups. Features hash table indexing for O(1) lookup performance, character encoding handling, and batch processing capabilities.

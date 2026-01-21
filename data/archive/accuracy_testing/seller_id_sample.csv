@@ -1,0 +1,4 @@
+Transaction Reference,Col2,Col3,Col4,Col5,Person Code,Account Type,Seller ID Code,Type of Seller ID Code,First Name,Surname,Date of Birth,Gender,Primary Nationality,Secondary Nationality
+TXN001,A,B,C,D,S001,CORPORATE,123456789012,LEI,Company,Name,01/01/2000,M,GB,
+TXN002,A,B,C,D,S002,INDIVIDUAL,RSSMRA80A01H501U,NIDN,Mario,Rossi,01/01/1980,M,IT,
+TXN003,A,B,C,D,S003,INDIVIDUAL,,,Pedro,Martinez,15/07/1985,M,ES,

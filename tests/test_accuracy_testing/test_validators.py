@@ -7,7 +7,7 @@ Tests for core validation functions.
 
 import pytest
 from datetime import date, datetime
-from src.txr_replay_core.validators import (
+from src.accuracy_testing.core.validators import (
     ValidationResult,
     validate_date_format,
     validate_date_range,

@@ -1,6 +1,6 @@
-# Quick Start Guide: Using txr_replay_core
+# Quick Start Guide: Using txr_replay_core and Accuracy Testing
 
-This guide shows how to use the `txr_replay_core` library in your scripts.
+This guide shows how to use the `txr_replay_core` library in your scripts and run accuracy testing tools.
 
 ## Prerequisites
 
@@ -22,10 +22,16 @@ The package installs console scripts for easy command-line access:
 # Activate environment first
 conda activate txr_automation
 
-# Run processors using console scripts
+# Accuracy Testing
+validate-buyer          # Buyer ID validation
+validate-seller         # Seller ID validation
+
+# Replay Processors
 replay-phase2           # Phase 2 processor
 replay-phase3           # Phase 3 processor
 replay-phase3-final     # Phase 3 final lookup
+
+# Utilities
 replay-xlsx-converter   # XLSX to CSV converter (single directory)
 replay-xlsx-converter-v2  # XLSX to CSV converter v2 (recursive with filters)
 ```
@@ -33,12 +39,48 @@ replay-xlsx-converter-v2  # XLSX to CSV converter v2 (recursive with filters)
 These commands automatically use your local configuration files from `config/local/`.
 
 **Override with custom config:**
+
 ```bash
+validate-buyer --config config/custom/buyer_validation.yaml
 replay-phase2 --config config/custom/phase2.yaml
 replay-phase3 --log-level DEBUG
 ```
 
+### Accuracy Testing Commands
+
+**Buyer ID Validation:**
+
+```bash
+# Basic validation
+validate-buyer --config config/buyer_validation.yaml
+
+# Preview changes without writing output
+validate-buyer --config config/buyer_validation.yaml --dry-run
+
+# Show progress bar during processing (requires tqdm)
+validate-buyer --config config/buyer_validation.yaml --progress
+
+# Combine flags
+validate-buyer --config config/buyer_validation.yaml --progress --dry-run
+```
+
+**Seller ID Validation:**
+
+```bash
+# Basic validation
+validate-seller --config config/seller_validation.yaml
+
+# With progress bar
+validate-seller --config config/seller_validation.yaml --progress
+```
+
+**Output Files:**
+
+- Main output: `{output_file}.csv` - All records with validation results
+- Errors only: `{output_file}_errors_only.csv` - Only invalid records for easy review
+
 **XLSX Converter v2 - Enhanced Features:**
+
 ```bash
 # Convert all FY25 Q3 data across all phases
 replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation \
@@ -60,9 +102,16 @@ replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation --force
 You can also run scripts directly as Python modules:
 
 ```bash
+# Accuracy Testing
+python -m src.accuracy_testing.scripts.buyer_id_validation
+python -m src.accuracy_testing.scripts.seller_id_validation
+
+# Replay
 python -m src.replay.phase_2_processor
 python -m src.replay.phase_3_processor
 python -m src.replay.phase_3_final_lookup
+
+# Utilities
 python -m src.utils.xlsx_csv_converter
 ```
 
