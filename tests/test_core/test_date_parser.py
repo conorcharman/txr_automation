@@ -3,7 +3,7 @@ Tests for DateParser utility
 """
 
 import pytest
-from txr_replay_core.utils import DateParser
+from common.utils import DateParser
 
 
 class TestDateParser:

@@ -28,8 +28,8 @@ from pathlib import Path
 # Import from txr_replay_core library
 from txr_replay_core.data_structures import ReplayRecord, LookupResult, ProcessingStats
 from txr_replay_core.config import ConfigManager
-from txr_replay_core.logger import create_logger
-from txr_replay_core.utils import CharacterReplacement, safe_open_csv
+from common.logger import create_logger
+from common.utils import CharacterReplacement, safe_open_csv
 
 class IncidentFileIndex:
     """Optimized incident file with pre-built indexes for O(1) transaction reference lookups"""

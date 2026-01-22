@@ -1,0 +1,116 @@
+# SQL Extract Generator Configuration Template
+# ===========================================
+# This template provides configuration examples for the SQL extract generator.
+# The tool generates SQL extract files from transaction reference lists.
+#
+# Usage:
+#   generate-sql-extract --template <template.sql> --input <input.csv> --output <output_dir>
+#
+# CLI Options:
+#   --template PATH       SQL template file with placeholder for transaction references
+#   --input PATH          CSV file with transaction references (first column)
+#   --output PATH         Output directory for generated SQL files
+#   --batch-size N        Number of transactions per extract file (default: 900)
+#   --dry-run            Preview generation without creating files
+#
+# Template Requirements:
+#   The SQL template must contain exactly one placeholder for transaction references.
+#   Supported placeholder formats:
+#     - --<<TRANSACTION REFERENCES>>
+#     - --<TRADE REFERENCES>--
+#     - Custom placeholders can be specified via CLI (not yet implemented)
+#
+# Input CSV Format:
+#   - Must have header row
+#   - First column contains transaction references
+#   - Additional columns are ignored
+#   - Example:
+#       TRANSACTION_REFERENCE,INCIDENT_CODE
+#       44625CKTPC31,35_3
+#       44625CKT72V1,35_3
+#
+# Examples:
+# ---------
+#
+# 1. Generate single extract file:
+#    generate-sql-extract \
+#      --template legacy/sql/buyer_id_extract.sql \
+#      --input data/output/transactions_35_3.csv \
+#      --output data/output/sql
+#
+# 2. Generate multiple batches:
+#    generate-sql-extract \
+#      --template legacy/sql/pricing_extract.sql \
+#      --input data/output/transactions_35_3.csv \
+#      --output data/output/sql \
+#      --batch-size 500
+#
+# 3. Preview without generating:
+#    generate-sql-extract \
+#      --template legacy/sql/seller_id_extract.sql \
+#      --input data/output/transactions_35_4.csv \
+#      --output data/output/sql \
+#      --dry-run
+#
+# Output:
+# -------
+# Single batch:  {template_name}.sql
+# Multiple batches: {template_name}_Extract1.sql, {template_name}_Extract2.sql, etc.
+#
+# Notes:
+# ------
+# - Batch size of 900 is recommended (matches VBA logic)
+# - Output directory is created automatically
+# - Transaction references are formatted with single quotes and comma-separated
+# - Empty or whitespace-only references are skipped
+# - Existing output files are overwritten without warning
+
+# Configuration (not currently used by CLI, for future YAML-based config)
+sql_extract:
+  # Default batch size (can be overridden by --batch-size)
+  batch_size: 900
+  
+  # Default template directory
+  template_dir: "legacy/sql"
+  
+  # Default output directory
+  output_dir: "data/output/sql"
+  
+  # Placeholder formats (for auto-detection)
+  placeholder_formats:
+    - "--<<TRANSACTION REFERENCES>>"
+    - "--<TRADE REFERENCES>--"
+  
+  # Input CSV settings
+  input:
+    header_row: true
+    reference_column: 0  # First column (0-indexed)
+    encoding: "utf-8"
+  
+  # Output settings
+  output:
+    encoding: "utf-8"
+    overwrite: true
+    create_directories: true
+
+# Template Mappings (examples for different use cases)
+templates:
+  buyer_id_extract:
+    template: "legacy/sql/ExtractBuyerID.sql"
+    description: "Extract buyer ID validation data"
+    incident_code: "35_3"
+    
+  seller_id_extract:
+    template: "legacy/sql/ExtractSellerID.sql"
+    description: "Extract seller ID validation data"
+    incident_code: "35_4"
+    
+  inconsistent_buyer_extract:
+    template: "legacy/sql/ExtractInconsistentBuyerID.sql"
+    description: "Extract inconsistent buyer ID validation data"
+    incident_code: "35_3"
+    
+  pricing_extract:
+    template: "legacy/sql/PricingDataExtract.sql"
+    description: "Extract pricing validation data"
+    incident_code: "35_3"

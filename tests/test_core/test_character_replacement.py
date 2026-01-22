@@ -3,7 +3,7 @@ Tests for CharacterReplacement utility
 """
 
 import pytest
-from txr_replay_core.utils import CharacterReplacement
+from common.utils import CharacterReplacement
 
 
 class TestCharacterReplacement:
