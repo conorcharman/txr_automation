@@ -26,7 +26,7 @@ except ImportError:
     # Fallback to pandas if openpyxl not available
     import pandas as pd
 
-from txr_replay_core import ConfigManager, ProcessingStats, create_logger
+from txr_replay_core import ConfigManager, create_logger
 
 
 class XLSXConverterV2:
@@ -72,7 +72,7 @@ class XLSXConverterV2:
         self.filter_phases = filter_phases or []
         self.dry_run = dry_run
         self.force = force
-        self.stats = ProcessingStats()
+        self.stats = ConverterStats()
         
         # Validate configuration
         if parent_dir and (input_dir or output_dir):
@@ -411,9 +411,9 @@ class XLSXConverterV2:
             convert_method(xlsx_file, csv_file)
         
         # Log summary statistics
-        self.logger.log_stats(self.stats)
+        self.stats.print_summary(self.logger)
         
-        return self.stats.successful_matches, self.stats.processed_files
+        return self.stats.successful_conversions, self.stats.processed_files
 
 
 def parse_arguments():

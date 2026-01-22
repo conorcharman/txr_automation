@@ -1,0 +1,22 @@
+# Pricing Data Validation Configuration
+# ======================================
+
+paths:
+  # Input file path
+  input_file: "data/test/pricing_input_sample.csv"
+  
+  # Output file path  
+  output_file: "data/test/pricing_output.csv"
+  
+  # Log output directory
+  log_output: "logs"
+
+processor:
+  # Logging level (DEBUG, INFO, WARNING, ERROR)
+  log_level: "INFO"
+  
+  # Verbose output (true/false)
+  verbose: false
+  
+  # Batch size for processing
+  batch_size: 1000
