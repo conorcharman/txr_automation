@@ -14,7 +14,7 @@ This script:
 
 Usage:
     # With YAML configuration file
-    python -m src.accuracy_testing.scripts.pricing_validation --config config/templates/pricing_validation_template.yaml
+    python -m src.accuracy_testing.scripts.pricing_validation --config config/local/accuracy_testing/pricing_validation.yaml
     
     # With environment variables
     export TXR_ACCURACY_PATHS_INPUT_FILE="data/pricing_input.csv"
@@ -372,7 +372,7 @@ def parse_args():
         epilog="""
 Examples:
   # With YAML configuration file
-  python -m src.accuracy_testing.scripts.pricing_validation --config config/templates/pricing_validation_template.yaml
+  python -m src.accuracy_testing.scripts.pricing_validation --config config/local/accuracy_testing/pricing_validation.yaml
   
   # With environment variables
   export TXR_ACCURACY_PATHS_INPUT_FILE="data/pricing_input.csv"
@@ -463,8 +463,8 @@ def main():
                 }
             }
         else:
-            # Default configuration path
-            default_config = Path(__file__).parent.parent.parent.parent / "config" / "templates" / "pricing_validation_template.yaml"
+            # Default configuration path (same pattern as other validation scripts)
+            default_config = Path(__file__).parent.parent.parent.parent / "config" / "local" / "accuracy_testing" / "pricing_validation.yaml"
             if default_config.exists():
                 print(f"Loading default configuration from {default_config}...")
                 config = AccuracyConfigManager.load_from_yaml(str(default_config))
