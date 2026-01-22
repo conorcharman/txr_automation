@@ -239,6 +239,7 @@ class ClientRecord:
     """
     row_index: int
     transaction_ref: str
+    account_id: str
     person_code: str
     account_type: str
     id_value: str
