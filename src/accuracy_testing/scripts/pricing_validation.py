@@ -127,18 +127,15 @@ class PricingStats:
 class PricingValidationScript:
     """Main application class for pricing data validation."""
     
-    # CSV column mapping (0-indexed)
+    # Input CSV column mapping (0-indexed)
+    # Input file has: Transaction Reference, Net Amount, Consideration, Interest
     COL_TRANSACTION_REF = 0
-    COL_ERROR = 1
-    COL_CORRECTION = 2
-    COL_CORRECTION_FIELD = 3
-    COL_COMMENTS = 4
-    COL_NET_AMOUNT = 5
-    COL_CONSIDERATION = 6
-    COL_INTEREST = 7
-    COL_TOTAL = 8
-    COL_EXPECTED_INTEREST = 9
-    COL_NET_DIFFERENCE = 10
+    COL_NET_AMOUNT = 1
+    COL_CONSIDERATION = 2
+    COL_INTEREST = 3
+    
+    # Output CSV will have additional columns:
+    # Error (N or TBC), Total, Expected Interest, Net Difference, Correction, Correction Field, Comments
     
     def __init__(
         self,
@@ -216,15 +213,15 @@ class PricingValidationScript:
                         continue
                     
                     try:
-                        # Create record from row data
+                        # Create record from row data (input only has 4 columns)
                         record = PricingRecord(
                             transaction_ref=row[self.COL_TRANSACTION_REF].strip() if row[self.COL_TRANSACTION_REF] else "",
                             net_amount=Decimal(row[self.COL_NET_AMOUNT]) if row[self.COL_NET_AMOUNT] else Decimal('0'),
                             consideration=Decimal(row[self.COL_CONSIDERATION]) if row[self.COL_CONSIDERATION] else Decimal('0'),
                             interest=Decimal(row[self.COL_INTEREST]) if row[self.COL_INTEREST] else Decimal('0'),
-                            correction=row[self.COL_CORRECTION].strip() if len(row) > self.COL_CORRECTION and row[self.COL_CORRECTION] else None,
-                            correction_field=row[self.COL_CORRECTION_FIELD].strip() if len(row) > self.COL_CORRECTION_FIELD and row[self.COL_CORRECTION_FIELD] else None,
-                            comments=row[self.COL_COMMENTS].strip() if len(row) > self.COL_COMMENTS and row[self.COL_COMMENTS] else None
+                            correction=None,
+                            correction_field=None,
+                            comments=None
                         )
                         records.append(record)
                     
@@ -251,19 +248,18 @@ class PricingValidationScript:
         # Ensure output directory exists
         self.output_file.parent.mkdir(parents=True, exist_ok=True)
         
-        # Define output columns (11 columns as per spec)
+        # Define output columns (10 columns)
         output_columns = [
-            "Transaction Reference",  # Col 1
-            "Error",                  # Col 2
-            "Correction",             # Col 3
-            "Correction Field",       # Col 4
-            "Comments",               # Col 5
-            "Net Amount",             # Col 6
-            "Consideration",          # Col 7
-            "Interest",               # Col 8
-            "Total",                  # Col 9
-            "Expected Interest",      # Col 10
-            "Net Difference"          # Col 11
+            "Transaction Reference",  # Col 0
+            "Net Amount",             # Col 1
+            "Consideration",          # Col 2
+            "Interest",               # Col 3
+            "Total",                  # Col 4
+            "Expected Interest",      # Col 5
+            "Net Difference",         # Col 6
+            "Correction",             # Col 7
+            "Correction Field",       # Col 8
+            "Error"                   # Col 9
         ]
         
         try:
@@ -274,16 +270,15 @@ class PricingValidationScript:
                 for record in records:
                     output_row = [
                         record.transaction_ref,
-                        record.error,
-                        record.correction or "",
-                        record.correction_field or "",
-                        record.comments or "",
                         f"{record.net_amount:.2f}",
                         f"{record.consideration:.2f}",
                         f"{record.interest:.2f}",
                         f"{record.total:.2f}",
                         f"{record.expected_interest:.2f}",
-                        f"{record.net_difference:.2f}"
+                        f"{record.net_difference:.2f}",
+                        record.correction or "",
+                        record.correction_field or "",
+                        record.error
                     ]
                     writer.writerow(output_row)
             
