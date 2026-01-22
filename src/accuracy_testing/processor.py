@@ -38,9 +38,9 @@ from .core import (
     IDType,
 )
 
-# Import structured logger from txr_replay_core
+# Import structured logger from common
 try:
-    from txr_replay_core.logger import StructuredLogger
+    from common.logger import StructuredLogger
     LOGGER_AVAILABLE = True
 except ImportError:
     LOGGER_AVAILABLE = False

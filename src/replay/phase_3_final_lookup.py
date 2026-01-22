@@ -22,8 +22,8 @@ from pathlib import Path
 # Import from txr_replay_core library
 from txr_replay_core.data_structures import ProcessingStats, UnaVistaTransaction
 from txr_replay_core.config import ConfigManager
-from txr_replay_core.logger import create_logger
-from txr_replay_core.utils import DateParser, safe_open_csv
+from common.logger import create_logger
+from common.utils import DateParser, safe_open_csv
 from txr_replay_core.incident_codes import INCIDENT_CODE_MATRIX, get_client_types
 
 # ============================================================================
