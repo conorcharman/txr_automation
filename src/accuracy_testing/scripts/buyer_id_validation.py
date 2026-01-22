@@ -82,6 +82,7 @@ class BuyerIDValidator:
     
     # CSV column mapping (0-indexed)
     COL_TRANSACTION_REF = 0
+    COL_ACCOUNT_ID = 1
     COL_PERSON_CODE = 5
     COL_ACCOUNT_TYPE = 6
     COL_ID_VALUE = 7
@@ -174,6 +175,7 @@ class BuyerIDValidator:
                         record = ClientRecord(
                             row_index=row_idx,
                             transaction_ref=row[self.COL_TRANSACTION_REF].strip(),
+                            account_id=row[self.COL_ACCOUNT_ID].strip(),
                             person_code=row[self.COL_PERSON_CODE].strip(),
                             account_type=row[self.COL_ACCOUNT_TYPE].strip(),
                             id_value=row[self.COL_ID_VALUE].strip(),
@@ -214,6 +216,7 @@ class BuyerIDValidator:
         # Define output columns (matching VBA output format)
         output_columns = [
             "Transaction Reference",
+            "Account ID",
             "Person Code",
             "Account Type",
             "Buyer ID Code",
@@ -264,6 +267,7 @@ class BuyerIDValidator:
                     # Build output row from original data + validation results
                     output_row = [
                         record.transaction_ref,
+                        record.account_id,
                         record.person_code,
                         record.account_type,
                         record.id_value,
