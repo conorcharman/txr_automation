@@ -1,0 +1,34 @@
+2026-01-22 09:16:26 - pricing_validation - INFO - ================================================================================
+2026-01-22 09:16:26 - pricing_validation - INFO - PRICING DATA VALIDATION v1.0
+2026-01-22 09:16:26 - pricing_validation - INFO - ================================================================================
+2026-01-22 09:16:26 - pricing_validation - INFO - Input file: data/test/pricing_input_sample.csv
+2026-01-22 09:16:26 - pricing_validation - INFO - Output file: data/test/pricing_output.csv
+2026-01-22 09:16:26 - pricing_validation - INFO - Start time: 2026-01-22 09:16:26
+2026-01-22 09:16:26 - pricing_validation - INFO - Reading input file: data/test/pricing_input_sample.csv
+2026-01-22 09:16:26 - pricing_validation - INFO - Detected encoding: utf-8
+2026-01-22 09:16:26 - pricing_validation - INFO - Successfully read 5 records
+2026-01-22 09:16:26 - pricing_validation - INFO - ================================================================================
+2026-01-22 09:16:26 - pricing_validation - INFO - VALIDATING PRICING DATA
+2026-01-22 09:16:26 - pricing_validation - INFO - ================================================================================
+2026-01-22 09:16:26 - pricing_validation - INFO - Writing output file: data/test/pricing_output.csv
+2026-01-22 09:16:26 - pricing_validation - INFO - Successfully wrote 5 records
+2026-01-22 09:16:26 - pricing_validation - INFO - ================================================================================
+2026-01-22 09:16:26 - pricing_validation - INFO - VALIDATION COMPLETE
+2026-01-22 09:16:26 - pricing_validation - INFO - ================================================================================
+2026-01-22 09:16:26 - pricing_validation - INFO - End time: 2026-01-22 09:16:26
+2026-01-22 09:16:26 - pricing_validation - INFO - Duration: 0:00:00.000471
+2026-01-22 09:16:26 - pricing_validation - INFO - ======================================================================
+2026-01-22 09:16:26 - pricing_validation - INFO - PROCESSING SUMMARY
+2026-01-22 09:16:26 - pricing_validation - INFO - ======================================================================
+2026-01-22 09:16:26 - pricing_validation - INFO - Total records processed:          5
+2026-01-22 09:16:26 - pricing_validation - INFO - Valid records (no changes):       4
+2026-01-22 09:16:26 - pricing_validation - INFO - Invalid records found:            1
+2026-01-22 09:16:26 - pricing_validation - INFO -   - Invalid format:               0
+2026-01-22 09:16:26 - pricing_validation - INFO -   - Invalid logic:                0
+2026-01-22 09:16:26 - pricing_validation - INFO - Records corrected:                0
+2026-01-22 09:16:26 - pricing_validation - INFO - CONCAT IDs generated:             0
+2026-01-22 09:16:26 - pricing_validation - INFO - No correction possible:           0
+2026-01-22 09:16:26 - pricing_validation - INFO - JNT accounts aggregated:          0
+2026-01-22 09:16:26 - pricing_validation - INFO - Processing errors:                0
+2026-01-22 09:16:26 - pricing_validation - INFO - ======================================================================
+2026-01-22 09:16:26 - pricing_validation - INFO - Pricing data validation completed successfully
