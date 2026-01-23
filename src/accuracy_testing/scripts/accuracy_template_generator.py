@@ -148,10 +148,16 @@ def main():
     
     print_header()
     
-    # Load configuration if provided
+    # Load configuration if provided or use default
     config = {}
     if args.config:
         config = load_config(args.config)
+    else:
+        # Try default configuration path
+        default_config = Path(__file__).parent.parent.parent.parent / "config" / "templates" / "accuracy_template_generator_template.yaml"
+        if default_config.exists():
+            print(f"Loading default configuration from {default_config}...")
+            config = load_config(str(default_config))
     
     # Determine paths (CLI args override config)
     errors_path = None
