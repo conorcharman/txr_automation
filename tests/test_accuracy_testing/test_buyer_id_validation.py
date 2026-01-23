@@ -115,6 +115,7 @@ class TestBuyerIDValidator:
             ClientRecord(
                 row_index=2,
                 transaction_ref="TXN001",
+                account_id="ACC001",
                 person_code="P001",
                 account_type="INDIVIDUAL",
                 id_value="AB123456C",
@@ -207,6 +208,7 @@ class TestProcessorLogic:
         record = ClientRecord(
             row_index=1,
             transaction_ref="TXN001",
+            account_id="ACC001",
             person_code="P001",
             account_type="INDIVIDUAL",
             id_value="AB123456C",
@@ -245,6 +247,7 @@ class TestProcessorLogic:
         record = ClientRecord(
             row_index=1,
             transaction_ref="TXN002",
+            account_id="ACC002",
             person_code="P002",
             account_type="INDIVIDUAL",
             id_value="",
@@ -285,6 +288,7 @@ class TestProcessorLogic:
         record = ClientRecord(
             row_index=1,
             transaction_ref="TXN003",
+            account_id="ACC003",
             person_code="P003",
             account_type="INDIVIDUAL",
             id_value="AB123456C",

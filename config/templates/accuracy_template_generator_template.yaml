@@ -1,0 +1,67 @@
+# Accuracy Testing Template Generator Configuration Template
+# ===========================================================
+# This template provides configuration for generating accuracy testing templates
+# from consolidated errors and queries data.
+#
+# Usage:
+#   generate-accuracy-template --config <config.yaml>
+#   OR
+#   generate-accuracy-template --errors <errors.csv> --queries <queries.csv> --output <output_dir>
+#
+# CLI Options:
+#   --config PATH         Configuration file (optional, uses defaults if not provided)
+#   --errors PATH         Consolidated errors CSV file (overrides config)
+#   --queries PATH        Consolidated queries CSV file (overrides config)
+#   --output PATH         Output directory for template files (overrides config)
+#   --dry-run            Preview generation without creating files
+#
+# Consolidated Data Format:
+#   - Must contain INCIDENT_CODE column
+#   - Supports pipe-delimited incident codes (e.g., "7_37|16_21")
+#   - Records with multiple incident codes will appear in multiple templates
+#   - All columns from consolidated data are appended to templates
+#
+# Template Formats:
+#   - Buyer validation:   7_35, 7_37, 7_39, 7_66
+#   - Seller validation:  16_19, 16_21, 16_23, 16_20
+#   - Pricing validation: 35_3
+#   - Default:            All other incident codes
+#
+# Examples:
+# ---------
+#
+# 1. Generate using config file:
+#    generate-accuracy-template --config config/environments/local.yaml
+#
+# 2. Generate with CLI arguments:
+#    generate-accuracy-template \
+#      --errors "data/consolidated_errors.csv" \
+#      --queries "data/consolidated_queries.csv" \
+#      --output "data/output/templates"
+#
+# 3. Preview without generating:
+#    generate-accuracy-template --config config/environments/local.yaml --dry-run
+#
+# 4. Override config paths:
+#    generate-accuracy-template \
+#      --config config/environments/local.yaml \
+#      --output "data/test/templates"
+
+# Path configuration
+paths:
+  # Input files (consolidated errors/queries from regulatory reporting)
+  input:
+    errors_file: "data/input/consolidated_errors.csv"
+    queries_file: "data/input/consolidated_queries.csv"
+  
+  # Output directory for generated template files
+  output:
+    directory: "data/output/accuracy_testing/templates"
+
+# Processing options
+processing:
+  # Whether to include queries data (in addition to errors)
+  include_queries: true
+  
+  # Whether to validate incident codes exist in consolidated data
+  validate_incident_codes: true

@@ -31,6 +31,6 @@ FROM
 		AND t4.PARTY = 'BUYER'
 WHERE
     t1.REPORTREF IN (
--- Insert transaction references here --
+        -- TRANSACTION REFERENCES --
 	)
 LIMIT 50000

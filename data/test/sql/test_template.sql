@@ -1,3 +1,4 @@
 SELECT * FROM table WHERE ref IN (
-    -- TRANSACTION REFERENCES --
+    'TXN001',
+'TXN002'
 )

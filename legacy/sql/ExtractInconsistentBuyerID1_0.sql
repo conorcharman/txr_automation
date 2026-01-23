@@ -63,5 +63,5 @@ WITH LinkCodes AS (
     LEFT JOIN LinkCodes lc ON t2.CLINUM = lc.CLINUM 
   WHERE 
     t1.REPORTREF IN (
-      --<<TRANSACTION REFERENCES>>
+      -- TRANSACTION REFERENCES --
       )

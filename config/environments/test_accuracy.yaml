@@ -1,0 +1,7 @@
+# Accuracy Testing Template Generator Configuration - Test
+paths:
+  input:
+    errors_file: "data/test/test_consolidated_errors.csv"
+    queries_file: null
+  output:
+    directory: "data/test/templates"

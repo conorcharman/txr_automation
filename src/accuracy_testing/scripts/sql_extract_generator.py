@@ -38,6 +38,7 @@ Features:
 
 import sys
 import csv
+import yaml
 import argparse
 from pathlib import Path
 from typing import List
@@ -110,8 +111,12 @@ class SQLExtractGeneratorCLI:
             
             # Determine column index
             if self.transaction_column is None:
-                # Default: first column (index 0)
-                col_idx = 0
+                # Default: try "Transaction reference number" (template format)
+                # Fall back to first column if not found
+                if 'Transaction reference number' in header:
+                    col_idx = header.index('Transaction reference number')
+                else:
+                    col_idx = 0
             elif self.transaction_column.isdigit():
                 # Column specified by index
                 col_idx = int(self.transaction_column)
