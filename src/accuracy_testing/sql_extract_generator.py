@@ -47,6 +47,7 @@ class SQLExtractGenerator:
     
     # Common placeholder patterns (in order of preference for auto-detection)
     PLACEHOLDER_PATTERNS = [
+        r'-- TRANSACTION REFERENCES --',
         r'--<<TRANSACTION REFERENCES>>',
         r'--<TRADE REFERENCES>--',
         r'--\{TRANSACTION_REFS\}--',

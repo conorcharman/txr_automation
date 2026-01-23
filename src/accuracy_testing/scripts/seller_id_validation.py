@@ -73,8 +73,8 @@ from src.accuracy_testing.processor import (
 )
 
 # Import txr_replay_core utilities (only logger, not config)
-from common.logger import create_logger, StructuredLogger
-from common.utils import safe_open_csv
+from src.common.logger import create_logger, StructuredLogger
+from src.common.utils import safe_open_csv
 
 
 class SellerIDValidator:

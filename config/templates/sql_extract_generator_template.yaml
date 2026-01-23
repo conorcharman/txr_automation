@@ -15,10 +15,12 @@
 #
 # Template Requirements:
 #   The SQL template must contain exactly one placeholder for transaction references.
-#   Supported placeholder formats:
+#   Standard placeholder format:
+#     - -- TRANSACTION REFERENCES --
+#   Legacy formats (still supported for backward compatibility):
 #     - --<<TRANSACTION REFERENCES>>
 #     - --<TRADE REFERENCES>--
-#     - Custom placeholders can be specified via CLI (not yet implemented)
+#     - Custom placeholders can be specified via CLI
 #
 # Input CSV Format:
 #   - Must have header row
