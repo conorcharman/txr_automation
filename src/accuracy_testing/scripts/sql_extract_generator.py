@@ -344,7 +344,7 @@ def main():
             config = yaml.safe_load(f)
     else:
         # Try default configuration path
-        default_config = Path(__file__).parent.parent.parent.parent / "config" / "templates" / "sql_extract_generator_template.yaml"
+        default_config = Path(__file__).parent.parent.parent.parent / "config" / "local" / "accuracy_testing" / "sql_extract_generator.yaml"
         if default_config.exists():
             print(f"Loading default configuration from {default_config}...")
             with open(default_config, 'r') as f:

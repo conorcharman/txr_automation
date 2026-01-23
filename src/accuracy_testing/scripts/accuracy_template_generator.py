@@ -154,7 +154,7 @@ def main():
         config = load_config(args.config)
     else:
         # Try default configuration path
-        default_config = Path(__file__).parent.parent.parent.parent / "config" / "templates" / "accuracy_template_generator_template.yaml"
+        default_config = Path(__file__).parent.parent.parent.parent / "config" / "local" / "accuracy_testing" / "accuracy_template_generator.yaml"
         if default_config.exists():
             print(f"Loading default configuration from {default_config}...")
             config = load_config(str(default_config))
