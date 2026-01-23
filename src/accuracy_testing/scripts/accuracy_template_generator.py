@@ -159,6 +159,14 @@ def main():
             print(f"Loading default configuration from {default_config}...")
             config = load_config(str(default_config))
     
+    # Get testing period from config
+    fiscal_year = None
+    quarter = None
+    if config:
+        testing_period = config.get('testing_period', {})
+        fiscal_year = testing_period.get('fiscal_year')
+        quarter = testing_period.get('quarter')
+    
     # Determine paths (CLI args override config)
     errors_path = None
     queries_path = None
@@ -207,6 +215,8 @@ def main():
     # Display configuration
     if args.config:
         print(f"Config file:   {args.config}")
+    if fiscal_year and quarter:
+        print(f"Testing:       {fiscal_year} {quarter}")
     print(f"Errors file:   {errors_path if errors_path else 'Not provided'}")
     print(f"Queries file:  {queries_path if queries_path else 'Not provided'}")
     print(f"Output dir:    {output_dir}")
@@ -228,15 +238,17 @@ def main():
             print("\nDRY RUN - Preview of templates that would be generated:")
             print()
             
+            fy_q_prefix = f"{fiscal_year} {quarter} " if (fiscal_year and quarter) else "template_"
             for incident_code in sorted(generator.incident_records.keys()):
                 record_count = len(generator.incident_records[incident_code])
                 template_type = TemplateFormat.get_template_type(incident_code)
-                print(f"  template_{incident_code}.csv ({template_type} format, {record_count} records)")
+                filename = f"{fy_q_prefix}{incident_code}.csv" if (fiscal_year and quarter) else f"template_{incident_code}.csv"
+                print(f"  {filename} ({template_type} format, {record_count} records)")
             
             print_summary(generator, str(output_dir), dry_run=True)
         else:
             # Generate templates
-            generated_files = generator.generate_templates(str(output_dir))
+            generated_files = generator.generate_templates(str(output_dir), fiscal_year, quarter)
             
             print_summary(generator, str(output_dir))
         

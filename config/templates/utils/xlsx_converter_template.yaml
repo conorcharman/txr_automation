@@ -1,19 +1,23 @@
-# XLSX to CSV Converter v2.0 Configuration Template
-# Copy this file to config/local/utils/xlsx_converter_v2.yaml and customize
+# XLSX to CSV Converter Configuration Template
+# Copy this file to config/local/utils/xlsx_converter.yaml and customize
 
+# Conversion mode selection
 # Mode 1: Recursive parent directory mode (xlsx → csv in same structure)
+# Mode 2: Single directory mode (input dir → output dir)
+mode: 2
+
+# Mode 1 paths - Recursive parent directory mode
 # Use this when you have a structured hierarchy with xlsx/csv folders
-# paths:
-#   parent_dir: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation
-#   
-#   # Optional: specify log output directory
-#   log_output: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation/logs
-# Mode 2: Single directory mode (original behavior)
-# Uncomment these and comment out parent_dir to use single directory mode
- paths:
-   input_dir: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing
-   output_dir: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing
-   log_output: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\logs
+mode1_paths:
+  parent_dir: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation
+  log_output: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation/logs
+
+# Mode 2 paths - Single directory mode (original behavior)
+# Use this for simple input → output conversion
+mode2_paths:
+  input_dir: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing
+  output_dir: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing
+  log_output: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\logs
 
 processing:
   # Enable recursive scanning of subdirectories
@@ -57,22 +61,28 @@ logging:
 # Example Usage:
 # =============================================================================
 #
-# 1. Convert all FY25 Q3 data across all phases:
-#    replay-xlsx-converter-v2 --config config/local/utils/xlsx_converter_v2.yaml
+# 1. Convert all FY25 Q3 data across all phases (Mode 1):
+#    Set mode: 1 in config, then run:
+#    replay-xlsx-converter --config config/local/utils/xlsx_converter.yaml
 #
 # 2. Convert with command-line filters:
-#    replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation \
-#                             --filter-year FY25 --filter-quarter Q3
+#    replay-xlsx-converter --parent-dir C:/Data/txr_replay_automation \
+#                          --filter-year FY25 --filter-quarter Q3
 #
 # 3. Preview what would be converted (dry run):
-#    replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation --dry-run
+#    replay-xlsx-converter --parent-dir C:/Data/txr_replay_automation --dry-run
 #
 # 4. Convert specific phases only:
-#    replay-xlsx-converter-v2 --parent-dir C:/Data/txr_replay_automation \
-#                             --filter-phase phase_ii phase_iii
+#    replay-xlsx-converter --parent-dir C:/Data/txr_replay_automation \
+#                          --filter-phase phase_ii phase_iii
 #
-# 5. Single directory mode:
-#    replay-xlsx-converter-v2 --input-dir ./data/xlsx --output-dir ./data/csv
+# 5. Single directory mode (Mode 2):
+#    Set mode: 2 in config, then run:
+#    replay-xlsx-converter --config config/local/utils/xlsx_converter.yaml
+#
+# 6. Override mode via command line:
+#    replay-xlsx-converter --mode 1 --parent-dir ./data/parent
+#    replay-xlsx-converter --mode 2 --input-dir ./data/xlsx --output-dir ./data/csv
 #
 # =============================================================================
 # Directory Structure Examples:
