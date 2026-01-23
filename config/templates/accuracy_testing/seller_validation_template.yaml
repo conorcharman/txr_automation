@@ -1,13 +1,29 @@
 # Seller ID Validation Configuration
 # ==================================
 
+# Testing period configuration
+testing_period:
+  # Fiscal year (e.g., FY25, FY26)
+  fiscal_year: "FY25"
+  
+  # Quarter (e.g., Q1, Q2, Q3, Q4)
+  quarter: "Q3"
+
+# Incident codes to validate (batch processing)
+# Seller validation incident codes: 16_19, 16_21, 16_23, 16_20
+incidents:
+  - "16_19"
+  - "16_21"
+  - "16_23"
+  - "16_20"
+
 # File paths
 paths:
-  # Input CSV file with seller ID data
-  input_file: "data/test/seller_id_sample.csv"
+  # Template directory (contains files named "FY25 Q3 16_21.csv")
+  template_dir: "data/output/accuracy_testing/templates"
   
-  # Output CSV file with validation results
-  output_file: "data/test/seller_id_output.csv"
+  # Output directory for validated files
+  output_dir: "data/output/accuracy_testing/validated"
   
   # Log output directory
   log_output: "logs"

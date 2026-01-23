@@ -1,12 +1,25 @@
 # Pricing Data Validation Configuration
 # ======================================
 
-paths:
-  # Input file path
-  input_file: "data/test/pricing_input_sample.csv"
+# Testing period configuration
+testing_period:
+  # Fiscal year (e.g., FY25, FY26)
+  fiscal_year: "FY25"
   
-  # Output file path  
-  output_file: "data/test/pricing_output.csv"
+  # Quarter (e.g., Q1, Q2, Q3, Q4)
+  quarter: "Q3"
+
+# Incident codes to validate (batch processing)
+# Pricing validation incident codes: 35_3
+incidents:
+  - "35_3"
+
+paths:
+  # Template directory (contains files named "FY25 Q3 35_3.csv")
+  template_dir: "data/output/accuracy_testing/templates"
+  
+  # Output directory for validated files
+  output_dir: "data/output/accuracy_testing/validated"
   
   # Log output directory
   log_output: "logs"

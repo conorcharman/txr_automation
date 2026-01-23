@@ -308,13 +308,15 @@ class AccuracyTemplateGenerator:
         
         return data_rows
     
-    def generate_template(self, incident_code: str, output_dir: Path) -> Path:
+    def generate_template(self, incident_code: str, output_dir: Path, fiscal_year: str = None, quarter: str = None) -> Path:
         """
         Generate template file for an incident code.
         
         Args:
             incident_code: Incident code
             output_dir: Output directory
+            fiscal_year: Fiscal year (e.g., "FY25")
+            quarter: Quarter (e.g., "Q3")
             
         Returns:
             Path to generated template file
@@ -322,8 +324,11 @@ class AccuracyTemplateGenerator:
         # Create output directory
         output_dir.mkdir(parents=True, exist_ok=True)
         
-        # Generate filename
-        filename = f"template_{incident_code}.csv"
+        # Generate filename with FY/Q pattern: "FY25 Q3 7_37.csv"
+        if fiscal_year and quarter:
+            filename = f"{fiscal_year} {quarter} {incident_code}.csv"
+        else:
+            filename = f"template_{incident_code}.csv"  # Fallback for backward compatibility
         output_path = output_dir / filename
         
         # Get record count
@@ -346,25 +351,28 @@ class AccuracyTemplateGenerator:
         
         return output_path
     
-    def generate_templates(self, output_dir: str) -> Dict[str, Path]:
+    def generate_templates(self, output_dir: str, fiscal_year: str = None, quarter: str = None) -> Dict[str, Path]:
         """
         Generate all template files.
         
         Args:
             output_dir: Output directory for template files
+            fiscal_year: Fiscal year (e.g., "FY25")
+            quarter: Quarter (e.g., "Q3")
             
         Returns:
             Dictionary mapping incident codes to template file paths
         """
         output_path = Path(output_dir)
         
-        print(f"\nGenerating templates in {output_path}...")
+        fy_q_label = f"{fiscal_year} {quarter}" if (fiscal_year and quarter) else "templates"
+        print(f"\nGenerating {fy_q_label} templates in {output_path}...")
         
         generated_files = {}
         
         # Sort incident codes for consistent output
         for incident_code in sorted(self.incident_records.keys()):
-            template_path = self.generate_template(incident_code, output_path)
+            template_path = self.generate_template(incident_code, output_path, fiscal_year, quarter)
             generated_files[incident_code] = template_path
         
         print(f"\n✓ Generated {len(generated_files)} template files")

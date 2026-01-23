@@ -1,13 +1,29 @@
 # Buyer ID Validation Configuration
 # ==================================
 
+# Testing period configuration
+testing_period:
+  # Fiscal year (e.g., FY25, FY26)
+  fiscal_year: "FY25"
+  
+  # Quarter (e.g., Q1, Q2, Q3, Q4)
+  quarter: "Q3"
+
+# Incident codes to validate (batch processing)
+# Buyer validation incident codes: 7_35, 7_37, 7_39, 7_66
+incidents:
+  - "7_35"
+  - "7_37"
+  - "7_39"
+  - "7_66"
+
 # File paths
 paths:
-  # Input CSV file with buyer ID data
-  input_file: "data/test/buyer_id_sample.csv"
+  # Template directory (contains files named "FY25 Q3 7_37.csv")
+  template_dir: "data/output/accuracy_testing/templates"
   
-  # Output CSV file with validation results
-  output_file: "data/test/buyer_id_output.csv"
+  # Output directory for validated files
+  output_dir: "data/output/accuracy_testing/validated"
   
   # Log output directory
   log_output: "logs"
@@ -19,10 +35,6 @@ paths:
   # Optional: Main tracker CSV file for client data remediation
   # Format: Column J = Person Code, Column N = Status
   # main_tracker: "path/to/main_tracker.csv"
-  
-  # Optional: Template CSV file for Kaizen error lookup validation
-  # Format: Column A = Transaction Ref, Columns V:W = Expected ID:Type
-  # template_file: "path/to/template_7_37.csv"
 
 # Processor configuration
 processor:

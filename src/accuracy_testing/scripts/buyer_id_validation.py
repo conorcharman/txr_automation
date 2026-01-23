@@ -490,6 +490,100 @@ class BuyerIDValidator:
         self.processor.stats.print_summary(logger=self.logger)
 
 
+def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: bool = False):
+    """
+    Run validation for multiple incidents in batch mode.
+    
+    Args:
+        config: Configuration dictionary with testing_period, incidents, and paths
+        dry_run: If True, preview without writing
+        show_progress: If True, show progress bars
+    """
+    # Extract batch configuration
+    testing_period = config.get('testing_period', {})
+    fiscal_year = testing_period.get('fiscal_year', 'FYXX')
+    quarter = testing_period.get('quarter', 'QX')
+    incidents = config.get('incidents', [])
+    
+    paths = config.get('paths', {})
+    template_dir = Path(paths.get('template_dir', 'data/templates'))
+    output_dir = Path(paths.get('output_dir', 'data/validated'))
+    
+    if not incidents:
+        print("ERROR: No incidents specified in config")
+        return 1
+    
+    print(f"\n{'='*70}")
+    print(f"BATCH BUYER ID VALIDATION - {fiscal_year} {quarter}")
+    print(f"{'='*70}")
+    print(f"Template directory: {template_dir}")
+    print(f"Output directory:   {output_dir}")
+    print(f"Incidents:          {', '.join(incidents)}")
+    print(f"{'='*70}\n")
+    
+    # Create output directory
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    total_success = 0
+    total_failed = 0
+    
+    for incident in incidents:
+        print(f"\n{'─'*70}")
+        print(f"Processing incident: {incident}")
+        print(f"{'─'*70}")
+        
+        # Build template filename: "FY25 Q3 7_37.csv"
+        template_filename = f"{fiscal_year} {quarter} {incident}.csv"
+        template_path = template_dir / template_filename
+        
+        # Build output filename: "validated_FY25_Q3_7_37.csv"
+        output_filename = f"validated_{fiscal_year}_{quarter}_{incident}.csv"
+        output_path = output_dir / output_filename
+        
+        # Check if template exists
+        if not template_path.exists():
+            print(f"⚠️  Template not found: {template_path}")
+            print(f"   Skipping incident {incident}")
+            total_failed += 1
+            continue
+        
+        # Create modified config for this incident
+        incident_config = config.copy()
+        incident_config['paths'] = {
+            **paths,
+            'input_file': str(template_path),
+            'output_file': str(output_path),
+            'template_file': str(template_path)  # Use same file for Kaizen lookup
+        }
+        
+        try:
+            # Run validation for this incident
+            validator = BuyerIDValidator(
+                config_dict=incident_config,
+                dry_run=dry_run,
+                show_progress=show_progress
+            )
+            validator.run()
+            
+            print(f"✓ Completed: {incident}")
+            total_success += 1
+            
+        except Exception as e:
+            print(f"✗ Failed: {incident} - {e}")
+            total_failed += 1
+            continue
+    
+    # Print batch summary
+    print(f"\n{'='*70}")
+    print(f"BATCH VALIDATION COMPLETE")
+    print(f"{'='*70}")
+    print(f"Successful: {total_success}/{len(incidents)}")
+    print(f"Failed:     {total_failed}/{len(incidents)}")
+    print(f"{'='*70}\n")
+    
+    return 0 if total_failed == 0 else 1
+
+
 def parse_args():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
@@ -599,22 +693,34 @@ def main():
                 print("Use --config, --use-env, or provide input_file and output_file arguments")
                 return 1
         
-        # Override log level if specified
-        if args.log_level:
-            if 'processor' not in config:
-                config['processor'] = {}
-            config['processor']['log_level'] = args.log_level
+        # Check if this is batch mode (has incidents list and testing_period)
+        is_batch_mode = 'incidents' in config and 'testing_period' in config
         
-        # Create and run validator
-        validator = BuyerIDValidator(
-            config_dict=config,
-            dry_run=args.dry_run,
-            show_progress=args.progress
-        )
-        validator.run()
-        
-        validator.logger.info("Buyer ID validation completed successfully")
-        return 0
+        if is_batch_mode:
+            # Run batch validation for multiple incidents
+            return run_batch_validation(
+                config=config,
+                dry_run=args.dry_run,
+                show_progress=args.progress
+            )
+        else:
+            # Single file mode (backward compatible)
+            # Override log level if specified
+            if args.log_level:
+                if 'processor' not in config:
+                    config['processor'] = {}
+                config['processor']['log_level'] = args.log_level
+            
+            # Create and run validator
+            validator = BuyerIDValidator(
+                config_dict=config,
+                dry_run=args.dry_run,
+                show_progress=args.progress
+            )
+            validator.run()
+            
+            validator.logger.info("Buyer ID validation completed successfully")
+            return 0
     
     except Exception as e:
         print(f"\nFATAL ERROR: {e}")

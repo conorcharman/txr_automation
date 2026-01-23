@@ -58,6 +58,14 @@ paths:
   output:
     directory: "data/output/accuracy_testing/templates"
 
+# Testing period configuration
+testing_period:
+  # Fiscal year (e.g., FY25, FY26)
+  fiscal_year: "FY25"
+  
+  # Quarter (e.g., Q1, Q2, Q3, Q4)
+  quarter: "Q3"
+
 # Processing options
 processing:
   # Whether to include queries data (in addition to errors)
