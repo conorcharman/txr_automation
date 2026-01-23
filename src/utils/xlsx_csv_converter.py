@@ -534,7 +534,7 @@ def main():
         config_dict = ConfigManager.load_from_yaml(args.config)
     else:
         # Try to load default local config
-        default_config = Path(__file__).parent.parent.parent / "config" / "templates" / "xlsx_converter_template.yaml"
+        default_config = Path(__file__).parent.parent.parent / "config" / "local" / "utils" / "xlsx_converter.yaml"
         if default_config.exists():
             print(f"Loading default configuration from {default_config}...")
             config_dict = ConfigManager.load_from_yaml(str(default_config))
