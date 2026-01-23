@@ -24,13 +24,18 @@ Generate accuracy testing template files from consolidated errors/queries data.
 
 **Usage:**
 ```bash
-# Using config file
-generate-accuracy-template --config config/environments/local.yaml
+# Using config file (default: config/templates/accuracy_template_generator_template.yaml)
+generate-accuracy-template --config config/my_config.yaml
 
-# Using command-line arguments
+# Using command-line arguments (overrides config)
 generate-accuracy-template \
   --errors data/input/consolidated_errors.csv \
   --queries data/input/consolidated_queries.csv \
+  --output data/output/templates
+
+# Mix config and CLI (CLI overrides config values)
+generate-accuracy-template \
+  --config config/my_config.yaml \
   --output data/output/templates
 
 # Preview without generating files
@@ -40,7 +45,7 @@ generate-accuracy-template \
 ```
 
 **Options:**
-- `--config PATH` - Configuration YAML file
+- `--config PATH` - Configuration YAML file (optional, default: config/templates/accuracy_template_generator_template.yaml)
 - `--errors PATH` - Consolidated errors CSV file (overrides config)
 - `--queries PATH` - Consolidated queries CSV file (overrides config)
 - `--output PATH` - Output directory for template files (overrides config)
@@ -61,7 +66,10 @@ Generate SQL extract files from transaction references in template files.
 
 **Usage:**
 ```bash
-# Basic usage
+# Using config file (default: config/templates/sql_extract_generator_template.yaml)
+generate-sql-extract --config config/my_config.yaml
+
+# Using command-line arguments
 generate-sql-extract \
   --template sql/ExtractBuyerID.sql \
   --input data/output/templates/template_7_37.csv \
@@ -90,9 +98,10 @@ generate-sql-extract \
 ```
 
 **Options:**
-- `--template PATH` - SQL template file (required)
-- `--input PATH` - CSV file with transaction references (required)
-- `--output PATH` - Output directory for SQL files (required)
+- `--config PATH` - Configuration YAML file (optional, default: config/templates/sql_extract_generator_template.yaml)
+- `--template PATH` - SQL template file (required unless in config)
+- `--input PATH` - CSV file with transaction references (required unless in config)
+- `--output PATH` - Output directory for SQL files (required unless in config)
 - `--batch-size N` - Number of transactions per file (default: 900)
 - `--column NAME` - CSV column name for transaction refs (default: auto-detect "Transaction reference number")
 - `--placeholder TEXT` - Custom SQL placeholder (default: auto-detect)
@@ -307,41 +316,64 @@ replay-phase3-final --config config/environments/local.yaml
 
 ### replay-xlsx-converter
 
-Convert XLSX files to CSV format (original version).
+Convert XLSX files to CSV format with enhanced features including recursive directory scanning, filtering by fiscal year/quarter/phase, and robust handling of multi-line cells.
 
 **Usage:**
 ```bash
+# Using config file (default: config/templates/xlsx_converter_template.yaml)
+replay-xlsx-converter --config config/my_config.yaml
+
+# Recursive mode - scan parent directory structure
 replay-xlsx-converter \
-  --input data/input/report.xlsx \
-  --output data/output/report.csv
+  --parent-dir /path/to/txr_replay_automation \
+  --recursive
+
+# Filter by fiscal year and quarter
+replay-xlsx-converter \
+  --parent-dir /path/to/txr_replay_automation \
+  --filter-year FY25 \
+  --filter-quarter Q3
+
+# Filter specific phases
+replay-xlsx-converter \
+  --parent-dir /path/to/txr_replay_automation \
+  --filter-phase phase_ii phase_iii
+
+# Dry run to preview what would be converted
+replay-xlsx-converter \
+  --parent-dir /path/to/txr_replay_automation \
+  --dry-run
+
+# Single directory mode (original behavior)
+replay-xlsx-converter \
+  --input-dir data/input/xlsx \
+  --output-dir data/output/csv
 ```
 
 **Options:**
-- `--input PATH` - Input XLSX file (required)
-- `--output PATH` - Output CSV file (required)
-- `--sheet NAME` - Sheet name to convert (default: first sheet)
+- `--config PATH` - Configuration YAML file (optional, default: config/templates/xlsx_converter_template.yaml)
+- `--mode {1,2}` - Conversion mode: 1=Recursive parent directory, 2=Single directory
+- `--parent-dir PATH` - Parent directory to scan recursively (mode 1)
+- `--input-dir PATH` - Single directory with XLSX files (mode 2)
+- `--output-dir PATH` - Output directory for CSV files (mode 2)
+- `--recursive` - Enable recursive scanning of subdirectories
+- `--filter-year YEAR` - Filter by fiscal year (e.g., FY25)
+- `--filter-quarter Q` - Filter by quarter (e.g., Q3)
+- `--filter-phase PHASES` - Filter by phase names (e.g., phase_ii phase_iii reference)
+- `--dry-run` - Preview mode - show what would be converted without converting
+- `--force` - Overwrite existing CSV files without prompting
+- `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
 
----
-
-### replay-xlsx-converter-v2
-
-Convert XLSX files to CSV format with enhanced features (v2).
-
-**Usage:**
-```bash
-replay-xlsx-converter-v2 \
-  --input data/input/report.xlsx \
-  --output data/output/report.csv
-```
-
-**Options:**
-- `--input PATH` - Input XLSX file (required)
-- `--output PATH` - Output CSV file (required)
-- `--sheet NAME` - Sheet name to convert (default: first sheet)
-- `--encoding NAME` - Output encoding (default: utf-8)
+**Features:**
+- Recursive directory scanning with filtering
+- Handles multi-line cells correctly
+- Preserves original file structure when using parent-dir mode
+- Fiscal year/quarter/phase filtering for organized processing
+- Dry-run mode for previewing conversions
+- Detailed logging with progress tracking
 
 **Related:**
-- Configuration template: `config/templates/xlsx_converter_v2_template.yaml`
+- Configuration template: `config/templates/xlsx_converter_template.yaml`
 
 ---
 
@@ -381,6 +413,13 @@ processing:
 - `config/templates/phase2_template.yaml` - Phase 2 replay config
 - `config/templates/phase3_template.yaml` - Phase 3 replay config
 - `config/templates/phase3_final_template.yaml` - Phase 3 final config
+- `config/templates/xlsx_converter_template.yaml` - XLSX converter config
+
+**Default Configuration Behavior:**
+All commands support the `--config` option, but it's optional. If not specified:
+- Commands will look for a default config file in `config/templates/[command]_template.yaml`
+- Most validation and replay commands fall back to `config/local/[category]/[script].yaml`
+- You can always override config values with command-line arguments
 
 **Creating Local Configuration:**
 ```bash
@@ -427,9 +466,9 @@ validate-buyer \
 
 ```bash
 # 1. Convert XLSX to CSV
-replay-xlsx-converter-v2 \
-  --input data/input/raw_data.xlsx \
-  --output data/input/raw_data.csv
+replay-xlsx-converter \
+  --input-dir data/input/xlsx \
+  --output-dir data/input/csv
 
 # 2. Run Phase 2 processing
 replay-phase2 --config config/environments/local.yaml

@@ -240,7 +240,11 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Basic usage
+  # Use configuration file
+  python -m src.accuracy_testing.scripts.sql_extract_generator \\
+      --config config/templates/sql_extract_generator_template.yaml
+  
+  # Basic usage with command line arguments
   python -m src.accuracy_testing.scripts.sql_extract_generator \\
       --template legacy/sql/ExtractBuyerID4_1.sql \\
       --input data/transactions.csv \\
@@ -270,22 +274,25 @@ Examples:
     )
     
     parser.add_argument(
+        '--config',
+        type=str,
+        help='Path to YAML configuration file (default: config/templates/sql_extract_generator_template.yaml)'
+    )
+    
+    parser.add_argument(
         '--template',
-        required=True,
         type=str,
         help='Path to SQL template file'
     )
     
     parser.add_argument(
         '--input',
-        required=True,
         type=str,
         help='Path to input CSV file with transaction references'
     )
     
     parser.add_argument(
         '--output',
-        required=True,
         type=str,
         help='Directory for output SQL files'
     )
@@ -330,15 +337,67 @@ def main():
     """Main entry point."""
     args = parse_arguments()
     
+    # Load configuration if provided or use default
+    config = {}
+    if args.config:
+        with open(args.config, 'r') as f:
+            config = yaml.safe_load(f)
+    else:
+        # Try default configuration path
+        default_config = Path(__file__).parent.parent.parent.parent / "config" / "templates" / "sql_extract_generator_template.yaml"
+        if default_config.exists():
+            print(f"Loading default configuration from {default_config}...")
+            with open(default_config, 'r') as f:
+                config = yaml.safe_load(f)
+    
+    # Determine paths (CLI args override config)
+    template_path = args.template
+    input_csv = args.input
+    output_dir = args.output
+    batch_size = args.batch_size or 900
+    placeholder = args.placeholder
+    transaction_column = args.column
+    dry_run = args.dry_run
+    verbose = args.verbose
+    
+    # Get from config if available and not provided via CLI
+    if config:
+        paths = config.get('paths', {})
+        processing = config.get('processing', {})
+        
+        if not template_path:
+            template_path = paths.get('template_file')
+        if not input_csv:
+            input_csv = paths.get('input_file')
+        if not output_dir:
+            output_dir = paths.get('output_directory')
+        if not placeholder:
+            placeholder = processing.get('placeholder_pattern')
+        if not transaction_column:
+            transaction_column = processing.get('transaction_column')
+        if args.batch_size == 900:  # default value
+            batch_size = processing.get('batch_size', 900)
+    
+    # Validate required arguments
+    if not template_path:
+        print("ERROR: Template file (--template or via --config) is required")
+        return 1
+    if not input_csv:
+        print("ERROR: Input CSV file (--input or via --config) is required")
+        return 1
+    if not output_dir:
+        print("ERROR: Output directory (--output or via --config) is required")
+        return 1
+    
     cli = SQLExtractGeneratorCLI(
-        template_path=args.template,
-        input_csv=args.input,
-        output_dir=args.output,
-        batch_size=args.batch_size,
-        placeholder=args.placeholder,
-        transaction_column=args.column,
-        dry_run=args.dry_run,
-        verbose=args.verbose
+        template_path=template_path,
+        input_csv=input_csv,
+        output_dir=output_dir,
+        batch_size=batch_size,
+        placeholder=placeholder,
+        transaction_column=transaction_column,
+        dry_run=dry_run,
+        verbose=verbose
     )
     
     return cli.run()
