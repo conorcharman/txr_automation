@@ -62,59 +62,91 @@ generate-accuracy-template \
 
 ### generate-sql-extract
 
-Generate SQL extract files from transaction references in template files.
+Generate SQL extract files from transaction references in validated data. Supports both **batch mode** (multiple incidents) and **single mode** (one incident).
 
-**Usage:**
+**Batch Mode (Recommended):**
 ```bash
-# Using config file (default: config/templates/sql_extract_generator_template.yaml)
-generate-sql-extract --config config/my_config.yaml
+# Process multiple incidents automatically
+# Reads validated CSV files, auto-selects SQL templates, generates extracts
+generate-sql-extract --config config/local/accuracy_testing/sql_extract_generator.yaml
 
-# Using command-line arguments
-generate-sql-extract \
-  --template sql/ExtractBuyerID.sql \
-  --input data/output/templates/template_7_37.csv \
-  --output data/output/sql
+# Preview batch processing
+generate-sql-extract --config config/batch.yaml --dry-run
 
-# With custom batch size
+# Verbose output
+generate-sql-extract --config config/batch.yaml --verbose
+```
+
+**Batch Configuration Example:**
+```yaml
+testing_period:
+  fiscal_year: "FY25"
+  quarter: "Q3"
+incidents: ["7_37", "16_21", "35_3"]
+paths:
+  template_dir: "data/validated"              # Reads validated_FY25_Q3_7_37.csv
+  sql_template_dir: "src/accuracy_testing/sql_templates"
+  output_directory: "data/sql_extracts"       # Writes 7_37_FY25_Q3.sql
+processing:
+  batch_size: 900
+  transaction_column: "Transaction Ref"
+```
+
+**Automatic SQL Template Selection:**
+- Buyer ID incidents (7_*, 8_*, 9_*, etc.) → `BuyerID.sql`
+- Seller ID incidents (16_*, 17_*, etc.) → `SellerID.sql`
+- Pricing incidents (35_3) → `SCR_pricing_data_v1.0.sql`
+- Inconsistent Buyer (7_66, 7_68) → `InconsistentBuyerID.sql`
+- Inconsistent Seller (16_20, 16_64) → `InconsistentSellerID.sql`
+- Decision Maker Buyer (12_*) → `FTBDM.sql`
+- Decision Maker Seller (21_*) → `FTSDM.sql`
+
+**Single Mode (Legacy):**
+```bash
+# Process one incident manually
 generate-sql-extract \
-  --template sql/PricingData.sql \
-  --input data/output/templates/template_35_3.csv \
-  --output data/output/sql \
+  --template src/accuracy_testing/sql_templates/BuyerID.sql \
+  --input data/validated/validated_FY25_Q3_7_37.csv \
+  --output data/sql_extracts
+
+# Custom batch size
+generate-sql-extract \
+  --template src/accuracy_testing/sql_templates/SCR_pricing_data_v1.0.sql \
+  --input data/validated/validated_FY25_Q3_35_3.csv \
+  --output data/sql_extracts \
   --batch-size 500
 
-# Specify transaction column by name
+# Specify transaction column
 generate-sql-extract \
-  --template sql/ExtractSellerID.sql \
-  --input data/output/templates/template_16_21.csv \
-  --output data/output/sql \
+  --template src/accuracy_testing/sql_templates/SellerID.sql \
+  --input data/custom_transactions.csv \
+  --output data/sql_extracts \
   --column "Transaction reference number"
-
-# Preview without generating
-generate-sql-extract \
-  --template sql/ExtractBuyerID.sql \
-  --input data/output/templates/template_7_37.csv \
-  --output data/output/sql \
-  --dry-run
 ```
 
 **Options:**
-- `--config PATH` - Configuration YAML file (optional, default: config/templates/sql_extract_generator_template.yaml)
-- `--template PATH` - SQL template file (required unless in config)
-- `--input PATH` - CSV file with transaction references (required unless in config)
+- `--config PATH` - Configuration YAML file (enables batch mode if contains `incidents` and `testing_period`)
+- `--template PATH` - SQL template file (single mode, required unless in config)
+- `--input PATH` - CSV file with transaction references (single mode, required unless in config)
 - `--output PATH` - Output directory for SQL files (required unless in config)
 - `--batch-size N` - Number of transactions per file (default: 900)
-- `--column NAME` - CSV column name for transaction refs (default: auto-detect "Transaction reference number")
-- `--placeholder TEXT` - Custom SQL placeholder (default: auto-detect)
+- `--column NAME` - CSV column name for transaction refs (default: "Transaction Ref")
+- `--placeholder TEXT` - Custom SQL placeholder (default: "-- TRANSACTION REFERENCES --")
 - `--dry-run` - Preview without generating files
 - `--verbose` - Enable detailed output
 
 **SQL Template Requirements:**
 - Must contain placeholder: `-- TRANSACTION REFERENCES --`
-- Legacy formats also supported: `--<<TRANSACTION REFERENCES>>`, `--<TRADE REFERENCES>--`
 
-**Output:**
-- Single SQL file if ≤ batch_size transactions
-- Multiple numbered files if > batch_size: `template_Extract1.sql`, `template_Extract2.sql`, etc.
+**Output Naming:**
+- **Batch mode:** `{incident}_{fiscal_year}_{quarter}.sql` or `{incident}_{fiscal_year}_{quarter}_Extract{N}.sql`
+  - Example: `7_37_FY25_Q3.sql`, `35_3_FY25_Q3_Extract1.sql`
+- **Single mode:** `{template_name}.sql` or `{template_name}_Extract{N}.sql`
+  - Example: `BuyerID.sql`, `BuyerID_Extract1.sql`
+
+**Batch Splitting:**
+- Datasets > `batch_size` are automatically split into multiple files
+- Example: 2000 refs with batch_size=900 → Extract1 (900), Extract2 (900), Extract3 (200)
 
 ---
 

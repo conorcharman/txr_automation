@@ -2,21 +2,14 @@
 
 ## Overview
 
-The SQL Extract Generator is a unified Python tool that replaces three legacy VBA scripts:
-- `ExtractBuyerID4_1.vb`
-- `ExtractInconsistentBuyerID1_0.vb`
-- `SCR_extract_generator_v1_0.vb`
+The SQL Extract Generator is a Python tool that generates SQL extract files from validated transaction data. It supports **batch mode** for processing multiple incidents automatically and **single mode** for one-off extractions.
 
-It generates SQL extract files by inserting transaction references into SQL templates with placeholder markers.
-
-## Features
-
-- **Template-driven**: Works with any SQL template containing a transaction reference placeholder
-- **Batch processing**: Automatically splits large transaction lists into manageable batches
-- **Multiple placeholder formats**: Supports various placeholder patterns for compatibility
-- **Dry-run mode**: Preview generation without creating files
-- **Flexible batch sizes**: Configure transactions per extract (default: 900)
-- **Smart filename handling**: Single extracts use template name, multiple extracts are numbered
+**Key Features:**
+- **Batch Processing**: Process multiple incidents in one run with automatic SQL template selection
+- **Smart Template Mapping**: Automatically selects the correct SQL template for each incident code
+- **FY/Q Naming**: Outputs use fiscal year/quarter naming (`7_37_FY25_Q3.sql`)
+- **Auto-splitting**: Large datasets automatically split into multiple files (900 records per file)
+- **Multiple Modes**: Batch mode for production workflows, single mode for custom extractions
 
 ## Installation
 
@@ -28,66 +21,128 @@ pip install -e .
 
 This registers the `generate-sql-extract` console command.
 
-## Usage
+## Batch Mode (Recommended)
+
+Batch mode is the recommended approach for processing multiple incidents. The tool:
+1. Reads validated CSV files (`validated_FY25_Q3_7_37.csv`)
+2. Automatically selects the appropriate SQL template based on incident code
+3. Generates SQL files with FY/Q naming (`7_37_FY25_Q3.sql`)
+4. Handles large datasets by splitting into multiple extract files
+
+### Configuration
+
+Create a YAML config file (e.g., `config/local/accuracy_testing/sql_extract_generator.yaml`):
+
+```yaml
+testing_period:
+  fiscal_year: "FY25"
+  quarter: "Q3"
+
+incidents:
+  - "7_37"   # Buyer ID
+  - "16_21"  # Seller ID
+  - "35_3"   # Pricing data
+
+paths:
+  template_dir: "data/validated"
+  sql_template_dir: "src/accuracy_testing/sql_templates"
+  output_directory: "data/sql_extracts"
+
+processing:
+  batch_size: 900
+  transaction_column: "Transaction Ref"
+```
+
+### Usage
+
+```bash
+# Process all incidents in config
+generate-sql-extract --config config/local/accuracy_testing/sql_extract_generator.yaml
+
+# Preview without generating
+generate-sql-extract --config config.yaml --dry-run
+
+# Verbose output
+generate-sql-extract --config config.yaml --verbose
+```
+
+### Automatic SQL Template Selection
+
+The tool automatically selects the correct SQL template based on incident code:
+
+| Incident Type | Incident Codes | SQL Template |
+|--------------|----------------|--------------|
+| Buyer ID | 7_*, 8_*, 9_*, 10_*, 11_*, 13_*, 14_*, 15_* | `BuyerID.sql` |
+| Seller ID | 16_*, 17_*, 18_*, 19_*, 20_*, 22_*, 23_*, 24_*, 36_* | `SellerID.sql` |
+| Pricing Data | 35_3 | `SCR_pricing_data_v1.0.sql` |
+| Inconsistent Buyer | 7_66, 7_68 | `InconsistentBuyerID.sql` |
+| Inconsistent Seller | 16_20, 16_64 | `InconsistentSellerID.sql` |
+| Decision Maker Buyer | 12_* | `FTBDM.sql` |
+| Decision Maker Seller | 21_* | `FTSDM.sql` |
+
+### Output Format
+
+**Batch mode output naming:**
+- Single batch: `{incident}_{fiscal_year}_{quarter}.sql`
+  - Example: `7_37_FY25_Q3.sql`
+- Multiple batches: `{incident}_{fiscal_year}_{quarter}_Extract{N}.sql`
+  - Example: `7_37_FY25_Q3_Extract1.sql`, `7_37_FY25_Q3_Extract2.sql`
+
+**Example output for 2000 transaction refs with batch_size=900:**
+```
+7_37_FY25_Q3_Extract1.sql  (900 refs)
+7_37_FY25_Q3_Extract2.sql  (900 refs)
+7_37_FY25_Q3_Extract3.sql  (200 refs)
+```
+
+## Single Mode (Legacy)
+
+Single mode is useful for custom extractions or one-off queries.
 
 ### Basic Usage
 
 ```bash
 generate-sql-extract \
-  --template path/to/template.sql \
-  --input path/to/transactions.csv \
-  --output path/to/output
+  --template src/accuracy_testing/sql_templates/BuyerID.sql \
+  --input data/validated/validated_FY25_Q3_7_37.csv \
+  --output data/sql_extracts
 ```
 
 ### Command-Line Options
 
 | Option | Description | Default | Required |
 |--------|-------------|---------|----------|
-| `--template` | Path to SQL template file | - | Yes |
-| `--input` | Path to CSV file with transaction references | - | Yes |
-| `--output` | Output directory for generated SQL files | - | Yes |
+| `--config` | YAML configuration file | - | No |
+| `--template` | Path to SQL template file | - | Yes (unless in config) |
+| `--input` | Path to CSV file with transaction references | - | Yes (unless in config) |
+| `--output` | Output directory for generated SQL files | - | Yes (unless in config) |
 | `--batch-size` | Number of transactions per extract file | 900 | No |
+| `--column` | CSV column name for transaction refs | "Transaction Ref" | No |
+| `--placeholder` | SQL placeholder pattern | "-- TRANSACTION REFERENCES --" | No |
 | `--dry-run` | Preview generation without creating files | False | No |
+| `--verbose` | Enable detailed output | False | No |
 
 ### Examples
 
-#### 1. Generate Single Extract File
+#### Generate with Custom Batch Size
 
 ```bash
 generate-sql-extract \
-  --template legacy/sql/buyer_id_extract.sql \
-  --input data/output/transactions_35_3.csv \
-  --output data/output/sql
-```
-
-**Output**: `data/output/sql/buyer_id_extract.sql`
-
-#### 2. Generate Multiple Batch Files
-
-```bash
-generate-sql-extract \
-  --template legacy/sql/pricing_extract.sql \
-  --input data/output/transactions_35_3.csv \
-  --output data/output/sql \
+  --template src/accuracy_testing/sql_templates/SCR_pricing_data_v1.0.sql \
+  --input data/validated/validated_FY25_Q3_35_3.csv \
+  --output data/sql_extracts \
   --batch-size 500
 ```
 
-**Output** (if 1,200 transactions):
-- `data/output/sql/pricing_extract_Extract1.sql` (500 transactions)
-- `data/output/sql/pricing_extract_Extract2.sql` (500 transactions)
-- `data/output/sql/pricing_extract_Extract3.sql` (200 transactions)
-
-#### 3. Preview Without Generating Files
+#### Specify Transaction Column
 
 ```bash
 generate-sql-extract \
-  --template legacy/sql/seller_id_extract.sql \
-  --input data/output/transactions_35_4.csv \
-  --output data/output/sql \
-  --dry-run
+  --template src/accuracy_testing/sql_templates/SellerID.sql \
+  --input data/custom_transactions.csv \
+  --output data/sql_extracts \
+  --column "Transaction reference number"
 ```
-
-This displays a summary without creating any files.
 
 ## SQL Templates
 
