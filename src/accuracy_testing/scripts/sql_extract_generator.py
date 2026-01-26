@@ -68,7 +68,10 @@ class SQLExtractGeneratorCLI:
         placeholder: str = None,
         transaction_column: str = None,
         dry_run: bool = False,
-        verbose: bool = False
+        verbose: bool = False,
+        output_format: str = 'both',
+        incident_code: str = None,
+        dtf_template_path: str = None
     ):
         """
         Initialize CLI.
@@ -76,12 +79,15 @@ class SQLExtractGeneratorCLI:
         Args:
             template_path: Path to SQL template file
             input_csv: Path to CSV file with transaction references
-            output_dir: Directory for output SQL files
+            output_dir: Parent directory for output files (creates /csv and /dtf subdirs)
             batch_size: Records per SQL file (default 900)
             placeholder: Custom placeholder pattern (auto-detects if None)
             transaction_column: CSV column name/index for transaction refs
             dry_run: Preview mode - don't write files
             verbose: Enable detailed output
+            output_format: Output format - 'sql', 'dtf', or 'both' (default: 'both')
+            incident_code: Incident code for CSV naming in DTF files
+            dtf_template_path: Path to DTF template (uses default if None)
         """
         self.template_path = template_path
         self.input_csv = input_csv
@@ -91,6 +97,9 @@ class SQLExtractGeneratorCLI:
         self.transaction_column = transaction_column
         self.dry_run = dry_run
         self.verbose = verbose
+        self.output_format = output_format
+        self.incident_code = incident_code
+        self.dtf_template_path = dtf_template_path
     
     def read_transaction_refs(self) -> List[str]:
         """
@@ -155,12 +164,13 @@ class SQLExtractGeneratorCLI:
             print("=" * 70)
             print("SQL EXTRACT GENERATOR")
             print("=" * 70)
-            print(f"Template:     {self.template_path}")
-            print(f"Input CSV:    {self.input_csv}")
-            print(f"Output Dir:   {self.output_dir}")
-            print(f"Batch Size:   {self.batch_size}")
+            print(f"Template:      {self.template_path}")
+            print(f"Input CSV:     {self.input_csv}")
+            print(f"Output Dir:    {self.output_dir}")
+            print(f"Batch Size:    {self.batch_size}")
+            print(f"Output Format: {self.output_format}")
             if self.dry_run:
-                print("Mode:         DRY RUN (preview only)")
+                print("Mode:          DRY RUN (preview only)")
             print("=" * 70)
             
             # Initialize generator
@@ -170,12 +180,16 @@ class SQLExtractGeneratorCLI:
             generator = SQLExtractGenerator(
                 template_path=self.template_path,
                 batch_size=self.batch_size,
-                placeholder=self.placeholder
+                placeholder=self.placeholder,
+                output_format=self.output_format,
+                dtf_template_path=self.dtf_template_path
             )
             
             if self.verbose:
                 print(f"  ✓ Template loaded: {generator.template_path.name}")
                 print(f"  ✓ Placeholder detected: {generator.placeholder}")
+                if self.output_format in ['dtf', 'both']:
+                    print(f"  ✓ DTF template loaded: {generator.dtf_template_path.name}")
             
             # Read transaction references
             if self.verbose:
@@ -198,31 +212,53 @@ class SQLExtractGeneratorCLI:
             # Generate SQL files
             if self.dry_run:
                 print("\n[4/4] DRY RUN - Skipping file generation")
-                print(f"\nWould generate {summary['num_batches']} SQL file(s) in:")
+                print(f"\nWould generate {summary['num_batches']} file(s) in:")
                 print(f"  {Path(self.output_dir).absolute()}")
                 
                 # Show what filenames would be
                 base_filename = Path(self.template_path).stem
-                for i in range(1, summary['num_batches'] + 1):
-                    if summary['num_batches'] == 1:
-                        filename = f"{base_filename}.sql"
-                    else:
-                        filename = f"{base_filename}_Extract{i}.sql"
-                    print(f"    - {filename}")
+                
+                if self.output_format in ['sql', 'both']:
+                    print(f"\n  SQL files (in /csv or /sql subdir):")
+                    for i in range(1, summary['num_batches'] + 1):
+                        if summary['num_batches'] == 1:
+                            filename = f"{base_filename}.sql"
+                        else:
+                            filename = f"{base_filename}_Extract{i}.sql"
+                        print(f"    - {filename}")
+                
+                if self.output_format in ['dtf', 'both']:
+                    print(f"\n  DTF files (in /dtf subdir):")
+                    for i in range(1, summary['num_batches'] + 1):
+                        if summary['num_batches'] == 1:
+                            filename = f"{base_filename}.dtf"
+                        else:
+                            filename = f"{base_filename}_Extract{i}.dtf"
+                        print(f"    - {filename}")
             else:
                 if self.verbose:
-                    print("\n[4/4] Generating SQL files...")
+                    print("\n[4/4] Generating files...")
                 
                 base_filename = Path(self.template_path).stem
+                incident_code = self.incident_code or base_filename
+                
                 generated_files = generator.generate_extracts(
                     transaction_refs=transaction_refs,
                     output_dir=self.output_dir,
-                    base_filename=base_filename
+                    base_filename=base_filename,
+                    incident_code=incident_code
                 )
                 
-                print(f"\n✓ Successfully generated {len(generated_files)} SQL file(s):")
-                for file_path in generated_files:
-                    print(f"    - {file_path}")
+                # Report generated files
+                if generated_files['sql_files']:
+                    print(f"\n✓ Successfully generated {len(generated_files['sql_files'])} SQL file(s):")
+                    for file_path in generated_files['sql_files']:
+                        print(f"    - {file_path}")
+                
+                if generated_files['dtf_files']:
+                    print(f"\n✓ Successfully generated {len(generated_files['dtf_files'])} DTF file(s):")
+                    for file_path in generated_files['dtf_files']:
+                        print(f"    - {file_path}")
             
             print("\n" + "=" * 70)
             print("GENERATION COMPLETE")
@@ -324,6 +360,28 @@ Examples:
     )
     
     parser.add_argument(
+        '--output-format',
+        type=str,
+        choices=['sql', 'dtf', 'both'],
+        default='both',
+        help='Output format: sql (SQL files only), dtf (DTF files only), or both (default: both)'
+    )
+    
+    parser.add_argument(
+        '--incident-code',
+        type=str,
+        default=None,
+        help='Incident code for CSV naming in DTF files (defaults to template basename)'
+    )
+    
+    parser.add_argument(
+        '--dtf-template',
+        type=str,
+        default=None,
+        help='Path to DTF template file (uses default if not specified)'
+    )
+    
+    parser.add_argument(
         '--dry-run',
         action='store_true',
         help='Preview mode - show what would be generated without writing files'
@@ -413,11 +471,15 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     template_dir = Path(paths.get('template_dir', 'data/templates'))
     output_dir = Path(paths.get('output_directory', 'data/sql_extracts'))
     sql_template_dir = Path(paths.get('sql_template_dir', 'src/accuracy_testing/sql_templates'))
+    dtf_template_path = paths.get('dtf_template_file')
     
     processing = config.get('processing', {})
     batch_size = processing.get('batch_size', 900)
     placeholder = processing.get('placeholder_pattern', '-- TRANSACTION REFERENCES --')
     transaction_column = processing.get('transaction_column', 'Transaction reference number')
+    
+    output_options = config.get('output_options', {})
+    output_format = output_options.get('format', 'both')
     
     if not incidents:
         print("ERROR: No incidents specified in config")
@@ -429,6 +491,7 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     print(f"Template directory:       {template_dir}")
     print(f"SQL template directory:   {sql_template_dir}")
     print(f"Output directory:         {output_dir}")
+    print(f"Output format:            {output_format}")
     print(f"Incidents:                {', '.join(incidents)}")
     print(f"Batch size:               {batch_size} records per file")
     print(f"{'='*70}\n")
@@ -438,7 +501,8 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     
     total_success = 0
     total_failed = 0
-    total_files_generated = 0
+    total_sql_files = 0
+    total_dtf_files = 0
     
     for incident in incidents:
         print(f"\n{'─'*70}")
@@ -487,38 +551,63 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
             generator = SQLExtractGenerator(
                 template_path=str(sql_template),
                 batch_size=batch_size,
-                placeholder=placeholder
+                placeholder=placeholder,
+                output_format=output_format,
+                dtf_template_path=dtf_template_path
             )
             
             summary = generator.get_summary(refs)
             num_batches = summary['num_batches']
             
             if dry_run:
-                print(f"DRY RUN - Would generate {num_batches} SQL file(s)")
-                for i in range(1, num_batches + 1):
-                    if num_batches == 1:
-                        filename = f"{incident}_{fiscal_year}_{quarter}.sql"
-                    else:
-                        filename = f"{incident}_{fiscal_year}_{quarter}_Extract{i}.sql"
-                    print(f"  - {filename}")
+                if output_format in ['sql', 'both']:
+                    print(f"DRY RUN - Would generate {num_batches} SQL file(s)")
+                    for i in range(1, num_batches + 1):
+                        if num_batches == 1:
+                            filename = f"{incident}_{fiscal_year}_{quarter}.sql"
+                        else:
+                            filename = f"{incident}_{fiscal_year}_{quarter}_Extract{i}.sql"
+                        print(f"  - {filename}")
+                
+                if output_format in ['dtf', 'both']:
+                    print(f"DRY RUN - Would generate {num_batches} DTF file(s)")
+                    for i in range(1, num_batches + 1):
+                        if num_batches == 1:
+                            filename = f"{incident}_{fiscal_year}_{quarter}.dtf"
+                        else:
+                            filename = f"{incident}_{fiscal_year}_{quarter}_Extract{i}.dtf"
+                        print(f"  - {filename}")
+                
                 total_success += 1
-                total_files_generated += num_batches
+                if output_format in ['sql', 'both']:
+                    total_sql_files += num_batches
+                if output_format in ['dtf', 'both']:
+                    total_dtf_files += num_batches
             else:
                 # Generate with custom base filename
                 base_filename = f"{incident}_{fiscal_year}_{quarter}"
                 generated_files = generator.generate_extracts(
                     transaction_refs=refs,
                     output_dir=str(output_dir),
-                    base_filename=base_filename
+                    base_filename=base_filename,
+                    incident_code=incident
                 )
                 
-                print(f"✓ Generated {len(generated_files)} SQL file(s)")
-                if verbose:
-                    for file_path in generated_files:
-                        print(f"  - {Path(file_path).name}")
+                if generated_files['sql_files']:
+                    print(f"✓ Generated {len(generated_files['sql_files'])} SQL file(s)")
+                    if verbose:
+                        for file_path in generated_files['sql_files']:
+                            print(f"  - {Path(file_path).name}")
+                    total_sql_files += len(generated_files['sql_files'])
+                
+                if generated_files['dtf_files']:
+                    print(f"✓ Generated {len(generated_files['dtf_files'])} DTF file(s)")
+                    if verbose:
+                        for file_path in generated_files['dtf_files']:
+                            print(f"  - {Path(file_path).name}")
+                    total_dtf_files += len(generated_files['dtf_files'])
                 
                 total_success += 1
-                total_files_generated += len(generated_files)
         
         except Exception as e:
             print(f"✗ Failed: {incident} - {e}")
@@ -534,7 +623,10 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     print(f"{'='*70}")
     print(f"Incidents processed:  {total_success}/{len(incidents)}")
     print(f"Incidents failed:     {total_failed}/{len(incidents)}")
-    print(f"Total SQL files:      {total_files_generated}")
+    if output_format in ['sql', 'both']:
+        print(f"Total SQL files:      {total_sql_files}")
+    if output_format in ['dtf', 'both']:
+        print(f"Total DTF files:      {total_dtf_files}")
     print(f"{'='*70}\n")
     
     return 0 if total_failed == 0 else 1
@@ -566,11 +658,15 @@ def main():
     transaction_column = args.column
     dry_run = args.dry_run
     verbose = args.verbose
+    output_format = args.output_format
+    incident_code = args.incident_code
+    dtf_template_path = args.dtf_template
     
     # Get from config if available and not provided via CLI
     if config:
         paths = config.get('paths', {})
         processing = config.get('processing', {})
+        output_options = config.get('output_options', {})
         
         if not template_path:
             template_path = paths.get('template_file')
@@ -584,6 +680,12 @@ def main():
             transaction_column = processing.get('transaction_column')
         if args.batch_size == 900:  # default value
             batch_size = processing.get('batch_size', 900)
+        if args.output_format == 'both':  # default value
+            output_format = output_options.get('format', 'both')
+        if not incident_code:
+            incident_code = output_options.get('incident_code')
+        if not dtf_template_path:
+            dtf_template_path = paths.get('dtf_template_file')
     
     # Check if batch mode
     is_batch_mode = config and 'incidents' in config and 'testing_period' in config
@@ -615,7 +717,10 @@ def main():
         placeholder=placeholder,
         transaction_column=transaction_column,
         dry_run=dry_run,
-        verbose=verbose
+        verbose=verbose,
+        output_format=output_format,
+        incident_code=incident_code,
+        dtf_template_path=dtf_template_path
     )
     
     return cli.run()

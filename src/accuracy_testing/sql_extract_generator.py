@@ -58,7 +58,9 @@ class SQLExtractGenerator:
         self,
         template_path: str,
         batch_size: int = 900,
-        placeholder: Optional[str] = None
+        placeholder: Optional[str] = None,
+        output_format: str = 'both',
+        dtf_template_path: Optional[str] = None
     ):
         """
         Initialize SQL extract generator.
@@ -67,16 +69,24 @@ class SQLExtractGenerator:
             template_path: Path to SQL template file
             batch_size: Number of transaction refs per SQL file (default 900)
             placeholder: Custom placeholder pattern (auto-detects if None)
+            output_format: Output format - 'sql', 'dtf', or 'both' (default: 'both')
+            dtf_template_path: Path to DTF template file (optional, uses default if None)
             
         Raises:
             FileNotFoundError: If template file doesn't exist
-            ValueError: If placeholder not found in template
+            ValueError: If placeholder not found in template or invalid output_format
         """
         self.template_path = Path(template_path)
         self.batch_size = batch_size
         self.custom_placeholder = placeholder
         
-        # Load template
+        # Validate output format
+        valid_formats = ['sql', 'dtf', 'both']
+        if output_format not in valid_formats:
+            raise ValueError(f"Invalid output_format: {output_format}. Must be one of: {', '.join(valid_formats)}")
+        self.output_format = output_format
+        
+        # Load SQL template
         if not self.template_path.exists():
             raise FileNotFoundError(f"Template file not found: {template_path}")
         
@@ -90,6 +100,20 @@ class SQLExtractGenerator:
             raise ValueError(
                 f"No placeholder found in template. Expected one of: {', '.join(self.PLACEHOLDER_PATTERNS)}"
             )
+        
+        # Load DTF template if DTF output is requested
+        if self.output_format in ['dtf', 'both']:
+            if dtf_template_path:
+                self.dtf_template_path = Path(dtf_template_path)
+            else:
+                # Use default DTF template in same directory as SQL templates
+                self.dtf_template_path = self.template_path.parent / 'AS400_DataTransfer_template.dtf'
+            
+            if not self.dtf_template_path.exists():
+                raise FileNotFoundError(f"DTF template file not found: {self.dtf_template_path}")
+            
+            with open(self.dtf_template_path, 'r', encoding='utf-8') as f:
+                self.dtf_template = f.read()
     
     def _detect_placeholder(self) -> Optional[str]:
         """
@@ -176,6 +200,73 @@ class SQLExtractGenerator:
         
         return sql
     
+    def format_sql_for_dtf(self, sql: str) -> str:
+        """
+        Format SQL for DTF file (single line, no newlines).
+        
+        Args:
+            sql: Multi-line SQL string
+            
+        Returns:
+            Single-line SQL string suitable for DTF format
+        """
+        # Replace all newlines and multiple spaces with single space
+        formatted = ' '.join(sql.split())
+        return formatted
+    
+    def write_dtf_file(
+        self,
+        output_dir: Path,
+        base_filename: str,
+        batch: ExtractBatch,
+        sql: str,
+        incident_code: str,
+        total_batches: int = 1
+    ) -> Path:
+        """
+        Write DTF (AS/400 Data Transfer) file.
+        
+        Args:
+            output_dir: Output directory path
+            base_filename: Base name for output file (without extension)
+            batch: Batch information (for numbering)
+            sql: SQL content to embed
+            incident_code: Incident code for CSV output path
+            total_batches: Total number of batches (for filename formatting)
+            
+        Returns:
+            Path to written DTF file
+        """
+        # Create output directory if it doesn't exist
+        output_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate filename: {base}_Extract{batch_number}.dtf
+        if total_batches == 1:
+            filename = f"{base_filename}.dtf"
+            csv_filename = f"{incident_code}.csv"
+        else:
+            filename = f"{base_filename}_Extract{batch.batch_number}.dtf"
+            csv_filename = f"{incident_code}_Extract{batch.batch_number}.csv"
+        
+        output_path = output_dir / filename
+        
+        # Format SQL for DTF (single line)
+        sql_formatted = self.format_sql_for_dtf(sql)
+        
+        # Get parent directory for CSV path (output_dir should be parent/dtf)
+        parent_dir = output_dir.parent
+        csv_path = parent_dir / "csv" / csv_filename
+        
+        # Replace placeholders in DTF template
+        dtf_content = self.dtf_template.replace('{SQL_QUERY}', sql_formatted)
+        dtf_content = dtf_content.replace('{OUTPUT_PATH}', str(csv_path))
+        
+        # Write DTF file
+        with open(output_path, 'w', encoding='utf-8') as f:
+            f.write(dtf_content)
+        
+        return output_path
+    
     def write_sql_file(
         self,
         output_dir: Path,
@@ -220,37 +311,62 @@ class SQLExtractGenerator:
         self,
         transaction_refs: List[str],
         output_dir: str,
-        base_filename: str
-    ) -> List[Path]:
+        base_filename: str,
+        incident_code: Optional[str] = None
+    ) -> dict:
         """
-        Generate all SQL extract files.
+        Generate all extract files (SQL and/or DTF).
         
         Args:
             transaction_refs: List of transaction references
-            output_dir: Directory for output SQL files
+            output_dir: Parent directory for output files (will create /csv and /dtf subdirs)
             base_filename: Base name for output files
+            incident_code: Incident code for CSV naming (defaults to base_filename if None)
             
         Returns:
-            List of paths to generated SQL files
+            Dictionary with 'sql_files' and 'dtf_files' lists of generated file paths
         """
-        output_dir_path = Path(output_dir)
+        if incident_code is None:
+            incident_code = base_filename
+        
+        parent_dir = Path(output_dir)
+        
+        # Create output subdirectories based on format
+        sql_dir = parent_dir / 'sql' if self.output_format == 'sql' else parent_dir / 'csv'
+        dtf_dir = parent_dir / 'dtf'
         
         # Create batches
         batches = self.create_batches(transaction_refs)
         total_batches = len(batches)
         
-        # Generate SQL for each batch
-        generated_files = []
+        # Generate files for each batch
+        generated_files = {'sql_files': [], 'dtf_files': []}
+        
         for batch in batches:
             sql = self.generate_sql(batch)
-            output_path = self.write_sql_file(
-                output_dir_path,
-                base_filename,
-                batch,
-                sql,
-                total_batches=total_batches
-            )
-            generated_files.append(output_path)
+            
+            # Write SQL file if requested
+            if self.output_format in ['sql', 'both']:
+                sql_path = self.write_sql_file(
+                    sql_dir,
+                    base_filename,
+                    batch,
+                    sql,
+                    total_batches=total_batches
+                )
+                generated_files['sql_files'].append(sql_path)
+            
+            # Write DTF file if requested
+            if self.output_format in ['dtf', 'both']:
+                dtf_path = self.write_dtf_file(
+                    dtf_dir,
+                    base_filename,
+                    batch,
+                    sql,
+                    incident_code,
+                    total_batches=total_batches
+                )
+                generated_files['dtf_files'].append(dtf_path)
         
         return generated_files
     
