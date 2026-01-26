@@ -25,19 +25,23 @@
 
 # Testing period
 testing_period:
-  fiscal_year: "FY25"      # Fiscal year (e.g., FY25, FY26)
-  quarter: "Q3"            # Quarter (Q1, Q2, Q3, Q4)
+  fiscal_year: "FY26"      # Fiscal year (e.g., FY25, FY26)
+  quarter: "Q1"            # Quarter (Q1, Q2, Q3, Q4)
 
 # Incident codes to process
 incidents:
-  - "7_37"   # Buyer ID
-  - "16_21"  # Seller ID
+  - "7_35"   # Buyer ID
+  - "7_37"
+  - "7_39"
+  - "16_19"  # Seller ID
+  - "16_21"
+  - "16_23"
   - "35_3"   # Pricing data
 
 # Paths for batch mode
 paths:
   # Directory containing validated CSV files (from validation scripts)
-  # Expected format: validated_FY25_Q3_7_37.csv
+  # Expected format: validated_FY26_Q1_7_37.csv
   template_dir: "data/validated"
   
   # Directory for SQL template files
