@@ -2,109 +2,54 @@
 Incident Code Matrix Module
 ============================
 
-Static incident code mappings for determining client side (buyer/seller).
-This replaces the need for an external CSV file.
+Comprehensive incident code mappings with validation type routing.
+This serves as the single source of truth for all incident metadata.
 
 Data source: incident_code_matrix.csv (legacy)
 Last updated: January 2026
+
+Validation Types:
+- 'standard_id': Standard identification validation (buyer or seller determined by 'sides')
+- 'decision_maker': Inconsistent decision maker validation (requires chronological analysis)
+- 'pricing': Pricing data validation
+
+The 'sides' parameter determines whether validation is buyer/seller focused.
 """
 
-from typing import Dict, Set
+from typing import Dict, Set, Optional, TypedDict
 
 
-# Incident code mappings
-# Format: incident_code -> set of sides ('buyer', 'seller', or both)
-INCIDENT_CODE_MATRIX: Dict[str, Set[str]] = {
-    # Buyer incidents
-    '7_3': {'buyer'},
-    '7_35': {'buyer'},
-    '7_36': {'buyer'},
-    '7_37': {'buyer'},
-    '7_39': {'buyer'},
-    '7_43': {'buyer'},
-    '7_45': {'buyer'},
-    '7_66': {'buyer'},
-    '7_68': {'buyer'},
-    '7_74': {'buyer'},
-    '8_1': {'buyer'},
-    '8_2': {'buyer'},
-    '8_3': {'buyer'},
-    '8_4': {'buyer'},
-    '8_6': {'buyer'},
-    '8_7': {'buyer'},
-    '8_17': {'buyer'},
-    '8_19': {'buyer'},
-    '8_61': {'buyer'},
-    '9_1': {'buyer'},
-    '10_1': {'buyer'},
-    '11_2': {'buyer'},
-    '11_4': {'buyer'},
-    '12_1': {'buyer'},
-    '12_2': {'buyer'},
-    '12_11': {'buyer'},
-    '12_17': {'buyer'},
-    '12_18': {'buyer'},
-    '12_22': {'buyer'},
-    '12_24': {'buyer'},
-    '12_29': {'buyer'},
-    '12_31': {'buyer'},
-    '12_35': {'buyer'},
-    '12_43': {'buyer'},
-    '12_75': {'buyer'},
-    '13_1': {'buyer'},
-    '14_1': {'buyer'},
-    '15_2': {'buyer'},
-    '15_4': {'buyer'},
-    '21_2': {'buyer'},
+class IncidentMetadata(TypedDict):
+    """Metadata for an incident code."""
+    sides: Set[str]  # {'buyer', 'seller', or both}
+    validation_type: str  # Type of validation required
+    description: str  # Human-readable description
+
+
+# Incident code mappings with full metadata
+# Format: incident_code -> IncidentMetadata
+INCIDENT_CODE_MATRIX: Dict[str, IncidentMetadata] = {
+    # Standard Buyer ID Incidents (applicable for validation)
+    '7_35': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'Invalid buyer ID format'},
+    '7_37': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'FTBDM - standard txr'},
+    '7_39': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'FTBDM - Financing Trx ID, Seller DUNS'},
     
-    # Seller incidents
-    '7_11': {'seller'},
-    '8_6': {'seller'},  # Note: Also appears as buyer incident
-    '8_17': {'seller'},  # Note: Also appears as buyer incident
-    '8_19': {'seller'},  # Note: Also appears as buyer incident
-    '12_2': {'seller'},  # Note: Also appears as buyer incident
-    '16_3': {'seller'},
-    '16_18': {'seller'},
-    '16_19': {'seller'},
-    '16_20': {'seller'},
-    '16_21': {'seller'},
-    '16_22': {'seller'},
-    '16_23': {'seller'},
-    '16_24': {'seller'},
-    '16_27': {'seller'},
-    '16_29': {'seller'},
-    '16_37': {'seller'},
-    '16_64': {'seller'},
-    '17_2': {'seller'},
-    '17_7': {'seller'},
-    '17_59': {'seller'},
-    '18_1': {'seller'},
-    '19_1': {'seller'},
-    '20_2': {'seller'},
-    '20_4': {'seller'},
-    '21_1': {'seller'},
-    '21_2': {'seller'},  # Note: Also appears as buyer incident
-    '21_11': {'seller'},
-    '21_16': {'seller'},
-    '21_17': {'seller'},
-    '21_20': {'seller'},
-    '21_22': {'seller'},
-    '21_29': {'seller'},
-    '21_35': {'seller'},
-    '21_43': {'seller'},
-    '21_55': {'seller'},
-    '21_75': {'seller'},
-    '22_1': {'seller'},
-    '23_1': {'seller'},
-    '24_2': {'seller'},
-    '24_4': {'seller'},
-    '36_23': {'seller'},
+    # Decision Maker Buyer Incidents (requires chronological analysis)
+    '7_66': {'sides': {'buyer'}, 'validation_type': 'decision_maker', 'description': 'Inconsistent buyer decision maker ID'},
+    '7_68': {'sides': {'buyer'}, 'validation_type': 'decision_maker', 'description': 'Inconsistent buyer decision maker ID'},
+    
+    # Standard Seller ID Incidents (applicable for validation)
+    '16_19': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'Invalid seller ID format'},
+    '16_21': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'FTSDM - standard txr'},
+    '16_23': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'FTSDM - Financing Trx ID, Buyer DUNS'},
+    
+    # Decision Maker Seller Incidents (requires chronological analysis)
+    '16_20': {'sides': {'seller'}, 'validation_type': 'decision_maker', 'description': 'Inconsistent seller decision maker ID'},
+    '16_64': {'sides': {'seller'}, 'validation_type': 'decision_maker', 'description': 'Inconsistent seller decision maker ID'},
+    
+    # Pricing Incidents
+    '35_3': {'sides': set(), 'validation_type': 'pricing', 'description': 'SCR pricing data validation'},
 }
-
-# Merge duplicate codes that appear on both sides
-_BOTH_SIDE_CODES = {'8_6', '8_17', '8_19', '12_2', '21_2'}
-for code in _BOTH_SIDE_CODES:
-    INCIDENT_CODE_MATRIX[code] = {'buyer', 'seller'}
 
 
 def get_client_types(incident_codes: list) -> Set[str]:
@@ -129,18 +74,22 @@ def get_client_types(incident_codes: list) -> Set[str]:
     types = set()
     for code in incident_codes:
         if code in INCIDENT_CODE_MATRIX:
-            types.update(INCIDENT_CODE_MATRIX[code])
+            types.update(INCIDENT_CODE_MATRIX[code]['sides'])
     return types
 
 
 def is_buyer_incident(incident_code: str) -> bool:
     """Check if an incident code is associated with buyers."""
-    return 'buyer' in INCIDENT_CODE_MATRIX.get(incident_code, set())
+    if code_data := INCIDENT_CODE_MATRIX.get(incident_code):
+        return 'buyer' in code_data['sides']
+    return False
 
 
 def is_seller_incident(incident_code: str) -> bool:
     """Check if an incident code is associated with sellers."""
-    return 'seller' in INCIDENT_CODE_MATRIX.get(incident_code, set())
+    if code_data := INCIDENT_CODE_MATRIX.get(incident_code):
+        return 'seller' in code_data['sides']
+    return False
 
 
 def get_all_incident_codes() -> Set[str]:
@@ -150,9 +99,124 @@ def get_all_incident_codes() -> Set[str]:
 
 def get_buyer_incident_codes() -> Set[str]:
     """Get all buyer incident codes."""
-    return {code for code, sides in INCIDENT_CODE_MATRIX.items() if 'buyer' in sides}
+    return {code for code, data in INCIDENT_CODE_MATRIX.items() if 'buyer' in data['sides']}
 
 
 def get_seller_incident_codes() -> Set[str]:
     """Get all seller incident codes."""
-    return {code for code, sides in INCIDENT_CODE_MATRIX.items() if 'seller' in sides}
+    return {code for code, data in INCIDENT_CODE_MATRIX.items() if 'seller' in data['sides']}
+
+
+def get_standard_buyer_incident_codes() -> Set[str]:
+    """Get buyer incident codes excluding decision maker incidents."""
+    return {code for code, data in INCIDENT_CODE_MATRIX.items() 
+            if 'buyer' in data['sides'] and data['validation_type'] != 'decision_maker'}
+
+
+def get_standard_seller_incident_codes() -> Set[str]:
+    """Get seller incident codes excluding decision maker incidents."""
+    return {code for code, data in INCIDENT_CODE_MATRIX.items() 
+            if 'seller' in data['sides'] and data['validation_type'] != 'decision_maker'}
+
+
+def get_decision_maker_buyer_codes() -> Set[str]:
+    """Get buyer decision maker incident codes (7_66, 7_68)."""
+    return {code for code, data in INCIDENT_CODE_MATRIX.items() 
+            if 'buyer' in data['sides'] and data['validation_type'] == 'decision_maker'}
+
+
+def get_decision_maker_seller_codes() -> Set[str]:
+    """Get seller decision maker incident codes (16_20, 16_64)."""
+    return {code for code, data in INCIDENT_CODE_MATRIX.items() 
+            if 'seller' in data['sides'] and data['validation_type'] == 'decision_maker'}
+
+
+def is_decision_maker_incident(incident_code: str) -> bool:
+    """Check if an incident code is a decision maker incident."""
+    if code_data := INCIDENT_CODE_MATRIX.get(incident_code):
+        return code_data['validation_type'] == 'decision_maker'
+    return False
+
+
+# New validation type routing functions
+
+def get_validation_type(incident_code: str) -> Optional[str]:
+    """
+    Get the validation type for an incident code.
+    
+    Args:
+        incident_code: Incident code string (e.g., '7_37')
+        
+    Returns:
+        Validation type string ('standard_id', 'decision_maker', 'pricing')
+        or None if code not found.
+        
+    Example:
+        >>> get_validation_type('7_37')
+        'standard_id'
+        >>> get_validation_type('7_66')
+        'decision_maker'
+        >>> get_validation_type('35_3')
+        'pricing'
+    """
+    if code_data := INCIDENT_CODE_MATRIX.get(incident_code):
+        return code_data['validation_type']
+    return None
+
+
+def get_incidents_by_validation_type(validation_type: str) -> Set[str]:
+    """
+    Get all incident codes requiring a specific validation type.
+    
+    Args:
+        validation_type: Type of validation ('standard_id', 'decision_maker', 'pricing')
+        
+    Returns:
+        Set of incident codes matching the validation type.
+        
+    Example:
+        >>> sorted(get_incidents_by_validation_type('decision_maker'))
+        ['16_20', '16_64', '7_66', '7_68']
+        >>> get_incidents_by_validation_type('pricing')
+        {'35_3'}
+        >>> sorted(get_incidents_by_validation_type('standard_id'))
+        ['16_19', '16_21', '16_23', '7_35', '7_37', '7_39']
+    """
+    return {code for code, data in INCIDENT_CODE_MATRIX.items() 
+            if data['validation_type'] == validation_type}
+
+
+def get_incident_description(incident_code: str) -> Optional[str]:
+    """
+    Get the description for an incident code.
+    
+    Args:
+        incident_code: Incident code string (e.g., '7_37')
+        
+    Returns:
+        Description string or None if code not found.
+        
+    Example:
+        >>> get_incident_description('7_37')
+        'FTBDM - standard txr'
+        >>> get_incident_description('7_66')
+        'Inconsistent buyer decision maker ID'
+    """
+    if code_data := INCIDENT_CODE_MATRIX.get(incident_code):
+        return code_data['description']
+    return None
+
+
+def get_available_validation_types() -> Set[str]:
+    """
+    Get all available validation types in the system.
+    
+    Returns:
+        Set of validation type strings.
+        
+    Example:
+        >>> sorted(get_available_validation_types())
+        ['decision_maker', 'pricing', 'standard_id']
+    """
+    return {data['validation_type'] for data in INCIDENT_CODE_MATRIX.values()}
+

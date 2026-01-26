@@ -75,6 +75,13 @@ from src.accuracy_testing.processor import (
 # Import txr_replay_core utilities (only logger, not config)
 from src.common.logger import create_logger, StructuredLogger
 from src.common.utils import safe_open_csv
+from src.txr_replay_core.incident_codes import (
+    get_seller_incident_codes,
+    get_standard_seller_incident_codes,
+    get_decision_maker_seller_codes,
+    get_validation_type,
+    get_incident_description
+)
 
 
 class SellerIDValidator:
@@ -492,14 +499,26 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
     testing_period = config.get('testing_period', {})
     fiscal_year = testing_period.get('fiscal_year', 'FYXX')
     quarter = testing_period.get('quarter', 'QX')
-    incidents = config.get('incidents', [])
+    
+    # Check for auto-discovery of all seller incidents
+    auto_incidents = config.get('auto_incidents')
+    if auto_incidents == 'all':
+        # Auto-discover all seller incidents
+        incidents = sorted(list(get_seller_incident_codes()))
+        print(f"Auto-discovered {len(incidents)} seller incidents")
+        dm_codes = get_decision_maker_seller_codes() & set(incidents)
+        if dm_codes:
+            print(f"   → {len(incidents) - len(dm_codes)} standard ID incidents (16_19, 16_21, 16_23)")
+            print(f"   → {len(dm_codes)} decision maker incidents: {', '.join(sorted(dm_codes))} (will be skipped)")
+    else:
+        incidents = config.get('incidents', [])
     
     paths = config.get('paths', {})
     template_dir = Path(paths.get('template_dir', 'data/templates'))
     output_dir = Path(paths.get('output_dir', 'data/validated'))
     
     if not incidents:
-        print("ERROR: No incidents specified in config")
+        print("ERROR: No incidents specified in config and auto_incidents not set")
         return 1
     
     print(f"\n{'='*70}")
@@ -520,6 +539,26 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
         print(f"\n{'─'*70}")
         print(f"Processing incident: {incident}")
         print(f"{'─'*70}")
+        
+        # Check validation type and route accordingly
+        validation_type = get_validation_type(incident)
+        if validation_type is None:
+            print(f"⚠️  SKIPPING: Unknown incident code '{incident}'")
+            print(f"   → Not found in incident code matrix")
+            total_failed += 1
+            continue
+        elif validation_type == 'decision_maker':
+            print(f"⚠️  SKIPPING: Decision maker incident requires different validation logic")
+            print(f"   Description: {get_incident_description(incident)}")
+            print(f"   (Requires chronological analysis by Person Code)")
+            print(f"   → Not yet implemented in Python - see legacy VBA: InconsistentSellerIDValidation")
+            total_failed += 1
+            continue
+        elif validation_type != 'standard_id':
+            print(f"⚠️  SKIPPING: Unexpected validation type '{validation_type}' for seller validation")
+            print(f"   Expected: 'standard_id', Got: '{validation_type}'")
+            total_failed += 1
+            continue
         
         # Build template filename: "FY25 Q3 16_21.csv"
         template_filename = f"{fiscal_year} {quarter} {incident}.csv"

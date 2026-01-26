@@ -152,25 +152,62 @@ generate-sql-extract \
 
 ### validate-buyer
 
-Validate buyer identification codes in transaction data.
+Validate buyer identification codes in transaction data. Supports both **batch mode** (multiple incidents) and **single mode** (one incident).
 
-**Usage:**
+**Batch Mode (Recommended):**
 ```bash
-# Using config file
-validate-buyer --config config/environments/local.yaml
+# Auto-discover and process ALL buyer incidents (7_*, 8_*, 9_*, 10_*, etc.)
+validate-buyer --config config/local/accuracy_testing/buyer_validation.yaml
 
-# Using command-line arguments
+# Preview batch processing
+validate-buyer --config config/batch.yaml --dry-run
+
+# Show progress bars
+validate-buyer --config config/batch.yaml --progress
+```
+
+**Batch Configuration with Auto-Discovery:**
+```yaml
+testing_period:
+  fiscal_year: "FY25"
+  quarter: "Q3"
+
+# Auto-discover all buyer incidents (RECOMMENDED)
+auto_incidents: "all"  # Processes all 40 buyer incidents
+                       # Automatically detects and skips decision maker incidents (7_66, 7_68)
+
+# Alternative: Specify incidents manually
+# incidents:
+#   - "7_35"
+#   - "7_37"
+#   - "7_39"
+
+paths:
+  template_dir: "data/output/accuracy_testing/templates"
+  output_dir: "data/output/accuracy_testing/validated"
+```
+
+**What Auto-Discovery Processes:**
+- **40 buyer incidents**: 7_*, 8_*, 9_*, 10_*, 11_*, 12_*, 13_*, 14_*, 15_*, 21_2
+- **Smart Detection**: Decision maker incidents (7_66, 7_68) are auto-detected and skipped with clear warnings
+- Automatically reads: `FY25 Q3 7_37.csv`, `FY25 Q3 8_1.csv`, etc.
+- Automatically writes: `validated_FY25_Q3_7_37.csv`, `validated_FY25_Q3_8_1.csv`, etc.
+
+**Decision Maker Incidents:**
+Incidents 7_66 and 7_68 are "inconsistent buyer decision maker" codes requiring different validation logic:
+- Grouping records by Person Code
+- Chronological analysis (sorting by Trade_Date_Time)
+- Validating inconsistent IDs across suspected same individuals
+
+These are **included in auto-discovery** but automatically skipped during processing with informative warnings. When Python implementation is added, they'll be processed automatically.
+
+**Single File Mode:**
+```bash
+# Process one incident with explicit file paths
 validate-buyer \
   --reference data/output/templates/template_7_37.csv \
   --extract data/database/buyer_extract.csv \
   --output data/output/validated
-
-# With verbose logging
-validate-buyer \
-  --reference data/output/templates/template_7_37.csv \
-  --extract data/database/buyer_extract.csv \
-  --output data/output/validated \
-  --verbose
 ```
 
 **Options:**
@@ -180,6 +217,8 @@ validate-buyer \
 - `--output PATH` - Output directory (overrides config)
 - `--verbose` - Enable detailed logging
 - `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
+- `--dry-run` - Preview without writing files
+- `--progress` - Show progress bars (batch mode only)
 
 **Validation Logic:**
 - Extracts Account ID from Transaction Reference
@@ -188,29 +227,80 @@ validate-buyer \
 - Generates CONCAT ID if invalid or missing
 - Populates validation columns in template
 
-**Output:**
+**Output (Single Mode):**
 - `{output}_validated.csv` - All records with validation results
 - `{output}_errors_only.csv` - Only records with validation errors
 - Log file in configured log directory
 
-**Incident Codes:**
+**Output (Batch Mode):**
+- `validated_FY25_Q3_7_37.csv` - One file per incident
+- Summary report with success/failure counts
+- Consolidated logs
+
+**Common Buyer Incident Codes:**
 - 7_35 - Invalid buyer ID format
-- 7_37 - Buyer ID missing
+- 7_37 - Buyer ID missing (standard txr)
 - 7_39 - Buyer ID type mismatch
-- 7_66 - Buyer decision maker ID issues
+- 7_66 - Inconsistent buyer decision maker ID (⚠️ uses different validation logic)
+- 7_68 - Inconsistent buyer decision maker ID (⚠️ uses different validation logic)
+- 8_*, 9_*, 10_*, 11_*, 12_*, 13_*, 14_*, 15_* - Other buyer ID issues
 
 ---
 
 ### validate-seller
 
-Validate seller identification codes in transaction data.
+Validate seller identification codes in transaction data. Supports both **batch mode** (multiple incidents) and **single mode** (one incident).
 
-**Usage:**
+**Batch Mode (Recommended):**
 ```bash
-# Using config file
-validate-seller --config config/environments/local.yaml
+# Auto-discover and process ALL seller incidents (16_*, 17_*, 18_*, etc.)
+validate-seller --config config/local/accuracy_testing/seller_validation.yaml
 
-# Using command-line arguments
+# Preview batch processing
+validate-seller --config config/batch.yaml --dry-run
+
+# Show progress bars
+validate-seller --config config/batch.yaml --progress
+```
+
+**Batch Configuration with Auto-Discovery:**
+```yaml
+testing_period:
+  fiscal_year: "FY25"
+  quarter: "Q3"
+
+# Auto-discover all seller incidents (RECOMMENDED)
+auto_incidents: "all"  # Processes all 41 seller incidents
+                       # Automatically detects and skips decision maker incidents (16_20, 16_64)
+
+# Alternative: Specify incidents manually
+# incidents:
+#   - "16_19"
+#   - "16_21"
+#   - "16_23"
+
+paths:
+  template_dir: "data/output/accuracy_testing/templates"
+  output_dir: "data/output/accuracy_testing/validated"
+```
+
+**What Auto-Discovery Processes:**
+- **41 seller incidents**: 16_*, 17_*, 18_*, 19_*, 20_*, 21_*, 22_*, 23_*, 24_*, 36_23
+- **Smart Detection**: Decision maker incidents (16_20, 16_64) are auto-detected and skipped with clear warnings
+- Automatically reads: `FY25 Q3 16_21.csv`, `FY25 Q3 17_2.csv`, etc.
+- Automatically writes: `validated_FY25_Q3_16_21.csv`, `validated_FY25_Q3_17_2.csv`, etc.
+
+**Decision Maker Incidents:**
+Incidents 16_20 and 16_64 are "inconsistent seller decision maker" codes requiring different validation logic:
+- Grouping records by Person Code
+- Chronological analysis (sorting by Trade_Date_Time)
+- Validating inconsistent IDs across suspected same individuals
+
+These are **included in auto-discovery** but automatically skipped during processing with informative warnings. When Python implementation is added, they'll be processed automatically.
+
+**Single File Mode:**
+```bash
+# Process one incident with explicit file paths
 validate-seller \
   --reference data/output/templates/template_16_21.csv \
   --extract data/database/seller_extract.csv \
@@ -226,7 +316,15 @@ validate-seller \
 - Format validation and CONCAT generation
 
 **Output:**
-- Same structure as buyer validation
+- Same structure as buyer validation (single and batch modes)
+
+**Common Seller Incident Codes:**
+- 16_19 - Invalid seller ID format
+- 16_21 - Seller ID missing
+- 16_23 - Seller ID type mismatch  
+- 16_20 - Inconsistent seller decision maker ID (⚠️ uses different validation logic)
+- 16_64 - Inconsistent seller decision maker ID (⚠️ uses different validation logic)
+- 17_*, 18_*, 19_*, 20_*, 21_*, 22_*, 23_*, 24_* - Other seller ID issues
 
 **Incident Codes:**
 - 16_19 - Invalid seller ID format
