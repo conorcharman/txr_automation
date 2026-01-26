@@ -48,9 +48,28 @@ paths:
   # Templates: BuyerID.sql, SellerID.sql, SCR_pricing_data_v1.0.sql, etc.
   sql_template_dir: "src/accuracy_testing/sql_templates"
   
-  # Output directory for generated SQL files
-  # Generated format: 7_37_FY25_Q3.sql or 7_37_FY25_Q3_Extract1.sql
+  # DTF template file (AS/400 Data Transfer format)
+  # Defaults to AS400_DataTransfer_template.dtf if not specified
+  dtf_template_file: "src/accuracy_testing/sql_templates/AS400_DataTransfer_template.dtf"
+  
+  # Parent output directory for generated files
+  # Structure created:
+  #   - output_directory/csv/  → CSV files (for AS/400 extracts)
+  #   - output_directory/sql/  → SQL files (when format=sql)
+  #   - output_directory/dtf/  → DTF files (for AS/400 Data Transfer tool)
+  # Generated format: 7_37_FY25_Q3.sql/dtf or 7_37_FY25_Q3_Extract1.sql/dtf
   output_directory: "data/sql_extracts"
+
+# Output options
+output_options:
+  # Output format: 'sql', 'dtf', or 'both' (default: 'both')
+  # - 'sql': Generate only SQL files (in /sql or /csv subdirectory)
+  # - 'dtf': Generate only DTF files (in /dtf subdirectory)
+  # - 'both': Generate both SQL and DTF files (in /csv and /dtf subdirectories)
+  format: "both"
+  
+  # Optional: Override incident code for CSV naming in DTF files
+  # incident_code: "7_37"
 
 # Processing options
 processing:
