@@ -120,11 +120,11 @@ class TestBatchSQLGeneration:
     def setup_method(self):
         """Create temporary test directories and files."""
         self.test_dir = tempfile.mkdtemp()
-        self.validated_dir = Path(self.test_dir) / "validated"
+        self.template_dir = Path(self.test_dir) / "validated"
         self.sql_templates_dir = Path(self.test_dir) / "sql_templates"
         self.output_dir = Path(self.test_dir) / "output"
         
-        self.validated_dir.mkdir(parents=True)
+        self.template_dir.mkdir(parents=True)
         self.sql_templates_dir.mkdir(parents=True)
         self.output_dir.mkdir(parents=True)
         
@@ -145,10 +145,10 @@ class TestBatchSQLGeneration:
     
     def create_validated_csv(self, fiscal_year: str, quarter: str, incident: str, num_refs: int = 10):
         """Create a mock validated CSV file with transaction references."""
-        filename = f"validated_{fiscal_year}_{quarter}_{incident}.csv"
-        filepath = self.validated_dir / filename
+        filename = f"{fiscal_year} {quarter} {incident}.csv"
+        filepath = self.template_dir / filename
         
-        content = "Transaction Ref,Other Column\n"
+        content = "Transaction reference number,Other Column\n"
         for i in range(num_refs):
             content += f"TXN{i:05d},Data{i}\n"
         
@@ -167,13 +167,13 @@ class TestBatchSQLGeneration:
             },
             'incidents': ['7_37'],
             'paths': {
-                'template_dir': str(self.validated_dir),
+                'template_dir': str(self.template_dir),
                 'sql_template_dir': str(self.sql_templates_dir),
                 'output_directory': str(self.output_dir)
             },
             'processing': {
                 'batch_size': 900,
-                'transaction_column': 'Transaction Ref',
+                'transaction_column': 'Transaction reference number',
                 'placeholder_pattern': '-- TRANSACTION REFERENCES --'
             }
         }
@@ -212,13 +212,13 @@ class TestBatchSQLGeneration:
             },
             'incidents': incidents,
             'paths': {
-                'template_dir': str(self.validated_dir),
+                'template_dir': str(self.template_dir),
                 'sql_template_dir': str(self.sql_templates_dir),
                 'output_directory': str(self.output_dir)
             },
             'processing': {
                 'batch_size': 900,
-                'transaction_column': 'Transaction Ref',
+                'transaction_column': 'Transaction reference number',
                 'placeholder_pattern': '-- TRANSACTION REFERENCES --'
             }
         }
@@ -251,13 +251,13 @@ class TestBatchSQLGeneration:
             },
             'incidents': ['7_37'],
             'paths': {
-                'template_dir': str(self.validated_dir),
+                'template_dir': str(self.template_dir),
                 'sql_template_dir': str(self.sql_templates_dir),
                 'output_directory': str(self.output_dir)
             },
             'processing': {
                 'batch_size': 900,
-                'transaction_column': 'Transaction Ref',
+                'transaction_column': 'Transaction reference number',
                 'placeholder_pattern': '-- TRANSACTION REFERENCES --'
             }
         }
@@ -286,13 +286,13 @@ class TestBatchSQLGeneration:
             },
             'incidents': ['7_37', 'MISSING'],
             'paths': {
-                'template_dir': str(self.validated_dir),
+                'template_dir': str(self.template_dir),
                 'sql_template_dir': str(self.sql_templates_dir),
                 'output_directory': str(self.output_dir)
             },
             'processing': {
                 'batch_size': 900,
-                'transaction_column': 'Transaction Ref',
+                'transaction_column': 'Transaction reference number',
                 'placeholder_pattern': '-- TRANSACTION REFERENCES --'
             }
         }
@@ -325,13 +325,13 @@ class TestBatchSQLGeneration:
             },
             'incidents': ['7_37'],
             'paths': {
-                'template_dir': str(self.validated_dir),
+                'template_dir': str(self.template_dir),
                 'sql_template_dir': str(self.sql_templates_dir),
                 'output_directory': str(self.output_dir)
             },
             'processing': {
                 'batch_size': 900,
-                'transaction_column': 'Transaction Ref',
+                'transaction_column': 'Transaction reference number',
                 'placeholder_pattern': '-- TRANSACTION REFERENCES --'
             }
         }
@@ -359,13 +359,13 @@ class TestBatchSQLGeneration:
             },
             'incidents': [],
             'paths': {
-                'template_dir': str(self.validated_dir),
+                'template_dir': str(self.template_dir),
                 'sql_template_dir': str(self.sql_templates_dir),
                 'output_directory': str(self.output_dir)
             },
             'processing': {
                 'batch_size': 900,
-                'transaction_column': 'Transaction Ref'
+                'transaction_column': 'Transaction reference number'
             }
         }
         

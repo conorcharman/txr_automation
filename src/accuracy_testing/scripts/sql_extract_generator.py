@@ -410,14 +410,14 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     incidents = config.get('incidents', [])
     
     paths = config.get('paths', {})
-    template_dir = Path(paths.get('template_dir', 'data/validated'))
+    template_dir = Path(paths.get('template_dir', 'data/templates'))
     output_dir = Path(paths.get('output_directory', 'data/sql_extracts'))
     sql_template_dir = Path(paths.get('sql_template_dir', 'src/accuracy_testing/sql_templates'))
     
     processing = config.get('processing', {})
     batch_size = processing.get('batch_size', 900)
     placeholder = processing.get('placeholder_pattern', '-- TRANSACTION REFERENCES --')
-    transaction_column = processing.get('transaction_column', 'Transaction Ref')
+    transaction_column = processing.get('transaction_column', 'Transaction reference number')
     
     if not incidents:
         print("ERROR: No incidents specified in config")
@@ -426,7 +426,7 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     print(f"\n{'='*70}")
     print(f"BATCH SQL EXTRACT GENERATION - {fiscal_year} {quarter}")
     print(f"{'='*70}")
-    print(f"Validated data directory: {template_dir}")
+    print(f"Template directory:       {template_dir}")
     print(f"SQL template directory:   {sql_template_dir}")
     print(f"Output directory:         {output_dir}")
     print(f"Incidents:                {', '.join(incidents)}")
@@ -450,23 +450,23 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
             sql_template = get_sql_template_for_incident(incident, sql_template_dir)
             print(f"SQL template: {sql_template.name}")
             
-            # Build validated CSV filename: "validated_FY25_Q3_7_37.csv"
-            validated_filename = f"validated_{fiscal_year}_{quarter}_{incident}.csv"
-            validated_path = template_dir / validated_filename
+            # Build template CSV filename: "FY25 Q3 7_37.csv"
+            template_filename = f"{fiscal_year} {quarter} {incident}.csv"
+            template_path = template_dir / template_filename
             
-            # Check if validated CSV exists
-            if not validated_path.exists():
-                print(f"⚠️  Validated data not found: {validated_path}")
+            # Check if template CSV exists
+            if not template_path.exists():
+                print(f"⚠️  Template not found: {template_path}")
                 print(f"   Skipping incident {incident}")
                 total_failed += 1
                 continue
             
-            # Read transaction refs from validated CSV
+            # Read transaction refs from template CSV
             refs = []
-            with open(validated_path, 'r', encoding='utf-8') as f:
+            with open(template_path, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 if transaction_column not in reader.fieldnames:
-                    print(f"⚠️  Column '{transaction_column}' not found in {validated_filename}")
+                    print(f"⚠️  Column '{transaction_column}' not found in {template_filename}")
                     print(f"   Available columns: {', '.join(reader.fieldnames)}")
                     total_failed += 1
                     continue
@@ -477,7 +477,7 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
                         refs.append(ref)
             
             if not refs:
-                print(f"⚠️  No transaction references found in {validated_filename}")
+                print(f"⚠️  No transaction references found in {template_filename}")
                 total_failed += 1
                 continue
             

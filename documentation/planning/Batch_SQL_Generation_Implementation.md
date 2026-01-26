@@ -117,13 +117,14 @@ generate-sql-extract \
 
 ## Workflow Integration
 
-The tool now integrates seamlessly with validation scripts:
+The tool integrates seamlessly into the accuracy testing workflow:
 
 1. **Generate Templates**: `generate-accuracy-template` → `FY25 Q3 7_37.csv`
-2. **Validate Data**: `validate-buyer-ids` → `validated_FY25_Q3_7_37.csv`
-3. **Generate SQL**: `generate-sql-extract` → `7_37_FY25_Q3.sql` ✨ NEW
+2. **Generate SQL Extracts**: `generate-sql-extract` → `7_37_FY25_Q3.sql` ✨
+3. **Run SQL in Database**: Execute SQL to populate templates with data
+4. **Validate Data**: `validate-buyer-ids` → `validated_FY25_Q3_7_37.csv`
 
-All three steps now use consistent FY/Q naming and batch processing patterns.
+SQL generation reads transaction references from templates and creates SQL queries to extract the corresponding data from the database.
 
 ## Test Coverage
 
