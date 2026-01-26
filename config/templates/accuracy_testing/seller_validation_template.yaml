@@ -10,12 +10,18 @@ testing_period:
   quarter: "Q3"
 
 # Incident codes to validate (batch processing)
-# Seller validation incident codes: 16_19, 16_21, 16_23, 16_20
-incidents:
-  - "16_19"
-  - "16_21"
-  - "16_23"
-  - "16_20"
+# Option 1: Auto-discover all seller incidents (RECOMMENDED)
+# Set to "all" to automatically process all seller-related incidents
+# This will discover: 16_*, 17_*, 18_*, 19_*, 20_*, 21_*, 22_*, 23_*, 24_*, 36_23
+# Note: Decision maker incidents (16_20, 16_64) are auto-detected and skipped with warnings
+auto_incidents: "all"
+
+# Option 2: Specify incidents manually (uncomment and modify below, comment out auto_incidents)
+# incidents:
+#   - "16_19"
+#   - "16_21"
+#   - "16_23"
+#   - "16_20"
 
 # File paths
 paths:

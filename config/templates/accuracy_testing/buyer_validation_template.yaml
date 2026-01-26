@@ -10,12 +10,18 @@ testing_period:
   quarter: "Q3"
 
 # Incident codes to validate (batch processing)
-# Buyer validation incident codes: 7_35, 7_37, 7_39, 7_66
-incidents:
-  - "7_35"
-  - "7_37"
-  - "7_39"
-  - "7_66"
+# Option 1: Auto-discover all buyer incidents (RECOMMENDED)
+# Set to "all" to automatically process all buyer-related incidents
+# This will discover: 7_*, 8_*, 9_*, 10_*, 11_*, 12_*, 13_*, 14_*, 15_*, 21_2
+# Note: Decision maker incidents (7_66, 7_68) are auto-detected and skipped with warnings
+auto_incidents: "all"
+
+# Option 2: Specify incidents manually (uncomment and modify below, comment out auto_incidents)
+# incidents:
+#   - "7_35"
+#   - "7_37"
+#   - "7_39"
+#   - "7_66"
 
 # File paths
 paths:
