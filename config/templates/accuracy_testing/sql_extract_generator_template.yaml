@@ -1,78 +1,143 @@
 # SQL Extract Generator Configuration Template
 # ===========================================
-# This template provides configuration examples for the SQL extract generator.
-# The tool generates SQL extract files from transaction reference lists.
+# Generates SQL extract files from validated transaction data.
+# Supports both single-incident and batch processing modes.
 #
 # Usage:
-#   generate-sql-extract --template <template.sql> --input <input.csv> --output <output_dir>
+#   Single mode:  generate-sql-extract --config single_config.yaml
+#   Batch mode:   generate-sql-extract --config batch_config.yaml
 #
-# CLI Options:
-#   --template PATH       SQL template file with placeholder for transaction references
-#   --input PATH          CSV file with transaction references (first column)
-#   --output PATH         Output directory for generated SQL files
-#   --batch-size N        Number of transactions per extract file (default: 900)
-#   --dry-run            Preview generation without creating files
+# Batch Mode (recommended):
+#   Configure testing_period, incidents list, and paths.
+#   The tool will:
+#   - Automatically select the correct SQL template for each incident
+#   - Read transaction refs from validated CSV files
+#   - Generate SQL extracts with FY/Q naming
+#   - Split large datasets into multiple files (batch_size)
 #
-# Template Requirements:
-#   The SQL template must contain exactly one placeholder for transaction references.
-#   Standard placeholder format:
-#     - -- TRANSACTION REFERENCES --
-#   Legacy formats (still supported for backward compatibility):
-#     - --<<TRANSACTION REFERENCES>>
-#     - --<TRADE REFERENCES>--
-#     - Custom placeholders can be specified via CLI
-#
-# Input CSV Format:
-#   - Must have header row
-#   - First column contains transaction references
-#   - Additional columns are ignored
-#   - Example:
-#       TRANSACTION_REFERENCE,INCIDENT_CODE
-#       44625CKTPC31,35_3
-#       44625CKT72V1,35_3
-#
-# Examples:
-# ---------
-#
-# 1. Generate single extract file:
-#    generate-sql-extract \
-#      --template legacy/sql/buyer_id_extract.sql \
-#      --input data/output/transactions_35_3.csv \
-#      --output data/output/sql
-#
-# 2. Generate multiple batches:
-#    generate-sql-extract \
-#      --template legacy/sql/pricing_extract.sql \
-#      --input data/output/transactions_35_3.csv \
-#      --output data/output/sql \
-#      --batch-size 500
-#
-# 3. Preview without generating:
-#    generate-sql-extract \
-#      --template legacy/sql/seller_id_extract.sql \
-#      --input data/output/transactions_35_4.csv \
-#      --output data/output/sql \
-#      --dry-run
-#
-# Output:
-# -------
-# Single batch:  {template_name}.sql
-# Multiple batches: {template_name}_Extract1.sql, {template_name}_Extract2.sql, etc.
-#
-# Notes:
-# ------
-# - Batch size of 900 is recommended (matches VBA logic)
-# - Output directory is created automatically
-# - Transaction references are formatted with single quotes and comma-separated
-# - Empty or whitespace-only references are skipped
-# - Existing output files are overwritten without warning
+# Single Mode (legacy):
+#   Provide template_file, input_file, and output_directory.
+#   Useful for one-off extractions or custom workflows.
 
-# Configuration (not currently used by CLI, for future YAML-based config)
-sql_extract:
-  # Default batch size (can be overridden by --batch-size)
+# =============================================================================
+# BATCH MODE CONFIGURATION (RECOMMENDED)
+# =============================================================================
+
+# Testing period
+testing_period:
+  fiscal_year: "FY25"      # Fiscal year (e.g., FY25, FY26)
+  quarter: "Q3"            # Quarter (Q1, Q2, Q3, Q4)
+
+# Incident codes to process
+incidents:
+  - "7_37"   # Buyer ID
+  - "16_21"  # Seller ID
+  - "35_3"   # Pricing data
+
+# Paths for batch mode
+paths:
+  # Directory containing validated CSV files (from validation scripts)
+  # Expected format: validated_FY25_Q3_7_37.csv
+  template_dir: "data/validated"
+  
+  # Directory for SQL template files
+  # Templates: BuyerID.sql, SellerID.sql, SCR_pricing_data_v1.0.sql, etc.
+  sql_template_dir: "src/accuracy_testing/sql_templates"
+  
+  # Output directory for generated SQL files
+  # Generated format: 7_37_FY25_Q3.sql or 7_37_FY25_Q3_Extract1.sql
+  output_directory: "data/sql_extracts"
+
+# Processing options
+processing:
+  # Maximum transactions per SQL file (default: 900)
+  # Large datasets will be split into multiple files
   batch_size: 900
   
-  # Default template directory
+  # Placeholder pattern in SQL templates (default: "-- TRANSACTION REFERENCES --")
+  placeholder_pattern: "-- TRANSACTION REFERENCES --"
+  
+  # CSV column name containing transaction references
+  transaction_column: "Transaction Ref"
+
+# =============================================================================
+# SQL TEMPLATE MAPPING (AUTOMATIC IN BATCH MODE)
+# =============================================================================
+# The tool automatically selects SQL templates based on incident codes:
+#
+# Buyer ID incidents (7_*, 8_*, 9_*, etc.):     → BuyerID.sql
+# Seller ID incidents (16_*, 17_*, etc.):       → SellerID.sql
+# Pricing incidents (35_3):                     → SCR_pricing_data_v1.0.sql
+# Inconsistent Buyer (7_66, 7_68):              → InconsistentBuyerID.sql
+# Inconsistent Seller (16_20, 16_64):           → InconsistentSellerID.sql
+# Decision Maker Buyer (12_*):                  → FTBDM.sql
+# Decision Maker Seller (21_*):                 → FTSDM.sql
+
+# =============================================================================
+# SINGLE MODE CONFIGURATION (LEGACY)
+# =============================================================================
+# Uncomment and configure these for single-incident processing:
+
+# paths:
+#   # SQL template file with placeholder
+#   template_file: "src/accuracy_testing/sql_templates/BuyerID.sql"
+#   
+#   # Input CSV with transaction references
+#   input_file: "data/validated/validated_FY25_Q3_7_37.csv"
+#   
+#   # Output directory
+#   output_directory: "data/sql_extracts"
+
+# processing:
+#   batch_size: 900
+#   placeholder_pattern: "-- TRANSACTION REFERENCES --"
+#   transaction_column: "Transaction Ref"
+
+# =============================================================================
+# EXAMPLES
+# =============================================================================
+#
+# Example 1: Batch mode with multiple incidents
+# ----------------------------------------------
+# testing_period:
+#   fiscal_year: "FY25"
+#   quarter: "Q3"
+# incidents: ["7_37", "16_21", "35_3"]
+# paths:
+#   template_dir: "data/validated"
+#   sql_template_dir: "src/accuracy_testing/sql_templates"
+#   output_directory: "data/sql_extracts"
+# processing:
+#   batch_size: 900
+#   transaction_column: "Transaction Ref"
+#
+# Result:
+#   - Reads validated_FY25_Q3_7_37.csv  → Generates 7_37_FY25_Q3.sql
+#   - Reads validated_FY25_Q3_16_21.csv → Generates 16_21_FY25_Q3.sql
+#   - Reads validated_FY25_Q3_35_3.csv  → Generates 35_3_FY25_Q3.sql
+#
+# Example 2: Large dataset with multiple extracts
+# -----------------------------------------------
+# If validated_FY25_Q3_7_37.csv contains 2000 transaction refs:
+#   - Generates 7_37_FY25_Q3_Extract1.sql (900 refs)
+#   - Generates 7_37_FY25_Q3_Extract2.sql (900 refs)
+#   - Generates 7_37_FY25_Q3_Extract3.sql (200 refs)
+#
+# Example 3: Single mode (legacy)
+# -------------------------------
+# paths:
+#   template_file: "src/accuracy_testing/sql_templates/BuyerID.sql"
+#   input_file: "data/custom_transactions.csv"
+#   output_directory: "data/output"
+# processing:
+#   batch_size: 500
+#
+# CLI Usage:
+# ----------
+# Batch mode:  generate-sql-extract --config config.yaml
+# Dry run:     generate-sql-extract --config config.yaml --dry-run
+# Verbose:     generate-sql-extract --config config.yaml --verbose
+
   template_dir: "legacy/sql"
   
   # Default output directory

@@ -41,7 +41,7 @@ import csv
 import yaml
 import argparse
 from pathlib import Path
-from typing import List
+from typing import List, Dict
 from datetime import datetime
 
 # Add project root to path
@@ -49,6 +49,11 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.accuracy_testing.sql_extract_generator import SQLExtractGenerator
+from src.txr_replay_core.incident_codes import (
+    is_buyer_incident,
+    is_seller_incident,
+    get_client_types
+)
 
 
 class SQLExtractGeneratorCLI:
@@ -333,6 +338,208 @@ Examples:
     return parser.parse_args()
 
 
+def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) -> Path:
+    """
+    Determine the appropriate SQL template for an incident code.
+    
+    Args:
+        incident_code: Incident code (e.g., '7_37', '16_21', '35_3')
+        sql_template_dir: Directory containing SQL templates
+        
+    Returns:
+        Path to the appropriate SQL template file
+        
+    Raises:
+        FileNotFoundError: If template not found
+    """
+    # Map incident types to SQL templates
+    # Buyer incidents → BuyerID.sql
+    # Seller incidents → SellerID.sql  
+    # Pricing incidents (35_3) → SCR_pricing_data_v1.0.sql
+    # Inconsistent buyer (7_66, 7_68) → InconsistentBuyerID.sql
+    # Inconsistent seller (16_20, 16_64) → InconsistentSellerID.sql
+    # Decision maker buyer (12_*) → FTBDM.sql
+    # Decision maker seller (21_*) → FTSDM.sql
+    
+    # Pricing incidents
+    if incident_code == '35_3':
+        template_path = sql_template_dir / "SCR_pricing_data_v1.0.sql"
+    # Inconsistent buyer
+    elif incident_code in ['7_66', '7_68']:
+        template_path = sql_template_dir / "InconsistentBuyerID.sql"
+    # Inconsistent seller
+    elif incident_code in ['16_20', '16_64']:
+        template_path = sql_template_dir / "InconsistentSellerID.sql"
+    # Decision maker buyer
+    elif incident_code.startswith('12_'):
+        template_path = sql_template_dir / "FTBDM.sql"
+    # Decision maker seller
+    elif incident_code.startswith('21_'):
+        template_path = sql_template_dir / "FTSDM.sql"
+    # Regular buyer incidents
+    elif is_buyer_incident(incident_code):
+        template_path = sql_template_dir / "BuyerID.sql"
+    # Regular seller incidents
+    elif is_seller_incident(incident_code):
+        template_path = sql_template_dir / "SellerID.sql"
+    else:
+        raise ValueError(f"Unknown incident code: {incident_code}. Cannot determine SQL template.")
+    
+    if not template_path.exists():
+        raise FileNotFoundError(f"SQL template not found: {template_path}")
+    
+    return template_path
+
+
+def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool = False) -> int:
+    """
+    Run SQL generation for multiple incidents in batch mode.
+    
+    Args:
+        config: Configuration dictionary with testing_period, incidents, and paths
+        dry_run: If True, preview without writing files
+        verbose: If True, show detailed output
+        
+    Returns:
+        Exit code (0 for success, 1 for error)
+    """
+    # Extract batch configuration
+    testing_period = config.get('testing_period', {})
+    fiscal_year = testing_period.get('fiscal_year', 'FYXX')
+    quarter = testing_period.get('quarter', 'QX')
+    incidents = config.get('incidents', [])
+    
+    paths = config.get('paths', {})
+    template_dir = Path(paths.get('template_dir', 'data/validated'))
+    output_dir = Path(paths.get('output_directory', 'data/sql_extracts'))
+    sql_template_dir = Path(paths.get('sql_template_dir', 'src/accuracy_testing/sql_templates'))
+    
+    processing = config.get('processing', {})
+    batch_size = processing.get('batch_size', 900)
+    placeholder = processing.get('placeholder_pattern', '-- TRANSACTION REFERENCES --')
+    transaction_column = processing.get('transaction_column', 'Transaction Ref')
+    
+    if not incidents:
+        print("ERROR: No incidents specified in config")
+        return 1
+    
+    print(f"\n{'='*70}")
+    print(f"BATCH SQL EXTRACT GENERATION - {fiscal_year} {quarter}")
+    print(f"{'='*70}")
+    print(f"Validated data directory: {template_dir}")
+    print(f"SQL template directory:   {sql_template_dir}")
+    print(f"Output directory:         {output_dir}")
+    print(f"Incidents:                {', '.join(incidents)}")
+    print(f"Batch size:               {batch_size} records per file")
+    print(f"{'='*70}\n")
+    
+    # Create output directory
+    output_dir.mkdir(parents=True, exist_ok=True)
+    
+    total_success = 0
+    total_failed = 0
+    total_files_generated = 0
+    
+    for incident in incidents:
+        print(f"\n{'─'*70}")
+        print(f"Processing incident: {incident}")
+        print(f"{'─'*70}")
+        
+        try:
+            # Determine SQL template for this incident
+            sql_template = get_sql_template_for_incident(incident, sql_template_dir)
+            print(f"SQL template: {sql_template.name}")
+            
+            # Build validated CSV filename: "validated_FY25_Q3_7_37.csv"
+            validated_filename = f"validated_{fiscal_year}_{quarter}_{incident}.csv"
+            validated_path = template_dir / validated_filename
+            
+            # Check if validated CSV exists
+            if not validated_path.exists():
+                print(f"⚠️  Validated data not found: {validated_path}")
+                print(f"   Skipping incident {incident}")
+                total_failed += 1
+                continue
+            
+            # Read transaction refs from validated CSV
+            refs = []
+            with open(validated_path, 'r', encoding='utf-8') as f:
+                reader = csv.DictReader(f)
+                if transaction_column not in reader.fieldnames:
+                    print(f"⚠️  Column '{transaction_column}' not found in {validated_filename}")
+                    print(f"   Available columns: {', '.join(reader.fieldnames)}")
+                    total_failed += 1
+                    continue
+                
+                for row in reader:
+                    ref = row[transaction_column].strip()
+                    if ref:
+                        refs.append(ref)
+            
+            if not refs:
+                print(f"⚠️  No transaction references found in {validated_filename}")
+                total_failed += 1
+                continue
+            
+            print(f"Transaction refs: {len(refs)}")
+            
+            # Generate SQL extracts
+            generator = SQLExtractGenerator(
+                template_path=str(sql_template),
+                batch_size=batch_size,
+                placeholder=placeholder
+            )
+            
+            summary = generator.get_summary(refs)
+            num_batches = summary['num_batches']
+            
+            if dry_run:
+                print(f"DRY RUN - Would generate {num_batches} SQL file(s)")
+                for i in range(1, num_batches + 1):
+                    if num_batches == 1:
+                        filename = f"{incident}_{fiscal_year}_{quarter}.sql"
+                    else:
+                        filename = f"{incident}_{fiscal_year}_{quarter}_Extract{i}.sql"
+                    print(f"  - {filename}")
+                total_success += 1
+                total_files_generated += num_batches
+            else:
+                # Generate with custom base filename
+                base_filename = f"{incident}_{fiscal_year}_{quarter}"
+                generated_files = generator.generate_extracts(
+                    transaction_refs=refs,
+                    output_dir=str(output_dir),
+                    base_filename=base_filename
+                )
+                
+                print(f"✓ Generated {len(generated_files)} SQL file(s)")
+                if verbose:
+                    for file_path in generated_files:
+                        print(f"  - {Path(file_path).name}")
+                
+                total_success += 1
+                total_files_generated += len(generated_files)
+        
+        except Exception as e:
+            print(f"✗ Failed: {incident} - {e}")
+            if verbose:
+                import traceback
+                traceback.print_exc()
+            total_failed += 1
+            continue
+    
+    # Print batch summary
+    print(f"\n{'='*70}")
+    print(f"BATCH SQL GENERATION COMPLETE")
+    print(f"{'='*70}")
+    print(f"Incidents processed:  {total_success}/{len(incidents)}")
+    print(f"Incidents failed:     {total_failed}/{len(incidents)}")
+    print(f"Total SQL files:      {total_files_generated}")
+    print(f"{'='*70}\n")
+    
+    return 0 if total_failed == 0 else 1
+
+
 def main():
     """Main entry point."""
     args = parse_arguments()
@@ -378,7 +585,18 @@ def main():
         if args.batch_size == 900:  # default value
             batch_size = processing.get('batch_size', 900)
     
-    # Validate required arguments
+    # Check if batch mode
+    is_batch_mode = config and 'incidents' in config and 'testing_period' in config
+    
+    if is_batch_mode:
+        # Run batch SQL generation
+        return run_batch_sql_generation(
+            config=config,
+            dry_run=dry_run,
+            verbose=verbose
+        )
+    
+    # Single mode - validate required arguments
     if not template_path:
         print("ERROR: Template file (--template or via --config) is required")
         return 1
