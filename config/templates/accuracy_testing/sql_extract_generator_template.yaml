@@ -1,6 +1,6 @@
 # SQL Extract Generator Configuration Template
 # ===========================================
-# Generates SQL extract files from validated transaction data.
+# Generates SQL extract files from accuracy testing template CSV files.
 # Supports both single-incident and batch processing modes.
 #
 # Usage:
@@ -11,7 +11,7 @@
 #   Configure testing_period, incidents list, and paths.
 #   The tool will:
 #   - Automatically select the correct SQL template for each incident
-#   - Read transaction refs from validated CSV files
+#   - Read transaction refs from template CSV files
 #   - Generate SQL extracts with FY/Q naming
 #   - Split large datasets into multiple files (batch_size)
 #
@@ -40,9 +40,9 @@ incidents:
 
 # Paths for batch mode
 paths:
-  # Directory containing validated CSV files (from validation scripts)
-  # Expected format: validated_FY26_Q1_7_37.csv
-  template_dir: "data/validated"
+  # Directory containing template CSV files (from accuracy template generator)
+  # Expected format: FY26 Q1 7_37.csv
+  template_dir: "data/templates"
   
   # Directory for SQL template files
   # Templates: BuyerID.sql, SellerID.sql, SCR_pricing_data_v1.0.sql, etc.
@@ -62,7 +62,7 @@ processing:
   placeholder_pattern: "-- TRANSACTION REFERENCES --"
   
   # CSV column name containing transaction references
-  transaction_column: "Transaction Ref"
+  transaction_column: "Transaction reference number"
 
 # =============================================================================
 # SQL TEMPLATE MAPPING (AUTOMATIC IN BATCH MODE)
@@ -87,7 +87,7 @@ processing:
 #   template_file: "src/accuracy_testing/sql_templates/BuyerID.sql"
 #   
 #   # Input CSV with transaction references
-#   input_file: "data/validated/validated_FY25_Q3_7_37.csv"
+#   input_file: "data/templates/FY25 Q3 7_37.csv"
 #   
 #   # Output directory
 #   output_directory: "data/sql_extracts"
@@ -108,21 +108,21 @@ processing:
 #   quarter: "Q3"
 # incidents: ["7_37", "16_21", "35_3"]
 # paths:
-#   template_dir: "data/validated"
+#   template_dir: "data/templates"
 #   sql_template_dir: "src/accuracy_testing/sql_templates"
 #   output_directory: "data/sql_extracts"
 # processing:
 #   batch_size: 900
-#   transaction_column: "Transaction Ref"
+#   transaction_column: "Transaction reference number"
 #
 # Result:
-#   - Reads validated_FY25_Q3_7_37.csv  → Generates 7_37_FY25_Q3.sql
-#   - Reads validated_FY25_Q3_16_21.csv → Generates 16_21_FY25_Q3.sql
-#   - Reads validated_FY25_Q3_35_3.csv  → Generates 35_3_FY25_Q3.sql
+#   - Reads FY25 Q3 7_37.csv  → Generates 7_37_FY25_Q3.sql
+#   - Reads FY25 Q3 16_21.csv → Generates 16_21_FY25_Q3.sql
+#   - Reads FY25 Q3 35_3.csv  → Generates 35_3_FY25_Q3.sql
 #
 # Example 2: Large dataset with multiple extracts
 # -----------------------------------------------
-# If validated_FY25_Q3_7_37.csv contains 2000 transaction refs:
+# If FY25 Q3 7_37.csv contains 2000 transaction refs:
 #   - Generates 7_37_FY25_Q3_Extract1.sql (900 refs)
 #   - Generates 7_37_FY25_Q3_Extract2.sql (900 refs)
 #   - Generates 7_37_FY25_Q3_Extract3.sql (200 refs)
