@@ -22,7 +22,7 @@ import os
 import yaml
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Tuple, Any
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 import csv
 from collections import defaultdict
@@ -269,6 +269,15 @@ class ClientRecord:
     kaizen_error: str = ""  # Template lookup result (ID:TYPE)
     match: str = ""  # "TRUE" if correction matches template, "FALSE" if not
     
+    # Inconsistent ID validation fields (Phase 4)
+    trade_date_time_raw: str = ""  # Raw Trade_Date_Time string from CSV
+    trade_date_time_parsed: Optional[datetime] = None  # Parsed datetime for sorting
+    is_fallback_id: bool = False  # True if ID matches CountryCode_PersonCode pattern
+    is_valid_id: bool = False  # True if ID passes format + logic validation
+    requires_standard_validation: bool = True  # False if corrected by inconsistent ID logic
+    correction_source: str = ""  # Description of where correction came from
+    priority_country_code: str = ""  # Computed ISO-2 country code for validation
+    
     # Original row data for output
     original_row: List[str] = field(default_factory=list)
 
@@ -389,6 +398,441 @@ class ProcessingStats:
                 print("\nITALIAN TRACKER ACTIONS:")
                 for action, count in sorted(self.italian_tracker_actions.items()):
                     print(f"  {action}: {count}")
+
+
+# ============================================================================
+# Inconsistent ID Processor (Phase 4)
+# ============================================================================
+
+
+@dataclass
+class InconsistentIDStats:
+    """Statistics for inconsistent ID validation run."""
+    total_records: int = 0
+    person_groups: int = 0
+    inconsistent_groups: int = 0
+    fallback_ids_found: int = 0
+    invalid_ids_found: int = 0
+    corrected_from_prior: int = 0
+    no_prior_valid: int = 0
+    valid_to_valid_changes: int = 0  # No correction needed
+
+
+class InconsistentIDProcessor:
+    """
+    Pre-processor for inconsistent ID validation (incident codes 7_66, 16_20).
+    
+    Handles:
+    - Grouping records by Person Code
+    - Chronological sorting by Trade_Date_Time
+    - Detection of fallback ID patterns
+    - Application of corrections from most recent valid ID
+    
+    IMPORTANT: This is a PRE-PROCESSOR, not a replacement for IDValidationProcessor.
+    After preprocessing, records that still need correction go through standard validation.
+    
+    Usage:
+        inconsistent = InconsistentIDProcessor(logger=logger)
+        records = inconsistent.preprocess_for_inconsistent_validation(
+            records, 
+            id_processor  # For format/logic validation
+        )
+        
+        # Then standard validation for remaining
+        for record in records:
+            if record.requires_standard_validation:
+                processor.validate_record(record)
+    """
+    
+    def __init__(self, client_type: str = "buyer", logger=None, verbose: bool = False):
+        """
+        Initialize inconsistent ID processor.
+        
+        Args:
+            client_type: Either "buyer" or "seller"
+            logger: Optional StructuredLogger instance
+            verbose: Enable verbose output
+        """
+        self.client_type = client_type.lower()
+        self.logger = logger
+        self.verbose = verbose
+        self.stats = InconsistentIDStats()
+    
+    def _log(self, message: str, level: str = "info"):
+        """Log message using logger or print if verbose."""
+        if self.logger and LOGGER_AVAILABLE:
+            getattr(self.logger, level)(message)
+        elif self.verbose:
+            print(f"[{level.upper()}] {message}")
+    
+    @staticmethod
+    def parse_trade_date_time(raw_string: str) -> Optional[datetime]:
+        """
+        Parse Trade_Date_Time format: YYYY-MM-DD-HH-MM-SS-MSMS
+        
+        Args:
+            raw_string: String like "2024-03-15-14-30-45-123456"
+        
+        Returns:
+            datetime object or None if parsing fails
+        
+        Examples:
+            >>> InconsistentIDProcessor.parse_trade_date_time("2024-03-15-14-30-45-123456")
+            datetime(2024, 3, 15, 14, 30, 45)
+        """
+        if not raw_string:
+            return None
+        
+        clean = str(raw_string).strip()
+        
+        # Minimum length check (YYYY-MM-DD-HH-MM-SS = 19 chars)
+        if len(clean) < 19:
+            return None
+        
+        try:
+            # Extract components by position
+            year = int(clean[0:4])
+            month = int(clean[5:7])
+            day = int(clean[8:10])
+            hour = int(clean[11:13])
+            minute = int(clean[14:16])
+            second = int(clean[17:19])
+            
+            return datetime(year, month, day, hour, minute, second)
+        except (ValueError, IndexError):
+            return None
+    
+    @staticmethod
+    def is_fallback_id_pattern(id_value: str, person_code: str, country_code: str) -> bool:
+        """
+        Check if ID matches the fallback pattern: CountryCode_PersonCode
+        
+        Args:
+            id_value: The ID to check
+            person_code: The person code for this record
+            country_code: ISO-2 country code
+        
+        Returns:
+            True if ID matches fallback pattern
+            
+        Examples:
+            >>> InconsistentIDProcessor.is_fallback_id_pattern("GB_12345", "12345", "GB")
+            True
+            >>> InconsistentIDProcessor.is_fallback_id_pattern("AB123456C", "12345", "GB")
+            False
+        """
+        if not id_value or not person_code or not country_code:
+            return False
+        
+        clean_id = str(id_value).strip().upper()
+        clean_pc = str(person_code).strip()
+        clean_cc = str(country_code).strip().upper()
+        
+        if len(clean_cc) == 2 and clean_pc:
+            expected = f"{clean_cc}_{clean_pc}"
+            return clean_id == expected
+        
+        return False
+    
+    def group_by_person_code(self, records: List[ClientRecord]) -> Dict[str, List[int]]:
+        """
+        Group record indices by Person Code.
+        
+        Args:
+            records: List of ClientRecord objects
+        
+        Returns:
+            Dictionary mapping person_code -> list of record indices
+        """
+        groups = defaultdict(list)
+        
+        for idx, record in enumerate(records):
+            if record.person_code and record.person_code.strip():
+                groups[record.person_code.strip()].append(idx)
+        
+        return dict(groups)
+    
+    def has_inconsistent_ids(self, records: List[ClientRecord], indices: List[int]) -> bool:
+        """
+        Check if a group has different IDs or ID types.
+        
+        Args:
+            records: Full list of records
+            indices: Indices of records in this person group
+        
+        Returns:
+            True if IDs or types differ within the group
+        """
+        if len(indices) <= 1:
+            return False
+        
+        first_record = records[indices[0]]
+        first_id = str(first_record.id_value).strip()
+        first_type = str(first_record.id_type).strip()
+        
+        for idx in indices[1:]:
+            record = records[idx]
+            if (str(record.id_value).strip() != first_id or 
+                str(record.id_type).strip() != first_type):
+                return True
+        
+        return False
+    
+    def validate_id_complete(
+        self, 
+        record: ClientRecord, 
+        id_processor: 'IDValidationProcessor'
+    ) -> Tuple[bool, bool]:
+        """
+        Validate ID using standard format + logic validation.
+        
+        Args:
+            record: ClientRecord to validate
+            id_processor: IDValidationProcessor for validation logic
+        
+        Returns:
+            Tuple of (format_valid, logic_valid)
+        """
+        # Use the processor's validation methods
+        # This reuses the existing v5.6 validation logic
+        
+        # Get priority country code
+        country_code = record.priority_country_code
+        if not country_code:
+            country_code = id_processor._determine_priority_country(
+                record.primary_nationality,
+                record.secondary_nationality
+            )
+            record.priority_country_code = country_code
+        
+        if not country_code:
+            return (False, False)
+        
+        # Format validation
+        format_valid = id_processor._validate_format(
+            record.id_value,
+            record.id_type,
+            country_code
+        )
+        
+        if not format_valid:
+            return (False, False)
+        
+        # Logic validation
+        logic_valid = id_processor._validate_logic(
+            record.id_value,
+            record.id_type,
+            country_code,
+            record.date_of_birth,
+            record.gender
+        )
+        
+        return (format_valid, logic_valid)
+    
+    def apply_prior_valid_corrections(
+        self, 
+        records: List[ClientRecord], 
+        indices: List[int]
+    ) -> None:
+        """
+        Apply correction logic based on v1.3 rules:
+        - Only correct INVALID or FALLBACK IDs
+        - Use most recent VALID ID (search backwards chronologically)
+        - Do NOT correct valid IDs even if they differ
+        
+        Args:
+            records: Full list of records
+            indices: Indices of records in this person group (already sorted chronologically)
+        """
+        for i, current_idx in enumerate(indices):
+            current_record = records[current_idx]
+            
+            # Only process invalid or fallback IDs
+            if current_record.is_valid_id and not current_record.is_fallback_id:
+                # Valid ID - no correction needed (valid-to-valid is OK)
+                self.stats.valid_to_valid_changes += 1
+                current_record.requires_standard_validation = False
+                continue
+            
+            # Search backwards from previous record for most recent valid ID
+            most_recent_valid_id = None
+            most_recent_valid_type = None
+            most_recent_valid_date = None
+            
+            for j in range(i - 1, -1, -1):  # Go backwards
+                prior_idx = indices[j]
+                prior_record = records[prior_idx]
+                
+                # Found a valid ID that's not a fallback
+                if prior_record.is_valid_id and not prior_record.is_fallback_id:
+                    most_recent_valid_id = prior_record.id_value
+                    most_recent_valid_type = prior_record.id_type
+                    most_recent_valid_date = prior_record.trade_date_time_parsed
+                    break
+            
+            # Apply correction if we found a valid prior ID
+            if most_recent_valid_id:
+                current_record.correction = most_recent_valid_id
+                current_record.correction_type = most_recent_valid_type
+                current_record.correction_output = f"{most_recent_valid_id}:{most_recent_valid_type}"
+                current_record.correction_fields = "ID:IDT"
+                current_record.requires_standard_validation = False
+                current_record.correction_source = f"Prior valid ID from {most_recent_valid_date}"
+                current_record.is_valid = False  # Mark as corrected
+                current_record.actions_taken.append("Inconsistent ID - Corrected to most recent valid ID")
+                self.stats.corrected_from_prior += 1
+                
+                self._log(f"Record {current_record.row_index}: Corrected to prior valid ID "
+                         f"{most_recent_valid_id}:{most_recent_valid_type}")
+            else:
+                # No prior valid ID - needs standard pipeline
+                current_record.requires_standard_validation = True
+                current_record.correction_source = "No prior valid ID - requires standard correction"
+                current_record.actions_taken.append("Inconsistent ID - No prior valid ID to use")
+                self.stats.no_prior_valid += 1
+                
+                self._log(f"Record {current_record.row_index}: No prior valid ID found, "
+                         f"will use standard correction pipeline")
+    
+    def preprocess_for_inconsistent_validation(
+        self,
+        records: List[ClientRecord],
+        id_processor: 'IDValidationProcessor'
+    ) -> List[ClientRecord]:
+        """
+        Apply inconsistent ID preprocessing to records.
+        
+        This method:
+        1. Parses Trade_Date_Time fields
+        2. Computes priority country codes
+        3. Groups records by Person Code
+        4. Sorts each group chronologically
+        5. Validates each ID (format + logic)
+        6. Detects fallback ID patterns
+        7. Applies corrections from most recent valid ID
+        
+        Records that receive corrections will have:
+        - requires_standard_validation = False
+        - correction, correction_type, correction_output set
+        
+        Records without prior valid ID will have:
+        - requires_standard_validation = True
+        
+        Args:
+            records: List of ClientRecord objects to preprocess
+            id_processor: IDValidationProcessor instance for format/logic validation
+        
+        Returns:
+            Same list of records, modified in place
+        """
+        self._log(f"Starting inconsistent ID preprocessing for {len(records)} records")
+        self.stats.total_records = len(records)
+        
+        # Phase 1: Parse Trade_Date_Time and compute priority country
+        self._log("Phase 1: Parsing Trade_Date_Time fields...")
+        for record in records:
+            if record.trade_date_time_raw:
+                record.trade_date_time_parsed = self.parse_trade_date_time(
+                    record.trade_date_time_raw
+                )
+            
+            # Compute priority country code
+            if not record.priority_country_code:
+                record.priority_country_code = id_processor._determine_priority_country(
+                    record.primary_nationality,
+                    record.secondary_nationality
+                )
+        
+        # Phase 2: Group by Person Code
+        self._log("Phase 2: Grouping records by Person Code...")
+        person_groups = self.group_by_person_code(records)
+        self.stats.person_groups = len(person_groups)
+        self._log(f"Found {len(person_groups)} unique Person Codes")
+        
+        # Phase 3: Process each person group
+        self._log("Phase 3: Processing person groups for inconsistencies...")
+        for person_code, record_indices in person_groups.items():
+            # Skip single-record groups
+            if len(record_indices) <= 1:
+                # Single record - mark for standard validation
+                records[record_indices[0]].requires_standard_validation = True
+                continue
+            
+            # Sort indices by trade_date_time (chronological order)
+            record_indices.sort(
+                key=lambda idx: records[idx].trade_date_time_parsed or datetime.min
+            )
+            
+            # Check if IDs differ within this group
+            if not self.has_inconsistent_ids(records, record_indices):
+                # All IDs identical - mark for standard validation (no inconsistency)
+                for idx in record_indices:
+                    records[idx].requires_standard_validation = True
+                continue
+            
+            self.stats.inconsistent_groups += 1
+            self._log(f"Person {person_code}: Found {len(record_indices)} records with inconsistent IDs")
+            
+            # Phase 4: Validate each ID in the group
+            for idx in record_indices:
+                record = records[idx]
+                
+                # Check if fallback ID pattern
+                record.is_fallback_id = self.is_fallback_id_pattern(
+                    record.id_value,
+                    record.person_code,
+                    record.priority_country_code
+                )
+                
+                if record.is_fallback_id:
+                    self.stats.fallback_ids_found += 1
+                    record.is_valid_id = False  # Fallback IDs are not valid
+                else:
+                    # Validate format + logic
+                    format_valid, logic_valid = self.validate_id_complete(record, id_processor)
+                    record.is_valid_id = format_valid and logic_valid
+                    
+                    if not record.is_valid_id:
+                        self.stats.invalid_ids_found += 1
+            
+            # Phase 5: Apply correction logic
+            self.apply_prior_valid_corrections(records, record_indices)
+        
+        self._log(f"Preprocessing complete:")
+        self._log(f"  - Person groups processed: {self.stats.person_groups}")
+        self._log(f"  - Inconsistent groups: {self.stats.inconsistent_groups}")
+        self._log(f"  - Fallback IDs found: {self.stats.fallback_ids_found}")
+        self._log(f"  - Invalid IDs found: {self.stats.invalid_ids_found}")
+        self._log(f"  - Corrected from prior valid: {self.stats.corrected_from_prior}")
+        self._log(f"  - No prior valid (need standard): {self.stats.no_prior_valid}")
+        
+        return records
+    
+    def print_stats(self, logger=None):
+        """Print preprocessing statistics."""
+        log = logger or self.logger
+        
+        lines = [
+            "=" * 70,
+            "INCONSISTENT ID PREPROCESSING SUMMARY",
+            "=" * 70,
+            f"Total records:               {self.stats.total_records:>6}",
+            f"Person groups:               {self.stats.person_groups:>6}",
+            f"Inconsistent groups:         {self.stats.inconsistent_groups:>6}",
+            f"Fallback IDs found:          {self.stats.fallback_ids_found:>6}",
+            f"Invalid IDs found:           {self.stats.invalid_ids_found:>6}",
+            f"Corrected from prior valid:  {self.stats.corrected_from_prior:>6}",
+            f"No prior valid ID:           {self.stats.no_prior_valid:>6}",
+            f"Valid-to-valid (no change):  {self.stats.valid_to_valid_changes:>6}",
+            "=" * 70,
+        ]
+        
+        if log and LOGGER_AVAILABLE:
+            for line in lines:
+                log.info(line)
+        else:
+            for line in lines:
+                print(line)
 
 
 class IDValidationProcessor:
