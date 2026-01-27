@@ -4,22 +4,18 @@ Logging Infrastructure Module
 
 Unified structured logging for all replay processing scripts.
 
-Note: This module is deprecated. Import from common.logger instead.
-      Kept for backward compatibility.
+DEPRECATED: This module re-exports from core.logging for backward compatibility.
+Please import directly from core.logging in new code:
+    from core.logging import StructuredLogger, create_logger
 """
 
-import logging
-import os
-import json
-from datetime import datetime
-from typing import Optional, Dict, Any
 from .data_structures import ProcessingStats
 
-# Re-export from common for backward compatibility
-from common.logger import StructuredLogger as _StructuredLogger, create_logger as _create_logger
+# Re-export from canonical location for backward compatibility
+from core.logging import StructuredLogger as _StructuredLogger, create_logger as _create_logger
 
 
-# Backward compatibility wrapper
+# Backward compatibility wrapper that accepts ProcessingStats
 class StructuredLogger(_StructuredLogger):
     """
     Unified structured logging for all processors.
@@ -27,7 +23,7 @@ class StructuredLogger(_StructuredLogger):
     Provides consistent logging format and functionality across all scripts.
     Supports both file and console logging with structured data.
     
-    Note: This is a compatibility wrapper. Use common.logger.StructuredLogger instead.
+    Note: This is a compatibility wrapper. Use core.logging.StructuredLogger instead.
     """
     
     def __init__(self, name: str, log_dir: str, log_level: str = "INFO"):
@@ -39,7 +35,6 @@ class StructuredLogger(_StructuredLogger):
             log_dir: Directory for log files
             log_level: Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
         """
-        # Call parent constructor
         super().__init__(name, log_dir, log_level)
     
     def log_stats(self, stats: ProcessingStats) -> None:
@@ -49,7 +44,6 @@ class StructuredLogger(_StructuredLogger):
         Args:
             stats: ProcessingStats object to log
         """
-        # Call parent's generic version
         super().log_stats(stats)
 
 
@@ -66,4 +60,7 @@ def create_logger(name: str, log_dir: str, log_level: str = "INFO") -> Structure
         Configured StructuredLogger instance
     """
     return StructuredLogger(name, log_dir, log_level)
+
+
+__all__ = ['StructuredLogger', 'create_logger']
 
