@@ -1,0 +1,85 @@
+"""
+Reference Data
+==============
+
+Embedded reference data for validation and processing.
+
+Modules:
+    country_codes: ISO 3166-1 country codes with EEA status
+    id_formats: ID format validation regex patterns
+    incident_codes: Incident code matrix with buyer/seller mappings
+
+This is the canonical location for reference data.
+For backward compatibility, these are also re-exported from their original locations:
+- accuracy_testing.core.country_codes -> core.data.country_codes
+- accuracy_testing.core.id_formats -> core.data.id_formats
+- txr_replay_core.incident_codes -> core.data.incident_codes
+"""
+
+# Country codes reference data
+from core.data.country_codes import (
+    Country,
+    CountryDataManager,
+    country_manager,
+    COUNTRIES,
+)
+
+# ID format validation patterns
+from core.data.id_formats import (
+    IDPattern,
+    IDFormatManager,
+    id_format_manager,
+    ID_PATTERNS,
+)
+
+# Incident code matrix
+from core.data.incident_codes import (
+    IncidentMetadata,
+    INCIDENT_CODE_MATRIX,
+    get_client_types,
+    is_buyer_incident,
+    is_seller_incident,
+    get_all_incident_codes,
+    get_buyer_incident_codes,
+    get_seller_incident_codes,
+    get_standard_buyer_incident_codes,
+    get_standard_seller_incident_codes,
+    get_decision_maker_buyer_codes,
+    get_decision_maker_seller_codes,
+    is_decision_maker_incident,
+    get_validation_type,
+    get_incidents_by_validation_type,
+    get_incident_description,
+    get_available_validation_types,
+)
+
+__all__ = [
+    # Country codes
+    "Country",
+    "CountryDataManager",
+    "country_manager",
+    "COUNTRIES",
+    # ID formats
+    "IDPattern",
+    "IDFormatManager",
+    "id_format_manager",
+    "ID_PATTERNS",
+    # Incident codes
+    "IncidentMetadata",
+    "INCIDENT_CODE_MATRIX",
+    "get_client_types",
+    "is_buyer_incident",
+    "is_seller_incident",
+    "get_all_incident_codes",
+    "get_buyer_incident_codes",
+    "get_seller_incident_codes",
+    "get_standard_buyer_incident_codes",
+    "get_standard_seller_incident_codes",
+    "get_decision_maker_buyer_codes",
+    "get_decision_maker_seller_codes",
+    "is_decision_maker_incident",
+    "get_validation_type",
+    "get_incidents_by_validation_type",
+    "get_incident_description",
+    "get_available_validation_types",
+]
