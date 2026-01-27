@@ -153,9 +153,9 @@ class TestIncidentCodeMatrix:
         assert get_validation_type('12_17') == 'decision_maker'
         assert get_validation_type('21_17') == 'decision_maker'
         
-        # Pending codes (not yet implemented)
-        assert get_validation_type('7_66') == 'pending'
-        assert get_validation_type('16_20') == 'pending'
+        # Inconsistent ID codes (Phase 4 implementation)
+        assert get_validation_type('7_66') == 'inconsistent_id'
+        assert get_validation_type('16_20') == 'inconsistent_id'
         
         # Pricing code
         assert get_validation_type('35_3') == 'pricing'

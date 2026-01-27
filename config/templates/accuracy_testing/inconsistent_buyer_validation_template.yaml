@@ -1,0 +1,80 @@
+# Inconsistent Buyer ID Validation Configuration
+# ===============================================
+#
+# Template for incident code 7_66 (Inconsistent Buyer ID)
+# Use this for scenarios where the same person has different IDs across trades.
+#
+# Algorithm Overview:
+# 1. Groups records by Person Code
+# 2. Sorts each group chronologically by Trade_Date_Time
+# 3. Validates each ID using standard format + logic rules
+# 4. Corrects INVALID IDs using most recent PRIOR VALID ID
+#
+# Key differences from standard validation:
+# - Only corrects invalid IDs (fallback pattern or failed format/logic)
+# - Valid-to-valid ID changes are preserved (not corrected)
+# - Requires Trade_Date_Time field for chronological ordering
+
+# Testing period configuration
+testing_period:
+  # Fiscal year (e.g., FY25, FY26)
+  fiscal_year: "FY25"
+  
+  # Quarter (e.g., Q1, Q2, Q3, Q4)
+  quarter: "Q3"
+
+# Incident codes to validate
+# For inconsistent ID validation, only incident 7_66 is supported
+incidents:
+  - "7_66"
+
+# File paths
+paths:
+  # Input file containing records with Trade_Date_Time field
+  # Required columns: Transaction Reference, Account ID, Trade_Date_Time,
+  #                   Person Code, Account Type, Buyer ID Code, Type of Buyer ID Code,
+  #                   First Name, Surname, Date of Birth, Gender, 
+  #                   Primary Nationality, Secondary Nationality
+  input_file: "data/input/accuracy_testing/inconsistent_buyer_input.csv"
+  
+  # Output file with corrections applied
+  output_file: "data/output/accuracy_testing/inconsistent_buyer_validated.csv"
+  
+  # Log output directory
+  log_output: "logs"
+  
+  # Optional: Italian tracker CSV file for IT fiscal code validation
+  # Format: Column C = Person Code, Column G = Status
+  # italian_tracker: "path/to/italian_tracker.csv"
+  
+  # Optional: Main tracker CSV file for client data remediation
+  # Format: Column J = Person Code, Column N = Status
+  # main_tracker: "path/to/main_tracker.csv"
+  
+  # Optional: Template file for Kaizen error lookup
+  # template_file: "path/to/template.xlsx"
+  # template_id_column: 23
+  # template_type_column: 24
+
+# Processor configuration
+processor:
+  # Logging level: DEBUG, INFO, WARNING, ERROR
+  log_level: "DEBUG"
+  
+  # Enable verbose console output
+  verbose: true
+  
+  # Batch size for processing (future use)
+  batch_size: 1000
+
+# Example usage:
+# --------------
+# python -m src.accuracy_testing.scripts.inconsistent_buyer_id_validation --config config/local/accuracy_testing/inconsistent_buyer.yaml
+# 
+# Or with CLI arguments:
+# python -m src.accuracy_testing.scripts.inconsistent_buyer_id_validation input.csv output.csv --log-level DEBUG
+#
+# Or with environment variables:
+# export TXR_PATHS_INPUT_FILE="data/buyer_input.csv"
+# export TXR_PATHS_OUTPUT_FILE="data/buyer_output.csv"
+# python -m src.accuracy_testing.scripts.inconsistent_buyer_id_validation --use-env

@@ -39,8 +39,8 @@ INCIDENT_CODE_MATRIX: Dict[str, IncidentMetadata] = {
     '7_37': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'Incorrect NIDN value within Buyer identification code field'},
     '7_39': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'Incorrect CCPT value within Buyer identification code field'},
     
-    # Inconsistent Buyer ID (pending implementation)
-    '7_66': {'sides': {'buyer'}, 'validation_type': 'pending', 'description': 'Inconsistent Buyer identification code reported across suspected same individual'},
+    # Inconsistent Buyer ID
+    '7_66': {'sides': {'buyer'}, 'validation_type': 'inconsistent_id', 'description': 'Inconsistent Buyer identification code reported across suspected same individual'},
     
     # Fund Trade Buyer Decision Maker
     '12_17': {'sides': {'buyer'}, 'validation_type': 'decision_maker', 'description': 'Incorrect buyer decision maker or buyer populated for fund trade'},
@@ -50,8 +50,8 @@ INCIDENT_CODE_MATRIX: Dict[str, IncidentMetadata] = {
     '16_21': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'Incorrect NIDN value within Seller identification code field'},
     '16_23': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'Incorrect CCPT value within Seller identification code field'},
     
-    # Inconsistent Seller ID (pending implementation)
-    '16_20': {'sides': {'seller'}, 'validation_type': 'pending', 'description': 'Inconsistent Seller identification code reported across suspected same individual'},
+    # Inconsistent Seller ID
+    '16_20': {'sides': {'seller'}, 'validation_type': 'inconsistent_id', 'description': 'Inconsistent Seller identification code reported across suspected same individual'},
     
     # Fund Trade Seller Decision Maker
     '21_17': {'sides': {'seller'}, 'validation_type': 'decision_maker', 'description': 'Incorrect seller decision maker or seller populated for fund trade'},
@@ -225,6 +225,57 @@ def get_available_validation_types() -> Set[str]:
         
     Example:
         >>> sorted(get_available_validation_types())
-        ['decision_maker', 'pricing', 'standard_id']
+        ['decision_maker', 'inconsistent_id', 'pricing', 'standard_id']
     """
     return {data['validation_type'] for data in INCIDENT_CODE_MATRIX.values()}
+
+
+def get_inconsistent_buyer_incident_codes() -> Set[str]:
+    """
+    Get buyer incident codes requiring inconsistent ID validation.
+    
+    Returns:
+        Set of incident codes with validation_type='inconsistent_id' and buyer side.
+        
+    Example:
+        >>> get_inconsistent_buyer_incident_codes()
+        {'7_66'}
+    """
+    return {code for code, data in INCIDENT_CODE_MATRIX.items() 
+            if 'buyer' in data['sides'] and data['validation_type'] == 'inconsistent_id'}
+
+
+def get_inconsistent_seller_incident_codes() -> Set[str]:
+    """
+    Get seller incident codes requiring inconsistent ID validation.
+    
+    Returns:
+        Set of incident codes with validation_type='inconsistent_id' and seller side.
+        
+    Example:
+        >>> get_inconsistent_seller_incident_codes()
+        {'16_20'}
+    """
+    return {code for code, data in INCIDENT_CODE_MATRIX.items() 
+            if 'seller' in data['sides'] and data['validation_type'] == 'inconsistent_id'}
+
+
+def is_inconsistent_id_incident(incident_code: str) -> bool:
+    """
+    Check if an incident code requires inconsistent ID validation.
+    
+    Args:
+        incident_code: Incident code string (e.g., '7_66')
+        
+    Returns:
+        True if incident uses inconsistent_id validation type.
+        
+    Example:
+        >>> is_inconsistent_id_incident('7_66')
+        True
+        >>> is_inconsistent_id_incident('7_37')
+        False
+    """
+    if code_data := INCIDENT_CODE_MATRIX.get(incident_code):
+        return code_data['validation_type'] == 'inconsistent_id'
+    return False
