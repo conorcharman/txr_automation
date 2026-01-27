@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Buyer ID Validation Script v2.0
 ================================
