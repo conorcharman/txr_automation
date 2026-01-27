@@ -35,6 +35,9 @@ from txr_replay_core.config import ConfigManager
 from common.logger import create_logger
 from common.utils import DateParser, CharacterReplacement, safe_open_csv
 
+# Import column constants (replaces magic numbers)
+from core.data.constants import Phase3Columns, ClientErrorColumns
+
 # Local dataclass for Phase 3 specific client records
 @dataclass
 class ClientRecord:
@@ -100,28 +103,30 @@ class IncidentFileIndex:
     
     def _build_indexes(self):
         """Build all lookup indexes"""
+        cols = Phase3Columns  # Alias for readability
+        
         for i, row in enumerate(self.data_rows):
-            if len(row) < 22:  # Minimum for buyer ID at index 21
+            if len(row) < cols.MIN_COLS:  # Minimum for buyer ID at index 21
                 continue
                 
             # Index buyer data
-            buyer_id = row[21].strip().lower() if len(row) > 21 else ""
+            buyer_id = row[cols.BUYER_ID].strip().lower() if len(row) > cols.BUYER_ID else ""
             if buyer_id:
                 if buyer_id not in self.buyer_id_index:
                     self.buyer_id_index[buyer_id] = []
                 self.buyer_id_index[buyer_id].append(i)
             
             # Index seller data
-            seller_id = row[32].strip().lower() if len(row) > 32 else ""
+            seller_id = row[cols.SELLER_ID].strip().lower() if len(row) > cols.SELLER_ID else ""
             if seller_id:
                 if seller_id not in self.seller_id_index:
                     self.seller_id_index[seller_id] = []
                 self.seller_id_index[seller_id].append(i)
             
             # Index buyer names
-            buyer_first = row[24].strip().lower() if len(row) > 24 else ""
-            buyer_last = row[25].strip().lower() if len(row) > 25 else ""
-            buyer_dob = DateParser.parse_date(row[26]) if len(row) > 26 else ""
+            buyer_first = row[cols.BUYER_FIRST_NAME].strip().lower() if len(row) > cols.BUYER_FIRST_NAME else ""
+            buyer_last = row[cols.BUYER_LAST_NAME].strip().lower() if len(row) > cols.BUYER_LAST_NAME else ""
+            buyer_dob = DateParser.parse_date(row[cols.BUYER_DOB]) if len(row) > cols.BUYER_DOB else ""
             
             if buyer_first and buyer_last:
                 name_key = (buyer_first, buyer_last, buyer_dob or "")
@@ -130,9 +135,9 @@ class IncidentFileIndex:
                 self.buyer_name_index[name_key].append(i)
             
             # Index seller names
-            seller_first = row[35].strip().lower() if len(row) > 35 else ""
-            seller_last = row[36].strip().lower() if len(row) > 36 else ""
-            seller_dob = DateParser.parse_date(row[37]) if len(row) > 37 else ""
+            seller_first = row[cols.SELLER_FIRST_NAME].strip().lower() if len(row) > cols.SELLER_FIRST_NAME else ""
+            seller_last = row[cols.SELLER_LAST_NAME].strip().lower() if len(row) > cols.SELLER_LAST_NAME else ""
+            seller_dob = DateParser.parse_date(row[cols.SELLER_DOB]) if len(row) > cols.SELLER_DOB else ""
             
             if seller_first and seller_last:
                 name_key = (seller_first, seller_last, seller_dob or "")
@@ -141,15 +146,15 @@ class IncidentFileIndex:
                 self.seller_name_index[name_key].append(i)
             
             # Index buyer decision maker data
-            buyer_dm_id = row[27].strip().lower() if len(row) > 27 else ""
+            buyer_dm_id = row[cols.BUYER_DM_ID].strip().lower() if len(row) > cols.BUYER_DM_ID else ""
             if buyer_dm_id:
                 if buyer_dm_id not in self.buyer_dm_id_index:
                     self.buyer_dm_id_index[buyer_dm_id] = []
                 self.buyer_dm_id_index[buyer_dm_id].append(i)
             
-            buyer_dm_first = row[29].strip().lower() if len(row) > 29 else ""
-            buyer_dm_last = row[30].strip().lower() if len(row) > 30 else ""
-            buyer_dm_dob = DateParser.parse_date(row[31]) if len(row) > 31 else ""
+            buyer_dm_first = row[cols.BUYER_DM_FIRST_NAME].strip().lower() if len(row) > cols.BUYER_DM_FIRST_NAME else ""
+            buyer_dm_last = row[cols.BUYER_DM_LAST_NAME].strip().lower() if len(row) > cols.BUYER_DM_LAST_NAME else ""
+            buyer_dm_dob = DateParser.parse_date(row[cols.BUYER_DM_DOB]) if len(row) > cols.BUYER_DM_DOB else ""
             
             if buyer_dm_first and buyer_dm_last:
                 name_key = (buyer_dm_first, buyer_dm_last, buyer_dm_dob or "")
@@ -158,15 +163,15 @@ class IncidentFileIndex:
                 self.buyer_dm_name_index[name_key].append(i)
             
             # Index seller decision maker data
-            seller_dm_id = row[38].strip().lower() if len(row) > 38 else ""
+            seller_dm_id = row[cols.SELLER_DM_ID].strip().lower() if len(row) > cols.SELLER_DM_ID else ""
             if seller_dm_id:
                 if seller_dm_id not in self.seller_dm_id_index:
                     self.seller_dm_id_index[seller_dm_id] = []
                 self.seller_dm_id_index[seller_dm_id].append(i)
             
-            seller_dm_first = row[40].strip().lower() if len(row) > 40 else ""
-            seller_dm_last = row[41].strip().lower() if len(row) > 41 else ""
-            seller_dm_dob = DateParser.parse_date(row[42]) if len(row) > 42 else ""
+            seller_dm_first = row[cols.SELLER_DM_FIRST_NAME].strip().lower() if len(row) > cols.SELLER_DM_FIRST_NAME else ""
+            seller_dm_last = row[cols.SELLER_DM_LAST_NAME].strip().lower() if len(row) > cols.SELLER_DM_LAST_NAME else ""
+            seller_dm_dob = DateParser.parse_date(row[cols.SELLER_DM_DOB]) if len(row) > cols.SELLER_DM_DOB else ""
             
             if seller_dm_first and seller_dm_last:
                 name_key = (seller_dm_first, seller_dm_last, seller_dm_dob or "")
@@ -498,13 +503,14 @@ class Phase3Processor:
     
     def _create_lookup_result(self, row: List[str], match_type: str) -> LookupResult:
         """Create lookup result from row data"""
+        cols = ClientErrorColumns  # Alias for readability
         try:
-            error_flag = row[4].strip() if len(row) > 4 else ""
-            transaction_ref = row[0].strip() if len(row) > 0 else ""
+            error_flag = row[cols.ERROR_FLAG].strip() if len(row) > cols.ERROR_FLAG else ""
+            transaction_ref = row[cols.TRANSACTION_REF].strip() if len(row) > cols.TRANSACTION_REF else ""
             
             if error_flag.upper() == 'Y':
-                correction = row[5].strip() if len(row) > 5 else ""
-                correction_field = row[6].strip() if len(row) > 6 else ""
+                correction = row[cols.CORRECTION].strip() if len(row) > cols.CORRECTION else ""
+                correction_field = row[cols.CORRECTION_FIELD].strip() if len(row) > cols.CORRECTION_FIELD else ""
             else:
                 correction = "No Change"
                 correction_field = ""

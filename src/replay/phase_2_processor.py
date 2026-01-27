@@ -31,6 +31,9 @@ from txr_replay_core.config import ConfigManager
 from common.logger import create_logger
 from common.utils import CharacterReplacement, safe_open_csv
 
+# Import column constants (replaces magic numbers)
+from core.data.constants import Phase2SingleColumns, Phase2CombinedColumns, ClientErrorColumns
+
 class IncidentFileIndex:
     """Optimized incident file with pre-built indexes for O(1) transaction reference lookups"""
     
@@ -131,20 +134,22 @@ class Phase2Processor:
     def get_column_mapping(self, file_type: str) -> Dict[str, int]:
         """Get column mappings based on file type"""
         if file_type == 'single':
+            cols = Phase2SingleColumns
             return {
-                'incident_code': 0,
-                'agrees': 8,
-                'correction_field': 9, 
-                'correction_value': 10,
-                'transaction_ref': 13
+                'incident_code': cols.INCIDENT_CODE,
+                'agrees': cols.AGREES,
+                'correction_field': cols.CORRECTION_FIELD, 
+                'correction_value': cols.CORRECTION_VALUE,
+                'transaction_ref': cols.TRANSACTION_REF
             }
         else:  # combined
+            cols = Phase2CombinedColumns
             return {
-                'incident_code': 0,
-                'agrees': 7,
-                'correction_field': 8,
-                'correction_value': 9,
-                'transaction_ref': 12
+                'incident_code': cols.INCIDENT_CODE,
+                'agrees': cols.AGREES,
+                'correction_field': cols.CORRECTION_FIELD,
+                'correction_value': cols.CORRECTION_VALUE,
+                'transaction_ref': cols.TRANSACTION_REF
             }
     
     def parse_incident_codes(self, incident_codes_str: str) -> List[str]:
@@ -269,13 +274,14 @@ class Phase2Processor:
     
     def _create_lookup_result(self, row: List[str]) -> LookupResult:
         """Create lookup result from incident file row"""
+        cols = ClientErrorColumns  # Alias for readability
         try:
-            error_flag = row[4].strip() if len(row) > 4 else ""
-            transaction_ref = row[0].strip() if len(row) > 0 else ""
+            error_flag = row[cols.ERROR_FLAG].strip() if len(row) > cols.ERROR_FLAG else ""
+            transaction_ref = row[cols.TRANSACTION_REF].strip() if len(row) > cols.TRANSACTION_REF else ""
             
             if error_flag.upper() == 'Y':
-                correction = row[5].strip() if len(row) > 5 else ""
-                correction_field = row[6].strip() if len(row) > 6 else ""
+                correction = row[cols.CORRECTION].strip() if len(row) > cols.CORRECTION else ""
+                correction_field = row[cols.CORRECTION_FIELD].strip() if len(row) > cols.CORRECTION_FIELD else ""
                 # Keep original values for consistency checking
                 # Character replacement done at output time
             else:

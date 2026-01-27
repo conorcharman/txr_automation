@@ -14,7 +14,8 @@ Last updated: January 2026
 
 Validation Types:
 - 'standard_id': Standard identification validation (buyer or seller determined by 'sides')
-- 'decision_maker': Inconsistent decision maker validation (requires chronological analysis)
+- 'decision_maker': Decision maker validation for fund trades
+- 'pending': Validation logic not yet implemented (scheduled for future migration)
 - 'pricing': Pricing data validation
 
 The 'sides' parameter determines whether validation is buyer/seller focused.
@@ -33,26 +34,30 @@ class IncidentMetadata(TypedDict):
 # Incident code mappings with full metadata
 # Format: incident_code -> IncidentMetadata
 INCIDENT_CODE_MATRIX: Dict[str, IncidentMetadata] = {
-    # Standard Buyer ID Incidents (applicable for validation)
-    '7_35': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'Invalid buyer ID format'},
-    '7_37': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'FTBDM - standard txr'},
-    '7_39': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'FTBDM - Financing Trx ID, Seller DUNS'},
+    # Standard Buyer ID Incidents
+    '7_35': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'Incorrect CONCAT value within Buyer identification code field'},
+    '7_37': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'Incorrect NIDN value within Buyer identification code field'},
+    '7_39': {'sides': {'buyer'}, 'validation_type': 'standard_id', 'description': 'Incorrect CCPT value within Buyer identification code field'},
     
-    # Decision Maker Buyer Incidents (requires chronological analysis)
-    '7_66': {'sides': {'buyer'}, 'validation_type': 'decision_maker', 'description': 'Inconsistent buyer decision maker ID'},
-    '7_68': {'sides': {'buyer'}, 'validation_type': 'decision_maker', 'description': 'Inconsistent buyer decision maker ID'},
+    # Inconsistent Buyer ID (pending implementation)
+    '7_66': {'sides': {'buyer'}, 'validation_type': 'pending', 'description': 'Inconsistent Buyer identification code reported across suspected same individual'},
     
-    # Standard Seller ID Incidents (applicable for validation)
-    '16_19': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'Invalid seller ID format'},
-    '16_21': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'FTSDM - standard txr'},
-    '16_23': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'FTSDM - Financing Trx ID, Buyer DUNS'},
+    # Fund Trade Buyer Decision Maker
+    '12_17': {'sides': {'buyer'}, 'validation_type': 'decision_maker', 'description': 'Incorrect buyer decision maker or buyer populated for fund trade'},
     
-    # Decision Maker Seller Incidents (requires chronological analysis)
-    '16_20': {'sides': {'seller'}, 'validation_type': 'decision_maker', 'description': 'Inconsistent seller decision maker ID'},
-    '16_64': {'sides': {'seller'}, 'validation_type': 'decision_maker', 'description': 'Inconsistent seller decision maker ID'},
+    # Standard Seller ID Incidents
+    '16_19': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'Incorrect CONCAT value within Seller identification code field'},
+    '16_21': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'Incorrect NIDN value within Seller identification code field'},
+    '16_23': {'sides': {'seller'}, 'validation_type': 'standard_id', 'description': 'Incorrect CCPT value within Seller identification code field'},
+    
+    # Inconsistent Seller ID (pending implementation)
+    '16_20': {'sides': {'seller'}, 'validation_type': 'pending', 'description': 'Inconsistent Seller identification code reported across suspected same individual'},
+    
+    # Fund Trade Seller Decision Maker
+    '21_17': {'sides': {'seller'}, 'validation_type': 'decision_maker', 'description': 'Incorrect seller decision maker or seller populated for fund trade'},
     
     # Pricing Incidents
-    '35_3': {'sides': set(), 'validation_type': 'pricing', 'description': 'SCR pricing data validation'},
+    '35_3': {'sides': {'seller'}, 'validation_type': 'pricing', 'description': 'Incorrect net amount'},
 }
 
 
