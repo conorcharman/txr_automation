@@ -38,6 +38,14 @@ SAMPLE_REFS = [
 ]
 
 
+# Minimal DTF template for testing
+SAMPLE_DTF_TEMPLATE = """[DataTransfer]
+SourceType=SQL
+SQLStatement=<<SQL_CONTENT>>
+OutputFormat=CSV
+"""
+
+
 class TestSQLExtractGenerator:
     """Tests for SQLExtractGenerator class."""
     
@@ -46,6 +54,9 @@ class TestSQLExtractGenerator:
         self.temp_dir = Path(tempfile.mkdtemp())
         self.template_path = self.temp_dir / "template.sql"
         self.template_path.write_text(SAMPLE_TEMPLATE)
+        # Create DTF template (required by SQLExtractGenerator when output_format='both')
+        self.dtf_template_path = self.temp_dir / "AS400_DataTransfer_template.dtf"
+        self.dtf_template_path.write_text(SAMPLE_DTF_TEMPLATE)
     
     def teardown_method(self):
         """Clean up test fixtures."""
@@ -229,17 +240,21 @@ class TestSQLExtractGenerator:
         generator = SQLExtractGenerator(str(self.template_path), batch_size=900)
         output_dir = self.temp_dir / "extracts"
         
-        generated_files = generator.generate_extracts(
+        result = generator.generate_extracts(
             transaction_refs=SAMPLE_REFS,
             output_dir=str(output_dir),
             base_filename="test_extract"
         )
         
-        assert len(generated_files) == 1
-        assert generated_files[0].exists()
-        assert generated_files[0].name == "test_extract.sql"
+        # Result is a dict with sql_files and dtf_files keys
+        assert 'sql_files' in result
+        assert 'dtf_files' in result
+        assert len(result['sql_files']) == 1
+        sql_file = result['sql_files'][0]
+        assert sql_file.exists()
+        assert sql_file.name == "test_extract.sql"
         
-        content = generated_files[0].read_text()
+        content = sql_file.read_text()
         for ref in SAMPLE_REFS:
             assert f"'{ref}'" in content
     
@@ -248,17 +263,19 @@ class TestSQLExtractGenerator:
         generator = SQLExtractGenerator(str(self.template_path), batch_size=2)
         output_dir = self.temp_dir / "extracts"
         
-        generated_files = generator.generate_extracts(
+        result = generator.generate_extracts(
             transaction_refs=SAMPLE_REFS,
             output_dir=str(output_dir),
             base_filename="test_extract"
         )
         
-        assert len(generated_files) == 3  # 5 refs / 2 per batch = 3 files
-        assert all(f.exists() for f in generated_files)
-        assert generated_files[0].name == "test_extract_Extract1.sql"
-        assert generated_files[1].name == "test_extract_Extract2.sql"
-        assert generated_files[2].name == "test_extract_Extract3.sql"
+        # Result is a dict with sql_files and dtf_files keys
+        sql_files = result['sql_files']
+        assert len(sql_files) == 3  # 5 refs / 2 per batch = 3 files
+        assert all(f.exists() for f in sql_files)
+        assert sql_files[0].name == "test_extract_Extract1.sql"
+        assert sql_files[1].name == "test_extract_Extract2.sql"
+        assert sql_files[2].name == "test_extract_Extract3.sql"
     
     def test_get_summary(self):
         """Test generation summary statistics."""

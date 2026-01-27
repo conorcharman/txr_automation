@@ -62,6 +62,20 @@ from .data import (
     get_incident_description,
 )
 
+# Data - Constants (magic number replacements)
+from .data import (
+    ID_LENGTHS,
+    Phase3Columns,
+    Phase2SingleColumns,
+    Phase2CombinedColumns,
+    ClientErrorColumns,
+    ValidationThresholds,
+    IT_MONTH_LETTERS,
+    FI_CENTURY_MARKERS,
+    LT_CENTURY_GENDER_CODES,
+    LV_CENTURY_CODES,
+)
+
 __all__ = [
     # Logging
     'StructuredLogger',
@@ -97,4 +111,15 @@ __all__ = [
     'get_seller_incident_codes',
     'get_validation_type',
     'get_incident_description',
+    # Constants
+    'ID_LENGTHS',
+    'Phase3Columns',
+    'Phase2SingleColumns',
+    'Phase2CombinedColumns',
+    'ClientErrorColumns',
+    'ValidationThresholds',
+    'IT_MONTH_LETTERS',
+    'FI_CENTURY_MARKERS',
+    'LT_CENTURY_GENDER_CODES',
+    'LV_CENTURY_CODES',
 ]

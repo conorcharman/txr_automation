@@ -49,7 +49,8 @@ class TestSQLTemplateMapping:
     
     def test_buyer_id_incident_mapping(self):
         """Should map buyer ID incidents to BuyerID.sql."""
-        buyer_incidents = ['7_37', '7_39', '8_1', '9_1', '10_1']
+        # Only test with implemented standard_id buyer codes
+        buyer_incidents = ['7_35', '7_37', '7_39']
         
         for incident in buyer_incidents:
             result = get_sql_template_for_incident(incident, self.sql_dir)
@@ -57,7 +58,8 @@ class TestSQLTemplateMapping:
     
     def test_seller_id_incident_mapping(self):
         """Should map seller ID incidents to SellerID.sql."""
-        seller_incidents = ['16_21', '16_22', '17_2', '18_1', '19_1']
+        # Only test with implemented standard_id seller codes
+        seller_incidents = ['16_19', '16_21', '16_23']
         
         for incident in seller_incidents:
             result = get_sql_template_for_incident(incident, self.sql_dir)
@@ -70,7 +72,8 @@ class TestSQLTemplateMapping:
     
     def test_inconsistent_buyer_mapping(self):
         """Should map inconsistent buyer incidents to InconsistentBuyerID.sql."""
-        inconsistent_buyer = ['7_66', '7_68']
+        # Only 7_66 is implemented (7_68 was removed)
+        inconsistent_buyer = ['7_66']
         
         for incident in inconsistent_buyer:
             result = get_sql_template_for_incident(incident, self.sql_dir)
@@ -78,7 +81,8 @@ class TestSQLTemplateMapping:
     
     def test_inconsistent_seller_mapping(self):
         """Should map inconsistent seller incidents to InconsistentSellerID.sql."""
-        inconsistent_seller = ['16_20', '16_64']
+        # Only 16_20 is implemented (16_64 was removed)
+        inconsistent_seller = ['16_20']
         
         for incident in inconsistent_seller:
             result = get_sql_template_for_incident(incident, self.sql_dir)
@@ -86,7 +90,8 @@ class TestSQLTemplateMapping:
     
     def test_decision_maker_buyer_mapping(self):
         """Should map decision maker buyer incidents (12_*) to FTBDM.sql."""
-        dm_buyer = ['12_1', '12_17', '12_18', '12_29']
+        # Only 12_17 is implemented
+        dm_buyer = ['12_17']
         
         for incident in dm_buyer:
             result = get_sql_template_for_incident(incident, self.sql_dir)
@@ -94,7 +99,8 @@ class TestSQLTemplateMapping:
     
     def test_decision_maker_seller_mapping(self):
         """Should map decision maker seller incidents (21_*) to FTSDM.sql."""
-        dm_seller = ['21_1', '21_17', '21_20', '21_35']
+        # Only 21_17 is implemented
+        dm_seller = ['21_17']
         
         for incident in dm_seller:
             result = get_sql_template_for_incident(incident, self.sql_dir)
@@ -137,6 +143,14 @@ class TestBatchSQLGeneration:
         
         for name, content in templates.items():
             (self.sql_templates_dir / name).write_text(content)
+        
+        # Create DTF template (required when output_format='both')
+        dtf_template = """[DataTransfer]
+SourceType=SQL
+SQLStatement=<<SQL_CONTENT>>
+OutputFormat=CSV
+"""
+        (self.sql_templates_dir / "AS400_DataTransfer_template.dtf").write_text(dtf_template)
     
     def teardown_method(self):
         """Clean up temporary test files."""
@@ -189,8 +203,8 @@ class TestBatchSQLGeneration:
         # Check result
         assert result == 0
         
-        # Check output file exists
-        output_file = self.output_dir / "7_37_FY25_Q3.sql"
+        # Check output file exists (files go to csv/ subdir when output_format='both')
+        output_file = self.output_dir / "csv" / "7_37_FY25_Q3.sql"
         assert output_file.exists()
         
         # Check content contains transaction refs
@@ -234,9 +248,9 @@ class TestBatchSQLGeneration:
         # Check result
         assert result == 0
         
-        # Check all output files exist
+        # Check all output files exist (files go to csv/ subdir when output_format='both')
         for incident in incidents:
-            output_file = self.output_dir / f"{incident}_FY25_Q3.sql"
+            output_file = self.output_dir / "csv" / f"{incident}_FY25_Q3.sql"
             assert output_file.exists(), f"Output file not found: {output_file}"
     
     def test_splits_large_dataset(self):
@@ -273,9 +287,10 @@ class TestBatchSQLGeneration:
         assert result == 0
         
         # Should create 3 files: Extract1 (900), Extract2 (900), Extract3 (200)
-        assert (self.output_dir / "7_37_FY25_Q3_Extract1.sql").exists()
-        assert (self.output_dir / "7_37_FY25_Q3_Extract2.sql").exists()
-        assert (self.output_dir / "7_37_FY25_Q3_Extract3.sql").exists()
+        # Files go to csv/ subdir when output_format='both'
+        assert (self.output_dir / "csv" / "7_37_FY25_Q3_Extract1.sql").exists()
+        assert (self.output_dir / "csv" / "7_37_FY25_Q3_Extract2.sql").exists()
+        assert (self.output_dir / "csv" / "7_37_FY25_Q3_Extract3.sql").exists()
     
     def test_handles_missing_validated_csv(self):
         """Should handle missing validated CSV gracefully."""
@@ -308,11 +323,11 @@ class TestBatchSQLGeneration:
         
         sys.stdout = old_stdout
         
-        # Should return error code
+        # Should return error code (MISSING incident unknown)
         assert result == 1
         
-        # Should still create output for valid CSV
-        assert (self.output_dir / "7_37_FY25_Q3.sql").exists()
+        # Should still create output for valid CSV (files go to csv/ subdir)
+        assert (self.output_dir / "csv" / "7_37_FY25_Q3.sql").exists()
     
     def test_dry_run_mode(self):
         """Should not create files in dry run mode."""

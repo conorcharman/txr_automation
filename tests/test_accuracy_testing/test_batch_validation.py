@@ -125,8 +125,23 @@ class TestBuyerBatchValidation:
     
     def teardown_method(self):
         """Clean up temporary test files."""
+        # Close all logging handlers to release file locks (Windows issue)
+        import logging
+        for handler in logging.root.handlers[:]:
+            handler.close()
+            logging.root.removeHandler(handler)
+        
         if Path(self.test_dir).exists():
-            shutil.rmtree(self.test_dir)
+            try:
+                shutil.rmtree(self.test_dir)
+            except PermissionError:
+                # On Windows, file locks can persist briefly
+                import time
+                time.sleep(0.1)
+                try:
+                    shutil.rmtree(self.test_dir)
+                except PermissionError:
+                    pass  # Best effort cleanup
     
     def create_buyer_template(self, fiscal_year: str, quarter: str, incident: str) -> Path:
         """Create a sample buyer ID validation template CSV."""
@@ -178,8 +193,9 @@ TXN003,ACC003,,,,,B,11111111,PASSPORT,Bob,Johnson,1992-12-20,M,CA,
     
     def test_processes_multiple_incidents(self):
         """Should process multiple incidents in batch mode."""
-        # Create templates
-        incidents = ['7_37', '16_21', '35_3']
+        # Create templates - use only buyer incidents (standard_id type)
+        # 7_35, 7_37, 7_39 are valid buyer ID incidents
+        incidents = ['7_35', '7_37', '7_39']
         for incident in incidents:
             self.create_buyer_template('FY25', 'Q3', incident)
         
@@ -309,8 +325,22 @@ class TestSellerBatchValidation:
     
     def teardown_method(self):
         """Clean up temporary test files."""
+        # Close all logging handlers to release file locks (Windows issue)
+        import logging
+        for handler in logging.root.handlers[:]:
+            handler.close()
+            logging.root.removeHandler(handler)
+        
         if Path(self.test_dir).exists():
-            shutil.rmtree(self.test_dir)
+            try:
+                shutil.rmtree(self.test_dir)
+            except PermissionError:
+                import time
+                time.sleep(0.1)
+                try:
+                    shutil.rmtree(self.test_dir)
+                except PermissionError:
+                    pass  # Best effort cleanup
     
     def create_seller_template(self, fiscal_year: str, quarter: str, incident: str) -> Path:
         """Create a sample seller ID validation template CSV."""
@@ -326,8 +356,9 @@ TXN002,ACC002,,,,,S,12345678,PASSPORT,Charlie,Brown,1991-07-22,M,GB,
         return filepath
     
     def test_processes_multiple_incidents(self):
-        """Should process multiple incidents in batch mode."""
-        incidents = ['7_37', '16_21']
+        """Should process multiple seller incidents in batch mode."""
+        # Use only seller incidents (16_19, 16_21, 16_23 are standard_id seller)
+        incidents = ['16_19', '16_21', '16_23']
         for incident in incidents:
             self.create_seller_template('FY25', 'Q3', incident)
         
@@ -369,8 +400,22 @@ class TestPricingBatchValidation:
     
     def teardown_method(self):
         """Clean up temporary test files."""
+        # Close all logging handlers to release file locks (Windows issue)
+        import logging
+        for handler in logging.root.handlers[:]:
+            handler.close()
+            logging.root.removeHandler(handler)
+        
         if Path(self.test_dir).exists():
-            shutil.rmtree(self.test_dir)
+            try:
+                shutil.rmtree(self.test_dir)
+            except PermissionError:
+                import time
+                time.sleep(0.1)
+                try:
+                    shutil.rmtree(self.test_dir)
+                except PermissionError:
+                    pass  # Best effort cleanup
     
     def create_pricing_template(self, fiscal_year: str, quarter: str, incident: str) -> Path:
         """Create a sample pricing validation template CSV."""
@@ -386,8 +431,9 @@ TXN002,200.00,190.00,10.00
         return filepath
     
     def test_processes_multiple_incidents(self):
-        """Should process multiple incidents in batch mode."""
-        incidents = ['35_3', '7_37']
+        """Should process pricing incident in batch mode."""
+        # Only 35_3 is a pricing incident (7_37 is buyer standard_id)
+        incidents = ['35_3']
         for incident in incidents:
             self.create_pricing_template('FY25', 'Q3', incident)
         
@@ -429,8 +475,22 @@ class TestBatchValidationDryRun:
     
     def teardown_method(self):
         """Clean up temporary test files."""
+        # Close all logging handlers to release file locks (Windows issue)
+        import logging
+        for handler in logging.root.handlers[:]:
+            handler.close()
+            logging.root.removeHandler(handler)
+        
         if Path(self.test_dir).exists():
-            shutil.rmtree(self.test_dir)
+            try:
+                shutil.rmtree(self.test_dir)
+            except PermissionError:
+                import time
+                time.sleep(0.1)
+                try:
+                    shutil.rmtree(self.test_dir)
+                except PermissionError:
+                    pass  # Best effort cleanup
     
     def create_buyer_template(self, fiscal_year: str, quarter: str, incident: str) -> Path:
         """Create a sample template."""

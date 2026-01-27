@@ -15,8 +15,13 @@ Covers: BE, BG, CZ, DK, EE, FI, IS, IT, LT, LV, NO, RO, SE, SI, SK
 """
 
 from datetime import datetime
-from typing import Optional, Tuple
+from typing import Optional, Tuple, List
 import re
+import logging
+
+
+# Module logger
+logger = logging.getLogger(__name__)
 
 
 class IDLogicValidator:
@@ -40,6 +45,7 @@ class IDLogicValidator:
         """
         self.verbose = verbose
         self.last_failure_reason = ""  # Stores reason for most recent validation failure
+        self.validation_warnings: List[str] = []  # Track validation exceptions/warnings
     
     def validate_id_logic(
         self,
@@ -112,6 +118,34 @@ class IDLogicValidator:
             print(f"[LOGIC VALIDATOR] No validator for country {country_code}, passing by default")
         return True
     
+    def _log_validation_exception(self, country: str, nidn: str, error: Exception, context: str = "") -> None:
+        """
+        Log a validation exception for tracking.
+        
+        Args:
+            country: Country code being validated
+            nidn: The NIDN value
+            error: The exception that occurred
+            context: Additional context about what was being validated
+        """
+        warning_msg = f"Validation exception for {country} NIDN '{nidn}': {error}"
+        if context:
+            warning_msg = f"{context} - {warning_msg}"
+        
+        self.validation_warnings.append(warning_msg)
+        logger.warning(warning_msg)
+        
+        if self.verbose:
+            print(f"[VALIDATION WARNING] {warning_msg}")
+    
+    def get_warnings(self) -> List[str]:
+        """Get list of validation warnings encountered."""
+        return self.validation_warnings.copy()
+    
+    def clear_warnings(self) -> None:
+        """Clear the list of validation warnings."""
+        self.validation_warnings.clear()
+    
     # ========================================================================
     # BELGIAN NIDN VALIDATION (BE)
     # Format: YYMMDD-XXX-CD (11 digits)
@@ -155,8 +189,9 @@ class IDLogicValidator:
                 return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("BE", nidn, e, "Belgian NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # BULGARIAN NIDN VALIDATION (BG)
@@ -197,8 +232,9 @@ class IDLogicValidator:
                 return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("BG", nidn, e, "Bulgarian NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # CZECH NIDN VALIDATION (CZ)
@@ -258,8 +294,9 @@ class IDLogicValidator:
                     return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("CZ", nidn, e, "Czech NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # DANISH NIDN VALIDATION (DK)
@@ -350,8 +387,9 @@ class IDLogicValidator:
                 return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("EE", nidn, e, "Estonian NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # FINNISH NIDN VALIDATION (FI)
@@ -411,8 +449,9 @@ class IDLogicValidator:
                 return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("FI", nidn, e, "Finnish NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # ICELANDIC NIDN VALIDATION (IS)
@@ -494,9 +533,8 @@ class IDLogicValidator:
             return dob_match and gender_match
             
         except Exception as e:
-            if self.verbose:
-                print(f"Error validating Italian fiscal code {fiscal_code}: {e}")
-            return True  # Pass on validation errors
+            self._log_validation_exception("IT", fiscal_code, e, "Italian fiscal code validation")
+            return True  # Pass with warning logged
     
     def _extract_italian_dob(self, fiscal_code: str) -> Optional[str]:
         """
@@ -609,8 +647,9 @@ class IDLogicValidator:
                 return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("LT", nidn, e, "Lithuanian NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # LATVIAN NIDN VALIDATION (LV)
@@ -653,8 +692,9 @@ class IDLogicValidator:
                 return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("LV", nidn, e, "Latvian NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # NORWEGIAN NIDN VALIDATION (NO)
@@ -738,8 +778,9 @@ class IDLogicValidator:
                 return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("RO", nidn, e, "Romanian NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # SWEDISH NIDN VALIDATION (SE)
@@ -793,8 +834,9 @@ class IDLogicValidator:
                 return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("SE", nidn, e, "Swedish NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # SLOVENIAN NIDN VALIDATION (SI)
@@ -850,8 +892,9 @@ class IDLogicValidator:
                 return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("SI", nidn, e, "Slovenian NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # SLOVAK NIDN VALIDATION (SK)
@@ -905,8 +948,9 @@ class IDLogicValidator:
                     return False
             
             return True
-        except (ValueError, IndexError):
-            return True
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("SK", nidn, e, "Slovak NIDN validation")
+            return True  # Pass with warning logged
     
     # ========================================================================
     # HELPER METHODS

@@ -53,6 +53,42 @@ from core.data.incident_codes import (
     get_available_validation_types,
 )
 
+# Constants - magic number replacements
+from core.data.constants import (
+    # ID lengths by country
+    ID_LENGTHS,
+    IDLength,
+    IDSlice,
+    # ID slice positions by country
+    DOBSlices,
+    BE_SLICES,
+    BG_SLICES,
+    CZ_SLICES,
+    EE_SLICES,
+    FI_SLICES,
+    IT_SLICES,
+    LT_SLICES,
+    LV_SLICES,
+    PL_SLICES,
+    RO_SLICES,
+    SE_SLICES,
+    SK_SLICES,
+    SI_SLICES,
+    # Column indices
+    Phase3Columns,
+    Phase2SingleColumns,
+    Phase2CombinedColumns,
+    ClientErrorColumns,
+    # Validation thresholds
+    ValidationThresholds,
+    # Country-specific mappings
+    IT_MONTH_LETTERS,
+    IT_MONTH_NUMBERS,
+    FI_CENTURY_MARKERS,
+    LT_CENTURY_GENDER_CODES,
+    LV_CENTURY_CODES,
+)
+
 __all__ = [
     # Country codes
     "Country",
@@ -82,4 +118,32 @@ __all__ = [
     "get_incidents_by_validation_type",
     "get_incident_description",
     "get_available_validation_types",
+    # Constants
+    "ID_LENGTHS",
+    "IDLength",
+    "IDSlice",
+    "DOBSlices",
+    "BE_SLICES",
+    "BG_SLICES",
+    "CZ_SLICES",
+    "EE_SLICES",
+    "FI_SLICES",
+    "IT_SLICES",
+    "LT_SLICES",
+    "LV_SLICES",
+    "PL_SLICES",
+    "RO_SLICES",
+    "SE_SLICES",
+    "SK_SLICES",
+    "SI_SLICES",
+    "Phase3Columns",
+    "Phase2SingleColumns",
+    "Phase2CombinedColumns",
+    "ClientErrorColumns",
+    "ValidationThresholds",
+    "IT_MONTH_LETTERS",
+    "IT_MONTH_NUMBERS",
+    "FI_CENTURY_MARKERS",
+    "LT_CENTURY_GENDER_CODES",
+    "LV_CENTURY_CODES",
 ]
