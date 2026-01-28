@@ -57,12 +57,11 @@ from src.accuracy_testing.processor import (
     AccuracyProcessorConfig
 )
 
-# Import common utilities
+# Import core utilities
 try:
-    from src.common.logger import create_logger, StructuredLogger
-    from src.common.utils import safe_open_csv
+    from core import create_logger, StructuredLogger, safe_open_csv
 except ImportError:
-    # Fallback if common not available
+    # Fallback if core not available
     import logging
     def create_logger(name, log_dir, log_level='INFO'):
         logger = logging.getLogger(name)

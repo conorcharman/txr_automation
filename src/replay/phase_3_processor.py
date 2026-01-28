@@ -29,14 +29,18 @@ from difflib import SequenceMatcher
 from collections import defaultdict
 from pathlib import Path
 
-# Import from txr_replay_core library
-from txr_replay_core.data_structures import ReplayRecord, LookupResult, ProcessingStats
-from txr_replay_core.config import ConfigManager
-from common.logger import create_logger
-from common.utils import DateParser, CharacterReplacement, safe_open_csv
-
-# Import column constants (replaces magic numbers)
-from core.data.constants import Phase3Columns, ClientErrorColumns
+# Import from core library
+from core import (
+    ReplayRecord,
+    LookupResult,
+    ProcessingStats,
+    ConfigManager,
+    create_logger,
+    DateParser,
+    CharacterReplacement,
+    safe_open_csv,
+)
+from core.data import Phase3Columns, ClientErrorColumns
 
 # Local dataclass for Phase 3 specific client records
 @dataclass

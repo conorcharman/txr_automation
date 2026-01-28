@@ -26,7 +26,7 @@ except ImportError:
     # Fallback to pandas if openpyxl not available
     import pandas as pd
 
-from txr_replay_core import ConfigManager, create_logger
+from core import ConfigManager, create_logger
 
 
 class XLSXConverter:

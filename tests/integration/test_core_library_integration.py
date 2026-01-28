@@ -16,7 +16,7 @@ from pathlib import Path
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from txr_replay_core import (
+from core import (
     DateParser, CharacterReplacement, ConfigManager, 
     ProcessingStats, ReplayRecord, LookupResult, UnaVistaTransaction
 )
@@ -270,8 +270,8 @@ class TestCoreLibraryExports:
     """Test that core library exports all necessary components."""
     
     def test_all_exports_available(self):
-        """Test all expected exports are available from txr_replay_core."""
-        from txr_replay_core import (
+        """Test all expected exports are available from core."""
+        from core import (
             ReplayRecord,
             LookupResult,
             UnaVistaTransaction,
@@ -303,7 +303,7 @@ class TestCoreLibraryExports:
     def test_no_duplicate_implementations(self):
         """Test that scripts don't contain duplicate implementations."""
         # This would be a code review check, but we can verify imports work
-        from txr_replay_core import DateParser, CharacterReplacement
+        from core import DateParser, CharacterReplacement
         
         # Verify these are classes, not duplicated functions
         assert hasattr(DateParser, 'parse_date')
@@ -329,7 +329,7 @@ class TestFileDiscoveryIntegration:
         file2.write_text("new")
         
         # Find latest file matching pattern
-        from txr_replay_core import FileDiscovery
+        from core import FileDiscovery
         latest = FileDiscovery.find_latest_file(str(input_dir), "test_*.csv")
         
         assert latest is not None
@@ -339,7 +339,7 @@ class TestFileDiscoveryIntegration:
         """Test FileDiscovery returns None when no files match."""
         input_dir = temp_data_dir / "input"
         
-        from txr_replay_core import FileDiscovery
+        from core import FileDiscovery
         result = FileDiscovery.find_latest_file(str(input_dir), "nonexistent_*.csv")
         
         assert result is None

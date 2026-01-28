@@ -3,7 +3,7 @@ Tests for DateParser utility
 """
 
 import pytest
-from common.utils import DateParser
+from core import DateParser
 
 
 class TestDateParser:

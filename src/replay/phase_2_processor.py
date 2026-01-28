@@ -25,14 +25,17 @@ from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any, Set
 from pathlib import Path
 
-# Import from txr_replay_core library
-from txr_replay_core.data_structures import ReplayRecord, LookupResult, ProcessingStats
-from txr_replay_core.config import ConfigManager
-from common.logger import create_logger
-from common.utils import CharacterReplacement, safe_open_csv
-
-# Import column constants (replaces magic numbers)
-from core.data.constants import Phase2SingleColumns, Phase2CombinedColumns, ClientErrorColumns
+# Import from core library
+from core import (
+    ReplayRecord,
+    LookupResult,
+    ProcessingStats,
+    ConfigManager,
+    create_logger,
+    CharacterReplacement,
+    safe_open_csv,
+)
+from core.data import Phase2SingleColumns, Phase2CombinedColumns, ClientErrorColumns
 
 class IncidentFileIndex:
     """Optimized incident file with pre-built indexes for O(1) transaction reference lookups"""

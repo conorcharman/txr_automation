@@ -1,33 +1,28 @@
 # Transaction Reporting Automation: VBA to Python Migration Plan
 
-**Version:** 2.1  
-**Date:** 23 December 2025  
-**Status:** Phase 0 In Progress  
+**Version:** 2.2  
+**Date:** 28 January 2026  
+**Status:** Phase 4 Complete, Phase 3 & 5 Pending  
 
 ---
 
 ## Git Branch Strategy
 
-**Phase 0 (Refactoring):** Use `phase0-refactoring` branch  
-**Phases 1-7 (VBA Migration):** Use `vba-migration` branch (created after Phase 0 completes)
+**All VBA Migration work:** Use `vba-migration` branch  
+**Phase 0 (Refactoring):** ✅ Completed and merged to main
 
-See [Git_Branching_Guide.md](Git_Branching_Guide.md) for detailed instructions on:
+See [Git_Branching_Guide.md](../guides/Git_Branching_Guide.md) for detailed instructions on:
 
 - Branch creation and workflow
 - Commit best practices
 - Merging strategies
 
-**Quick Reference:**
+**Current Branch:**
 
 ```bash
-# Currently on Phase 0
-git checkout phase0-refactoring
-
-# When starting VBA migration (after Phase 0 merges to main)
-git checkout main
-git pull origin main
-git checkout -b vba-migration
-git push -u origin vba-migration
+# Working on VBA migration
+git checkout vba-migration
+git pull origin vba-migration
 ```
 
 ---
@@ -101,19 +96,16 @@ The CSV-first approach significantly reduces conversion complexity:
 
 **Standardization Framework:**
 
-1. **Create Shared Core Library** (`txr_core` module)
+1. **Create Shared Core Library** (`core` module)
 
    ```markdown
-   txr_core/
+   src/core/
    ├── __init__.py
-   ├── config.py          # Configuration constants
-   ├── data_structures.py # ClientRecord, ValidationContext classes
-   ├── validators.py      # Core validation functions
-   ├── id_validation.py   # ID format/logic validation
-   ├── reference_data.py  # Country codes, ID formats loader
-   ├── csv_utils.py       # CSV reading/writing utilities
-   ├── regex_engine.py    # Regex pattern matching
-   └── schema.py          # CSV schema definitions & validation
+   ├── config/           # Configuration management
+   ├── data/             # Reference data, constants, data structures
+   ├── logging/          # Structured logging
+   ├── utils/            # Utilities (date parsing, CSV, file discovery)
+   └── validation/       # Core validation functions
    ```
 
 2. **Common Functions Must Be Identical**
@@ -1067,108 +1059,64 @@ and must be completed first because:
 
 ## Next Steps
 
-### **Phase 0: Refactor Existing Python Scripts (Weeks 1-8)**
+### **Phase 0: Refactor Existing Python Scripts** ✅ **COMPLETED**
 
-See **[Existing_Python_Scripts_Refactoring_Plan.md](Existing_Python_Scripts_Refactoring_Plan.md)**
-for detailed plan.
+See **archive/Phase_0_Refactoring_Plan.md** for historical details.
 
-**Summary:**
-
-- Weeks 1-2: Extract shared core library (`txr_replay_core`)
-- Weeks 3-6: Refactor individual scripts (Phase 2, 3, 3 Final, XLSX Converter)
-- Week 7: Integration testing and parallel running
-- Week 8: Documentation and training
-
-**Critical Success Factor:** All existing scripts must work identically after refactoring before
-proceeding to VBA migration.
+**Summary:** Core library refactoring completed. All replay scripts use unified `core` module.
 
 ---
 
-### **Phase 1: Foundation (Weeks 9-10, formerly Weeks 1-2)** ✅ **COMPLETED (19 January 2026)**
+### **Phase 1: Foundation** ✅ **COMPLETED (19 January 2026)**
 
 **Note:** Phase 1 successfully created the accuracy testing core library in `src/accuracy_testing/core/`.
 
-**Objectives:**
-
-- ✅ Extend functionality for accuracy testing workflows
-- ✅ Establish foundation for VBA conversion
-- ✅ Create embedded reference data (no CSV dependencies)
-- ✅ Document all validation patterns and schemas
-
-**Completed Activities:**
-
-1. **Accuracy Testing Core Library** ✅
-   - ✅ Created `src/accuracy_testing/core/` directory structure
-   - ✅ Implemented country codes module (249 countries with EEA status)
-   - ✅ Implemented ID formats module (67 patterns across 40+ countries)
-   - ✅ Implemented ID validation module (NIDN, CONCAT, CCPT, LEI)
-   - ✅ Implemented core validators (date, string, numeric, country)
-   - ✅ Implemented CSV schema definitions
-
-2. **Testing & Documentation** ✅
-   - ✅ Created comprehensive test suite in `tests/test_accuracy_testing/`
-   - ✅ Created demo script (`demo_phase1.py`)
-   - ✅ Created complete README documentation
-   - ✅ All tests passing with 90%+ coverage
-
-3. **Project Organization** ✅
-   - ✅ Separated accuracy testing modules from replay core
-   - ✅ Clean public API with proper exports
-   - ✅ Updated project documentation
-
-### **Week 9-10 Deliverables** ✅
-
-- ✅ `accuracy_testing.core` package initialized
-- ✅ Country codes and ID formats embedded (no CSV dependencies)
-- ✅ Comprehensive validation framework
-- ✅ CSV schema utilities
-- ✅ Test framework with 90%+ coverage
-- ✅ Demo script showcasing all functionality
-- ✅ Complete documentation
+**Completed:**
+- ✅ Accuracy testing core library with country codes, ID formats, validators
+- ✅ Comprehensive test suite (90%+ coverage)
+- ✅ Demo scripts and documentation
 
 ---
 
-### **Phase 2: Simple ID Validation Scripts (Next Steps)**
+### **Phase 2: Simple ID Validation Scripts** ✅ **COMPLETED (21 January 2026)**
 
-**Note:** This phase now builds on the `accuracy_testing.core` library created in Phase 1.
+**Completed Scripts:**
+- ✅ `buyer_id_validation.py` - Migrated from BuyerIDValidation5_6.vb
+- ✅ `seller_id_validation.py` - Migrated from SellerIDValidation5_6.vb
+- ✅ `pricing_validation.py` - Migrated from pricing_data_validation_v1.0.vb
+- ✅ `sql_extract_generator.py` - Migrated from SCR_extract_generator_v1_0.vb
 
-**Activities:**
+**All scripts use unified `core` module and pass 336+ tests.**
 
-1. **Environment Setup**
-   - [ ] Verify Python 3.10+ environment
-   - [ ] Extend virtual environment with VBA conversion dependencies
-   - [ ] Install additional dependencies (if needed)
-   - [ ] Verify IDE setup for VBA conversion work
+---
 
-2. **Core Library Extension**
-   - [ ] Create `txr_core/` directory structure (separate from `txr_replay_core`)
-   - [ ] Identify shared code between replay and accuracy testing
-   - [ ] Create adapter layer between `txr_replay_core` and `txr_core`
-   - [ ] Port relevant utilities to `txr_core`
+### **Phase 3: Decision Maker Validation** 🔲 **NOT STARTED**
 
-3. **Project Initialization**
-   - [ ] Extend git repository structure
-   - [ ] Update `requirements.txt` with VBA conversion needs
-   - [ ] Extend CI/CD pipeline for VBA conversions
-   - [ ] Set up project tracking for VBA migration phase
+**Scripts to convert:**
+- ValidateFTBDM3_0.vb → `validate_ftbdm.py` (Buyer Decision Maker)
+- ValidateFTSDM3_0.vb → `validate_ftsdm.py` (Seller Decision Maker)
 
-4. **Planning & Documentation**
-   - [ ] Review and approve VBA migration plan (this document)
-   - [ ] Schedule kickoff meeting for VBA migration
-   - [ ] Identify additional stakeholders
-   - [ ] Review existing VBA code in detail
-   - [ ] Document current workflows
-   - [ ] Create CSV templates for accuracy testing workflows
-   - [ ] Define CSV schemas for accuracy testing
+---
 
-### **Week 9-10 Deliverables**
+### **Phase 4: Core ID Validation (Inconsistent ID)** ✅ **COMPLETED (27 January 2026)**
 
-- `txr_core` package initialized (builds on `txr_replay_core`)
-- `ReferenceDataManager` class implemented
-- CSV utilities for accuracy testing
-- VBA→Python function mapping document
-- Test framework extended for VBA conversions
-- Development environment fully documented
+**Completed Scripts:**
+- ✅ `inconsistent_buyer_id_validation.py` - Migrated from InconsistentBuyerIDValidation1_3.vb
+- ✅ `inconsistent_seller_id_validation.py` - Migrated from InconsistentSellerIDValidation1_3.vb
+
+**Features implemented:**
+- Chronological grouping by Person Code
+- Trade_Date_Time based ordering
+- Prior valid ID correction algorithm
+- Fallback ID detection (CC_PersonCode pattern)
+
+---
+
+### **Phase 5: Data Operations** 🔲 **NOT STARTED**
+
+**Scripts to convert:**
+- IncidentLookup1_1.vb → `incident_lookup.py`
+- DataPush1_0.vb → `data_push.py`
 
 ---
 

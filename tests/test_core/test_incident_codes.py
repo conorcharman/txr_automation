@@ -12,7 +12,7 @@ Tests the implemented incident codes:
 """
 
 import pytest
-from txr_replay_core.incident_codes import (
+from core import (
     INCIDENT_CODE_MATRIX,
     get_client_types,
     is_buyer_incident,

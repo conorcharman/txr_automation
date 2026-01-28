@@ -38,9 +38,9 @@ from .core import (
     IDType,
 )
 
-# Import structured logger from common
+# Import structured logger from core
 try:
-    from common.logger import StructuredLogger
+    from core import StructuredLogger
     LOGGER_AVAILABLE = True
 except ImportError:
     LOGGER_AVAILABLE = False

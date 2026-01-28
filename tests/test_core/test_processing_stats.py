@@ -3,7 +3,7 @@ Tests for ProcessingStats data structure
 """
 
 import pytest
-from txr_replay_core.data_structures import ProcessingStats
+from core import ProcessingStats
 
 
 class TestProcessingStats:

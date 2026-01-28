@@ -3,7 +3,7 @@ Tests for CharacterReplacement utility
 """
 
 import pytest
-from common.utils import CharacterReplacement
+from core import CharacterReplacement
 
 
 class TestCharacterReplacement:

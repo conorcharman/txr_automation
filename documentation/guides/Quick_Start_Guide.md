@@ -120,7 +120,7 @@ python -m src.utils.xlsx_csv_converter
 ### 1. Import the Library
 
 ```python
-from txr_replay_core import (
+from core import (
     ReplayRecord,
     LookupResult,
     UnaVistaTransaction,
@@ -128,9 +128,9 @@ from txr_replay_core import (
     DateParser,
     CharacterReplacement,
     FileDiscovery,
+    ConfigManager,
+    create_logger,
 )
-from txr_replay_core.config import ConfigManager
-from txr_replay_core.logger import create_logger
 ```
 
 ### 2. Set Up Configuration
@@ -300,17 +300,17 @@ FileDiscovery.ensure_directory_exists("/path/to/output")
 ```python
 #!/usr/bin/env python3
 """
-Example: Phase 2 Processor using txr_replay_core
+Example: Phase 2 Processor using core library
 """
 
 import csv
-from txr_replay_core import (
+from core import (
     ReplayRecord,
     ProcessingStats,
     DateParser,
+    ConfigManager,
+    create_logger,
 )
-from txr_replay_core.config import ConfigManager
-from txr_replay_core.logger import create_logger
 
 
 def main():
@@ -390,7 +390,7 @@ Here's how to add a CLI interface to your script:
 ```python
 #!/usr/bin/env python3
 import argparse
-from txr_replay_core.config import ConfigManager
+from core import ConfigManager
 
 
 def parse_arguments():
@@ -466,7 +466,7 @@ if __name__ == "__main__":
 # tests/test_integration/test_phase2_example.py
 
 import pytest
-from txr_replay_core import ProcessingStats
+from core import ProcessingStats
 from your_script import main  # Import your main function
 
 

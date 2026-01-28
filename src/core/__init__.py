@@ -5,22 +5,17 @@ TXR Core Library
 Shared foundation for all TXR automation modules.
 Provides common utilities, configuration, logging, reference data, and validation.
 
-This package consolidates functionality previously split between:
-- src/common/
-- src/txr_replay_core/
-- src/accuracy_testing/core/
-
 Subpackages:
     config: Unified configuration management
-    data: Reference data (country codes, ID formats, incident codes)
+    data: Reference data (country codes, ID formats, incident codes, data structures)
     logging: Structured logging infrastructure
     utils: Common utilities (date parsing, CSV operations, file discovery)
     validation: Core validation functions and ID validators
 
-Version: 1.0.0
+Version: 1.1.0
 """
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 __author__ = "Transaction Reporting Team"
 
 # Logging
@@ -31,6 +26,14 @@ from .utils import DateParser, CharacterReplacement, FileDiscovery, safe_open_cs
 
 # Config
 from .config import ConfigManager, PathConfig, ProcessorConfig
+
+# Data structures
+from .data import (
+    ReplayRecord,
+    LookupResult,
+    UnaVistaTransaction,
+    ProcessingStats,
+)
 
 # Data - Country codes
 from .data import (
@@ -60,6 +63,9 @@ from .data import (
     get_seller_incident_codes,
     get_validation_type,
     get_incident_description,
+    get_inconsistent_buyer_incident_codes,
+    get_inconsistent_seller_incident_codes,
+    is_inconsistent_id_incident,
 )
 
 # Data - Constants (magic number replacements)
@@ -90,6 +96,11 @@ __all__ = [
     'ConfigManager',
     'PathConfig',
     'ProcessorConfig',
+    # Data structures
+    'ReplayRecord',
+    'LookupResult',
+    'UnaVistaTransaction',
+    'ProcessingStats',
     # Country codes
     'Country',
     'CountryDataManager',
@@ -111,6 +122,9 @@ __all__ = [
     'get_seller_incident_codes',
     'get_validation_type',
     'get_incident_description',
+    'get_inconsistent_buyer_incident_codes',
+    'get_inconsistent_seller_incident_codes',
+    'is_inconsistent_id_incident',
     # Constants
     'ID_LENGTHS',
     'Phase3Columns',

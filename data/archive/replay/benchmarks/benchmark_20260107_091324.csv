@@ -1,5 +1,0 @@
-Script,Mean Time (s),Median Time (s),Mean Memory (MB),Records,Throughput (rec/s)
-Phase 2 Processor,0.0467,0.0463,0.10,0,0.0
-Phase 3 Processor,0.0505,0.0508,0.10,0,0.0
-Phase 3 Final Lookup,0.0528,0.0535,0.10,0,0.0
-XLSX Converter,0.5491,0.4667,0.10,0,0.0
