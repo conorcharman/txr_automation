@@ -1072,6 +1072,7 @@ See **archive/Phase_0_Refactoring_Plan.md** for historical details.
 **Note:** Phase 1 successfully created the accuracy testing core library in `src/accuracy_testing/core/`.
 
 **Completed:**
+
 - ✅ Accuracy testing core library with country codes, ID formats, validators
 - ✅ Comprehensive test suite (90%+ coverage)
 - ✅ Demo scripts and documentation
@@ -1081,6 +1082,7 @@ See **archive/Phase_0_Refactoring_Plan.md** for historical details.
 ### **Phase 2: Simple ID Validation Scripts** ✅ **COMPLETED (21 January 2026)**
 
 **Completed Scripts:**
+
 - ✅ `buyer_id_validation.py` - Migrated from BuyerIDValidation5_6.vb
 - ✅ `seller_id_validation.py` - Migrated from SellerIDValidation5_6.vb
 - ✅ `pricing_validation.py` - Migrated from pricing_data_validation_v1.0.vb
@@ -1093,6 +1095,7 @@ See **archive/Phase_0_Refactoring_Plan.md** for historical details.
 ### **Phase 3: Decision Maker Validation** 🔲 **NOT STARTED**
 
 **Scripts to convert:**
+
 - ValidateFTBDM3_0.vb → `validate_ftbdm.py` (Buyer Decision Maker)
 - ValidateFTSDM3_0.vb → `validate_ftsdm.py` (Seller Decision Maker)
 
@@ -1101,10 +1104,12 @@ See **archive/Phase_0_Refactoring_Plan.md** for historical details.
 ### **Phase 4: Core ID Validation (Inconsistent ID)** ✅ **COMPLETED (27 January 2026)**
 
 **Completed Scripts:**
+
 - ✅ `inconsistent_buyer_id_validation.py` - Migrated from InconsistentBuyerIDValidation1_3.vb
 - ✅ `inconsistent_seller_id_validation.py` - Migrated from InconsistentSellerIDValidation1_3.vb
 
 **Features implemented:**
+
 - Chronological grouping by Person Code
 - Trade_Date_Time based ordering
 - Prior valid ID correction algorithm
@@ -1115,6 +1120,7 @@ See **archive/Phase_0_Refactoring_Plan.md** for historical details.
 ### **Phase 5: Data Operations** 🔲 **NOT STARTED**
 
 **Scripts to convert:**
+
 - IncidentLookup1_1.vb → `incident_lookup.py`
 - DataPush1_0.vb → `data_push.py`
 

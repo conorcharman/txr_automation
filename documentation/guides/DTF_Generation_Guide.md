@@ -2,18 +2,24 @@
 
 ## Overview
 
-The SQL Extract Generator now supports generating **DTF (Data Transfer) files** in addition to SQL files. DTF files are configuration files for the AS/400 Data Transfer tool that contain:
+The SQL Extract Generator now supports generating **DTF (Data Transfer) files**
+in addition to SQL files. DTF files are configuration files for the AS/400
+Data Transfer tool that contain:
+
 - Embedded SQL queries
 - Pre-configured output paths for CSV files
 - All AS/400 connection and formatting settings
 
-This eliminates the manual step of copying SQL into the AS/400 Data Transfer tool.
+This eliminates the manual step of copying SQL into the AS/400 Data Transfer
+tool.
 
 ## Key Features
 
-- **Automated DTF Generation**: Generate ready-to-import AS/400 Data Transfer files
+- **Automated DTF Generation**: Generate ready-to-import AS/400 Data Transfer
+  files
 - **Multiple Output Formats**: Choose `sql`, `dtf`, or `both` (default)
-- **Structured Output**: Organized directory structure with `/csv` and `/dtf` subdirectories
+- **Structured Output**: Organized directory structure with `/csv` and `/dtf`
+  subdirectories
 - **Single-Line SQL**: SQL queries automatically formatted for DTF compatibility
 - **Batch Processing**: Generate DTF files for multiple incidents simultaneously
 
@@ -21,7 +27,7 @@ This eliminates the manual step of copying SQL into the AS/400 Data Transfer too
 
 When using the extract generator, the following structure is created:
 
-```
+```text
 output_directory/
 ├── csv/              # SQL files (or CSV destination for AS/400 extracts)
 │   ├── 7_37_FY26_Q1.sql
@@ -31,7 +37,8 @@ output_directory/
     └── 16_21_FY26_Q1.dtf
 ```
 
-**Note**: When `output_format: 'sql'`, a `/sql` subdirectory is used instead of `/csv`.
+**Note**: When `output_format: 'sql'`, a `/sql` subdirectory is used instead
+of `/csv`.
 
 ## Configuration
 
@@ -150,7 +157,8 @@ AutoRun=1              # Automatically run on import
 PCFile=data/extracts/csv/7_37.csv
 
 [SQL]
-SQLSelect=SELECT t1.REPORTREF, t2.CLINUM FROM GLDATA/TXNREPESMA t1 WHERE t1.REPORTREF IN ('TXN001', 'TXN002')
+SQLSelect=SELECT t1.REPORTREF, t2.CLINUM FROM GLDATA/TXNREPESMA t1 \
+  WHERE t1.REPORTREF IN ('TXN001', 'TXN002')
 
 [Properties]
 AutoClose=1
@@ -162,18 +170,20 @@ AutoRun=1
 ### Complete AS/400 Extraction Workflow
 
 1. **Generate Templates**: Create accuracy testing templates
+
    ```bash
    python -m src.accuracy_testing.scripts.accuracy_template_generator \
        --config config/local/accuracy_testing/buyer_validation.yaml
    ```
 
 2. **Generate SQL/DTF Files**: Create extraction files
+
    ```bash
    python -m src.accuracy_testing.scripts.sql_extract_generator \
        --config config/local/accuracy_testing/sql_extract_generator.yaml
    ```
 
-3. **Import DTF to AS/400 Tool**: 
+3. **Import DTF to AS/400 Tool**:
    - Open AS/400 Data Transfer tool
    - File → Import → Select DTF file
    - Tool automatically:
@@ -183,6 +193,7 @@ AutoRun=1
      - Runs extraction (if AutoRun=1)
 
 4. **Run Validation**: Validate extracted data
+
    ```bash
    python -m src.accuracy_testing.scripts.buyer_id_validation \
        --config config/local/accuracy_testing/buyer_validation.yaml
@@ -211,13 +222,15 @@ output_options:
 ```
 
 Run batch generation:
+
 ```bash
 python -m src.accuracy_testing.scripts.sql_extract_generator \
     --config config/local/accuracy_testing/sql_extract_generator.yaml
 ```
 
 Output:
-```
+
+```text
 data/sql_extracts/
 ├── csv/
 │   ├── 7_35_FY26_Q1.sql
@@ -239,13 +252,15 @@ data/sql_extracts/
 
 ### SQL Formatting for DTF
 
-DTF files require SQL queries on a single line without newlines. The generator automatically:
+DTF files require SQL queries on a single line without newlines. The generator
+automatically:
 
 1. **Removes newlines**: Multi-line SQL → single line
 2. **Collapses whitespace**: Multiple spaces → single space
 3. **Preserves syntax**: Maintains valid SQL structure
 
 Example transformation:
+
 ```sql
 -- Original multi-line SQL
 SELECT 
@@ -263,9 +278,10 @@ SELECT t1.REPORTREF, t2.CLINUM FROM GLDATA/TXNREPESMA t1 WHERE t1.REPORTREF IN (
 
 ### Batch Splitting
 
-When transaction counts exceed `batch_size` (default 900), multiple files are generated:
+When transaction counts exceed `batch_size` (default 900), multiple files
+are generated:
 
-```
+```text
 csv/
 ├── 7_37_FY26_Q1_Extract1.sql
 ├── 7_37_FY26_Q1_Extract2.sql
@@ -278,6 +294,7 @@ dtf/
 ```
 
 Each DTF file:
+
 - Contains its batch's SQL query
 - Points to its corresponding CSV output file
 - Is independently importable into AS/400 tool
@@ -289,11 +306,13 @@ Each DTF file:
 **Error**: `FileNotFoundError: DTF template file not found`
 
 **Solution**: Verify DTF template exists:
+
 ```bash
 ls src/accuracy_testing/sql_templates/AS400_DataTransfer_template.dtf
 ```
 
 If missing, the template should contain:
+
 - `{SQL_QUERY}` placeholder for SQL
 - `{OUTPUT_PATH}` placeholder for CSV output
 - Valid AS/400 configuration settings
@@ -303,6 +322,7 @@ If missing, the template should contain:
 **Error**: DTF file contains `{SQL_QUERY}` or `{OUTPUT_PATH}`
 
 **Solution**: Check template format:
+
 ```ini
 # Correct placeholders (exact match required)
 SQLSelect={SQL_QUERY}
@@ -314,8 +334,9 @@ PCFile={OUTPUT_PATH}
 **Error**: `ValueError: Invalid output_format`
 
 **Solution**: Use valid format options:
+
 - `'sql'` - SQL files only
-- `'dtf'` - DTF files only  
+- `'dtf'` - DTF files only
 - `'both'` - Both formats (default)
 
 ### Missing CSV Output Path
@@ -323,6 +344,7 @@ PCFile={OUTPUT_PATH}
 **Issue**: DTF file points to incorrect CSV location
 
 **Solution**: Ensure `incident_code` parameter matches expected naming:
+
 ```python
 generator.generate_extracts(
     transaction_refs=refs,
@@ -344,6 +366,7 @@ generator.generate_extracts(
 ## Migration from Manual Process
 
 ### Old Workflow (Manual)
+
 1. Generate SQL files
 2. Open AS/400 Data Transfer tool
 3. **Manual**: Copy/paste SQL query
@@ -353,6 +376,7 @@ generator.generate_extracts(
 7. **Manual**: Repeat for each incident
 
 ### New Workflow (Automated)
+
 1. Generate SQL + DTF files (`output_format: 'both'`)
 2. Import DTF file into AS/400 tool
 3. Tool automatically runs extraction

@@ -2,14 +2,21 @@
 
 ## Overview
 
-The SQL Extract Generator is a Python tool that generates SQL extract files from validated transaction data. It supports **batch mode** for processing multiple incidents automatically and **single mode** for one-off extractions.
+The SQL Extract Generator is a Python tool that generates SQL extract files from
+validated transaction data. It supports **batch mode** for processing multiple
+incidents automatically and **single mode** for one-off extractions.
 
 **Key Features:**
-- **Batch Processing**: Process multiple incidents in one run with automatic SQL template selection
-- **Smart Template Mapping**: Automatically selects the correct SQL template for each incident code
+
+- **Batch Processing**: Process multiple incidents in one run with automatic
+  SQL template selection
+- **Smart Template Mapping**: Automatically selects the correct SQL template
+  for each incident code
 - **FY/Q Naming**: Outputs use fiscal year/quarter naming (`7_37_FY25_Q3.sql`)
-- **Auto-splitting**: Large datasets automatically split into multiple files (900 records per file)
-- **Multiple Modes**: Batch mode for production workflows, single mode for custom extractions
+- **Auto-splitting**: Large datasets automatically split into multiple files
+  (900 records per file)
+- **Multiple Modes**: Batch mode for production workflows, single mode for
+  custom extractions
 
 ## Installation
 
@@ -23,7 +30,9 @@ This registers the `generate-sql-extract` console command.
 
 ## Batch Mode (Recommended)
 
-Batch mode is the recommended approach for processing multiple incidents. The tool:
+Batch mode is the recommended approach for processing multiple incidents.
+The tool:
+
 1. Reads validated CSV files (`validated_FY25_Q3_7_37.csv`)
 2. Automatically selects the appropriate SQL template based on incident code
 3. Generates SQL files with FY/Q naming (`7_37_FY25_Q3.sql`)
@@ -31,7 +40,8 @@ Batch mode is the recommended approach for processing multiple incidents. The to
 
 ### Configuration
 
-Create a YAML config file (e.g., `config/local/accuracy_testing/sql_extract_generator.yaml`):
+Create a YAML config file
+(e.g., `config/local/accuracy_testing/sql_extract_generator.yaml`):
 
 ```yaml
 testing_period:
@@ -71,7 +81,7 @@ generate-sql-extract --config config.yaml --verbose
 The tool automatically selects the correct SQL template based on incident code:
 
 | Incident Type | Incident Codes | SQL Template |
-|--------------|----------------|--------------|
+| -------------- | ---------------- | -------------- |
 | Buyer ID | 7_*, 8_*, 9_*, 10_*, 11_*, 13_*, 14_*, 15_* | `BuyerID.sql` |
 | Seller ID | 16_*, 17_*, 18_*, 19_*, 20_*, 22_*, 23_*, 24_*, 36_* | `SellerID.sql` |
 | Pricing Data | 35_3 | `SCR_pricing_data_v1.0.sql` |
@@ -83,13 +93,15 @@ The tool automatically selects the correct SQL template based on incident code:
 ### Output Format
 
 **Batch mode output naming:**
+
 - Single batch: `{incident}_{fiscal_year}_{quarter}.sql`
   - Example: `7_37_FY25_Q3.sql`
 - Multiple batches: `{incident}_{fiscal_year}_{quarter}_Extract{N}.sql`
   - Example: `7_37_FY25_Q3_Extract1.sql`, `7_37_FY25_Q3_Extract2.sql`
 
 **Example output for 2000 transaction refs with batch_size=900:**
-```
+
+```text
 7_37_FY25_Q3_Extract1.sql  (900 refs)
 7_37_FY25_Q3_Extract2.sql  (900 refs)
 7_37_FY25_Q3_Extract3.sql  (200 refs)
@@ -111,16 +123,18 @@ generate-sql-extract \
 ### Command-Line Options
 
 | Option | Description | Default | Required |
-|--------|-------------|---------|----------|
+| -------- | ------------- | --------- | ---------- |
 | `--config` | YAML configuration file | - | No |
 | `--template` | Path to SQL template file | - | Yes (unless in config) |
 | `--input` | Path to CSV file with transaction references | - | Yes (unless in config) |
 | `--output` | Output directory for generated SQL files | - | Yes (unless in config) |
 | `--batch-size` | Number of transactions per extract file | 900 | No |
 | `--column` | CSV column name for transaction refs | "Transaction Ref" | No |
-| `--placeholder` | SQL placeholder pattern | "-- TRANSACTION REFERENCES --" | No |
+| `--placeholder` | SQL placeholder pattern | (see below) | No |
 | `--dry-run` | Preview generation without creating files | False | No |
 | `--verbose` | Enable detailed output | False | No |
+
+The default placeholder pattern is `"-- TRANSACTION REFERENCES --"`.
 
 ### Examples
 
@@ -148,7 +162,8 @@ generate-sql-extract \
 
 ### Template Requirements
 
-SQL templates must contain exactly one placeholder for transaction references. The tool automatically detects the placeholder format.
+SQL templates must contain exactly one placeholder for transaction references.
+The tool automatically detects the placeholder format.
 
 ### Supported Placeholder Formats
 
@@ -218,11 +233,10 @@ TRANSACTION_REFERENCE,INCIDENT_CODE,DATE
 
 - **Single batch**: Uses template filename
   - Example: `buyer_id_extract.sql`
-  
 - **Multiple batches**: Adds batch number suffix
   - Example: `buyer_id_extract_Extract1.sql`, `buyer_id_extract_Extract2.sql`
 
-### Output Format
+### File Output Format
 
 - **Encoding**: UTF-8
 - **Line endings**: Platform-specific (LF on Unix, CRLF on Windows)
@@ -232,7 +246,8 @@ TRANSACTION_REFERENCE,INCIDENT_CODE,DATE
 
 ### Batch Size Selection
 
-The default batch size is 900 transactions (matching VBA logic), but can be adjusted based on:
+The default batch size is 900 transactions (matching VBA logic), but can be
+adjusted based on:
 
 1. **Database query limits**: Some databases have IN clause size limits
 2. **Performance**: Smaller batches process faster but create more files
@@ -241,7 +256,7 @@ The default batch size is 900 transactions (matching VBA logic), but can be adju
 ### Batch Size Guidelines
 
 | Scenario | Recommended Batch Size |
-|----------|------------------------|
+| ---------- | ------------------------ |
 | Standard processing | 900 (default) |
 | Large datasets (10,000+ transactions) | 500-700 |
 | Database with IN clause limits | 500 or less |
@@ -252,27 +267,35 @@ The default batch size is 900 transactions (matching VBA logic), but can be adju
 ### Common Errors
 
 1. **Template not found**
-   ```
+
+   ```text
    FileNotFoundError: Template file not found: path/to/template.sql
    ```
+
    **Solution**: Verify the template path is correct
 
 2. **No placeholder found**
-   ```
+
+   ```text
    ValueError: No placeholder found in template
    ```
+
    **Solution**: Ensure template contains a valid placeholder
 
 3. **Input CSV not found**
-   ```
+
+   ```text
    FileNotFoundError: Input CSV not found: path/to/input.csv
    ```
+
    **Solution**: Verify the input CSV path is correct
 
 4. **Empty input CSV**
-   ```
+
+   ```text
    Warning: No transaction references found in CSV
    ```
+
    **Solution**: Verify CSV contains data in first column
 
 ## Migration from VBA
@@ -280,6 +303,7 @@ The default batch size is 900 transactions (matching VBA logic), but can be adju
 ### ExtractBuyerID4_1.vb → SQL Extract Generator
 
 **VBA:**
+
 ```vb
 ' Hard-coded template path
 ' Hard-coded batch size (900)
@@ -287,6 +311,7 @@ The default batch size is 900 transactions (matching VBA logic), but can be adju
 ```
 
 **Python:**
+
 ```bash
 generate-sql-extract \
   --template legacy/sql/buyer_id_extract.sql \
@@ -315,6 +340,7 @@ pytest tests/test_accuracy_testing/test_sql_extract_generator.py -v
 ### Test Coverage
 
 The test suite includes:
+
 - Template loading and validation
 - Placeholder detection (multiple formats)
 - Batch splitting logic
@@ -361,7 +387,7 @@ summary = generator.get_summary(transaction_refs)
 print(f"Generated {summary['num_batches']} batch(es)")
 ```
 
-## Configuration
+## Advanced Configuration
 
 ### YAML Configuration (Future Enhancement)
 
@@ -378,6 +404,7 @@ sql_extract:
 ### Environment Variables (Future Enhancement)
 
 Planned support for environment variables:
+
 - `SQL_EXTRACT_TEMPLATE_DIR`: Default template directory
 - `SQL_EXTRACT_OUTPUT_DIR`: Default output directory
 - `SQL_EXTRACT_BATCH_SIZE`: Default batch size
@@ -389,7 +416,9 @@ Planned support for environment variables:
 **Cause**: Template doesn't contain a recognized placeholder pattern
 
 **Solution**:
-1. Check template contains `--<<TRANSACTION REFERENCES>>` or `--<TRADE REFERENCES>--`
+
+1. Check template contains `--<<TRANSACTION REFERENCES>>` or
+   `--<TRADE REFERENCES>--`
 2. Verify placeholder is on its own line
 3. Check for typos in placeholder syntax
 
@@ -398,6 +427,7 @@ Planned support for environment variables:
 **Cause**: Transaction references contain unexpected characters
 
 **Solution**:
+
 1. Verify CSV data is clean (no special characters)
 2. Check encoding is UTF-8
 3. Review generated SQL file manually
@@ -407,6 +437,7 @@ Planned support for environment variables:
 **Cause**: Incorrect batch size calculation
 
 **Solution**:
+
 1. Verify `--batch-size` parameter
 2. Check number of transaction references in input CSV
 3. Use `--dry-run` to preview batch count
@@ -416,6 +447,7 @@ Planned support for environment variables:
 ### Benchmarks
 
 Tested on MacBook Pro M1:
+
 - 1,000 transactions: <0.1 seconds
 - 10,000 transactions: ~0.5 seconds
 - 100,000 transactions: ~4 seconds
@@ -438,6 +470,7 @@ Tested on MacBook Pro M1:
 ## Support
 
 For issues or questions:
+
 1. Check this documentation
 2. Review test cases in `tests/test_accuracy_testing/test_sql_extract_generator.py`
 3. Examine sample files in `data/test/`
