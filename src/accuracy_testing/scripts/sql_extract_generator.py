@@ -49,10 +49,10 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.accuracy_testing.sql_extract_generator import SQLExtractGenerator
-from src.txr_replay_core.incident_codes import (
+from core import (
     is_buyer_incident,
     is_seller_incident,
-    get_client_types
+    get_client_types,
 )
 
 

@@ -82,14 +82,15 @@ from src.accuracy_testing.processor import (
     AccuracyProcessorConfig,
 )
 
-# Import txr_replay_core utilities
-from src.common.logger import create_logger, StructuredLogger
-from src.common.utils import safe_open_csv
-from src.txr_replay_core.incident_codes import (
+# Import core utilities
+from core import (
+    create_logger,
+    StructuredLogger,
+    safe_open_csv,
     get_inconsistent_seller_incident_codes,
     is_inconsistent_id_incident,
     get_validation_type,
-    get_incident_description
+    get_incident_description,
 )
 
 

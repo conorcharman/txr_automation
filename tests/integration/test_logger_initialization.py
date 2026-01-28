@@ -16,7 +16,7 @@ import logging
 # Add src to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent.parent / "src"))
 
-from txr_replay_core import StructuredLogger, create_logger, ProcessingStats
+from core import StructuredLogger, create_logger, ProcessingStats
 
 
 class TestStructuredLogger:
@@ -150,7 +150,7 @@ class TestLoggerIntegration:
     
     def test_logger_from_config(self, sample_phase2_config, temp_data_dir):
         """Test creating logger from configuration."""
-        from txr_replay_core import ConfigManager
+        from core import ConfigManager
         
         config_dict = ConfigManager.load_from_yaml(sample_phase2_config)
         log_output = config_dict['paths']['log_output']

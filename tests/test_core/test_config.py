@@ -4,7 +4,7 @@ Tests for ConfigManager
 
 import pytest
 import os
-from txr_replay_core.config import ConfigManager, PathConfig, ProcessorConfig
+from core import ConfigManager, PathConfig, ProcessorConfig
 
 
 class TestConfigManager:
