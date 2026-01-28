@@ -2,11 +2,13 @@
 
 ## Overview
 
-This guide documents the complete workflow for accuracy testing of transaction reporting data using the template-based approach. The workflow automates the creation of validation templates, SQL extraction, and data validation.
+This guide documents the complete workflow for accuracy testing of transaction
+reporting data using the template-based approach. The workflow automates the
+creation of validation templates, SQL extraction, and data validation.
 
 ## Workflow Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────────┐
 │                     ACCURACY TESTING WORKFLOW                    │
 └─────────────────────────────────────────────────────────────────┘
@@ -70,15 +72,18 @@ This guide documents the complete workflow for accuracy testing of transaction r
 ### Step 1: Prepare Consolidated Data
 
 **Input Files:**
+
 - `consolidated_errors.csv` - Errors from regulatory reporting system
 - `consolidated_queries.csv` - Queries from regulatory reporting system
 
 **Required Columns:**
+
 - `INCIDENT_CODE` - Must contain incident code (e.g., "7_37" or "7_37|16_21" for multiple)
 - `Transaction reference number` - Transaction identifier
 - Additional columns vary by incident type
 
 **Example Data:**
+
 ```csv
 INCIDENT_CODE,INCIDENT_DESCRIPTION,KR_RECORD_KEY,Transaction reference number,Buyer identification code
 7_37,Buyer ID missing,REC001,TXN001,
@@ -88,7 +93,9 @@ INCIDENT_CODE,INCIDENT_DESCRIPTION,KR_RECORD_KEY,Transaction reference number,Bu
 ```
 
 **Note on Pipe-Delimited Codes:**
-Records with multiple incident codes (e.g., "7_37|16_21") will be duplicated across multiple template files - one for each incident code.
+
+Records with multiple incident codes (e.g., "7_37|16_21") will be duplicated
+across multiple template files - one for each incident code.
 
 ---
 
@@ -97,7 +104,9 @@ Records with multiple incident codes (e.g., "7_37|16_21") will be duplicated acr
 **Tool:** `generate-accuracy-template`
 
 **Configuration:**
+
 Create or edit `config/environments/local.yaml`:
+
 ```yaml
 paths:
   input:
@@ -108,6 +117,7 @@ paths:
 ```
 
 **Command:**
+
 ```bash
 # Using config file
 generate-accuracy-template --config config/environments/local.yaml
@@ -123,6 +133,7 @@ generate-accuracy-template --config config/environments/local.yaml --dry-run
 ```
 
 **Output:**
+
 - One CSV file per unique incident code: `template_7_37.csv`, `template_16_21.csv`, etc.
 - Files include:
   - **Validation columns** (empty, to be filled by validation scripts)
@@ -132,14 +143,16 @@ generate-accuracy-template --config config/environments/local.yaml --dry-run
 **Template Formats:**
 
 | Incident Codes | Format | Validation Columns |
-|----------------|--------|-------------------|
-| 7_35, 7_37, 7_39, 7_66 | Buyer | 14 columns (Transaction Ref, Account ID, Person Code, Buyer ID, etc.) |
-| 16_19, 16_21, 16_23, 16_20 | Seller | 14 columns (Transaction Ref, Account ID, Person Code, Seller ID, etc.) |
-| 35_3 | Pricing | 10 columns (Transaction Ref, Account ID, Price, etc.) |
-| All others | Default | 6 columns (Transaction Ref, Record Key, Description, etc.) |
+| ---------------- | -------- | ------------------- |
+| 7_35, 7_37, 7_39, 7_66 | Buyer | 14 columns |
+| 16_19, 16_21, 16_23, 16_20 | Seller | 14 columns |
+| 35_3 | Pricing | 10 columns |
+| All others | Default | 6 columns |
 
 **Key Feature:**
-The first validation column (Transaction Reference) is automatically populated from the consolidated data for easy reference.
+
+The first validation column (Transaction Reference) is automatically
+populated from the consolidated data for easy reference.
 
 ---
 
@@ -148,9 +161,12 @@ The first validation column (Transaction Reference) is automatically populated f
 **Tool:** `generate-sql-extract`
 
 **SQL Template Requirements:**
-Your SQL template file must contain the placeholder `-- TRANSACTION REFERENCES --` where transaction references should be inserted.
+
+Your SQL template file must contain the placeholder `-- TRANSACTION REFERENCES --`
+where transaction references should be inserted.
 
 **Example Template:** `sql/ExtractBuyerID.sql`
+
 ```sql
 SELECT
     t1.REPORTREF,
@@ -166,6 +182,7 @@ WHERE
 ```
 
 **Configuration:**
+
 ```yaml
 # In config/environments/local.yaml
 paths:
@@ -178,6 +195,7 @@ paths:
 ```
 
 **Command:**
+
 ```bash
 # Generate SQL for buyer validation (incident 7_37)
 generate-sql-extract \
@@ -201,10 +219,13 @@ generate-sql-extract \
 ```
 
 **Output:**
+
 - `ExtractBuyerID.sql` - Single file if ≤900 transactions
-- `ExtractBuyerID_Extract1.sql`, `ExtractBuyerID_Extract2.sql`, etc. - Multiple files if >900 transactions
+- `ExtractBuyerID_Extract1.sql`, `ExtractBuyerID_Extract2.sql`, etc.
+  - Multiple files if >900 transactions
 
 **Generated SQL Example:**
+
 ```sql
 SELECT
     t1.REPORTREF,
@@ -226,11 +247,13 @@ WHERE
 ### Step 4: Execute SQL Queries
 
 **Process:**
+
 1. Copy generated SQL files to database query tool
 2. Execute queries against production database
 3. Export results to CSV files
 
 **Naming Convention:**
+
 - Use incident-specific names: `buyer_id_data_7_37.csv`, `seller_id_data_16_21.csv`
 - Include date for tracking: `buyer_id_data_7_37_2026-01-23.csv`
 
@@ -239,11 +262,13 @@ WHERE
 ### Step 5: Run Validation Scripts
 
 **Tools:**
+
 - `buyer-id-validation` - For buyer ID incidents (7_35, 7_37, 7_39, 7_66)
 - `seller-id-validation` - For seller ID incidents (16_19, 16_21, 16_23, 16_20)
 - `pricing-validation` - For pricing incidents (35_3)
 
 **Buyer Validation Example:**
+
 ```bash
 buyer-id-validation \
   --reference data/output/templates/template_7_37.csv \
@@ -252,6 +277,7 @@ buyer-id-validation \
 ```
 
 **Seller Validation Example:**
+
 ```bash
 seller-id-validation \
   --reference data/output/templates/template_16_21.csv \
@@ -260,6 +286,7 @@ seller-id-validation \
 ```
 
 **Pricing Validation Example:**
+
 ```bash
 pricing-validation \
   --reference data/output/templates/template_35_3.csv \
@@ -270,21 +297,25 @@ pricing-validation \
 **Validation Logic:**
 
 **Buyer ID Validation:**
+
 - Extracts Account ID from Transaction Reference
 - Determines account type (NIDN, CONCAT, CCPT)
 - Validates Buyer ID format matches account type
 - Populates validation columns with results
 
 **Seller ID Validation:**
+
 - Similar logic to buyer validation
 - Validates Seller ID instead of Buyer ID
 
 **Pricing Validation:**
+
 - Validates Price field presence and format
 - Checks Price Currency
 - Validates Net Amount calculations
 
 **Output:**
+
 - Updated template files with validation columns filled
 - Summary statistics printed to console
 - Log files in `data/output/logs/`
@@ -294,6 +325,7 @@ pricing-validation \
 ### Step 6: Manual QA Review
 
 **Process:**
+
 1. Open filled template files in spreadsheet software
 2. Review validation results in validation columns
 3. For each record, fill comparison columns:
@@ -302,11 +334,13 @@ pricing-validation \
    - **Suggested Correction Field** - Which field needs correction?
 
 **Comparison Columns:**
+
 - Column 15: `Agree With Correction`
 - Column 16: `Suggested Correction`
 - Column 17: `Suggested Correction Field`
 
 **Tips:**
+
 - Use filters to focus on specific validation outcomes
 - Cross-reference with consolidated data columns
 - Document patterns or systemic issues
@@ -317,6 +351,7 @@ pricing-validation \
 ### Step 7: Final Reporting
 
 **Deliverables:**
+
 1. Completed template files with all columns filled
 2. Summary report with:
    - Total records processed
@@ -325,6 +360,7 @@ pricing-validation \
    - Recommendations for data quality improvements
 
 **Archive:**
+
 - Store all files (templates, SQL, extracts, logs) in dated folder
 - Document any manual adjustments or exceptions
 - Track for audit trail
@@ -335,7 +371,7 @@ pricing-validation \
 
 ### Column Layout
 
-```
+```text
 ┌───────────────────────────────────────────────────────────────────┐
 │                        TEMPLATE FILE STRUCTURE                     │
 └───────────────────────────────────────────────────────────────────┘
@@ -356,7 +392,8 @@ CONSOLIDATED DATA COLUMNS (read-only, from original data)
 ```
 
 ### Buyer Template (14 validation columns)
-```
+
+```text
 Transaction Reference | Account ID | Person Code | Buyer ID Code | 
 Type of Buyer ID Code | First Name | Surname | Date of Birth | Gender |
 Primary Nationality | Secondary Nationality | Correction Output | 
@@ -364,7 +401,8 @@ Correction Fields | Tracker Status | [Comparison Cols] | [Consolidated Data]
 ```
 
 ### Seller Template (14 validation columns)
-```
+
+```text
 Transaction Reference | Account ID | Person Code | Seller ID Code | 
 Type of Seller ID Code | First Name | Surname | Date of Birth | Gender |
 Primary Nationality | Secondary Nationality | Correction Output | 
@@ -372,14 +410,16 @@ Correction Fields | Tracker Status | [Comparison Cols] | [Consolidated Data]
 ```
 
 ### Pricing Template (10 validation columns)
-```
+
+```text
 Transaction Reference | Account ID | Person Code | Price | Price Currency |
 Type of Price | Net Amount | Correction Output | Correction Fields | 
 Tracker Status | [Comparison Cols] | [Consolidated Data]
 ```
 
 ### Default Template (6 validation columns)
-```
+
+```text
 Transaction Reference | Record Key | Description | Correction Output |
 Correction Fields | Tracker Status | [Comparison Cols] | [Consolidated Data]
 ```
@@ -410,6 +450,7 @@ processing:
 The SQL extract generator primarily uses CLI arguments but can reference config for paths.
 
 **Command-line Options:**
+
 - `--template PATH` - SQL template file
 - `--input PATH` - Template CSV file
 - `--output PATH` - Output directory for SQL files
@@ -421,25 +462,33 @@ The SQL extract generator primarily uses CLI arguments but can reference config 
 ## Troubleshooting
 
 ### Issue: "INCIDENT_CODE column not found"
+
 **Solution:** Ensure consolidated CSV has `INCIDENT_CODE` header (case-sensitive)
 
 ### Issue: "Template placeholder not found"
+
 **Solution:** Ensure SQL template contains `-- TRANSACTION REFERENCES --` (spaces around text)
 
 ### Issue: No transaction references extracted
-**Solution:** 
+
+**Solution:**
+
 - Check that template file has data rows (not just header)
 - Verify "Transaction reference number" column exists in consolidated data
 - Check for empty transaction reference values
 
 ### Issue: Validation script can't find transaction
+
 **Solution:**
+
 - Ensure database extract includes all transactions from template
 - Check that transaction reference format matches between files
 - Verify JOIN conditions in SQL query are correct
 
 ### Issue: Wrong template format applied
+
 **Solution:**
+
 - Check incident code matches expected format
 - Review TemplateFormat class mappings in `accuracy_template_generator.py`
 - Verify incident code doesn't have extra whitespace
@@ -454,7 +503,8 @@ The SQL extract generator primarily uses CLI arguments but can reference config 
    - Tag releases with regulatory submission dates
 
 2. **File Organization**
-   ```
+
+   ```text
    data/
    ├── input/
    │   ├── consolidated_errors_2026-01-23.csv
@@ -532,6 +582,7 @@ cp -r data/output/* data/archive/$(date +%Y-%m-%d)/
 ## Support
 
 For issues or questions:
+
 1. Check logs in `data/output/logs/`
 2. Review test cases in `tests/test_accuracy_testing/`
 3. Consult source code documentation in module docstrings

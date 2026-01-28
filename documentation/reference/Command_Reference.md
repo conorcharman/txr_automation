@@ -23,6 +23,7 @@ pip install .
 Generate accuracy testing template files from consolidated errors/queries data.
 
 **Usage:**
+
 ```bash
 # Using config file (default: config/templates/accuracy_template_generator_template.yaml)
 generate-accuracy-template --config config/my_config.yaml
@@ -45,26 +46,33 @@ generate-accuracy-template \
 ```
 
 **Options:**
-- `--config PATH` - Configuration YAML file (optional, default: config/templates/accuracy_template_generator_template.yaml)
+
+- `--config PATH` - Configuration YAML file
+  (optional, default: config/templates/accuracy_template_generator_template.yaml)
 - `--errors PATH` - Consolidated errors CSV file (overrides config)
 - `--queries PATH` - Consolidated queries CSV file (overrides config)
 - `--output PATH` - Output directory for template files (overrides config)
 - `--dry-run` - Preview generation without creating files
 
 **Output:**
+
 - One CSV template file per unique incident code
 - Template structure: [Validation Columns | Comparison Columns | Consolidated Data]
 
 **Related:**
-- See [Accuracy Testing Workflow Guide](../guides/Accuracy_Testing_Workflow.md) for complete workflow
+
+- See [Accuracy Testing Workflow Guide](../guides/Accuracy_Testing_Workflow.md)
+  for complete workflow
 
 ---
 
 ### generate-sql-extract
 
-Generate SQL extract files from transaction references in validated data. Supports both **batch mode** (multiple incidents) and **single mode** (one incident).
+Generate SQL extract files from transaction references in validated data.
+Supports both **batch mode** (multiple incidents) and **single mode** (one incident).
 
 **Batch Mode (Recommended):**
+
 ```bash
 # Process multiple incidents automatically
 # Reads validated CSV files, auto-selects SQL templates, generates extracts
@@ -78,21 +86,23 @@ generate-sql-extract --config config/batch.yaml --verbose
 ```
 
 **Batch Configuration Example:**
+
 ```yaml
 testing_period:
   fiscal_year: "FY25"
   quarter: "Q3"
 incidents: ["7_37", "16_21", "35_3"]
 paths:
-  template_dir: "data/validated"              # Reads validated_FY25_Q3_7_37.csv
+  template_dir: "data/validated"
   sql_template_dir: "src/accuracy_testing/sql_templates"
-  output_directory: "data/sql_extracts"       # Writes 7_37_FY25_Q3.sql
+  output_directory: "data/sql_extracts"
 processing:
   batch_size: 900
   transaction_column: "Transaction Ref"
 ```
 
 **Automatic SQL Template Selection:**
+
 - Buyer ID incidents (7_*, 8_*, 9_*, etc.) → `BuyerID.sql`
 - Seller ID incidents (16_*, 17_*, etc.) → `SellerID.sql`
 - Pricing incidents (35_3) → `SCR_pricing_data_v1.0.sql`
@@ -102,6 +112,7 @@ processing:
 - Decision Maker Seller (21_*) → `FTSDM.sql`
 
 **Single Mode (Legacy):**
+
 ```bash
 # Process one incident manually
 generate-sql-extract \
@@ -125,9 +136,12 @@ generate-sql-extract \
 ```
 
 **Options:**
-- `--config PATH` - Configuration YAML file (enables batch mode if contains `incidents` and `testing_period`)
+
+- `--config PATH` - Configuration YAML file
+  (enables batch mode if contains `incidents` and `testing_period`)
 - `--template PATH` - SQL template file (single mode, required unless in config)
-- `--input PATH` - CSV file with transaction references (single mode, required unless in config)
+- `--input PATH` - CSV file with transaction references
+  (single mode, required unless in config)
 - `--output PATH` - Output directory for SQL files (required unless in config)
 - `--batch-size N` - Number of transactions per file (default: 900)
 - `--column NAME` - CSV column name for transaction refs (default: "Transaction Ref")
@@ -136,15 +150,19 @@ generate-sql-extract \
 - `--verbose` - Enable detailed output
 
 **SQL Template Requirements:**
+
 - Must contain placeholder: `-- TRANSACTION REFERENCES --`
 
 **Output Naming:**
-- **Batch mode:** `{incident}_{fiscal_year}_{quarter}.sql` or `{incident}_{fiscal_year}_{quarter}_Extract{N}.sql`
+
+- **Batch mode:** `{incident}_{fiscal_year}_{quarter}.sql`
+  or `{incident}_{fiscal_year}_{quarter}_Extract{N}.sql`
   - Example: `7_37_FY25_Q3.sql`, `35_3_FY25_Q3_Extract1.sql`
 - **Single mode:** `{template_name}.sql` or `{template_name}_Extract{N}.sql`
   - Example: `BuyerID.sql`, `BuyerID_Extract1.sql`
 
 **Batch Splitting:**
+
 - Datasets > `batch_size` are automatically split into multiple files
 - Example: 2000 refs with batch_size=900 → Extract1 (900), Extract2 (900), Extract3 (200)
 
@@ -152,9 +170,11 @@ generate-sql-extract \
 
 ### validate-buyer
 
-Validate buyer identification codes in transaction data. Supports both **batch mode** (multiple incidents) and **single mode** (one incident).
+Validate buyer identification codes in transaction data.
+Supports both **batch mode** (multiple incidents) and **single mode** (one incident).
 
 **Batch Mode (Recommended):**
+
 ```bash
 # Auto-discover and process ALL buyer incidents (7_*, 8_*, 9_*, 10_*, etc.)
 validate-buyer --config config/local/accuracy_testing/buyer_validation.yaml
@@ -167,14 +187,16 @@ validate-buyer --config config/batch.yaml --progress
 ```
 
 **Batch Configuration with Auto-Discovery:**
+
 ```yaml
 testing_period:
   fiscal_year: "FY25"
   quarter: "Q3"
 
 # Auto-discover all buyer incidents (RECOMMENDED)
-auto_incidents: "all"  # Processes all 40 buyer incidents
-                       # Automatically detects and skips decision maker incidents (7_66, 7_68)
+# Processes all 40 buyer incidents
+# Automatically detects and skips decision maker incidents (7_66, 7_68)
+auto_incidents: "all"
 
 # Alternative: Specify incidents manually
 # incidents:
@@ -188,20 +210,28 @@ paths:
 ```
 
 **What Auto-Discovery Processes:**
+
 - **40 buyer incidents**: 7_*, 8_*, 9_*, 10_*, 11_*, 12_*, 13_*, 14_*, 15_*, 21_2
-- **Smart Detection**: Decision maker incidents (7_66, 7_68) are auto-detected and skipped with clear warnings
+- **Smart Detection**: Decision maker incidents (7_66, 7_68) are auto-detected and
+  skipped with clear warnings
 - Automatically reads: `FY25 Q3 7_37.csv`, `FY25 Q3 8_1.csv`, etc.
 - Automatically writes: `validated_FY25_Q3_7_37.csv`, `validated_FY25_Q3_8_1.csv`, etc.
 
 **Decision Maker Incidents:**
-Incidents 7_66 and 7_68 are "inconsistent buyer decision maker" codes requiring different validation logic:
+
+Incidents 7_66 and 7_68 are "inconsistent buyer decision maker" codes requiring
+different validation logic:
+
 - Grouping records by Person Code
 - Chronological analysis (sorting by Trade_Date_Time)
 - Validating inconsistent IDs across suspected same individuals
 
-These are **included in auto-discovery** but automatically skipped during processing with informative warnings. When Python implementation is added, they'll be processed automatically.
+These are **included in auto-discovery** but automatically skipped during processing
+with informative warnings. When Python implementation is added, they'll be processed
+automatically.
 
 **Single File Mode:**
+
 ```bash
 # Process one incident with explicit file paths
 validate-buyer \
@@ -211,6 +241,7 @@ validate-buyer \
 ```
 
 **Options:**
+
 - `--config PATH` - Configuration YAML file
 - `--reference PATH` - Reference CSV (template file, overrides config)
 - `--extract PATH` - Database extract CSV (overrides config)
@@ -221,6 +252,7 @@ validate-buyer \
 - `--progress` - Show progress bars (batch mode only)
 
 **Validation Logic:**
+
 - Extracts Account ID from Transaction Reference
 - Determines account type (NIDN, CONCAT, CCPT)
 - Validates Buyer ID format matches account type
@@ -228,30 +260,35 @@ validate-buyer \
 - Populates validation columns in template
 
 **Output (Single Mode):**
+
 - `{output}_validated.csv` - All records with validation results
 - `{output}_errors_only.csv` - Only records with validation errors
 - Log file in configured log directory
 
 **Output (Batch Mode):**
+
 - `validated_FY25_Q3_7_37.csv` - One file per incident
 - Summary report with success/failure counts
 - Consolidated logs
 
 **Common Buyer Incident Codes:**
+
 - 7_35 - Invalid buyer ID format
 - 7_37 - Buyer ID missing (standard txr)
 - 7_39 - Buyer ID type mismatch
-- 7_66 - Inconsistent buyer decision maker ID (⚠️ uses different validation logic)
-- 7_68 - Inconsistent buyer decision maker ID (⚠️ uses different validation logic)
+- 7_66 - Inconsistent buyer decision maker ID (⚠️ different validation logic)
+- 7_68 - Inconsistent buyer decision maker ID (⚠️ different validation logic)
 - 8_*, 9_*, 10_*, 11_*, 12_*, 13_*, 14_*, 15_* - Other buyer ID issues
 
 ---
 
 ### validate-seller
 
-Validate seller identification codes in transaction data. Supports both **batch mode** (multiple incidents) and **single mode** (one incident).
+Validate seller identification codes in transaction data.
+Supports both **batch mode** (multiple incidents) and **single mode** (one incident).
 
 **Batch Mode (Recommended):**
+
 ```bash
 # Auto-discover and process ALL seller incidents (16_*, 17_*, 18_*, etc.)
 validate-seller --config config/local/accuracy_testing/seller_validation.yaml
@@ -264,14 +301,16 @@ validate-seller --config config/batch.yaml --progress
 ```
 
 **Batch Configuration with Auto-Discovery:**
+
 ```yaml
 testing_period:
   fiscal_year: "FY25"
   quarter: "Q3"
 
 # Auto-discover all seller incidents (RECOMMENDED)
-auto_incidents: "all"  # Processes all 41 seller incidents
-                       # Automatically detects and skips decision maker incidents (16_20, 16_64)
+# Processes all 41 seller incidents
+# Automatically detects and skips decision maker incidents (16_20, 16_64)
+auto_incidents: "all"
 
 # Alternative: Specify incidents manually
 # incidents:
@@ -285,20 +324,28 @@ paths:
 ```
 
 **What Auto-Discovery Processes:**
+
 - **41 seller incidents**: 16_*, 17_*, 18_*, 19_*, 20_*, 21_*, 22_*, 23_*, 24_*, 36_23
-- **Smart Detection**: Decision maker incidents (16_20, 16_64) are auto-detected and skipped with clear warnings
+- **Smart Detection**: Decision maker incidents (16_20, 16_64) are auto-detected and
+  skipped with clear warnings
 - Automatically reads: `FY25 Q3 16_21.csv`, `FY25 Q3 17_2.csv`, etc.
 - Automatically writes: `validated_FY25_Q3_16_21.csv`, `validated_FY25_Q3_17_2.csv`, etc.
 
 **Decision Maker Incidents:**
-Incidents 16_20 and 16_64 are "inconsistent seller decision maker" codes requiring different validation logic:
+
+Incidents 16_20 and 16_64 are "inconsistent seller decision maker" codes requiring
+different validation logic:
+
 - Grouping records by Person Code
 - Chronological analysis (sorting by Trade_Date_Time)
 - Validating inconsistent IDs across suspected same individuals
 
-These are **included in auto-discovery** but automatically skipped during processing with informative warnings. When Python implementation is added, they'll be processed automatically.
+These are **included in auto-discovery** but automatically skipped during processing
+with informative warnings. When Python implementation is added, they'll be processed
+automatically.
 
 **Single File Mode:**
+
 ```bash
 # Process one incident with explicit file paths
 validate-seller \
@@ -308,29 +355,27 @@ validate-seller \
 ```
 
 **Options:**
+
 - Same as `validate-buyer`
 
 **Validation Logic:**
+
 - Similar to buyer validation but for seller IDs
 - Account type determination (NIDN, CONCAT, CCPT)
 - Format validation and CONCAT generation
 
 **Output:**
+
 - Same structure as buyer validation (single and batch modes)
 
 **Common Seller Incident Codes:**
-- 16_19 - Invalid seller ID format
-- 16_21 - Seller ID missing
-- 16_23 - Seller ID type mismatch  
-- 16_20 - Inconsistent seller decision maker ID (⚠️ uses different validation logic)
-- 16_64 - Inconsistent seller decision maker ID (⚠️ uses different validation logic)
-- 17_*, 18_*, 19_*, 20_*, 21_*, 22_*, 23_*, 24_* - Other seller ID issues
 
-**Incident Codes:**
 - 16_19 - Invalid seller ID format
 - 16_21 - Seller ID missing
 - 16_23 - Seller ID type mismatch
-- 16_20 - Seller decision maker ID issues
+- 16_20 - Inconsistent seller decision maker ID (⚠️ different validation logic)
+- 16_64 - Inconsistent seller decision maker ID (⚠️ different validation logic)
+- 17_*, 18_*, 19_*, 20_*, 21_*, 22_*, 23_*, 24_* - Other seller ID issues
 
 ---
 
@@ -339,6 +384,7 @@ validate-seller \
 Validate pricing data in transaction records.
 
 **Usage:**
+
 ```bash
 # Using config file
 validate-pricing --config config/environments/local.yaml
@@ -351,6 +397,7 @@ validate-pricing \
 ```
 
 **Options:**
+
 - `--config PATH` - Configuration YAML file
 - `--reference PATH` - Reference CSV (template file)
 - `--extract PATH` - Database extract CSV
@@ -359,16 +406,19 @@ validate-pricing \
 - `--log-level LEVEL` - Logging level
 
 **Validation Logic:**
+
 - Validates Price field presence
 - Validates Price Currency
 - Checks Net Amount calculations
 - Verifies Interest and Consideration fields
 
 **Output:**
+
 - Validated template file with pricing corrections
 - Log file with processing summary
 
 **Incident Code:**
+
 - 35_3 - Price missing or invalid
 
 ---
@@ -380,6 +430,7 @@ validate-pricing \
 Process Phase 2 replay data (incident lookup and validation).
 
 **Usage:**
+
 ```bash
 # Using config file
 replay-phase2 --config config/environments/local.yaml
@@ -392,12 +443,14 @@ replay-phase2 \
 ```
 
 **Options:**
+
 - `--config PATH` - Configuration YAML file (required)
 - `--input PATH` - Input CSV file (overrides config)
 - `--output PATH` - Output CSV file (overrides config)
 - `--verbose` - Enable detailed logging
 
 **Related:**
+
 - Configuration template: `config/templates/phase2_template.yaml`
 
 ---
@@ -407,17 +460,20 @@ replay-phase2 \
 Process Phase 3 replay data (incident code matrix application).
 
 **Usage:**
+
 ```bash
 replay-phase3 --config config/environments/local.yaml
 ```
 
 **Options:**
+
 - `--config PATH` - Configuration YAML file (required)
 - `--input PATH` - Input CSV file (overrides config)
 - `--output PATH` - Output CSV file (overrides config)
 - `--matrix PATH` - Incident code matrix file (overrides config)
 
 **Related:**
+
 - Configuration template: `config/templates/phase3_template.yaml`
 - Incident code matrix: `data/archive/incident_code_matrix.csv`
 
@@ -428,16 +484,19 @@ replay-phase3 --config config/environments/local.yaml
 Process Phase 3 final lookup (consolidated error/query assignment).
 
 **Usage:**
+
 ```bash
 replay-phase3-final --config config/environments/local.yaml
 ```
 
 **Options:**
+
 - `--config PATH` - Configuration YAML file (required)
 - `--input PATH` - Input CSV file (overrides config)
 - `--output PATH` - Output CSV file (overrides config)
 
 **Related:**
+
 - Configuration template: `config/templates/phase3_final_template.yaml`
 
 ---
@@ -446,9 +505,12 @@ replay-phase3-final --config config/environments/local.yaml
 
 ### replay-xlsx-converter
 
-Convert XLSX files to CSV format with enhanced features including recursive directory scanning, filtering by fiscal year/quarter/phase, and robust handling of multi-line cells.
+Convert XLSX files to CSV format with enhanced features including recursive directory
+scanning, filtering by fiscal year/quarter/phase, and robust handling of multi-line
+cells.
 
 **Usage:**
+
 ```bash
 # Using config file (default: config/templates/xlsx_converter_template.yaml)
 replay-xlsx-converter --config config/my_config.yaml
@@ -481,7 +543,9 @@ replay-xlsx-converter \
 ```
 
 **Options:**
-- `--config PATH` - Configuration YAML file (optional, default: config/templates/xlsx_converter_template.yaml)
+
+- `--config PATH` - Configuration YAML file
+  (optional, default: config/templates/xlsx_converter_template.yaml)
 - `--mode {1,2}` - Conversion mode: 1=Recursive parent directory, 2=Single directory
 - `--parent-dir PATH` - Parent directory to scan recursively (mode 1)
 - `--input-dir PATH` - Single directory with XLSX files (mode 2)
@@ -495,6 +559,7 @@ replay-xlsx-converter \
 - `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
 
 **Features:**
+
 - Recursive directory scanning with filtering
 - Handles multi-line cells correctly
 - Preserves original file structure when using parent-dir mode
@@ -503,19 +568,23 @@ replay-xlsx-converter \
 - Detailed logging with progress tracking
 
 **Related:**
+
 - Configuration template: `config/templates/xlsx_converter_template.yaml`
 
 ---
 
 ## Configuration Files
 
-All commands support configuration files in YAML format. Configuration files allow you to:
+All commands support configuration files in YAML format. Configuration files allow
+you to:
+
 - Set default input/output paths
 - Configure logging levels and output
 - Define processing options
 - Maintain environment-specific settings
 
 **Configuration Structure:**
+
 ```yaml
 paths:
   input:
@@ -534,9 +603,10 @@ processing:
 ```
 
 **Configuration Templates:**
+
 - `config/templates/local_template.yaml` - General template
-- `config/templates/accuracy_template_generator_template.yaml` - Template generator config
-- `config/templates/sql_extract_generator_template.yaml` - SQL extract generator config
+- `config/templates/accuracy_template_generator_template.yaml` - Template generator
+- `config/templates/sql_extract_generator_template.yaml` - SQL extract generator
 - `config/templates/buyer_validation_template.yaml` - Buyer validation config
 - `config/templates/seller_validation_template.yaml` - Seller validation config
 - `config/templates/pricing_validation_template.yaml` - Pricing validation config
@@ -546,12 +616,15 @@ processing:
 - `config/templates/xlsx_converter_template.yaml` - XLSX converter config
 
 **Default Configuration Behavior:**
+
 All commands support the `--config` option, but it's optional. If not specified:
-- Commands will look for a default config file in `config/templates/[command]_template.yaml`
-- Most validation and replay commands fall back to `config/local/[category]/[script].yaml`
+
+- Commands look for default config in `config/templates/[command]_template.yaml`
+- Validation/replay commands fall back to `config/local/[category]/[script].yaml`
 - You can always override config values with command-line arguments
 
 **Creating Local Configuration:**
+
 ```bash
 # Copy template and customize
 cp config/templates/local_template.yaml config/environments/local.yaml
@@ -621,6 +694,7 @@ Some commands support environment variables for common settings:
 - `TXR_OUTPUT_DIR` - Default output directory
 
 Example:
+
 ```bash
 export TXR_CONFIG=config/environments/local.yaml
 export TXR_LOG_LEVEL=DEBUG
@@ -689,11 +763,12 @@ replay-phase2 --help
 ```
 
 For more information, see:
+
 - [Accuracy Testing Workflow Guide](../guides/Accuracy_Testing_Workflow.md)
 - [Quick Start Guide](../guides/Quick_Start_Guide.md)
 - [Git Workflow Summary](../guides/Git_Workflow_Summary.md)
 
 ---
 
-**Last Updated:** January 23, 2026  
-**Version:** 1.0
+**Last Updated:** January 28, 2026
+**Version:** 1.1

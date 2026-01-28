@@ -202,7 +202,8 @@ git rebase -i abc1234
 git push --force-with-lease origin phase0-refactoring
 ```
 
-**Prevention**: The `pull.rebase true` configuration prevents these merge commits from occurring in the first place.
+**Prevention**: The `pull.rebase true` configuration prevents these merge commits
+from occurring in the first place.
 
 ### If You Forgot to Create a Branch
 

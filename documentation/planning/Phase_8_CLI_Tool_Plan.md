@@ -9,9 +9,14 @@
 
 ## Executive Summary
 
-This document outlines the plan to create a unified command-line interface (CLI) tool that consolidates all transaction reporting automations into a single, user-friendly entry point. This tool will simplify workflow execution by providing guided selection of operations (extract generation, accuracy testing, or replay) and appropriate incident codes or phases.
+This document outlines the plan to create a unified command-line interface (CLI)
+tool that consolidates all transaction reporting automations into a single,
+user-friendly entry point. This tool will simplify workflow execution by providing
+guided selection of operations (extract generation, accuracy testing, or replay)
+and appropriate incident codes or phases.
 
-**This is Phase 8** - to be started after successful completion of Phases 0-7 (Python refactoring and VBA migration).
+**This is Phase 8** - to be started after successful completion of Phases 0-7
+(Python refactoring and VBA migration).
 
 ### Key Benefits
 
@@ -40,7 +45,8 @@ This CLI tool is designed to evolve into a **Graphical User Interface (GUI)** in
 - **Short-Term (Phase 8)**: Command-line interface with text-based menus
 - **Medium-Term (Phase 9+)**: Desktop GUI application (Electron, PyQt, or similar)
 
-**Architectural Principle**: Keep business logic separate from presentation layer to enable easy GUI transition.
+**Architectural Principle**: Keep business logic separate from presentation layer
+to enable easy GUI transition.
 
 ---
 
@@ -273,14 +279,14 @@ txr_automation/
 The tool uses [incident_fields.csv](../reference_data/incident_fields.csv) as the master catalog:
 
 ```csv
-incident_code,incident_name,category,script_name,input_schema,description
-7_37,Inconsistent Buyer Identification Codes,Accuracy Testing,inconsistent_buyer_id_validation.py,buyer_id_validation_input,Validates consistency of buyer ID codes across transactions
-7_38,Inconsistent Seller Identification Codes,Accuracy Testing,inconsistent_seller_id_validation.py,seller_id_validation_input,Validates consistency of seller ID codes across transactions
-7_39,Buyer ID Validation,Accuracy Testing,buyer_id_validation.py,buyer_id_validation_input,Validates buyer identification codes against reference data
-7_40,Seller ID Validation,Accuracy Testing,seller_id_validation.py,seller_id_validation_input,Validates seller identification codes against reference data
-7_41,Buyer Decision Maker Validation,Accuracy Testing,validate_ftbdm.py,ftbdm_input,Validates buyer decision maker information
-7_42,Seller Decision Maker Validation,Accuracy Testing,validate_ftsdm.py,ftsdm_input,Validates seller decision maker information
-7_43,Pricing Data Validation,Accuracy Testing,pricing_validation.py,pricing_input,Validates pricing and financial calculations
+incident_code,incident_name,category,script_name
+7_37,Inconsistent Buyer ID,Accuracy Testing,inconsistent_buyer_id_validation.py
+7_38,Inconsistent Seller ID,Accuracy Testing,inconsistent_seller_id_validation.py
+7_39,Buyer ID Validation,Accuracy Testing,buyer_id_validation.py
+7_40,Seller ID Validation,Accuracy Testing,seller_id_validation.py
+7_41,Buyer Decision Maker,Accuracy Testing,validate_ftbdm.py
+7_42,Seller Decision Maker,Accuracy Testing,validate_ftsdm.py
+7_43,Pricing Data Validation,Accuracy Testing,pricing_validation.py
 ```
 
 ### Incident Manager Implementation
@@ -877,7 +883,7 @@ if __name__ == '__main__':
 ### Timeline: 3-4 Weeks
 
 | Week | Focus | Deliverables |
-|------|-------|--------------|
+| ------ | ------- | -------------- |
 | **Week 1** | Core Infrastructure | - Project structure<br>- Incident/Phase managers<br>- Base workflow class<br>- CLI renderer |
 | **Week 2** | Workflows | - Accuracy testing workflow<br>- Replay workflow<br>- Extract workflow<br>- Integration with existing scripts |
 | **Week 3** | CLI Interface | - Main menu system<br>- Submenus<br>- User prompts<br>- Error handling |
@@ -886,6 +892,7 @@ if __name__ == '__main__':
 ### Dependencies
 
 **Must Be Complete Before Starting:**
+
 - ✅ All Phase 0-7 scripts functional
 - ✅ `txr_replay_core` package stable
 - ✅ `txr_core` package stable
@@ -895,7 +902,7 @@ if __name__ == '__main__':
 ### Risk Assessment
 
 | Risk | Mitigation |
-|------|------------|
+| ------ | ------------ |
 | **Script integration issues** | - Test with each script individually<br>- Use subprocess with proper error handling<br>- Validate script outputs |
 | **Path management complexity** | - Centralize path configuration<br>- Use pathlib consistently<br>- Test on actual file structure |
 | **User confusion** | - Clear menu labels<br>- Helpful error messages<br>- Comprehensive user testing |
@@ -1099,11 +1106,12 @@ class GUIAccuracyTestingController:
         self.view.show_results(results)
 ```
 
-4. **Shared Components**
-   - ✅ All `managers/` classes work with GUI
-   - ✅ All `workflows/` classes work with GUI
-   - ✅ Only `ui/` layer needs replacement
-   - ✅ Same configuration and incident catalog
+**Shared Components:**
+
+- ✅ All `managers/` classes work with GUI
+- ✅ All `workflows/` classes work with GUI
+- ✅ Only `ui/` layer needs replacement
+- ✅ Same configuration and incident catalog
 
 ---
 
@@ -1139,7 +1147,9 @@ class GUIAccuracyTestingController:
 
 ## Conclusion
 
-**Phase 8** provides a unified interface for all transaction reporting automations, significantly improving the user experience while laying the foundation for future GUI development.
+**Phase 8** provides a unified interface for all transaction reporting automations,
+significantly improving the user experience while laying the foundation for future
+GUI development.
 
 **Key Benefits:**
 

@@ -2,7 +2,9 @@
 
 ## Overview
 
-This project uses Conda for package management to ensure compatibility with production environments that have SSL restrictions preventing direct pip/PyPI access.
+This project uses Conda for package management to ensure compatibility with
+production environments that have SSL restrictions preventing direct pip/PyPI
+access.
 
 ## Installation Steps
 
@@ -45,7 +47,9 @@ conda activate txr_automation
 pip install -e .
 ```
 
-**Note**: This step requires `setuptools` to be installed in your environment. If you encounter a `ModuleNotFoundError: No module named 'setuptools'` error, install it first:
+**Note**: This step requires `setuptools` to be installed in your environment.
+If you encounter a `ModuleNotFoundError: No module named 'setuptools'` error,
+install it first:
 
 ```bash
 conda install setuptools
@@ -53,6 +57,7 @@ pip install -e .
 ```
 
 The `-e` flag installs the package in "editable" mode, meaning:
+
 - Changes to source code are immediately available without reinstalling
 - Console scripts (`replay-phase2`, `replay-phase3`, etc.) are added to your PATH
 - The package can be imported from anywhere: `import replay`, `import utils`
