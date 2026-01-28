@@ -1092,12 +1092,31 @@ See **archive/Phase_0_Refactoring_Plan.md** for historical details.
 
 ---
 
-### **Phase 3: Decision Maker Validation** 🔲 **NOT STARTED**
+### **Phase 3: Decision Maker Validation** ✅ **COMPLETED (28 January 2026)**
 
-**Scripts to convert:**
+**Completed Scripts:**
 
-- ValidateFTBDM3_0.vb → `validate_ftbdm.py` (Buyer Decision Maker)
-- ValidateFTSDM3_0.vb → `validate_ftsdm.py` (Seller Decision Maker)
+- ✅ `validate_ftbdm.py` - Migrated from ValidateFTBDM3_0.vb (Buyer Decision Maker, incident 12_17)
+- ✅ `validate_ftsdm.py` - Migrated from ValidateFTSDM3_0.vb (Seller Decision Maker, incident 21_17)
+
+**Features implemented:**
+
+- DecisionMakerRecord dataclass for structured data handling
+- LEILookupManager for branch → LEI resolution
+- IDFormatValidator for ID type classification (LEI, NIDN, CONCAT, etc.)
+- Full validation logic: SIPP exemption, discretionary checks, DM population
+- Correction generation with format `{LEI}:L`
+- Product determination from Account ID prefix
+- 40 comprehensive unit tests
+
+**Files created:**
+
+- `src/accuracy_testing/models/decision_maker_record.py`
+- `src/accuracy_testing/validators/decision_maker_validator.py`
+- `src/accuracy_testing/scripts/validate_ftbdm.py`
+- `src/accuracy_testing/scripts/validate_ftsdm.py`
+- `tests/test_accuracy_testing/test_decision_maker_validation.py`
+- `config/templates/decision_maker_validation_template.yaml`
 
 ---
 
