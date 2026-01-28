@@ -36,7 +36,6 @@ from ..models.data_push_record import (
     DataPushConfig,
     PushStats,
     PushAction,
-    ColumnMapping,
     DEFAULT_COLUMN_MAPPINGS,
 )
 

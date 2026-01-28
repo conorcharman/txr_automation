@@ -154,7 +154,7 @@ class IDLogicValidator:
     def _validate_belgian_nidn(self, nidn: str, provided_dob: str, provided_gender: str) -> bool:
         """
         Belgian NIDN: YYMMDD + sequence (odd=M, even=F) + check digit (mod 97).
-        Regex: ^\d{6}\d{3}\d{2}$
+        Regex: ``^\\d{6}\\d{3}\\d{2}$``
         """
         if len(nidn) != 11 or not nidn.isdigit():
             return True
@@ -201,7 +201,7 @@ class IDLogicValidator:
     def _validate_bulgarian_nidn(self, nidn: str, provided_dob: str, provided_gender: str) -> bool:
         """
         Bulgarian NIDN: YYMMDD + region + sequence (even=M, odd=F) + check digit.
-        Regex: ^\d{6}\d{2}\d{1}\d{1}$
+        Regex: ``^\\d{6}\\d{2}\\d{1}\\d{1}$``
         """
         if len(nidn) != 10 or not nidn.isdigit():
             return True
@@ -245,7 +245,7 @@ class IDLogicValidator:
         """
         Czech NIDN: YYMMDD + sequence + optional check digit.
         MM offset: +50 or +70 for females.
-        Regex: ^\d{6}\d{3}$ or ^\d{6}\d{3}\d{1}$
+        Regex: ``^\\d{6}\\d{3}$`` or ``^\\d{6}\\d{3}\\d{1}$``
         """
         if len(nidn) not in [9, 10] or not nidn.isdigit():
             return True
@@ -306,7 +306,7 @@ class IDLogicValidator:
     def _validate_danish_nidn(self, nidn: str, provided_dob: str, provided_gender: str) -> bool:
         """
         Danish NIDN: DDMMYY + sequence.
-        Regex: ^\d{6}\d{4}$
+        Regex: ``^\\d{6}\\d{4}$``
         """
         if len(nidn) != 10 or not nidn.isdigit():
             return True
@@ -325,7 +325,7 @@ class IDLogicValidator:
     def _validate_estonian_nidn(self, nidn: str, provided_dob: str, provided_gender: str) -> bool:
         """
         Estonian NIDN: Gender+Century code + YYMMDD + sequence + check digit.
-        Regex: ^\d{1}\d{6}\d{3}\d{1}$
+        Regex: ``^\\d{1}\\d{6}\\d{3}\\d{1}$``
         """
         if len(nidn) != 11 or not nidn.isdigit():
             return True
