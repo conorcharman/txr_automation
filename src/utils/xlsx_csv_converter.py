@@ -26,7 +26,32 @@ except ImportError:
     # Fallback to pandas if openpyxl not available
     import pandas as pd
 
+from dataclasses import dataclass, field
 from core import ConfigManager, create_logger
+
+
+@dataclass
+class ConverterStats:
+    """Statistics for XLSX to CSV conversion operations."""
+    
+    processed_files: int = 0
+    successful_conversions: int = 0
+    errors: int = 0
+    skipped: int = 0
+    
+    def print_summary(self, logger=None) -> None:
+        """Print summary of conversion statistics."""
+        summary = (
+            f"\nConversion Summary:\n"
+            f"  Processed files: {self.processed_files}\n"
+            f"  Successful conversions: {self.successful_conversions}\n"
+            f"  Errors: {self.errors}\n"
+            f"  Skipped: {self.skipped}\n"
+        )
+        if logger:
+            logger.info(summary)
+        else:
+            print(summary)
 
 
 class XLSXConverter:
@@ -308,7 +333,7 @@ class XLSXConverter:
             wb.close()
             
             self.logger.info(f"  ✓ Created: {csv_file.name} ({row_count:,} input rows → {output_row_count:,} output rows)")
-            self.stats.successful_matches += 1
+            self.stats.successful_conversions += 1
             return True
             
         except Exception as e:
@@ -337,7 +362,7 @@ class XLSXConverter:
             
             if self.dry_run:
                 self.logger.info(f"  [DRY RUN] Would create: {csv_file}")
-                self.stats.successful_matches += 1
+                self.stats.successful_conversions += 1
                 return True
             
             # Check if CSV already exists
@@ -370,7 +395,7 @@ class XLSXConverter:
                 writer.writerows(data_rows)
             
             self.logger.info(f"  ✓ Created: {csv_file.name}")
-            self.stats.successful_matches += 1
+            self.stats.successful_conversions += 1
             return True
             
         except Exception as e:

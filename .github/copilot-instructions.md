@@ -6,8 +6,8 @@ This project is migrating VBA macros for transaction reporting automation to Pyt
 
 **Key Planning Documents:**
 
-- [Python_Migration_Plan.md](documentation/planning/Python_Migration_Plan.md) - Master migration plan with phases, timelines, and technical approach
-- [Phase_8_CLI_Tool_Plan.md](documentation/planning/Phase_8_CLI_Tool_Plan.md) - Future CLI unification plan
+- [Python_Migration_Plan.md](../documentation/planning/Python_Migration_Plan.md) - Master migration plan with phases, timelines, and technical approach
+- [Phase_8_CLI_Tool_Plan.md](../documentation/planning/Phase_8_CLI_Tool_Plan.md) - Future CLI unification plan
 
 **Current Status (28 January 2026):**
 
@@ -17,6 +17,18 @@ This project is migrating VBA macros for transaction reporting automation to Pyt
 - Phase 3 (Decision Maker Validation): 🔲 Not started
 - Phase 4 (Inconsistent ID): ✅ Complete
 - Phase 5 (Data Operations): 🔲 Not started
+
+---
+
+## Terminal Environment
+
+**Important:** When creating a new terminal session, always activate the conda environment first:
+
+```bash
+conda activate txr_automation
+```
+
+This ensures all Python commands use the correct environment with the required dependencies.
 
 ---
 
