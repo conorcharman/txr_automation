@@ -1,0 +1,125 @@
+# Fund Trade Decision Maker Validation Configuration Template
+# =============================================================
+#
+# Configuration for Buyer (12_17) and Seller (21_17) Decision Maker validation.
+#
+# Usage:
+#   1. Copy this template to config/local/accuracy_testing/
+#   2. Update paths to match your environment
+#   3. Run: python -m src.accuracy_testing.scripts.validate_ftbdm --config <path>
+#
+# For Buyer validation (incident 12_17):
+#   python -m src.accuracy_testing.scripts.validate_ftbdm --config <config>
+#
+# For Seller validation (incident 21_17):
+#   python -m src.accuracy_testing.scripts.validate_ftsdm --config <config>
+
+# =============================================================================
+# Incident Information
+# =============================================================================
+incident:
+  # Incident code (12_17 for buyer, 21_17 for seller)
+  code: "12_17"
+  
+  # Party type: "Buyer" or "Seller"
+  party_type: "Buyer"
+  
+  # Description for logging
+  description: "Fund Trade Decision Maker Validation"
+
+# =============================================================================
+# Testing Period
+# =============================================================================
+testing_period:
+  # Fiscal year (e.g., FY25, FY26)
+  fiscal_year: "FY26"
+  
+  # Quarter (e.g., Q1, Q2, Q3, Q4)
+  quarter: "Q1"
+
+# =============================================================================
+# File Paths
+# =============================================================================
+paths:
+  # Input CSV file with transaction data
+  # Columns: Transaction Reference, Account ID, Buyer/Seller Code, 
+  #          DM Code, Account Type, Service Level, Branch Code
+  input_file: "data/input/ftbdm_input.csv"
+  
+  # Output CSV file with validation results
+  # Same columns as input + Error, Correction, Correction Field
+  output_file: "data/output/ftbdm_validated.csv"
+  
+  # LEI reference data file (Branch Code -> LEI mapping)
+  # Columns: Branch Code, LEI
+  lei_data_file: "data/reference/lei_lookup.csv"
+  
+  # ID format patterns file (optional)
+  # Columns: Country, ID Type, Pattern (regex)
+  # id_formats_file: "documentation/reference_data/id_formats.csv"
+  
+  # Log output directory
+  log_output: "data/output/logs"
+
+# =============================================================================
+# Processor Configuration
+# =============================================================================
+processor:
+  # Logging level: DEBUG, INFO, WARNING, ERROR
+  log_level: "INFO"
+  
+  # Enable verbose console output
+  verbose: false
+
+# =============================================================================
+# Validation Rules
+# =============================================================================
+validation:
+  # Account types exempt from validation
+  exempt_account_types:
+    - "SIPP"
+  
+  # Service levels that require validation
+  discretionary_service_levels:
+    - "D"
+
+# =============================================================================
+# Sample LEI Data Format
+# =============================================================================
+# The LEI data file should have the following format:
+#
+# Branch Code,LEI
+# ABC001,549300FUNDMANAGER0001
+# XYZ002,549300FUNDMANAGER0002
+# DEF003,549300MANAGER00000003
+#
+# Notes:
+# - Branch Code: Internal branch or partner identifier
+# - LEI: 20-character Legal Entity Identifier
+# - First row is header (will be skipped)
+
+# =============================================================================
+# Sample Input Data Format
+# =============================================================================
+# The input CSV should have the following columns:
+#
+# Transaction Reference,Account ID,Buyer Code,Type of Buyer ID,Buyer DM Code,
+# Type of Buyer DM ID,Product,Account Type,Service Level,Branch Code,
+# Error,Correction,Correction Field
+#
+# Notes:
+# - Columns 4, 6, 7, 11, 12, 13 are output columns (will be populated)
+# - Input columns: 1, 2, 3, 5, 8, 9, 10
+# - For Seller validation, use "Seller Code" and "Seller DM Code"
+
+# =============================================================================
+# Validation Logic Summary
+# =============================================================================
+# 1. SIPP accounts: Always no error (exempt)
+# 2. Non-discretionary (Service Level != D): Always no error
+# 3. Discretionary accounts:
+#    a. DM Code empty → Error, provide LEI correction
+#    b. DM Code = Party Code → Error, provide correct LEI
+#    c. DM Code different → No error
+# 4. If branch not found → TBC - Investigate branch code
+# 5. If branch found but LEI empty → TBC - Investigate LEI
