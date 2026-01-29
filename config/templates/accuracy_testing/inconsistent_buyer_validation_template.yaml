@@ -29,16 +29,21 @@ incidents:
   - "7_66"
 
 # File paths
+# Note: For inconsistent ID validation:
+# 1. Extract file (input) - SQL database export with Trade_Date_Time for chronological ordering
+# 2. Template file (Kaizen lookup) - Optional, contains expected correct ID values
+# 3. Output file - Where validation results are written
+
 paths:
-  # Input file containing records with Trade_Date_Time field
+  # SQL extract file (input) containing records with Trade_Date_Time field
   # Required columns: Transaction Reference, Account ID, Trade_Date_Time,
   #                   Person Code, Account Type, Buyer ID Code, Type of Buyer ID Code,
   #                   First Name, Surname, Date of Birth, Gender, 
   #                   Primary Nationality, Secondary Nationality
-  input_file: "data/input/accuracy_testing/inconsistent_buyer_input.csv"
+  input_file: "data/input/accuracy_testing/extracts/inconsistent_buyer_extract_7_66.csv"
   
   # Output file with corrections applied
-  output_file: "data/output/accuracy_testing/inconsistent_buyer_validated.csv"
+  output_file: "data/output/accuracy_testing/inconsistent_buyer_validated_7_66.csv"
   
   # Log output directory
   log_output: "logs"
@@ -51,10 +56,11 @@ paths:
   # Format: Column J = Person Code, Column N = Status
   # main_tracker: "path/to/main_tracker.csv"
   
-  # Optional: Template file for Kaizen error lookup
-  # template_file: "path/to/template.xlsx"
-  # template_id_column: 23
-  # template_type_column: 24
+  # Optional: Kaizen template file for expected value lookup/comparison
+  # This is separate from the extract file - it contains the expected correct values
+  # template_file: "data/output/accuracy_testing/templates/FY25 Q3 7_66.csv"
+  # template_id_column: 21  # Column V (0-indexed, for expected ID)
+  # template_type_column: 22  # Column W (0-indexed, for expected type)
 
 # Processor configuration
 processor:

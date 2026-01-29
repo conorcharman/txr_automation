@@ -23,18 +23,29 @@ incidents:
   - "7_39"
 
 # File paths
+# Note: Three separate files are involved in the validation workflow:
+# 1. Extract file (input) - SQL database export containing transaction data to validate
+# 2. Template file (Kaizen lookup) - Contains expected correct ID values for comparison
+# 3. Output file - Where validation results are written
+
 paths:
-  # Template directory (contains files named "FY25 Q3 7_37.csv")
+  # SQL extract directory (contains database export CSV files)
+  # Example files: "buyer_extract_7_37.csv", "buyer_extract_7_39.csv"
+  extract_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\extracts'
+  
+  # Template directory (contains Kaizen template files with expected values)
+  # Example files: "FY26 Q1 7_37.csv", "FY26 Q1 7_39.csv"
+  # These files contain the expected correct ID values in columns for comparison
   template_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\incident_code_analysis'
   
   # Output directory for validated files
   output_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\validated'
   
   # Log output directory
-  log_output: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\validated'
+  log_output: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\logs'
   
-  Optional: Italian tracker CSV file for IT fiscal code validation
-  Format: Column C = Person Code, Column G = Status
+  # Optional: Italian tracker CSV file for IT fiscal code validation
+  # Format: Column C = Person Code, Column G = Status
   italian_tracker: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\Transaction Reporting - Italian Fiscal Code Validation.csv'
   
   # Optional: Main tracker CSV file for client data remediation

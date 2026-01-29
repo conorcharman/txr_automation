@@ -15,7 +15,13 @@ incidents:
   - "35_3"
 
 paths:
-  # Template directory (contains files named "FY25 Q3 35_3.csv")
+  # SQL extract directory (contains database export CSV files)
+  # Example files: "pricing_extract_35_3.csv"
+  extract_dir: "data/input/accuracy_testing/extracts"
+  
+  # Template directory (contains Kaizen template files with expected values)
+  # Example files: "FY25 Q3 35_3.csv"
+  # These files contain the expected correct pricing values for comparison
   template_dir: "data/output/accuracy_testing/templates"
   
   # Output directory for validated files

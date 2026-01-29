@@ -24,8 +24,19 @@ auto_incidents: "all"
 #   - "16_20"
 
 # File paths
+# Note: Three separate files are involved in the validation workflow:
+# 1. Extract file (input) - SQL database export containing transaction data to validate
+# 2. Template file (Kaizen lookup) - Contains expected correct ID values for comparison
+# 3. Output file - Where validation results are written
+
 paths:
-  # Template directory (contains files named "FY25 Q3 16_21.csv")
+  # SQL extract directory (contains database export CSV files)
+  # Example files: "seller_extract_16_21.csv", "seller_extract_16_23.csv"
+  extract_dir: "data/input/accuracy_testing/extracts"
+  
+  # Template directory (contains Kaizen template files with expected values)
+  # Example files: "FY25 Q3 16_21.csv", "FY25 Q3 16_23.csv"
+  # These files contain the expected correct ID values in columns for comparison
   template_dir: "data/output/accuracy_testing/templates"
   
   # Output directory for validated files
