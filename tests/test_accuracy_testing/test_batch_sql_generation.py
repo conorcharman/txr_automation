@@ -203,8 +203,8 @@ OutputFormat=CSV
         # Check result
         assert result == 0
         
-        # Check output file exists (files go to csv/ subdir when output_format='both')
-        output_file = self.output_dir / "csv" / "7_37_FY25_Q3.sql"
+        # Check output file exists (files go to sql/ subdir when output_format='sql' or 'both')
+        output_file = self.output_dir / "sql" / "7_37_FY25_Q3.sql"
         assert output_file.exists()
         
         # Check content contains transaction refs
@@ -248,9 +248,9 @@ OutputFormat=CSV
         # Check result
         assert result == 0
         
-        # Check all output files exist (files go to csv/ subdir when output_format='both')
+        # Check all output files exist (files go to sql/ subdir when output_format='sql' or 'both')
         for incident in incidents:
-            output_file = self.output_dir / "csv" / f"{incident}_FY25_Q3.sql"
+            output_file = self.output_dir / "sql" / f"{incident}_FY25_Q3.sql"
             assert output_file.exists(), f"Output file not found: {output_file}"
     
     def test_splits_large_dataset(self):
@@ -287,10 +287,10 @@ OutputFormat=CSV
         assert result == 0
         
         # Should create 3 files: Extract1 (900), Extract2 (900), Extract3 (200)
-        # Files go to csv/ subdir when output_format='both'
-        assert (self.output_dir / "csv" / "7_37_FY25_Q3_Extract1.sql").exists()
-        assert (self.output_dir / "csv" / "7_37_FY25_Q3_Extract2.sql").exists()
-        assert (self.output_dir / "csv" / "7_37_FY25_Q3_Extract3.sql").exists()
+        # Files go to sql/ subdir when output_format='sql' or 'both'
+        assert (self.output_dir / "sql" / "7_37_FY25_Q3_Extract1.sql").exists()
+        assert (self.output_dir / "sql" / "7_37_FY25_Q3_Extract2.sql").exists()
+        assert (self.output_dir / "sql" / "7_37_FY25_Q3_Extract3.sql").exists()
     
     def test_handles_missing_validated_csv(self):
         """Should handle missing validated CSV gracefully."""
@@ -326,8 +326,8 @@ OutputFormat=CSV
         # Should return error code (MISSING incident unknown)
         assert result == 1
         
-        # Should still create output for valid CSV (files go to csv/ subdir)
-        assert (self.output_dir / "csv" / "7_37_FY25_Q3.sql").exists()
+        # Should still create output for valid CSV (files go to sql/ subdir)
+        assert (self.output_dir / "sql" / "7_37_FY25_Q3.sql").exists()
     
     def test_dry_run_mode(self):
         """Should not create files in dry run mode."""
