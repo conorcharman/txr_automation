@@ -513,6 +513,10 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
         incidents = config.get('incidents', [])
     
     paths = config.get('paths', {})
+    # Support both old and new config formats
+    # New format: extract_dir (input SQL extracts) + template_dir (Kaizen templates)
+    # Old format: template_dir (used for both)
+    extract_dir = Path(paths.get('extract_dir', paths.get('template_dir', 'data/extracts')))
     template_dir = Path(paths.get('template_dir', 'data/templates'))
     output_dir = Path(paths.get('output_dir', 'data/validated'))
     
@@ -523,6 +527,7 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
     print(f"\n{'='*70}")
     print(f"BATCH SELLER ID VALIDATION - {fiscal_year} {quarter}")
     print(f"{'='*70}")
+    print(f"Extract directory:  {extract_dir}")
     print(f"Template directory: {template_dir}")
     print(f"Output directory:   {output_dir}")
     print(f"Incidents:          {', '.join(incidents)}")
@@ -559,17 +564,18 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
             total_failed += 1
             continue
         
-        # Build template filename: "FY25 Q3 16_21.csv"
-        template_filename = f"{fiscal_year} {quarter} {incident}.csv"
-        template_path = template_dir / template_filename
+        # Build filenames: "FY25 Q3 16_21.csv"
+        base_filename = f"{fiscal_year} {quarter} {incident}.csv"
+        extract_path = extract_dir / base_filename
+        template_path = template_dir / base_filename
         
         # Build output filename: "validated_FY25_Q3_16_21.csv"
         output_filename = f"validated_{fiscal_year}_{quarter}_{incident}.csv"
         output_path = output_dir / output_filename
         
-        # Check if template exists
-        if not template_path.exists():
-            print(f"⚠️  Template not found: {template_path}")
+        # Check if extract file exists (input data to validate)
+        if not extract_path.exists():
+            print(f"⚠️  Extract file not found: {extract_path}")
             print(f"   Skipping incident {incident}")
             total_failed += 1
             continue
@@ -578,9 +584,9 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
         incident_config = config.copy()
         incident_config['paths'] = {
             **paths,
-            'input_file': str(template_path),
+            'input_file': str(extract_path),
             'output_file': str(output_path),
-            'template_file': str(template_path)
+            'template_file': str(template_path) if template_path.exists() else ''  # Optional Kaizen lookup
         }
         
         try:
