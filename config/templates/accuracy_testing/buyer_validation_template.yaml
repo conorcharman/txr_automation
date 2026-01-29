@@ -4,39 +4,38 @@
 # Testing period configuration
 testing_period:
   # Fiscal year (e.g., FY25, FY26)
-  fiscal_year: "FY25"
+  fiscal_year: "FY26"
   
   # Quarter (e.g., Q1, Q2, Q3, Q4)
-  quarter: "Q3"
+  quarter: "Q1"
 
 # Incident codes to validate (batch processing)
 # Option 1: Auto-discover all buyer incidents (RECOMMENDED)
 # Set to "all" to automatically process all buyer-related incidents
 # This will discover: 7_*, 8_*, 9_*, 10_*, 11_*, 12_*, 13_*, 14_*, 15_*, 21_2
 # Note: Decision maker incidents (7_66, 7_68) are auto-detected and skipped with warnings
-auto_incidents: "all"
+# auto_incidents: "all"
 
 # Option 2: Specify incidents manually (uncomment and modify below, comment out auto_incidents)
-# incidents:
-#   - "7_35"
-#   - "7_37"
-#   - "7_39"
-#   - "7_66"
+incidents:
+  - "7_35"
+  - "7_37"
+  - "7_39"
 
 # File paths
 paths:
   # Template directory (contains files named "FY25 Q3 7_37.csv")
-  template_dir: "data/output/accuracy_testing/templates"
+  template_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\incident_code_analysis'
   
   # Output directory for validated files
-  output_dir: "data/output/accuracy_testing/validated"
+  output_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\validated'
   
   # Log output directory
-  log_output: "logs"
+  log_output: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\validated'
   
-  # Optional: Italian tracker CSV file for IT fiscal code validation
-  # Format: Column C = Person Code, Column G = Status
-  # italian_tracker: "path/to/italian_tracker.csv"
+  Optional: Italian tracker CSV file for IT fiscal code validation
+  Format: Column C = Person Code, Column G = Status
+  italian_tracker: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\Transaction Reporting - Italian Fiscal Code Validation.csv'
   
   # Optional: Main tracker CSV file for client data remediation
   # Format: Column J = Person Code, Column N = Status
@@ -45,10 +44,10 @@ paths:
 # Processor configuration
 processor:
   # Logging level: DEBUG, INFO, WARNING, ERROR
-  log_level: "DEBUG"
+  log_level: "INFO"
   
   # Enable verbose console output
   verbose: true
   
   # Batch size for processing (future use)
-  batch_size: 1000
+  # batch_size: 1000
