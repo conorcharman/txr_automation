@@ -27,6 +27,7 @@ except ImportError:
     import pandas as pd
 
 from dataclasses import dataclass, field
+
 from core import ConfigManager, create_logger
 
 
@@ -35,6 +36,7 @@ class ConverterStats:
     """Statistics for XLSX to CSV conversion operations."""
     
     processed_files: int = 0
+    successful_matches: int = 0
     successful_conversions: int = 0
     errors: int = 0
     skipped: int = 0
