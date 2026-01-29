@@ -332,7 +332,8 @@ class SQLExtractGenerator:
         parent_dir = Path(output_dir)
         
         # Create output subdirectories based on format
-        sql_dir = parent_dir / 'sql' if self.output_format == 'sql' else parent_dir / 'csv'
+        # SQL files always go to /sql directory (for both 'sql' and 'both' formats)
+        sql_dir = parent_dir / 'sql'
         dtf_dir = parent_dir / 'dtf'
         
         # Create batches

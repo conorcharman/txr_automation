@@ -1,0 +1,124 @@
+# CSV Extract Collation Configuration Template
+# =============================================
+# Merges split CSV extract files back into single files for validation.
+#
+# When the SQL extract generator splits large datasets into multiple batches
+# (e.g., 7_37_Extract1.csv, 7_37_Extract2.csv), this tool collates them back
+# into a single file ready for the validation scripts.
+#
+# Usage:
+#   collate-csv-extracts --config config/local/collate_extracts.yaml
+#   collate-csv-extracts --input-dir data/csv --all-incidents --dry-run
+#
+# File Discovery Patterns:
+#   - Split files: {incident}_Extract{N}.csv (e.g., 7_37_Extract1.csv)
+#   - Single files: {incident}.csv (e.g., 7_37.csv)
+#   - With period: {incident}_{FY}_{Q}_Extract{N}.csv
+
+# =============================================================================
+# TESTING PERIOD
+# =============================================================================
+
+testing_period:
+  fiscal_year: "FY26"      # Fiscal year (e.g., FY25, FY26)
+  quarter: "Q1"            # Quarter (Q1, Q2, Q3, Q4)
+
+# =============================================================================
+# INCIDENT CODES TO PROCESS
+# =============================================================================
+# List the incident codes whose extracts should be collated.
+# Use the same codes from INCIDENT_CODE_MATRIX.
+# Alternatively, use --all-incidents flag to process all known codes.
+
+incidents:
+  # Standard Buyer ID
+  - "7_35"
+  - "7_37"
+  - "7_39"
+  # Inconsistent Buyer ID
+  - "7_66"
+  # Decision Maker - Buyer
+  - "12_17"
+  # Standard Seller ID
+  - "16_19"
+  - "16_21"
+  - "16_23"
+  # Inconsistent Seller ID
+  - "16_20"
+  # Decision Maker - Seller
+  - "21_17"
+  # Pricing
+  - "35_3"
+
+# =============================================================================
+# PATHS
+# =============================================================================
+
+paths:
+  # Directory containing split CSV extract files
+  # These are the outputs from AS/400 Data Transfer tool
+  input_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\extracts\csv'
+  
+  # Directory for collated output files
+  # Defaults to input_dir if not specified
+  output_dir: 
+  
+  # Log output directory (defaults to output_dir)
+  # log_output: "logs/"
+
+# =============================================================================
+# PROCESSING OPTIONS
+# =============================================================================
+
+processing:
+  # Preview mode - show what would be done without writing files
+  dry_run: false
+  
+  # Overwrite existing output files without prompting
+  force: false
+  
+  # Delete original split files after successful merge
+  # WARNING: This permanently removes the original Extract*.csv files
+  delete_originals: true
+
+# =============================================================================
+# EXAMPLES
+# =============================================================================
+#
+# Example 1: Collate all incidents from config
+#   collate-csv-extracts --config config/local/collate_extracts.yaml
+#
+# Example 2: Collate single incident
+#   collate-csv-extracts --input-dir data/csv --incident 7_37 --output data/7_37.csv
+#
+# Example 3: Collate multiple specific incidents
+#   collate-csv-extracts --input-dir data/csv --output-dir data/collated \
+#       --incidents 7_35,7_37,7_39
+#
+# Example 4: Collate all known incidents with dry run
+#   collate-csv-extracts --input-dir data/csv --output-dir data/collated \
+#       --all-incidents --dry-run
+#
+# Example 5: Force overwrite existing files
+#   collate-csv-extracts --config config/local/collate_extracts.yaml --force
+#
+# =============================================================================
+# OUTPUT STRUCTURE
+# =============================================================================
+#
+# Input (split files):
+#   extracts/csv/
+#   ├── 7_37_Extract1.csv
+#   ├── 7_37_Extract2.csv
+#   ├── 7_37_Extract3.csv
+#   ├── 16_21_Extract1.csv
+#   ├── 16_21_Extract2.csv
+#   └── 35_3.csv  (single file, not split)
+#
+# Output (collated files):
+#   extracts/collated/
+#   ├── 7_37.csv      (merged from 3 files)
+#   ├── 16_21.csv     (merged from 2 files)
+#   └── 35_3.csv      (copied, was single file)
+#
+# =============================================================================
