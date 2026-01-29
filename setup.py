@@ -35,6 +35,7 @@ setup(
             "validate-pricing=accuracy_testing.scripts.pricing_validation:main",
             "generate-sql-extract=accuracy_testing.scripts.sql_extract_generator:main",
             "generate-accuracy-template=accuracy_testing.scripts.accuracy_template_generator:main",
+            "collate-csv-extracts=accuracy_testing.scripts.collate_csv_extracts:main",
         ],
     },
     classifiers=[

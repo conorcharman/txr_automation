@@ -53,15 +53,15 @@ incidents:
 paths:
   # Directory containing template CSV files (from accuracy template generator)
   # Expected format: FY26 Q1 7_37.csv
-  template_dir: "data/templates"
+  template_dir: 'c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\incident_code_analysis'
   
   # Directory for SQL template files
   # Templates: BuyerID.sql, SellerID.sql, SCR_pricing_data_v1.0.sql, etc.
-  sql_template_dir: "src/accuracy_testing/sql_templates"
+  sql_template_dir: 'C:\Users\ccharm\Documents\GitHub\txr_automation\src\accuracy_testing\sql_templates'
   
   # DTF template file (AS/400 Data Transfer format)
   # Defaults to AS400_DataTransfer_template.dtf if not specified
-  dtf_template_file: "src/accuracy_testing/sql_templates/AS400_DataTransfer_template.dtf"
+  dtf_template_file: 'C:\Users\ccharm\Documents\GitHub\txr_automation\src\accuracy_testing\sql_templates\AS400_DataTransfer_template.dtf'
   
   # Parent output directory for generated files
   # Structure created:
@@ -69,7 +69,7 @@ paths:
   #   - output_directory/sql/  → SQL files (when format=sql)
   #   - output_directory/dtf/  → DTF files (for AS/400 Data Transfer tool)
   # Generated format: 7_37_FY25_Q3.sql/dtf or 7_37_FY25_Q3_Extract1.sql/dtf
-  output_directory: "data/sql_extracts"
+  output_directory: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\extracts'
 
 # Output options
 output_options:
@@ -92,7 +92,7 @@ processing:
   placeholder_pattern: "-- TRANSACTION REFERENCES --"
   
   # CSV column name containing transaction references
-  transaction_column: "Transaction reference number"
+  transaction_column: "Transaction Reference"
 
 # =============================================================================
 # SQL TEMPLATE MAPPING (AUTOMATIC IN BATCH MODE)

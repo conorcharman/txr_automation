@@ -1,0 +1,23 @@
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - ======================================================================
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - CSV Extract Collation Tool v1.0
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - ======================================================================
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - Input directory:  data/test/split_test
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - Output directory: data/test/split_test
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - Incidents:        1
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - Force overwrite:  ENABLED
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - Delete originals: ENABLED
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - ----------------------------------------------------------------------
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - Processing 1 incidents...
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - Processing incident: 7_37
+2026-01-29 14:14:38 - collate_csv_extracts - INFO -   ✓ Merged 2 files → 7_37.csv (4 data rows, 1 headers skipped, 2 files deleted)
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - ======================================================================
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - 
+Collation Summary:
+  Incidents processed: 1
+  Successful:          1
+  Failed:              0
+  Skipped (no files):  0
+
+2026-01-29 14:14:38 - collate_csv_extracts - INFO - 
+Detailed Results:
+2026-01-29 14:14:38 - collate_csv_extracts - INFO -   ✓ 7_37: 2 file(s) → 4 rows
