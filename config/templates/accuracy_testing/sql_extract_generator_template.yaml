@@ -28,15 +28,26 @@ testing_period:
   fiscal_year: "FY26"      # Fiscal year (e.g., FY25, FY26)
   quarter: "Q1"            # Quarter (Q1, Q2, Q3, Q4)
 
-# Incident codes to process
+# Incident codes to process (from INCIDENT_CODE_MATRIX)
 incidents:
-  - "7_35"   # Buyer ID
+  # Standard Buyer ID (7_35=CONCAT, 7_37=NIDN, 7_39=CCPT)
+  - "7_35"
   - "7_37"
   - "7_39"
-  - "16_19"  # Seller ID
+  # Inconsistent Buyer ID
+  - "7_66"
+  # Fund Trade Decision Maker - Buyer
+  - "12_17"
+  # Standard Seller ID (16_19=CONCAT, 16_21=NIDN, 16_23=CCPT)
+  - "16_19"
   - "16_21"
   - "16_23"
-  - "35_3"   # Pricing data
+  # Inconsistent Seller ID
+  - "16_20"
+  # Fund Trade Decision Maker - Seller
+  - "21_17"
+  # Pricing data
+  - "35_3"
 
 # Paths for batch mode
 paths:
@@ -86,15 +97,16 @@ processing:
 # =============================================================================
 # SQL TEMPLATE MAPPING (AUTOMATIC IN BATCH MODE)
 # =============================================================================
-# The tool automatically selects SQL templates based on incident codes:
+# The tool automatically selects SQL templates based on incident codes
+# (defined in INCIDENT_CODE_MATRIX):
 #
-# Buyer ID incidents (7_*, 8_*, 9_*, etc.):     → BuyerID.sql
-# Seller ID incidents (16_*, 17_*, etc.):       → SellerID.sql
-# Pricing incidents (35_3):                     → SCR_pricing_data_v1.0.sql
-# Inconsistent Buyer (7_66, 7_68):              → InconsistentBuyerID.sql
-# Inconsistent Seller (16_20, 16_64):           → InconsistentSellerID.sql
-# Decision Maker Buyer (12_*):                  → FTBDM.sql
-# Decision Maker Seller (21_*):                 → FTSDM.sql
+# Standard Buyer ID (7_35, 7_37, 7_39):   → BuyerID.sql
+# Inconsistent Buyer ID (7_66):           → InconsistentBuyerID.sql
+# Decision Maker Buyer (12_17):           → FTBDM.sql
+# Standard Seller ID (16_19, 16_21, 16_23): → SellerID.sql
+# Inconsistent Seller ID (16_20):         → InconsistentSellerID.sql
+# Decision Maker Seller (21_17):          → FTSDM.sql
+# Pricing (35_3):                         → SCR_pricing_data_v1.0.sql
 
 # =============================================================================
 # SINGLE MODE CONFIGURATION (LEGACY)

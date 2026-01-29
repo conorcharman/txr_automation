@@ -129,13 +129,13 @@ def get_standard_seller_incident_codes() -> Set[str]:
 
 
 def get_decision_maker_buyer_codes() -> Set[str]:
-    """Get buyer decision maker incident codes (7_66, 7_68)."""
+    """Get buyer decision maker incident codes (12_17)."""
     return {code for code, data in INCIDENT_CODE_MATRIX.items() 
             if 'buyer' in data['sides'] and data['validation_type'] == 'decision_maker'}
 
 
 def get_decision_maker_seller_codes() -> Set[str]:
-    """Get seller decision maker incident codes (16_20, 16_64)."""
+    """Get seller decision maker incident codes (21_17)."""
     return {code for code, data in INCIDENT_CODE_MATRIX.items() 
             if 'seller' in data['sides'] and data['validation_type'] == 'decision_maker'}
 
