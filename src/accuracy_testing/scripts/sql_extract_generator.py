@@ -410,23 +410,23 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
     Raises:
         FileNotFoundError: If template not found
     """
-    # Map incident types to SQL templates
-    # Buyer incidents → BuyerID.sql
-    # Seller incidents → SellerID.sql  
-    # Pricing incidents (35_3) → SCR_pricing_data_v1.0.sql
-    # Inconsistent buyer (7_66, 7_68) → InconsistentBuyerID.sql
-    # Inconsistent seller (16_20, 16_64) → InconsistentSellerID.sql
-    # Decision maker buyer (12_*) → FTBDM.sql
-    # Decision maker seller (21_*) → FTSDM.sql
+    # Map incident types to SQL templates (based on INCIDENT_CODE_MATRIX)
+    # Standard buyer (7_35, 7_37, 7_39) → BuyerID.sql
+    # Standard seller (16_19, 16_21, 16_23) → SellerID.sql  
+    # Pricing (35_3) → SCR_pricing_data_v1.0.sql
+    # Inconsistent buyer (7_66) → InconsistentBuyerID.sql
+    # Inconsistent seller (16_20) → InconsistentSellerID.sql
+    # Decision maker buyer (12_17) → FTBDM.sql
+    # Decision maker seller (21_17) → FTSDM.sql
     
     # Pricing incidents
     if incident_code == '35_3':
         template_path = sql_template_dir / "SCR_pricing_data_v1.0.sql"
     # Inconsistent buyer
-    elif incident_code in ['7_66', '7_68']:
+    elif incident_code == '7_66':
         template_path = sql_template_dir / "InconsistentBuyerID.sql"
     # Inconsistent seller
-    elif incident_code in ['16_20', '16_64']:
+    elif incident_code == '16_20':
         template_path = sql_template_dir / "InconsistentSellerID.sql"
     # Decision maker buyer
     elif incident_code.startswith('12_'):
