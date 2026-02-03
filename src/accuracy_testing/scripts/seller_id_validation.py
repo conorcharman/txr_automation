@@ -272,27 +272,27 @@ class SellerIDValidator:
                     
                     # Build output row from original data + validation results
                     output_row = [
-                        record.transaction_ref,
-                        record.account_id,
-                        record.person_code,
-                        record.account_type,
-                        record.id_value,
-                        record.id_type,
-                        record.first_name,
-                        record.surname,
-                        record.date_of_birth,
-                        record.gender,
-                        primary_nat,
-                        record.correction_fields or "",  # Fields corrected
-                        record.tracker_status or "",  # Tracker status
-                        f"Format: {record.format_status} | Logic: {record.logic_status}" if record.format_status else "",  # Pass/Fail status
-                        record.failure_reason or "",  # Failure reasonmat
-                        "ID:IDT" if record.correction else "",  # Fields corrected
-                        record.tracker_status or "",  # Tracker status
-                        " | ".join(record.actions_taken) if record.actions_taken else "",
-                        record.error or "",  # Error flag (Y/N)
-                        record.kaizen_error or "",  # Template lookup result
-                        record.match or ""  # Match result (TRUE/FALSE)
+                        record.transaction_ref,          # 1. Transaction Reference
+                        record.account_id,               # 2. Account ID
+                        record.person_code,              # 3. Person Code
+                        record.account_type,             # 4. Account Type
+                        record.id_value,                 # 5. Seller ID Code
+                        record.id_type,                  # 6. Type of Seller ID Code
+                        record.first_name,               # 7. First Name
+                        record.surname,                  # 8. Surname
+                        record.date_of_birth,            # 9. Date of Birth
+                        record.gender,                   # 10. Gender
+                        primary_nat,                     # 11. Primary Nationality
+                        secondary_nat,                   # 12. Secondary Nationality
+                        record.correction_output or "",  # 13. Correction Output (ID:TYPE)
+                        record.correction_fields or "",  # 14. Correction Fields
+                        record.tracker_status or "",     # 15. Tracker Status
+                        f"Format: {record.format_status} | Logic: {record.logic_status}" if record.format_status else "",  # 16. Pass/Fail
+                        record.failure_reason or "",     # 17. Failure Reason
+                        " | ".join(record.actions_taken) if record.actions_taken else "",  # 18. Actions Taken
+                        record.error or "",              # 19. Error (Y/N)
+                        record.kaizen_error or "",       # 20. Kaizen Error
+                        record.match or ""               # 21. Match (TRUE/FALSE)
                     ]
                     writer.writerow(output_row)
             
@@ -745,8 +745,11 @@ def main():
                 config['processor'] = {}
             config['processor']['log_level'] = args.log_level
         
-        # Check if batch mode
-        is_batch_mode = 'incidents' in config and 'testing_period' in config
+        # Check if batch mode - look for mode: "batch" or batch config with incidents
+        is_batch_mode = (
+            config.get('mode') == 'batch' or 
+            ('batch' in config and 'incidents' in config.get('batch', {}))
+        )
         
         if is_batch_mode:
             # Run batch validation

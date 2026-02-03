@@ -423,6 +423,228 @@ validate-pricing \
 
 ---
 
+### validate-ftbdm
+
+Validate buyer decision maker identification codes (incident 12_17).
+
+**Usage:**
+
+```bash
+# Using config file
+validate-ftbdm --config config/local/accuracy_testing/ftbdm_validation.yaml
+
+# Using command-line arguments
+validate-ftbdm \
+  --input data/extracts/12_17_FY26_Q1.csv \
+  --output data/validated/validated_FY26_Q1_12_17.csv \
+  --lei-data data/reference/lei_lookup.csv
+
+# Preview without writing files
+validate-ftbdm --config config/ftbdm.yaml --dry-run
+
+# Verbose output
+validate-ftbdm --config config/ftbdm.yaml --verbose
+```
+
+**Options:**
+
+- `--config PATH` - Configuration YAML file
+- `--input PATH` - Input extract CSV file (overrides config)
+- `--output PATH` - Output CSV file (overrides config)
+- `--lei-data PATH` - LEI lookup CSV file (Branch Code → LEI mapping)
+- `--id-formats PATH` - ID formats CSV file (optional)
+- `--log-dir PATH` - Directory for log files
+- `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
+- `--dry-run` - Preview without writing output
+- `--verbose` - Enable verbose output
+
+**Validation Logic:**
+
+- Determines product type from Account ID prefix (AJB, AJBIC, DODL, Custody Solutions)
+- Checks if account is SIPP (exempt from validation)
+- Validates discretionary accounts (Service Level = "D")
+- Looks up LEI from Branch Code
+- Validates Decision Maker ID format and type
+- Generates corrections in format `{LEI}:L`
+
+**Output (13 columns):**
+
+| Col | Column Name |
+|-----|-------------|
+| 1 | Transaction Reference |
+| 2 | Account ID |
+| 3 | Buyer Code |
+| 4 | Type of Buyer ID |
+| 5 | Buyer DM Code |
+| 6 | Type of Buyer DM ID |
+| 7 | Product |
+| 8 | Account Type |
+| 9 | Service Level |
+| 10 | Branch Code |
+| 11 | Error |
+| 12 | Correction |
+| 13 | Correction Field |
+
+**Incident Code:**
+
+- 12_17 - Incorrect ID of Buyer Decision Maker
+
+**Configuration Template:**
+
+- `config/templates/accuracy_testing/ftbdm_validation_template.yaml`
+
+---
+
+### validate-ftsdm
+
+Validate seller decision maker identification codes (incident 21_17).
+
+**Usage:**
+
+```bash
+# Using config file
+validate-ftsdm --config config/local/accuracy_testing/ftsdm_validation.yaml
+
+# Using command-line arguments
+validate-ftsdm \
+  --input data/extracts/21_17_FY26_Q1.csv \
+  --output data/validated/validated_FY26_Q1_21_17.csv \
+  --lei-data data/reference/lei_lookup.csv
+
+# Preview without writing files
+validate-ftsdm --config config/ftsdm.yaml --dry-run
+
+# Verbose output
+validate-ftsdm --config config/ftsdm.yaml --verbose
+```
+
+**Options:**
+
+- Same as `validate-ftbdm`
+
+**Validation Logic:**
+
+- Same as buyer decision maker but for seller records
+- Output columns use "Seller" instead of "Buyer"
+
+**Output (13 columns):**
+
+| Col | Column Name |
+|-----|-------------|
+| 1 | Transaction Reference |
+| 2 | Account ID |
+| 3 | Seller Code |
+| 4 | Type of Seller ID |
+| 5 | Seller DM Code |
+| 6 | Type of Seller DM ID |
+| 7 | Product |
+| 8 | Account Type |
+| 9 | Service Level |
+| 10 | Branch Code |
+| 11 | Error |
+| 12 | Correction |
+| 13 | Correction Field |
+
+**Incident Code:**
+
+- 21_17 - Incorrect ID of Seller Decision Maker
+
+**Configuration Template:**
+
+- `config/templates/accuracy_testing/ftsdm_validation_template.yaml`
+
+---
+
+### data-push
+
+Push validated corrections from source files to target template files.
+Supports both **single mode** (one file) and **batch mode** (multiple incidents).
+
+**Single Mode:**
+
+```bash
+# Using config file
+data-push --config config/local/accuracy_testing/data_push.yaml
+
+# Using command-line arguments
+data-push \
+  --source data/validated/validated_FY26_Q1_7_37.csv \
+  --target data/templates/FY26_Q1_7_37.csv \
+  --incident 7_37
+
+# Preview changes without modifying files
+data-push \
+  --source data/validated/validated.csv \
+  --target data/templates/template.csv \
+  --dry-run
+
+# Skip backup creation
+data-push \
+  --source data/validated/validated.csv \
+  --target data/templates/template.csv \
+  --no-backup
+```
+
+**Batch Mode:**
+
+```bash
+# Process multiple incidents
+data-push --batch \
+  --source-dir data/validated \
+  --target-dir data/templates \
+  --fiscal-year FY26 \
+  --quarter Q1
+
+# Process specific incidents only
+data-push --batch \
+  --source-dir data/validated \
+  --target-dir data/templates \
+  --fiscal-year FY26 \
+  --quarter Q1 \
+  --incidents "7_37,7_39,16_21"
+
+# Batch mode with dry run
+data-push --batch \
+  --source-dir data/validated \
+  --target-dir data/templates \
+  --fiscal-year FY26 \
+  --quarter Q1 \
+  --dry-run
+```
+
+**Options:**
+
+- `--config PATH` - Configuration YAML file
+- `--source PATH` - Source CSV file (validated data)
+- `--target PATH` - Target CSV file (template to update)
+- `--output PATH` - Output file path (defaults to target, overwriting)
+- `--incident CODE` - Incident code (e.g., 7_37)
+- `--batch` - Enable batch mode
+- `--source-dir PATH` - Base directory for source files (batch mode)
+- `--target-dir PATH` - Base directory for target files (batch mode)
+- `--incidents CODES` - Comma-separated incident codes (batch mode, optional)
+- `--fiscal-year YEAR` - Fiscal year (e.g., FY26)
+- `--quarter Q` - Quarter (e.g., Q1)
+- `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
+- `--dry-run` - Preview changes without writing to files
+- `--no-backup` - Don't create backup of target file before modifying
+- `--verbose` - Enable verbose output
+
+**Push Logic:**
+
+- Matches records by Transaction Reference
+- Checks Error flag in source:
+  - `Y` = Push all correction columns to target
+  - `N` = Push Error flag only (no correction needed)
+  - `TBC` = Skip record (needs manual review)
+- Creates backup of target file before modification (unless `--no-backup`)
+
+**Configuration Template:**
+
+- `config/templates/accuracy_testing/data_push_template.yaml`
+
+---
+
 ## Replay Commands
 
 ### replay-phase2
@@ -770,5 +992,5 @@ For more information, see:
 
 ---
 
-**Last Updated:** January 28, 2026
-**Version:** 1.1
+**Last Updated:** February 3, 2026
+**Version:** 1.2
