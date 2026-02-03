@@ -99,14 +99,21 @@ class DataPushRecord:
             DataPushRecord instance
         """
         transaction_ref = str(data.get(transaction_ref_column, "")).strip()
-        error_flag = str(data.get(error_column, "")).strip().upper()
+        error_flag = str(data.get(error_column, "")).strip()
         
         # Determine action based on error flag
-        if error_flag == "Y":
-            action = PushAction.UPDATE_ALL
-        elif error_flag == "N":
+        # N = No error → only update error flag
+        # Y = Error with correction → push all columns
+        # TBC (or variants) = Requires investigation → push all columns for review
+        # Empty/missing = Skip
+        if not error_flag:
+            action = PushAction.SKIP
+        elif error_flag.upper() == "N":
             action = PushAction.UPDATE_ERROR_ONLY
+        elif error_flag.upper() == "Y" or error_flag.upper().startswith("TBC"):
+            action = PushAction.UPDATE_ALL
         else:
+            # Unknown error value - skip to be safe
             action = PushAction.SKIP
         
         return cls(

@@ -33,23 +33,29 @@ Usage:
     python -m src.accuracy_testing.scripts.validate_ftsdm \\
         --config config.yaml --dry-run
 
-Input CSV columns (13 columns):
+Input CSV columns (7 columns minimum):
     1. Transaction Reference
     2. Account ID
     3. Seller Code
-    4. Type of Seller ID (output)
+    4. Seller DM Code
+    5. Account Type
+    6. Service Level
+    7. Branch Code
+
+Output CSV columns (13 columns):
+    1. Transaction Reference
+    2. Account ID
+    3. Seller Code
+    4. Type of Seller ID (derived)
     5. Seller DM Code
-    6. Type of Seller DM ID (output)
-    7. Product (output)
+    6. Type of Seller DM ID (derived)
+    7. Product (derived from Account ID)
     8. Account Type
     9. Service Level
     10. Branch Code
-    11. Error (output)
-    12. Correction (output)
-    13. Correction Field (output)
-
-Output:
-    Same CSV with validation columns (4, 6, 7, 11, 12, 13) populated.
+    11. Error (Y/N/TBC)
+    12. Correction (LEI:L format)
+    13. Correction Field
 
 Version: 1.0
 Migrated from: ValidateFTSDM3_0.vb
@@ -131,8 +137,13 @@ class SellerDecisionMakerValidator:
         elif config_path:
             self.config = AccuracyConfigManager.load_from_yaml(config_path)
 
+        # Get paths from single.paths (like buyer/seller validation)
+        paths = self.config.get("single", {}).get("paths", {})
+        if not paths:
+            # Fallback to root paths if single.paths doesn't exist
+            paths = self.config.get("paths", {})
+
         # Override with CLI arguments
-        paths = self.config.get("paths", {})
         if input_file:
             paths["input_file"] = input_file
         if output_file:
@@ -157,7 +168,9 @@ class SellerDecisionMakerValidator:
         self.input_file = Path(paths.get("input_file", ""))
         self.output_file = Path(paths.get("output_file", ""))
         self.lei_data_file = Path(paths.get("lei_data_file", ""))
-        self.id_formats_file = Path(paths.get("id_formats_file", ""))
+        # Only create Path for id_formats_file if it exists in config
+        id_formats_str = paths.get("id_formats_file", "")
+        self.id_formats_file = Path(id_formats_str) if id_formats_str else None
 
         # Initialize processor
         self.processor = DecisionMakerProcessor(
@@ -168,7 +181,9 @@ class SellerDecisionMakerValidator:
     def _setup_logging(self) -> None:
         """Setup logging configuration."""
         log_level = self.config.get("processor", {}).get("log_level", "INFO")
-        log_dir = self.config.get("paths", {}).get("log_output", "logs")
+        # Get log_output from single.paths or fallback to paths
+        paths = self.config.get("single", {}).get("paths", {}) or self.config.get("paths", {})
+        log_dir = paths.get("log_output", "logs")
 
         if CORE_LOGGING and create_logger:
             self.logger = create_logger(
@@ -366,13 +381,21 @@ def main() -> int:
     parser = create_parser()
     args = parser.parse_args()
 
-    # Validate arguments
-    if not args.config and not args.input_file:
-        parser.error("Either --config or --input is required")
+    # Determine config source
+    config_path = args.config
+    if not config_path and not args.input_file:
+        # Default configuration path (same pattern as other validation scripts)
+        from pathlib import Path
+        default_config = Path(__file__).parent.parent.parent.parent / "config" / "local" / "accuracy_testing" / "ftsdm_validation.yaml"
+        if default_config.exists():
+            print(f"Loading default configuration from {default_config}...")
+            config_path = str(default_config)
+        else:
+            parser.error("No configuration specified and default config not found. Use --config or provide --input and --lei-data")
 
     try:
         validator = SellerDecisionMakerValidator(
-            config_path=args.config,
+            config_path=config_path,
             input_file=args.input_file,
             output_file=args.output_file,
             lei_data_file=args.lei_data_file,
