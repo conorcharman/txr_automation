@@ -187,7 +187,12 @@ class AccuracyConfigManager:
         Raises:
             ValueError: If required paths are missing
         """
-        paths = config.get('paths', {})
+        # Support both 'paths' (direct) and 'single.paths' (structured) formats
+        # This allows backward compatibility and consistency with YAML config files
+        if 'single' in config and 'paths' in config['single']:
+            paths = config['single']['paths']
+        else:
+            paths = config.get('paths', {})
         
         required_keys = ['input_file', 'output_file']
         missing_keys = [key for key in required_keys if key not in paths]
@@ -584,7 +589,10 @@ class InconsistentIDProcessor:
         id_processor: 'IDValidationProcessor'
     ) -> Tuple[bool, bool]:
         """
-        Validate ID using standard format + logic validation.
+        Validate ID completely (format + logic) using the processor's methods.
+        
+        This method delegates to IDValidationProcessor's _validate_existing_id method
+        which handles both format and logic validation.
         
         Args:
             record: ClientRecord to validate
@@ -593,41 +601,30 @@ class InconsistentIDProcessor:
         Returns:
             Tuple of (format_valid, logic_valid)
         """
-        # Use the processor's validation methods
+        # Use the processor's validation method
         # This reuses the existing v5.6 validation logic
         
         # Get priority country code
         country_code = record.priority_country_code
         if not country_code:
-            country_code = id_processor._determine_priority_country(
-                record.primary_nationality,
-                record.secondary_nationality
-            )
+            country_code = id_processor._get_priority_country(record)
             record.priority_country_code = country_code
         
         if not country_code:
             return (False, False)
         
-        # Format validation
-        format_valid = id_processor._validate_format(
+        # Validate the existing ID (this handles both format and logic validation)
+        is_valid, error_message = id_processor._validate_existing_id(
             record.id_value,
             record.id_type,
             country_code
         )
         
-        if not format_valid:
-            return (False, False)
-        
-        # Logic validation
-        logic_valid = id_processor._validate_logic(
-            record.id_value,
-            record.id_type,
-            country_code,
-            record.date_of_birth,
-            record.gender
-        )
-        
-        return (format_valid, logic_valid)
+        # For inconsistent ID validation, we consider both format and logic together
+        # If validation passes, both format and logic are valid
+        # If validation fails, we consider both format and logic invalid
+        # (This matches the VBA behavior for inconsistent ID validation)
+        return (is_valid, is_valid)
     
     def apply_prior_valid_corrections(
         self, 
@@ -738,10 +735,7 @@ class InconsistentIDProcessor:
             
             # Compute priority country code
             if not record.priority_country_code:
-                record.priority_country_code = id_processor._determine_priority_country(
-                    record.primary_nationality,
-                    record.secondary_nationality
-                )
+                record.priority_country_code = id_processor._get_priority_country(record)
         
         # Phase 2: Group by Person Code
         self._log("Phase 2: Grouping records by Person Code...")

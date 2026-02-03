@@ -105,17 +105,19 @@ class InconsistentBuyerIDValidator:
     # CSV column mapping (0-indexed) - extended for Trade_Date_Time
     COL_TRANSACTION_REF = 0
     COL_ACCOUNT_ID = 1
-    COL_TRADE_DATE_TIME = 2  # New: YYYY-MM-DD-HH-MM-SS-MSMS format
-    COL_PERSON_CODE = 5
-    COL_ACCOUNT_TYPE = 6
-    COL_ID_VALUE = 7
-    COL_ID_TYPE = 8
-    COL_FNAME = 9
-    COL_SNAME = 10
-    COL_DOB = 11
-    COL_GENDER = 12
-    COL_PRIMARY_NAT = 13
-    COL_SECONDARY_NAT = 14
+    # COL 2 = BEN_Link (unused)
+    # COL 3 = OWN_Link (unused)
+    COL_PERSON_CODE = 4
+    COL_ACCOUNT_TYPE = 5
+    COL_ID_VALUE = 6
+    COL_ID_TYPE = 7
+    COL_FNAME = 8
+    COL_SNAME = 9
+    COL_DOB = 10
+    COL_GENDER = 11
+    COL_PRIMARY_NAT = 12
+    COL_SECONDARY_NAT = 13
+    COL_TRADE_DATE_TIME = 14  # YYYY-MM-DD-HH-MM-SS-MSMS format
     
     def __init__(
         self, 
@@ -198,7 +200,7 @@ class InconsistentBuyerIDValidator:
                 header = next(reader)  # Skip header row
                 
                 for row_idx, row in enumerate(reader, start=2):  # Start at 2 (after header)
-                    if len(row) < 15:  # Minimum required columns
+                    if len(row) < 14:  # Minimum required columns (up to Trade_Date_Time)
                         self.logger.warning(f"Row {row_idx} has insufficient columns, skipping")
                         continue
                     
@@ -246,11 +248,10 @@ class InconsistentBuyerIDValidator:
         # Ensure output directory exists
         self.output_file.parent.mkdir(parents=True, exist_ok=True)
         
-        # Define output columns (matching VBA output format with inconsistent-specific fields)
+        # Define output columns (matching inconsistent ID validation format)
         output_columns = [
             "Transaction Reference",
             "Account ID",
-            "Trade_Date_Time",  # Include for traceability
             "Person Code",
             "Account Type",
             "Buyer ID Code",
@@ -261,9 +262,10 @@ class InconsistentBuyerIDValidator:
             "Gender",
             "Primary Nationality",
             "Secondary Nationality",
-            "Correction Output",  # ID:TYPE format (from prior valid or standard)
-            "Correction Fields",  # "ID:IDT"
-            "Correction Source",  # New: Where the correction came from
+            "Trade_Date_Time",
+            "Correction Output",
+            "Correction Fields",
+            "Correction Source",
             "Tracker Status",
             "Pass/Fail",
             "Failure Reason",
@@ -290,8 +292,12 @@ class InconsistentBuyerIDValidator:
                         secondary_obj = country_manager.get_by_alpha2(secondary_nat)
                         
                         if priority_obj and secondary_obj and priority_obj.alpha2 == secondary_obj.alpha2:
+                            # Priority country is in secondary position, check if primary differs
                             primary_obj = country_manager.get_by_alpha2(primary_nat) if primary_nat else None
                             if not primary_obj or primary_obj.alpha2 != priority_obj.alpha2:
+                                # Swap them so priority country is first
+                                primary_nat = secondary_nat
+                                secondary_nat = record.primary_nationality
                                 primary_nat = secondary_nat
                                 secondary_nat = record.primary_nationality
                     
@@ -299,7 +305,6 @@ class InconsistentBuyerIDValidator:
                     output_row = [
                         record.transaction_ref,
                         record.account_id,
-                        record.trade_date_time_raw,  # Include Trade_Date_Time
                         record.person_code,
                         record.account_type,
                         record.id_value,
@@ -310,9 +315,10 @@ class InconsistentBuyerIDValidator:
                         record.gender,
                         primary_nat,
                         secondary_nat,
+                        record.trade_date_time_raw,
                         record.correction_output or "",
                         record.correction_fields or "",
-                        record.correction_source or "",  # New field
+                        record.correction_source or "",
                         record.tracker_status or "",
                         f"Format: {record.format_status} | Logic: {record.logic_status}" if record.format_status else "",
                         record.failure_reason or "",
@@ -351,7 +357,6 @@ class InconsistentBuyerIDValidator:
         output_columns = [
             "Transaction Reference",
             "Account ID",
-            "Trade_Date_Time",
             "Person Code",
             "Account Type",
             "Buyer ID Code",
@@ -362,6 +367,7 @@ class InconsistentBuyerIDValidator:
             "Gender",
             "Primary Nationality",
             "Secondary Nationality",
+            "Trade_Date_Time",
             "Correction Output",
             "Correction Fields",
             "Correction Source",
@@ -380,6 +386,7 @@ class InconsistentBuyerIDValidator:
                 writer.writerow(output_columns)
                 
                 for record in error_records:
+                    # Swap nationalities if priority country is in secondary position
                     primary_nat = record.primary_nationality
                     secondary_nat = record.secondary_nationality
                     
@@ -390,15 +397,16 @@ class InconsistentBuyerIDValidator:
                         secondary_obj = country_manager.get_by_alpha2(secondary_nat)
                         
                         if priority_obj and secondary_obj and priority_obj.alpha2 == secondary_obj.alpha2:
+                            # Priority country is in secondary position, check if primary differs
                             primary_obj = country_manager.get_by_alpha2(primary_nat) if primary_nat else None
                             if not primary_obj or primary_obj.alpha2 != priority_obj.alpha2:
+                                # Swap them so priority country is first
                                 primary_nat = secondary_nat
                                 secondary_nat = record.primary_nationality
                     
                     output_row = [
                         record.transaction_ref,
                         record.account_id,
-                        record.trade_date_time_raw,
                         record.person_code,
                         record.account_type,
                         record.id_value,
@@ -409,6 +417,7 @@ class InconsistentBuyerIDValidator:
                         record.gender,
                         primary_nat,
                         secondary_nat,
+                        record.trade_date_time_raw,
                         record.correction_output or "",
                         record.correction_fields or "",
                         record.correction_source or "",
@@ -493,8 +502,14 @@ class InconsistentBuyerIDValidator:
                     self.id_processor.process_record(record)
                     record.correction_source = "Standard validation (no prior valid ID)"
         
-        # Combine all records (maintain original order by row_index)
-        all_records = sorted(records, key=lambda r: r.row_index)
+        # Combine all records, sorted by Person Code (primary) and Trade_Date_Time (secondary)
+        all_records = sorted(
+            records, 
+            key=lambda r: (
+                r.person_code or "",
+                r.trade_date_time_parsed or datetime.min
+            )
+        )
         
         # Step 4: Write output (skip if dry run)
         if self.dry_run:
@@ -609,10 +624,12 @@ def main():
             # Backward compatible mode: build config from CLI args
             print("Running in backward compatible mode (CLI arguments)...")
             config = {
-                'paths': {
-                    'input_file': args.input_file,
-                    'output_file': args.output_file,
-                    'log_output': 'logs'
+                'single': {
+                    'paths': {
+                        'input_file': args.input_file,
+                        'output_file': args.output_file,
+                        'log_output': 'logs'
+                    }
                 },
                 'processor': {
                     'log_level': args.log_level or 'INFO',
@@ -624,7 +641,7 @@ def main():
             # Default configuration path
             default_config = (
                 Path(__file__).parent.parent.parent.parent / 
-                "config" / "local" / "accuracy_testing" / "inconsistent_buyer.yaml"
+                "config" / "local" / "accuracy_testing" / "inconsistent_buyer_validation.yaml"
             )
             if default_config.exists():
                 print(f"Loading default configuration from {default_config}...")

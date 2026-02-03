@@ -483,8 +483,8 @@ class DecisionMakerProcessor:
             header = next(reader, None)
 
             for row_idx, row in enumerate(reader, start=2):
-                if len(row) < 10:
-                    self.logger.warning(f"Row {row_idx}: insufficient columns, skipping")
+                if len(row) < 7:
+                    self.logger.warning(f"Row {row_idx}: insufficient columns (need 7, got {len(row)}), skipping")
                     continue
 
                 try:

@@ -217,18 +217,18 @@ paths:
 - Automatically reads: `FY25 Q3 7_37.csv`, `FY25 Q3 8_1.csv`, etc.
 - Automatically writes: `validated_FY25_Q3_7_37.csv`, `validated_FY25_Q3_8_1.csv`, etc.
 
-**Decision Maker Incidents:**
+**Inconsistent ID Incidents:**
 
-Incidents 7_66 and 7_68 are "inconsistent buyer decision maker" codes requiring
-different validation logic:
+Incidents 7_66 and 7_68 are "inconsistent buyer ID" codes requiring different
+validation logic:
 
 - Grouping records by Person Code
 - Chronological analysis (sorting by Trade_Date_Time)
-- Validating inconsistent IDs across suspected same individuals
+- Correcting invalid IDs using prior valid IDs
 
-These are **included in auto-discovery** but automatically skipped during processing
-with informative warnings. When Python implementation is added, they'll be processed
-automatically.
+These incidents are **not processed by validate-buyer**. Use the dedicated
+`validate-inconsistent-buyer` command instead. See the validate-inconsistent-buyer
+section for details.
 
 **Single File Mode:**
 
@@ -276,8 +276,8 @@ validate-buyer \
 - 7_35 - Invalid buyer ID format
 - 7_37 - Buyer ID missing (standard txr)
 - 7_39 - Buyer ID type mismatch
-- 7_66 - Inconsistent buyer decision maker ID (⚠️ different validation logic)
-- 7_68 - Inconsistent buyer decision maker ID (⚠️ different validation logic)
+- 7_66 - Inconsistent buyer ID (⚠️ use `validate-inconsistent-buyer` command)
+- 7_68 - Inconsistent buyer decision maker ID (⚠️ use `validate-inconsistent-buyer`)
 - 8_*, 9_*, 10_*, 11_*, 12_*, 13_*, 14_*, 15_* - Other buyer ID issues
 
 ---
@@ -331,18 +331,18 @@ paths:
 - Automatically reads: `FY25 Q3 16_21.csv`, `FY25 Q3 17_2.csv`, etc.
 - Automatically writes: `validated_FY25_Q3_16_21.csv`, `validated_FY25_Q3_17_2.csv`, etc.
 
-**Decision Maker Incidents:**
+**Inconsistent ID Incidents:**
 
-Incidents 16_20 and 16_64 are "inconsistent seller decision maker" codes requiring
-different validation logic:
+Incidents 16_20 and 16_64 are "inconsistent seller ID" codes requiring different
+validation logic:
 
 - Grouping records by Person Code
 - Chronological analysis (sorting by Trade_Date_Time)
-- Validating inconsistent IDs across suspected same individuals
+- Correcting invalid IDs using prior valid IDs
 
-These are **included in auto-discovery** but automatically skipped during processing
-with informative warnings. When Python implementation is added, they'll be processed
-automatically.
+These incidents are **not processed by validate-seller**. Use the dedicated
+`validate-inconsistent-seller` command instead. See the validate-inconsistent-seller
+section for details.
 
 **Single File Mode:**
 
@@ -373,9 +373,254 @@ validate-seller \
 - 16_19 - Invalid seller ID format
 - 16_21 - Seller ID missing
 - 16_23 - Seller ID type mismatch
-- 16_20 - Inconsistent seller decision maker ID (⚠️ different validation logic)
-- 16_64 - Inconsistent seller decision maker ID (⚠️ different validation logic)
+- 16_20 - Inconsistent seller ID (⚠️ use `validate-inconsistent-seller` command)
+- 16_64 - Inconsistent seller decision maker ID (⚠️ use `validate-inconsistent-seller`)
 - 17_*, 18_*, 19_*, 20_*, 21_*, 22_*, 23_*, 24_* - Other seller ID issues
+
+---
+
+### validate-inconsistent-buyer
+
+Validate buyer identification codes for inconsistent ID scenarios.
+
+**Purpose:**
+
+This script handles cases where the same person (identified by Person Code) has
+different IDs across multiple trades. It uses a specialized chronological validation
+algorithm that only corrects invalid IDs using the most recent prior valid ID.
+
+**Usage:**
+
+```bash
+# Using config file
+validate-inconsistent-buyer --config config/local/accuracy_testing/inconsistent_buyer.yaml
+
+# Using command-line arguments
+validate-inconsistent-buyer \
+  --input data/extracts/7_66_FY26_Q1.csv \
+  --output data/validated/validated_FY26_Q1_7_66.csv
+
+# With environment variables
+export TXR_PATHS_INPUT_FILE="data/buyer_input.csv"
+export TXR_PATHS_OUTPUT_FILE="data/buyer_output.csv"
+validate-inconsistent-buyer --use-env
+
+# Verbose output
+validate-inconsistent-buyer \
+  --input data/extracts/7_66_FY26_Q1.csv \
+  --output data/validated/validated_FY26_Q1_7_66.csv \
+  --log-level DEBUG
+```
+
+**Options:**
+
+- `--config PATH` - Configuration YAML file
+- `--input PATH` - Input extract CSV file (overrides config)
+- `--output PATH` - Output CSV file (overrides config)
+- `--use-env` - Load configuration from environment variables
+- `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
+- `--verbose` - Enable verbose output
+
+**Validation Algorithm:**
+
+1. **Group by Person Code** - Records are grouped by Person Code
+2. **Chronological Sort** - Each group sorted by Trade_Date_Time
+3. **Sequential Validation** - Each ID validated using standard format + logic rules
+4. **Prior Valid ID Correction** - Invalid IDs corrected using most recent prior valid ID
+5. **Fallback ID Detection** - Detects CC_PersonCode pattern fallback IDs
+
+**Key Differences from Standard Validation:**
+
+- Groups records by Person Code (not individual validation)
+- Requires Trade_Date_Time column for chronological ordering
+- Only corrects invalid IDs - valid-to-valid changes are preserved
+- Uses prior valid ID as correction source (not generated CONCAT)
+
+**Input CSV Columns (Minimum Required):**
+
+- Transaction Reference
+- Account ID
+- Trade_Date_Time (format: YYYY-MM-DD-HH-MM-SS-MSMS)
+- Person Code
+- Account Type
+- Buyer ID Code
+- Type of Buyer ID Code
+- First Name
+- Surname
+- Date of Birth
+- Gender
+- Primary Nationality
+- Secondary Nationality (optional)
+
+**Output CSV Adds:**
+
+- Correction Output (ID:TYPE format from prior valid)
+- Correction Fields
+- Correction Source (where the correction came from)
+- Tracker Status
+- Pass/Fail
+- Failure Reason
+- Actions Taken
+- Error
+- Kaizen Error
+- Match
+
+**Incident Codes:**
+
+- 7_66 - Inconsistent Buyer ID (standard transactions)
+- 7_68 - Inconsistent Buyer Decision Maker ID
+
+**Configuration Template:**
+
+- `config/templates/accuracy_testing/inconsistent_buyer_validation_template.yaml`
+
+---
+
+### validate-inconsistent-seller
+
+Validate seller identification codes for inconsistent ID scenarios.
+
+**Purpose:**
+
+Same as inconsistent buyer validation but for seller IDs.
+
+**Usage:**
+
+```bash
+# Using config file
+validate-inconsistent-seller --config config/local/accuracy_testing/inconsistent_seller.yaml
+
+# Using command-line arguments
+validate-inconsistent-seller \
+  --input data/extracts/16_20_FY26_Q1.csv \
+  --output data/validated/validated_FY26_Q1_16_20.csv
+
+# With environment variables
+export TXR_PATHS_INPUT_FILE="data/seller_input.csv"
+export TXR_PATHS_OUTPUT_FILE="data/seller_output.csv"
+validate-inconsistent-seller --use-env
+```
+
+**Options:**
+
+- Same as `validate-inconsistent-buyer`
+
+**Validation Algorithm:**
+
+- Same as inconsistent buyer validation but for seller records
+- Output columns use "Seller" instead of "Buyer"
+
+**Input CSV Columns:**
+
+- Same as inconsistent buyer but with "Seller ID Code" and "Type of Seller ID Code"
+
+**Incident Codes:**
+
+- 16_20 - Inconsistent Seller ID (standard transactions)
+- 16_64 - Inconsistent Seller Decision Maker ID
+
+**Configuration Template:**
+
+- `config/templates/accuracy_testing/inconsistent_seller_validation_template.yaml`
+
+---
+
+### collate-csv-extracts
+
+Merge split CSV extract files back into single files for validation.
+
+**Purpose:**
+
+When the SQL extract generator splits large datasets into multiple batches
+(e.g., `7_37_Extract1.csv`, `7_37_Extract2.csv`, `7_37_Extract3.csv`), this tool
+collates them back into a single file ready for validation.
+
+**Usage:**
+
+```bash
+# Single incident
+collate-csv-extracts \
+  --input-dir data/csv \
+  --incident 7_37 \
+  --output data/collated/7_37.csv
+
+# Batch mode with config
+collate-csv-extracts --config config/local/collate_extracts.yaml
+
+# Batch mode - all incidents
+collate-csv-extracts \
+  --input-dir data/csv \
+  --output-dir data/collated \
+  --all-incidents
+
+# Specific incidents
+collate-csv-extracts \
+  --input-dir data/csv \
+  --output-dir data/collated \
+  --incidents "7_37,16_21,35_3"
+
+# Delete source files after collation
+collate-csv-extracts \
+  --input-dir data/csv \
+  --output-dir data/collated \
+  --incidents "7_37" \
+  --delete-source
+```
+
+**Options:**
+
+- `--config PATH` - Configuration YAML file
+- `--input-dir PATH` - Directory containing split CSV files (overrides config)
+- `--output-dir PATH` - Directory for collated output files (overrides config)
+- `--output PATH` - Output file path (single incident mode)
+- `--incident CODE` - Single incident code to process (e.g., 7_37)
+- `--incidents CODES` - Comma-separated incident codes (batch mode)
+- `--all-incidents` - Process all incidents found in input directory
+- `--delete-source` - Delete source files after successful collation
+- `--dry-run` - Preview without creating files
+- `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
+- `--verbose` - Enable verbose output
+
+**Features:**
+
+- Auto-discovers split files by pattern (e.g., `7_37_Extract*.csv`)
+- Removes duplicate headers from split files
+- Validates row counts against expected totals
+- Supports batch processing of multiple incidents
+- Optional deletion of source files after successful collation
+
+**File Pattern Detection:**
+
+Automatically finds files matching patterns:
+- `{incident}_Extract1.csv`, `{incident}_Extract2.csv`, etc.
+- `{incident}_{fiscal_year}_{quarter}_Extract1.csv`, etc.
+
+**Output:**
+
+- Single collated CSV file per incident
+- Processing statistics (files merged, rows collated, etc.)
+- Log file with detailed operations
+
+**Example Workflow:**
+
+```bash
+# 1. Generate SQL extracts (may create split files)
+generate-sql-extract --config config/sql_generator.yaml
+
+# 2. Execute SQL and get results (creates Extract1, Extract2, etc.)
+# ... manual SQL execution ...
+
+# 3. Collate split files back together
+collate-csv-extracts --input-dir data/sql_results --output-dir data/ready_for_validation
+
+# 4. Run validation on collated file
+validate-buyer --reference data/templates/template_7_37.csv \
+               --extract data/ready_for_validation/7_37.csv
+```
+
+**Configuration Template:**
+
+- `config/templates/accuracy_testing/collate_extracts_template.yaml`
 
 ---
 
@@ -993,4 +1238,4 @@ For more information, see:
 ---
 
 **Last Updated:** February 3, 2026
-**Version:** 1.2
+**Version:** 1.3
