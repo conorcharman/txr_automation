@@ -25,12 +25,14 @@ class TestBatchValidationDetection:
     def test_detects_batch_mode_with_incidents_and_testing_period(self):
         """Should detect batch mode when config has incidents and testing_period."""
         config = {
-            'testing_period': {
-                'fiscal_year': 'FY25',
-                'quarter': 'Q3'
-            },
-            'incidents': ['7_37', '16_21', '35_3'],
-            'paths': {
+            'mode': 'batch',
+            'batch': {
+                'incidents': ['7_37', '16_21', '35_3'],
+                'testing_period': {
+                    'fiscal_year': 'FY25',
+                    'quarter': 'Q3'
+                },
+                'paths': {
                 'template_dir': 'data/templates',
                 'output_dir': 'data/validated'
             }
@@ -40,19 +42,24 @@ class TestBatchValidationDetection:
         assert is_batch is True
     
     def test_detects_single_mode_without_incidents(self):
-        """Should detect single mode when config lacks incidents."""
+        """Should detect single mode when config has mode='single'."""
         config = {
-            'paths': {
-                'input_file': 'data/input.csv',
-                'output_file': 'data/output.csv'
+            'mode': 'single',
+            'single': {
+                'incident_code': '7_66',
+                'paths': {
+                    'input_file': 'data/input.csv',
+                    'output_file': 'data/output.csv'
+                }
             }
         }
         
-        is_batch = 'incidents' in config and 'testing_period' in config
+        mode = config.get('mode', 'single')
+        is_batch = mode == 'batch'
         assert is_batch is False
     
     def test_detects_single_mode_without_testing_period(self):
-        """Should detect single mode when config lacks testing_period."""
+        """Should detect single mode when mode field is missing (defaults to single)."""
         config = {
             'incidents': ['7_37', '16_21'],
             'paths': {
@@ -61,7 +68,8 @@ class TestBatchValidationDetection:
             }
         }
         
-        is_batch = 'incidents' in config and 'testing_period' in config
+        mode = config.get('mode', 'single')
+        is_batch = mode == 'batch'
         assert is_batch is False
 
 
@@ -144,9 +152,19 @@ class TestBuyerBatchValidation:
                     pass  # Best effort cleanup
     
     def create_buyer_template(self, fiscal_year: str, quarter: str, incident: str) -> Path:
-        """Create a sample buyer ID validation template CSV."""
-        filename = f"{fiscal_year} {quarter} {incident}.csv"
-        filepath = self.template_dir / filename
+        """Create sample files for buyer ID validation.
+        
+        Creates both:
+        1. Extract file: {incident}_{FY}_{Q}.csv (SQL database export format)
+        2. Template file: {FY} {Q} {incident}.csv (Kaizen template format)
+        """
+        # Create extract file with new naming convention
+        extract_filename = f"{incident}_{fiscal_year}_{quarter}.csv"
+        extract_filepath = self.template_dir / extract_filename
+        
+        # Create template file with old naming convention (for Kaizen lookup)
+        template_filename = f"{fiscal_year} {quarter} {incident}.csv"
+        template_filepath = self.template_dir / template_filename
         
         # Create sample CSV with full column structure matching buyer validation expectations
         # Columns: Transaction Ref, Account ID, Col2-4, Person Code, Account Type, ID Value, ID Type, 
@@ -156,8 +174,9 @@ TXN001,ACC001,,,,,B,12345678,PASSPORT,John,Doe,1990-01-01,M,US,
 TXN002,ACC002,,,,,B,87654321,PASSPORT,Jane,Smith,1985-05-15,F,GB,
 TXN003,ACC003,,,,,B,11111111,PASSPORT,Bob,Johnson,1992-12-20,M,CA,
 """
-        filepath.write_text(content)
-        return filepath
+        extract_filepath.write_text(content)
+        template_filepath.write_text(content)
+        return extract_filepath
     
     def test_processes_single_incident(self):
         """Should process a single incident in batch mode."""
@@ -166,12 +185,14 @@ TXN003,ACC003,,,,,B,11111111,PASSPORT,Bob,Johnson,1992-12-20,M,CA,
         
         # Create config
         config = {
-            'testing_period': {
-                'fiscal_year': 'FY25',
-                'quarter': 'Q3'
-            },
-            'incidents': ['7_37'],
-            'paths': {
+            'mode': 'batch',
+            'batch': {
+                'incidents': ['7_37'],
+                'testing_period': {
+                    'fiscal_year': 'FY25',
+                    'quarter': 'Q3'
+                },
+                'paths': {
                 'template_dir': str(self.template_dir),
                 'output_dir': str(self.output_dir),
                 'log_output': str(self.output_dir / 'logs')
@@ -509,12 +530,14 @@ TXN001,ACC001,,,,,B,12345678,PASSPORT,John,Doe,1990-01-01,M,US,
         self.create_buyer_template('FY25', 'Q3', '7_37')
         
         config = {
-            'testing_period': {
-                'fiscal_year': 'FY25',
-                'quarter': 'Q3'
-            },
-            'incidents': ['7_37'],
-            'paths': {
+            'mode': 'batch',
+            'batch': {
+                'incidents': ['7_37'],
+                'testing_period': {
+                    'fiscal_year': 'FY25',
+                    'quarter': 'Q3'
+                },
+                'paths': {
                 'template_dir': str(self.template_dir),
                 'output_dir': str(self.output_dir),
                 'log_output': str(self.output_dir / 'logs')
@@ -571,11 +594,13 @@ class TestBatchValidationErrorHandling:
             output_dir.mkdir(parents=True)
             
             config = {
+            'mode': 'batch',
+            'batch': {
+                'incidents': ['MISSING1', 'MISSING2'],
                 'testing_period': {
                     'fiscal_year': 'FY25',
                     'quarter': 'Q3'
                 },
-                'incidents': ['MISSING1', 'MISSING2'],
                 'paths': {
                     'template_dir': str(template_dir),
                     'output_dir': str(output_dir),

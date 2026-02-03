@@ -1,218 +1,209 @@
 # SQL Extract Generator Configuration Template
-# ===========================================
+# ==============================================
+#
 # Generates SQL extract files from accuracy testing template CSV files.
-# Supports both single-incident and batch processing modes.
+# Script: sql_extract_generator.py
+# Supports ALL 11 automated incidents
 #
 # Usage:
-#   Single mode:  generate-sql-extract --config single_config.yaml
-#   Batch mode:   generate-sql-extract --config batch_config.yaml
-#
-# Batch Mode (recommended):
-#   Configure testing_period, incidents list, and paths.
-#   The tool will:
-#   - Automatically select the correct SQL template for each incident
-#   - Read transaction refs from template CSV files
-#   - Generate SQL extracts with FY/Q naming
-#   - Split large datasets into multiple files (batch_size)
-#
-# Single Mode (legacy):
-#   Provide template_file, input_file, and output_directory.
-#   Useful for one-off extractions or custom workflows.
+#   python -m src.accuracy_testing.scripts.sql_extract_generator \
+#       --config config/local/accuracy_testing/sql_extract_generator.yaml
 
 # =============================================================================
-# BATCH MODE CONFIGURATION (RECOMMENDED)
+# Configuration Mode
 # =============================================================================
+# Options: "single" or "batch"
+# - single: Generate SQL for one incident with explicit paths
+# - batch:  Generate SQL for multiple incidents using filename patterns
+mode: "batch"
 
-# Testing period
+# =============================================================================
+# Testing Period
+# =============================================================================
 testing_period:
-  fiscal_year: "FY26"      # Fiscal year (e.g., FY25, FY26)
-  quarter: "Q1"            # Quarter (Q1, Q2, Q3, Q4)
-
-# Incident codes to process (from INCIDENT_CODE_MATRIX)
-incidents:
-  # Standard Buyer ID (7_35=CONCAT, 7_37=NIDN, 7_39=CCPT)
-  - "7_35"
-  - "7_37"
-  - "7_39"
-  # Inconsistent Buyer ID
-  - "7_66"
-  # Fund Trade Decision Maker - Buyer
-  - "12_17"
-  # Standard Seller ID (16_19=CONCAT, 16_21=NIDN, 16_23=CCPT)
-  - "16_19"
-  - "16_21"
-  - "16_23"
-  # Inconsistent Seller ID
-  - "16_20"
-  # Fund Trade Decision Maker - Seller
-  - "21_17"
-  # Pricing data
-  - "35_3"
-
-# Paths for batch mode
-paths:
-  # Directory containing template CSV files (from accuracy template generator)
-  # Expected format: FY26 Q1 7_37.csv
-  template_dir: 'c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\incident_code_analysis'
+  # Fiscal year (e.g., FY25, FY26)
+  fiscal_year: "FY26"
   
-  # Directory for SQL template files
-  # Templates: BuyerID.sql, SellerID.sql, SCR_pricing_data_v1.0.sql, etc.
-  sql_template_dir: 'C:\Users\ccharm\Documents\GitHub\txr_automation\src\accuracy_testing\sql_templates'
-  
-  # DTF template file (AS/400 Data Transfer format)
-  # Defaults to AS400_DataTransfer_template.dtf if not specified
-  dtf_template_file: 'C:\Users\ccharm\Documents\GitHub\txr_automation\src\accuracy_testing\sql_templates\AS400_DataTransfer_template.dtf'
-  
-  # Parent output directory for generated files
-  # Structure created:
-  #   - output_directory/csv/  → CSV files (for AS/400 extracts)
-  #   - output_directory/sql/  → SQL files (when format=sql)
-  #   - output_directory/dtf/  → DTF files (for AS/400 Data Transfer tool)
-  # Generated format: 7_37_FY25_Q3.sql/dtf or 7_37_FY25_Q3_Extract1.sql/dtf
-  output_directory: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\extracts'
+  # Quarter (e.g., Q1, Q2, Q3, Q4)
+  quarter: "Q1"
 
-# Output options
-output_options:
-  # Output format: 'sql', 'dtf', or 'both' (default: 'both')
-  # - 'sql': Generate only SQL files (in /sql or /csv subdirectory)
-  # - 'dtf': Generate only DTF files (in /dtf subdirectory)
-  # - 'both': Generate both SQL and DTF files (in /csv and /dtf subdirectories)
-  format: "both"
+# =============================================================================
+# Single Mode Configuration
+# =============================================================================
+# Used when mode: "single"
+# Generate SQL for one incident with explicit paths
+single:
+  # Incident code to process
+  incident_code: "7_37"
   
-  # Optional: Override incident code for CSV naming in DTF files
-  # incident_code: "7_37"
+  paths:
+    # Template CSV file (contains Transaction References)
+    # Example: FY26 Q1 7_37.csv
+    template_file: "data/templates/FY26 Q1 7_37.csv"
+    
+    # SQL template file (contains SQL with placeholder)
+    # Example: BuyerID.sql
+    sql_template_file: "src/accuracy_testing/sql_templates/BuyerID.sql"
+    
+    # DTF template file (AS/400 Data Transfer format)
+    # Optional: Only needed if generating DTF files
+    dtf_template_file: "src/accuracy_testing/sql_templates/AS400_DataTransfer_template.dtf"
+    
+    # Output directory for generated SQL/DTF files
+    output_dir: "data/sql_extracts"
+    
+    # Log output directory
+    log_output: "logs"
 
-# Processing options
+# =============================================================================
+# Batch Mode Configuration
+# =============================================================================
+# Used when mode: "batch"
+# Process multiple incidents automatically
+batch:
+  # Incidents to process
+  # Options:
+  #   - "all": Process ALL 11 automated incidents
+  #   - List: ["7_35", "7_37", "7_39", "7_66", "12_17", "16_19", "16_21", "16_23", "16_20", "21_17", "35_3"]
+  incidents: "all"
+  
+  paths:
+    # Directory containing template CSV files
+    # Expected format: FY26 Q1 7_37.csv
+    template_dir: "data/templates/FY26/Q1"
+    
+    # Directory containing SQL template files
+    # Required files: BuyerID.sql, SellerID.sql, InconsistentBuyerID.sql, etc.
+    sql_template_dir: "src/accuracy_testing/sql_templates"
+    
+    # DTF template file (AS/400 Data Transfer format)
+    # Optional: Only needed if output_format includes 'dtf'
+    dtf_template_file: "src/accuracy_testing/sql_templates/AS400_DataTransfer_template.dtf"
+    
+    # Output directory for generated SQL/DTF files
+    # Subdirectories created: sql/, dtf/, csv/
+    output_dir: "data/sql_extracts/FY26/Q1"
+    
+    # Log output directory
+    log_output: "logs"
+  
+  # Filename patterns - construct filenames for each incident
+  # Available variables: {incident}, {fiscal_year}, {quarter}
+  filename_patterns:
+    # Template CSV file (contains Transaction References)
+    # Example: FY26 Q1 7_37.csv
+    template: "{fiscal_year} {quarter} {incident}.csv"
+    
+    # Output SQL file (single batch)
+    # Example: 7_37_FY26_Q1.sql
+    output_sql: "{incident}_{fiscal_year}_{quarter}.sql"
+    
+    # Output SQL file (multiple batches)
+    # Example: 7_37_FY26_Q1_Extract1.sql
+    output_sql_batch: "{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.sql"
+    
+    # Output DTF file (single batch)
+    # Example: 7_37_FY26_Q1.dtf
+    output_dtf: "{incident}_{fiscal_year}_{quarter}.dtf"
+    
+    # Output DTF file (multiple batches)
+    # Example: 7_37_FY26_Q1_Extract1.dtf
+    output_dtf_batch: "{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.dtf"
+    
+    # Output CSV file (for AS/400 Data Transfer Tool)
+    # Example: 7_37_FY26_Q1.csv
+    output_csv: "{incident}_{fiscal_year}_{quarter}.csv"
+    
+    # Output CSV file (multiple batches)
+    # Example: 7_37_FY26_Q1_Extract1.csv
+    output_csv_batch: "{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.csv"
+
+# =============================================================================
+# SQL Template Mapping
+# =============================================================================
+# Automatic mapping of incident codes to SQL template files
+# The tool uses this to select the correct SQL template for each incident
+sql_template_mapping:
+  # Standard Buyer ID incidents (7_35, 7_37, 7_39)
+  buyer_standard: "BuyerID.sql"
+  
+  # Inconsistent Buyer ID incident (7_66)
+  buyer_inconsistent: "InconsistentBuyerID.sql"
+  
+  # Buyer Decision Maker incident (12_17)
+  buyer_decision_maker: "FTBDM.sql"
+  
+  # Standard Seller ID incidents (16_19, 16_21, 16_23)
+  seller_standard: "SellerID.sql"
+  
+  # Inconsistent Seller ID incident (16_20)
+  seller_inconsistent: "InconsistentSellerID.sql"
+  
+  # Seller Decision Maker incident (21_17)
+  seller_decision_maker: "FTSDM.sql"
+  
+  # Pricing incident (35_3)
+  pricing: "SCR_pricing_data_v1.0.sql"
+
+# =============================================================================
+# Processing Options
+# =============================================================================
 processing:
-  # Maximum transactions per SQL file (default: 900)
-  # Large datasets will be split into multiple files
+  # Maximum transaction references per SQL file (default: 900)
+  # If template CSV has more refs, output is split into multiple files
   batch_size: 900
   
-  # Placeholder pattern in SQL templates (default: "-- TRANSACTION REFERENCES --")
+  # Placeholder pattern in SQL templates (replaced with transaction refs)
+  # Example: "-- TRANSACTION REFERENCES --"
   placeholder_pattern: "-- TRANSACTION REFERENCES --"
   
   # CSV column name containing transaction references
   transaction_column: "Transaction Reference"
-
-# =============================================================================
-# SQL TEMPLATE MAPPING (AUTOMATIC IN BATCH MODE)
-# =============================================================================
-# The tool automatically selects SQL templates based on incident codes
-# (defined in INCIDENT_CODE_MATRIX):
-#
-# Standard Buyer ID (7_35, 7_37, 7_39):   → BuyerID.sql
-# Inconsistent Buyer ID (7_66):           → InconsistentBuyerID.sql
-# Decision Maker Buyer (12_17):           → FTBDM.sql
-# Standard Seller ID (16_19, 16_21, 16_23): → SellerID.sql
-# Inconsistent Seller ID (16_20):         → InconsistentSellerID.sql
-# Decision Maker Seller (21_17):          → FTSDM.sql
-# Pricing (35_3):                         → SCR_pricing_data_v1.0.sql
-
-# =============================================================================
-# SINGLE MODE CONFIGURATION (LEGACY)
-# =============================================================================
-# Uncomment and configure these for single-incident processing:
-
-# paths:
-#   # SQL template file with placeholder
-#   template_file: "src/accuracy_testing/sql_templates/BuyerID.sql"
-#   
-#   # Input CSV with transaction references
-#   input_file: "data/templates/FY25 Q3 7_37.csv"
-#   
-#   # Output directory
-#   output_directory: "data/sql_extracts"
-
-# processing:
-#   batch_size: 900
-#   placeholder_pattern: "-- TRANSACTION REFERENCES --"
-#   transaction_column: "Transaction Ref"
-
-# =============================================================================
-# EXAMPLES
-# =============================================================================
-#
-# Example 1: Batch mode with multiple incidents
-# ----------------------------------------------
-# testing_period:
-#   fiscal_year: "FY25"
-#   quarter: "Q3"
-# incidents: ["7_37", "16_21", "35_3"]
-# paths:
-#   template_dir: "data/templates"
-#   sql_template_dir: "src/accuracy_testing/sql_templates"
-#   output_directory: "data/sql_extracts"
-# processing:
-#   batch_size: 900
-#   transaction_column: "Transaction reference number"
-#
-# Result:
-#   - Reads FY25 Q3 7_37.csv  → Generates 7_37_FY25_Q3.sql
-#   - Reads FY25 Q3 16_21.csv → Generates 16_21_FY25_Q3.sql
-#   - Reads FY25 Q3 35_3.csv  → Generates 35_3_FY25_Q3.sql
-#
-# Example 2: Large dataset with multiple extracts
-# -----------------------------------------------
-# If FY25 Q3 7_37.csv contains 2000 transaction refs:
-#   - Generates 7_37_FY25_Q3_Extract1.sql (900 refs)
-#   - Generates 7_37_FY25_Q3_Extract2.sql (900 refs)
-#   - Generates 7_37_FY25_Q3_Extract3.sql (200 refs)
-#
-# Example 3: Single mode (legacy)
-# -------------------------------
-# paths:
-#   template_file: "src/accuracy_testing/sql_templates/BuyerID.sql"
-#   input_file: "data/custom_transactions.csv"
-#   output_directory: "data/output"
-# processing:
-#   batch_size: 500
-#
-# CLI Usage:
-# ----------
-# Batch mode:  generate-sql-extract --config config.yaml
-# Dry run:     generate-sql-extract --config config.yaml --dry-run
-# Verbose:     generate-sql-extract --config config.yaml --verbose
-
-  template_dir: "legacy/sql"
   
-  # Default output directory
-  output_dir: "data/output/sql"
-  
-  # Placeholder formats (for auto-detection)
-  placeholder_formats:
-    - "--<<TRANSACTION REFERENCES>>"
-    - "--<TRADE REFERENCES>--"
-  
-  # Input CSV settings
-  input:
-    header_row: true
-    reference_column: 0  # First column (0-indexed)
-    encoding: "utf-8"
-  
-  # Output settings
-  output:
-    encoding: "utf-8"
-    overwrite: true
-    create_directories: true
+  # Output format: 'sql', 'dtf', or 'both'
+  # - 'sql': Generate only SQL files (in /sql or /csv subdirectory)
+  # - 'dtf': Generate only DTF files (in /dtf subdirectory)
+  # - 'both': Generate both SQL and DTF files
+  output_format: "both"
 
-# Template Mappings (examples for different use cases)
-templates:
-  buyer_id_extract:
-    template: "legacy/sql/ExtractBuyerID.sql"
-    description: "Extract buyer ID validation data"
-    incident_code: "35_3"
-    
-  seller_id_extract:
-    template: "legacy/sql/ExtractSellerID.sql"
-    description: "Extract seller ID validation data"
-    incident_code: "35_4"
-    
-  inconsistent_buyer_extract:
-    template: "legacy/sql/ExtractInconsistentBuyerID.sql"
-    description: "Extract inconsistent buyer ID validation data"
-    incident_code: "35_3"
-    
-  pricing_extract:
-    template: "legacy/sql/PricingDataExtract.sql"
-    description: "Extract pricing validation data"
-    incident_code: "35_3"
+# =============================================================================
+# Options
+# =============================================================================
+options:
+  # Dry run mode - preview SQL generation without writing files
+  dry_run: false
+  
+  # Show progress bars during processing
+  show_progress: true
+  
+  # Overwrite existing files
+  overwrite: true
+
+# =============================================================================
+# Processor Configuration
+# =============================================================================
+processor:
+  # Logging level: DEBUG, INFO, WARNING, ERROR
+  log_level: "INFO"
+  
+  # Enable verbose console output
+  verbose: false
+
+# =============================================================================
+# Supported Incident Codes (ALL 11)
+# =============================================================================
+# This script generates SQL extracts for ALL automated incidents:
+#   - 7_35:  Incorrect CONCAT value within Buyer identification code field
+#   - 7_37:  Incorrect NIDN value within Buyer identification code field
+#   - 7_39:  Incorrect CCPT value within Buyer identification code field
+#   - 7_66:  Inconsistent Buyer Identification Codes
+#   - 12_17: Incorrect ID of Buyer Decision Maker
+#   - 16_19: Incorrect CONCAT value within Seller identification code field
+#   - 16_21: Incorrect NIDN value within Seller identification code field
+#   - 16_23: Incorrect CCPT value within Seller identification code field
+#   - 16_20: Inconsistent Seller Identification Codes
+#   - 21_17: Incorrect ID of Seller Decision Maker
+#   - 35_3:  Incorrect Value Compensation for Trading Positions (Pricing)
+#
+# Note: Unlike validation scripts, SQL generator supports ALL incidents in batch
+# mode because it only generates SQL queries (no validation logic).

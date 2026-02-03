@@ -371,11 +371,30 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
     testing_period = config.get('testing_period', {})
     fiscal_year = testing_period.get('fiscal_year', 'FYXX')
     quarter = testing_period.get('quarter', 'QX')
-    incidents = config.get('incidents', [])
     
-    paths = config.get('paths', {})
+    # Get batch mode configuration
+    batch_config = config.get('batch', {})
+    
+    # Check for incidents configuration
+    incidents_config = batch_config.get('incidents', [])
+    if incidents_config == 'auto':
+        # Auto-discover pricing incident (35_3)
+        incidents = ['35_3']
+        print(f"Auto-discovered pricing incident: 35_3")
+    elif isinstance(incidents_config, list):
+        incidents = incidents_config
+    else:
+        incidents = []
+    
+    # Get paths from batch configuration
+    paths = batch_config.get('paths', {})
     template_dir = Path(paths.get('template_dir', 'data/templates'))
     output_dir = Path(paths.get('output_dir', 'data/validated'))
+    
+    # Get filename patterns from batch configuration
+    filename_patterns = batch_config.get('filename_patterns', {})
+    template_pattern = filename_patterns.get('template', '{fiscal_year} {quarter} {incident}.csv')
+    output_pattern = filename_patterns.get('output', 'validated_{fiscal_year}_{quarter}_{incident}.csv')
     
     if not incidents:
         print("ERROR: No incidents specified in config")
@@ -400,12 +419,16 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
         print(f"Processing incident: {incident}")
         print(f"{'─'*70}")
         
-        # Build template filename: "FY25 Q3 16_21.csv"
-        template_filename = f"{fiscal_year} {quarter} {incident}.csv"
+        # Build template filename using configured pattern
+        template_filename = template_pattern.format(
+            incident=incident, fiscal_year=fiscal_year, quarter=quarter
+        )
         template_path = template_dir / template_filename
         
-        # Build output filename: "validated_FY25_Q3_16_21.csv"
-        output_filename = f"validated_{fiscal_year}_{quarter}_{incident}.csv"
+        # Build output filename using configured pattern
+        output_filename = output_pattern.format(
+            incident=incident, fiscal_year=fiscal_year, quarter=quarter
+        )
         output_path = output_dir / output_filename
         
         # Check if template exists

@@ -1,41 +1,117 @@
-# Pricing Data Validation Configuration
-# ======================================
+# Pricing Data Validation Configuration Template
+# ================================================
+#
+# Validates pricing data (net amount, consideration, interest calculations).
+# Script: pricing_validation.py
+# Incident: 35_3 (Incorrect Value Compensation for Trading Positions)
+#
+# Usage:
+#   python -m src.accuracy_testing.scripts.pricing_validation \
+#       --config config/local/accuracy_testing/pricing_validation.yaml
 
-# Testing period configuration
+# =============================================================================
+# Configuration Mode
+# =============================================================================
+# Options: "single" or "batch"
+# - single: Process one incident with explicit file paths
+# - batch:  Process multiple incidents using filename patterns
+mode: "batch"
+
+# =============================================================================
+# Testing Period
+# =============================================================================
 testing_period:
   # Fiscal year (e.g., FY25, FY26)
-  fiscal_year: "FY25"
+  fiscal_year: "FY26"
   
   # Quarter (e.g., Q1, Q2, Q3, Q4)
-  quarter: "Q3"
+  quarter: "Q1"
 
-# Incident codes to validate (batch processing)
-# Pricing validation incident codes: 35_3
-incidents:
-  - "35_3"
+# =============================================================================
+# Single Mode Configuration
+# =============================================================================
+# Used when mode: "single"
+# Specify exact file paths for one incident
+single:
+  # Incident code to validate
+  incident_code: "35_3"
+  
+  paths:
+    # Extract file (SQL database export) - validation input
+    # Note: Pricing has NO separate extract file - template IS the input
+    input_file: "data/templates/FY26 Q1 35_3.csv"
+    
+    # Output file (validation results)
+    output_file: "data/validated/validated_FY26_Q1_35_3.csv"
+    
+    # Log output directory
+    log_output: "logs"
 
-paths:
-  # SQL extract directory (contains database export CSV files)
-  # Example files: "pricing_extract_35_3.csv"
-  extract_dir: "data/input/accuracy_testing/extracts"
+# =============================================================================
+# Batch Mode Configuration
+# =============================================================================
+# Used when mode: "batch"
+# Process multiple incidents automatically
+batch:
+  # Incidents to process
+  # Options:
+  #   - "auto": Auto-discover all pricing incidents (35_3)
+  #   - List: ["35_3"]
+  incidents: "auto"
   
-  # Template directory (contains Kaizen template files with expected values)
-  # Example files: "FY25 Q3 35_3.csv"
-  # These files contain the expected correct pricing values for comparison
-  template_dir: "data/output/accuracy_testing/templates"
+  paths:
+    # Directory containing template files (Kaizen expected values)
+    # Note: For pricing, template IS the input (no separate extract)
+    template_dir: "data/templates/FY26/Q1"
+    
+    # Directory for output files (validation results)
+    output_dir: "data/validated/FY26/Q1"
+    
+    # Log output directory
+    log_output: "logs"
   
-  # Output directory for validated files
-  output_dir: "data/output/accuracy_testing/validated"
-  
-  # Log output directory
-  log_output: "logs"
+  # Filename patterns - construct filenames for each incident
+  # Available variables: {incident}, {fiscal_year}, {quarter}
+  filename_patterns:
+    # Template file (Kaizen input data) - validation input
+    # Example: FY26 Q1 35_3.csv
+    # Note: For pricing, this is both the input AND the reference
+    template: "{fiscal_year} {quarter} {incident}.csv"
+    
+    # Output file (validation results)
+    # Example: validated_FY26_Q1_35_3.csv
+    output: "validated_{fiscal_year}_{quarter}_{incident}.csv"
 
+# =============================================================================
+# Options
+# =============================================================================
+options:
+  # Dry run mode - preview validation without writing output files
+  dry_run: false
+  
+  # Show progress bars during processing
+  show_progress: true
+
+# =============================================================================
+# Processor Configuration
+# =============================================================================
 processor:
-  # Logging level (DEBUG, INFO, WARNING, ERROR)
+  # Logging level: DEBUG, INFO, WARNING, ERROR
   log_level: "INFO"
   
-  # Verbose output (true/false)
+  # Enable verbose console output
   verbose: false
-  
-  # Batch size for processing
-  batch_size: 1000
+
+# =============================================================================
+# Supported Incident Codes
+# =============================================================================
+# This script handles pricing validation:
+#   - 35_3: Incorrect Value Compensation for Trading Positions
+#
+# Note: Pricing validation is unique - it has NO separate extract or template
+# Kaizen lookup files. The "template" file IS the input data source.
+# Validation checks:
+#   - Net Amount calculations
+#   - Consideration calculations  
+#   - Interest calculations
+#   - Total = Net Amount + Consideration + Interest
