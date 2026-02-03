@@ -1,57 +1,144 @@
-# Seller ID Validation Configuration
-# ==================================
+# Seller ID Validation Configuration Template
+# ============================================
+#
+# Validates seller identification codes for standard ID incidents.
+# Script: seller_id_validation.py
+# Incidents: 16_19 (CONCAT), 16_21 (NIDN), 16_23 (CCPT)
+#
+# Usage:
+#   python -m src.accuracy_testing.scripts.seller_id_validation \
+#       --config config/local/accuracy_testing/seller_validation.yaml
 
-# Testing period configuration
+# =============================================================================
+# Configuration Mode
+# =============================================================================
+# Options: "single" or "batch"
+# - single: Process one incident with explicit file paths
+# - batch:  Process multiple incidents using filename patterns
+mode: "batch"
+
+# =============================================================================
+# Testing Period
+# =============================================================================
 testing_period:
   # Fiscal year (e.g., FY25, FY26)
-  fiscal_year: "FY25"
+  fiscal_year: "FY26"
   
   # Quarter (e.g., Q1, Q2, Q3, Q4)
-  quarter: "Q3"
+  quarter: "Q1"
 
-# Incident codes to validate (batch processing)
-# Option 1: Auto-discover all seller incidents (RECOMMENDED)
-# Set to "all" to automatically process all seller-related incidents
-# This will discover: 16_*, 17_*, 18_*, 19_*, 20_*, 21_*, 22_*, 23_*, 24_*, 36_23
-# Note: Decision maker incidents (16_20, 16_64) are auto-detected and skipped with warnings
-auto_incidents: "all"
-
-# Option 2: Specify incidents manually (uncomment and modify below, comment out auto_incidents)
-# incidents:
-#   - "16_19"
-#   - "16_21"
-#   - "16_23"
-#   - "16_20"
-
-# File paths
-# Note: Three separate files are involved in the validation workflow:
-# 1. Extract file (input) - SQL database export containing transaction data to validate
-# 2. Template file (Kaizen lookup) - Contains expected correct ID values for comparison
-# 3. Output file - Where validation results are written
-
-paths:
-  # SQL extract directory (contains database export CSV files)
-  # Example files: "seller_extract_16_21.csv", "seller_extract_16_23.csv"
-  extract_dir: "data/input/accuracy_testing/extracts"
+# =============================================================================
+# Single Mode Configuration
+# =============================================================================
+# Used when mode: "single"
+# Specify exact file paths for one incident
+single:
+  # Incident code to validate
+  incident_code: "16_21"
   
-  # Template directory (contains Kaizen template files with expected values)
-  # Example files: "FY25 Q3 16_21.csv", "FY25 Q3 16_23.csv"
-  # These files contain the expected correct ID values in columns for comparison
-  template_dir: "data/output/accuracy_testing/templates"
-  
-  # Output directory for validated files
-  output_dir: "data/output/accuracy_testing/validated"
-  
-  # Log output directory
-  log_output: "logs"
+  paths:
+    # Extract file (SQL database export) - validation input
+    input_file: "data/extracts/16_21_FY26_Q1.csv"
+    
+    # Template file (Kaizen expected values) - validation reference
+    template_file: "data/templates/FY26 Q1 16_21.csv"
+    
+    # Output file (validation results)
+    output_file: "data/validated/validated_FY26_Q1_16_21.csv"
+    
+    # Optional: Tracker files for additional validation context
+    # italian_tracker: "data/trackers/italian_tracker.csv"
+    # main_tracker: "data/trackers/main_tracker.csv"
+    
+    # Log output directory
+    log_output: "logs"
 
-# Processor configuration
+# =============================================================================
+# Batch Mode Configuration
+# =============================================================================
+# Used when mode: "batch"
+# Process multiple incidents automatically
+batch:
+  # Incidents to process
+  # Options:
+  #   - "auto": Auto-discover all standard seller incidents (16_19, 16_21, 16_23)
+  #   - List: ["16_19", "16_21", "16_23"]
+  incidents: "auto"
+  
+  paths:
+    # Directory containing extract files (SQL database exports)
+    extract_dir: "data/extracts/FY26/Q1"
+    
+    # Directory containing template files (Kaizen expected values)
+    template_dir: "data/templates/FY26/Q1"
+    
+    # Directory for output files (validation results)
+    output_dir: "data/validated/FY26/Q1"
+    
+    # Optional: Tracker files (same for all incidents)
+    # italian_tracker: "data/trackers/italian_tracker.csv"
+    # main_tracker: "data/trackers/main_tracker.csv"
+    
+    # Log output directory
+    log_output: "logs"
+  
+  # Filename patterns - construct filenames for each incident
+  # Available variables: {incident}, {fiscal_year}, {quarter}
+  filename_patterns:
+    # Extract file (SQL database export) - validation input
+    # Example: 16_21_FY26_Q1.csv
+    extract: "{incident}_{fiscal_year}_{quarter}.csv"
+    
+    # Template file (Kaizen expected values) - validation reference
+    # Example: FY26 Q1 16_21.csv
+    template: "{fiscal_year} {quarter} {incident}.csv"
+    
+    # Output file (validation results)
+    # Example: validated_FY26_Q1_16_21.csv
+    output: "validated_{fiscal_year}_{quarter}_{incident}.csv"
+
+# =============================================================================
+# Tracker Configuration
+# =============================================================================
+# Column names for tracker file lookups
+tracker:
+  # Column containing transaction references in tracker files
+  transaction_ref_column: "Transaction Reference"
+  
+  # Column containing ID values in tracker files
+  id_column: "Seller ID Code"
+  
+  # Column containing ID types in tracker files
+  type_column: "Type of Seller ID Code"
+
+# =============================================================================
+# Options
+# =============================================================================
+options:
+  # Dry run mode - preview validation without writing output files
+  dry_run: false
+  
+  # Show progress bars during processing
+  show_progress: true
+
+# =============================================================================
+# Processor Configuration
+# =============================================================================
 processor:
   # Logging level: DEBUG, INFO, WARNING, ERROR
   log_level: "INFO"
   
   # Enable verbose console output
   verbose: false
-  
-  # Batch size for processing (future use)
-  batch_size: 1000
+
+# =============================================================================
+# Supported Incident Codes
+# =============================================================================
+# This script handles standard seller ID validation:
+#   - 16_19: Incorrect CONCAT value within Seller identification code field
+#   - 16_21: Incorrect NIDN value within Seller identification code field
+#   - 16_23: Incorrect CCPT value within Seller identification code field
+#
+# Note: This script does NOT handle:
+#   - 16_20: Inconsistent Seller ID (use inconsistent_seller_validation_template.yaml)
+#   - 21_17: Seller Decision Maker (use ftsdm_validation_template.yaml)

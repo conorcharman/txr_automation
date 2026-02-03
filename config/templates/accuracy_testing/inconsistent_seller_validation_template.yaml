@@ -1,86 +1,118 @@
-# Inconsistent Seller ID Validation Configuration
-# ===============================================
+# Inconsistent Seller ID Validation Configuration Template
+# ==========================================================
 #
-# Template for incident code 16_20 (Inconsistent Seller ID)
-# Use this for scenarios where the same person has different IDs across trades.
+# Validates inconsistent seller ID codes across time for the same person.
+# Script: inconsistent_seller_id_validation.py
+# Incident: 16_20 (Inconsistent Seller Identification Codes)
 #
-# Algorithm Overview:
-# 1. Groups records by Person Code
-# 2. Sorts each group chronologically by Trade_Date_Time
-# 3. Validates each ID using standard format + logic rules
-# 4. Corrects INVALID IDs using most recent PRIOR VALID ID
+# Algorithm:
+#   1. Groups records by Person Code
+#   2. Sorts chronologically by Trade_Date_Time
+#   3. Validates each ID (format + logic)
+#   4. Corrects INVALID IDs using most recent PRIOR VALID ID
+#   5. Valid-to-valid ID changes are preserved (not corrected)
 #
-# Key differences from standard validation:
-# - Only corrects invalid IDs (fallback pattern or failed format/logic)
-# - Valid-to-valid ID changes are preserved (not corrected)
-# - Requires Trade_Date_Time field for chronological ordering
+# Usage:
+#   python -m src.accuracy_testing.scripts.inconsistent_seller_id_validation \
+#       --config config/local/accuracy_testing/inconsistent_seller_validation.yaml
 
-# Testing period configuration
+# =============================================================================
+# Configuration Mode
+# =============================================================================
+# Options: "single" only (no batch mode for inconsistent ID validation)
+# Inconsistent ID validation requires one extract file per execution
+mode: "single"
+
+# =============================================================================
+# Testing Period
+# =============================================================================
 testing_period:
   # Fiscal year (e.g., FY25, FY26)
-  fiscal_year: "FY25"
+  fiscal_year: "FY26"
   
   # Quarter (e.g., Q1, Q2, Q3, Q4)
-  quarter: "Q3"
+  quarter: "Q1"
 
-# Incident codes to validate
-# For inconsistent ID validation, only incident 16_20 is supported
-incidents:
-  - "16_20"
+# =============================================================================
+# Single Mode Configuration
+# =============================================================================
+# Process one incident with explicit file paths
+single:
+  # Incident code (must be 16_20)
+  incident_code: "16_20"
+  
+  paths:
+    # Extract file (SQL database export) - validation input
+    # MUST include Trade_Date_Time column for chronological ordering
+    # Example: 16_20_FY26_Q1.csv
+    input_file: "data/extracts/16_20_FY26_Q1.csv"
+    
+    # Template file (Kaizen expected values) - validation reference
+    # Example: FY26 Q1 16_20.csv
+    template_file: "data/templates/FY26 Q1 16_20.csv"
+    
+    # Output file (validation results)
+    # Example: validated_FY26_Q1_16_20.csv
+    output_file: "data/validated/validated_FY26_Q1_16_20.csv"
+    
+    # Optional: Tracker files for additional validation context
+    # italian_tracker: "data/trackers/italian_tracker.csv"
+    # main_tracker: "data/trackers/main_tracker.csv"
+    
+    # Log output directory
+    log_output: "logs"
 
-# File paths
-# Note: For inconsistent ID validation:
-# 1. Extract file (input) - SQL database export with Trade_Date_Time for chronological ordering
-# 2. Template file (Kaizen lookup) - Optional, contains expected correct ID values
-# 3. Output file - Where validation results are written
+# =============================================================================
+# Tracker Configuration
+# =============================================================================
+# Column names for tracker file lookups
+tracker:
+  # Column containing transaction references in tracker files
+  transaction_ref_column: "Transaction Reference"
+  
+  # Column containing ID values in tracker files
+  id_column: "Seller ID Code"
+  
+  # Column containing ID types in tracker files
+  type_column: "Type of Seller ID Code"
 
-paths:
-  # SQL extract file (input) containing records with Trade_Date_Time field
-  # Required columns: Transaction Reference, Account ID, Trade_Date_Time,
-  #                   Person Code, Account Type, Seller ID Code, Type of Seller ID Code,
-  #                   First Name, Surname, Date of Birth, Gender, 
-  #                   Primary Nationality, Secondary Nationality
-  input_file: "data/input/accuracy_testing/extracts/inconsistent_seller_extract_16_20.csv"
+# =============================================================================
+# Options
+# =============================================================================
+options:
+  # Dry run mode - preview validation without writing output files
+  dry_run: false
   
-  # Output file with corrections applied
-  output_file: "data/output/accuracy_testing/inconsistent_seller_validated_16_20.csv"
-  
-  # Log output directory
-  log_output: "logs"
-  
-  # Optional: Italian tracker CSV file for IT fiscal code validation
-  # Format: Column C = Person Code, Column G = Status
-  # italian_tracker: "path/to/italian_tracker.csv"
-  
-  # Optional: Main tracker CSV file for client data remediation
-  # Format: Column J = Person Code, Column N = Status
-  # main_tracker: "path/to/main_tracker.csv"
-  
-  # Optional: Kaizen template file for expected value lookup/comparison
-  # This is separate from the extract file - it contains the expected correct values
-  # template_file: "data/output/accuracy_testing/templates/FY25 Q3 16_20.csv"
-  # template_id_column: 21  # Column V (0-indexed, for expected ID)
-  # template_type_column: 22  # Column W (0-indexed, for expected type)
+  # Show progress bars during processing
+  show_progress: true
 
-# Processor configuration
+# =============================================================================
+# Processor Configuration
+# =============================================================================
 processor:
   # Logging level: DEBUG, INFO, WARNING, ERROR
-  log_level: "DEBUG"
+  log_level: "INFO"
   
   # Enable verbose console output
-  verbose: true
-  
-  # Batch size for processing (future use)
-  batch_size: 1000
+  verbose: false
 
-# Example usage:
-# --------------
-# python -m src.accuracy_testing.scripts.inconsistent_seller_id_validation --config config/local/accuracy_testing/inconsistent_seller.yaml
-# 
-# Or with CLI arguments:
-# python -m src.accuracy_testing.scripts.inconsistent_seller_id_validation input.csv output.csv --log-level DEBUG
+# =============================================================================
+# Required Input Columns
+# =============================================================================
+# The extract file MUST contain these columns:
+#   - Transaction Reference
+#   - Account ID
+#   - Trade_Date_Time         (REQUIRED for chronological sorting)
+#   - Person Code             (REQUIRED for grouping)
+#   - Account Type
+#   - Seller ID Code
+#   - Type of Seller ID Code
+#   - First Name
+#   - Surname
+#   - Date of Birth
+#   - Gender
+#   - Primary Nationality
+#   - Secondary Nationality
 #
-# Or with environment variables:
-# export TXR_PATHS_INPUT_FILE="data/seller_input.csv"
-# export TXR_PATHS_OUTPUT_FILE="data/seller_output.csv"
-# python -m src.accuracy_testing.scripts.inconsistent_seller_id_validation --use-env
+# Note: Unlike standard validation, this script requires Trade_Date_Time
+# to determine the chronological order of IDs for the same person.

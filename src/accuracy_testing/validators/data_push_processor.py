@@ -499,19 +499,29 @@ class BatchDataPushProcessor:
         Returns:
             PushStats for this incident
         """
-        # Construct file paths
-        source_name = f"{self.fiscal_year} {self.quarter} - {incident}.csv"
+        # Construct target file path
         target_name = f"{self.fiscal_year} {self.quarter} - {incident}.csv"
-        
-        source_path = self.base_source_dir / source_name
         target_path = self.base_target_dir / target_name
         
-        if not source_path.exists():
-            # Try alternative naming
-            source_path = self.base_source_dir / f"{incident}_validated.csv"
+        # Try multiple naming patterns for source file (validation outputs)
+        source_patterns = [
+            f"validated_{self.fiscal_year}_{self.quarter}_{incident}.csv",  # New validation output format
+            f"{self.fiscal_year} {self.quarter} - {incident}.csv",          # Legacy/template format
+            f"{incident}_validated.csv",                                     # Generic fallback
+        ]
         
-        if not source_path.exists():
-            raise FileNotFoundError(f"Source file not found for {incident}")
+        source_path = None
+        for pattern in source_patterns:
+            candidate = self.base_source_dir / pattern
+            if candidate.exists():
+                source_path = candidate
+                self.logger.debug(f"Found source file: {pattern}")
+                break
+        
+        if source_path is None:
+            raise FileNotFoundError(
+                f"Source file not found for {incident}. Tried patterns: {source_patterns}"
+            )
         
         if not target_path.exists():
             raise FileNotFoundError(f"Target file not found for {incident}")

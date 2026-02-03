@@ -510,29 +510,35 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
     fiscal_year = testing_period.get('fiscal_year', 'FYXX')
     quarter = testing_period.get('quarter', 'QX')
     
-    # Check for auto-discovery of all buyer incidents
-    auto_incidents = config.get('auto_incidents')
-    if auto_incidents == 'all':
-        # Auto-discover all buyer incidents
-        incidents = sorted(list(get_buyer_incident_codes()))
-        print(f"Auto-discovered {len(incidents)} buyer incidents")
-        dm_codes = get_decision_maker_buyer_codes() & set(incidents)
-        if dm_codes:
-            print(f"   → {len(incidents) - len(dm_codes)} standard ID incidents (7_35, 7_37, 7_39)")
-            print(f"   → {len(dm_codes)} decision maker incidents: {', '.join(sorted(dm_codes))} (will be skipped)")
-    else:
-        incidents = config.get('incidents', [])
+    # Get batch mode configuration
+    batch_config = config.get('batch', {})
     
-    paths = config.get('paths', {})
-    # Support both old and new config formats
-    # New format: extract_dir (input SQL extracts) + template_dir (Kaizen templates)
-    # Old format: template_dir (used for both)
-    extract_dir = Path(paths.get('extract_dir', paths.get('template_dir', 'data/extracts')))
+    # Check for auto-discovery of incidents
+    incidents_config = batch_config.get('incidents', [])
+    if incidents_config == 'auto':
+        # Auto-discover all standard buyer incidents (7_35, 7_37, 7_39)
+        incidents = ['7_35', '7_37', '7_39']
+        print(f"Auto-discovered {len(incidents)} standard buyer incidents: {', '.join(incidents)}")
+    elif isinstance(incidents_config, list):
+        incidents = incidents_config
+    else:
+        incidents = []
+    
+    # Get paths from batch configuration
+    paths = batch_config.get('paths', {})
+    extract_dir = Path(paths.get('extract_dir', 'data/extracts'))
     template_dir = Path(paths.get('template_dir', 'data/templates'))
     output_dir = Path(paths.get('output_dir', 'data/validated'))
     
+    # Get filename patterns from batch configuration
+    filename_patterns = batch_config.get('filename_patterns', {})
+    extract_pattern = filename_patterns.get('extract', '{incident}_{fiscal_year}_{quarter}.csv')
+    template_pattern = filename_patterns.get('template', '{fiscal_year} {quarter} {incident}.csv')
+    output_pattern = filename_patterns.get('output', 'validated_{fiscal_year}_{quarter}_{incident}.csv')
+    
     if not incidents:
-        print("ERROR: No incidents specified in config and auto_incidents not set")
+        print("ERROR: No incidents specified in batch config")
+        print("       Set batch.incidents to 'auto', 'all', or provide explicit list")
         return 1
     
     print(f"\n{'='*70}")
@@ -575,13 +581,20 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
             total_failed += 1
             continue
         
-        # Build filenames: "FY25 Q3 7_37.csv"
-        base_filename = f"{fiscal_year} {quarter} {incident}.csv"
-        extract_path = extract_dir / base_filename
-        template_path = template_dir / base_filename
+        # Build filenames using configured patterns
+        extract_filename = extract_pattern.format(
+            incident=incident, fiscal_year=fiscal_year, quarter=quarter
+        )
+        template_filename = template_pattern.format(
+            incident=incident, fiscal_year=fiscal_year, quarter=quarter
+        )
+        extract_path = extract_dir / extract_filename
+        template_path = template_dir / template_filename
         
-        # Build output filename: "validated_FY25_Q3_7_37.csv"
-        output_filename = f"validated_{fiscal_year}_{quarter}_{incident}.csv"
+        # Build output filename using configured pattern
+        output_filename = output_pattern.format(
+            incident=incident, fiscal_year=fiscal_year, quarter=quarter
+        )
         output_path = output_dir / output_filename
         
         # Check if extract file exists (input data to validate)
@@ -737,8 +750,9 @@ def main():
                 print("Use --config, --use-env, or provide input_file and output_file arguments")
                 return 1
         
-        # Check if this is batch mode (has incidents list and testing_period)
-        is_batch_mode = 'incidents' in config and 'testing_period' in config
+        # Check if this is batch mode (using mode field from config)
+        mode = config.get('mode', 'single')  # Default to single if not specified
+        is_batch_mode = mode == 'batch'
         
         if is_batch_mode:
             # Run batch validation for multiple incidents

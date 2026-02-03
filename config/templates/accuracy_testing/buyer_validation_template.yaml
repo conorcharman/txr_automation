@@ -1,7 +1,25 @@
-# Buyer ID Validation Configuration
-# ==================================
+# Buyer ID Validation Configuration Template
+# ==========================================
+#
+# Validates buyer identification codes for standard ID incidents.
+# Script: buyer_id_validation.py
+# Incidents: 7_35 (CONCAT), 7_37 (NIDN), 7_39 (CCPT)
+#
+# Usage:
+#   python -m src.accuracy_testing.scripts.buyer_id_validation \
+#       --config config/local/accuracy_testing/buyer_validation.yaml
 
-# Testing period configuration
+# =============================================================================
+# Configuration Mode
+# =============================================================================
+# Options: "single" or "batch"
+# - single: Process one incident with explicit file paths
+# - batch:  Process multiple incidents using filename patterns
+mode: "batch"
+
+# =============================================================================
+# Testing Period
+# =============================================================================
 testing_period:
   # Fiscal year (e.g., FY25, FY26)
   fiscal_year: "FY26"
@@ -9,56 +27,118 @@ testing_period:
   # Quarter (e.g., Q1, Q2, Q3, Q4)
   quarter: "Q1"
 
-# Incident codes to validate (batch processing)
-# Option 1: Auto-discover all buyer incidents (RECOMMENDED)
-# Set to "all" to automatically process all buyer-related incidents
-# This will discover: 7_*, 8_*, 9_*, 10_*, 11_*, 12_*, 13_*, 14_*, 15_*, 21_2
-# Note: Decision maker incidents (7_66, 7_68) are auto-detected and skipped with warnings
-# auto_incidents: "all"
+# =============================================================================
+# Single Mode Configuration
+# =============================================================================
+# Used when mode: "single"
+# Specify exact file paths for one incident
+single:
+  # Incident code to validate
+  incident_code: "7_37"
+  
+  paths:
+    # Extract file (SQL database export) - validation input
+    input_file: "data/extracts/7_37_FY26_Q1.csv"
+    
+    # Template file (Kaizen expected values) - validation reference
+    template_file: "data/templates/FY26 Q1 7_37.csv"
+    
+    # Output file (validation results)
+    output_file: "data/validated/validated_FY26_Q1_7_37.csv"
+    
+    # Optional: Tracker files for additional validation context
+    # italian_tracker: "data/trackers/italian_tracker.csv"
+    # main_tracker: "data/trackers/main_tracker.csv"
+    
+    # Log output directory
+    log_output: "logs"
 
-# Option 2: Specify incidents manually (uncomment and modify below, comment out auto_incidents)
-incidents:
-  - "7_35"
-  - "7_37"
-  - "7_39"
+# =============================================================================
+# Batch Mode Configuration
+# =============================================================================
+# Used when mode: "batch"
+# Process multiple incidents automatically
+batch:
+  # Incidents to process
+  # Options:
+  #   - "auto": Auto-discover all standard buyer incidents (7_35, 7_37, 7_39)
+  #   - List: ["7_35", "7_37", "7_39"]
+  incidents: "auto"
+  
+  paths:
+    # Directory containing extract files (SQL database exports)
+    extract_dir: "data/extracts/FY26/Q1"
+    
+    # Directory containing template files (Kaizen expected values)
+    template_dir: "data/templates/FY26/Q1"
+    
+    # Directory for output files (validation results)
+    output_dir: "data/validated/FY26/Q1"
+    
+    # Optional: Tracker files (same for all incidents)
+    # italian_tracker: "data/trackers/italian_tracker.csv"
+    # main_tracker: "data/trackers/main_tracker.csv"
+    
+    # Log output directory
+    log_output: "logs"
+  
+  # Filename patterns - construct filenames for each incident
+  # Available variables: {incident}, {fiscal_year}, {quarter}
+  filename_patterns:
+    # Extract file (SQL database export) - validation input
+    # Example: 7_37_FY26_Q1.csv
+    extract: "{incident}_{fiscal_year}_{quarter}.csv"
+    
+    # Template file (Kaizen expected values) - validation reference
+    # Example: FY26 Q1 7_37.csv
+    template: "{fiscal_year} {quarter} {incident}.csv"
+    
+    # Output file (validation results)
+    # Example: validated_FY26_Q1_7_37.csv
+    output: "validated_{fiscal_year}_{quarter}_{incident}.csv"
 
-# File paths
-# Note: Three separate files are involved in the validation workflow:
-# 1. Extract file (input) - SQL database export containing transaction data to validate
-# 2. Template file (Kaizen lookup) - Contains expected correct ID values for comparison
-# 3. Output file - Where validation results are written
+# =============================================================================
+# Tracker Configuration
+# =============================================================================
+# Column names for tracker file lookups
+tracker:
+  # Column containing transaction references in tracker files
+  transaction_ref_column: "Transaction Reference"
+  
+  # Column containing ID values in tracker files
+  id_column: "Buyer ID Code"
+  
+  # Column containing ID types in tracker files
+  type_column: "Type of Buyer ID Code"
 
-paths:
-  # SQL extract directory (contains database export CSV files)
-  # Example files: "buyer_extract_7_37.csv", "buyer_extract_7_39.csv"
-  extract_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\extracts'
+# =============================================================================
+# Options
+# =============================================================================
+options:
+  # Dry run mode - preview validation without writing output files
+  dry_run: false
   
-  # Template directory (contains Kaizen template files with expected values)
-  # Example files: "FY26 Q1 7_37.csv", "FY26 Q1 7_39.csv"
-  # These files contain the expected correct ID values in columns for comparison
-  template_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\incident_code_analysis'
-  
-  # Output directory for validated files
-  output_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\validated'
-  
-  # Log output directory
-  log_output: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\logs'
-  
-  # Optional: Italian tracker CSV file for IT fiscal code validation
-  # Format: Column C = Person Code, Column G = Status
-  italian_tracker: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\Transaction Reporting - Italian Fiscal Code Validation.csv'
-  
-  # Optional: Main tracker CSV file for client data remediation
-  # Format: Column J = Person Code, Column N = Status
-  # main_tracker: "path/to/main_tracker.csv"
+  # Show progress bars during processing
+  show_progress: true
 
-# Processor configuration
+# =============================================================================
+# Processor Configuration
+# =============================================================================
 processor:
   # Logging level: DEBUG, INFO, WARNING, ERROR
   log_level: "INFO"
   
   # Enable verbose console output
-  verbose: true
-  
-  # Batch size for processing (future use)
-  # batch_size: 1000
+  verbose: false
+
+# =============================================================================
+# Supported Incident Codes
+# =============================================================================
+# This script handles standard buyer ID validation:
+#   - 7_35: Incorrect CONCAT value within Buyer identification code field
+#   - 7_37: Incorrect NIDN value within Buyer identification code field
+#   - 7_39: Incorrect CCPT value within Buyer identification code field
+#
+# Note: This script does NOT handle:
+#   - 7_66:  Inconsistent Buyer ID (use inconsistent_buyer_validation_template.yaml)
+#   - 12_17: Buyer Decision Maker (use ftbdm_validation_template.yaml)

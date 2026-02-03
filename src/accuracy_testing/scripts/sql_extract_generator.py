@@ -465,21 +465,44 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     testing_period = config.get('testing_period', {})
     fiscal_year = testing_period.get('fiscal_year', 'FYXX')
     quarter = testing_period.get('quarter', 'QX')
-    incidents = config.get('incidents', [])
     
-    paths = config.get('paths', {})
+    # Get batch mode configuration
+    batch_config = config.get('batch', {})
+    
+    # Check for incidents configuration
+    incidents_config = batch_config.get('incidents', [])
+    if incidents_config == 'all':
+        # Include ALL 11 automated incidents
+        incidents = ['7_35', '7_37', '7_39', '7_66', '12_17', '16_19', '16_21', '16_23', '16_20', '21_17', '35_3']
+        print(f"Auto-discovered all {len(incidents)} automated incidents")
+    elif isinstance(incidents_config, list):
+        incidents = incidents_config
+    else:
+        incidents = []
+    
+    # Get paths from batch configuration
+    paths = batch_config.get('paths', {})
     template_dir = Path(paths.get('template_dir', 'data/templates'))
-    output_dir = Path(paths.get('output_directory', 'data/sql_extracts'))
+    output_dir = Path(paths.get('output_dir', 'data/sql_extracts'))
     sql_template_dir = Path(paths.get('sql_template_dir', 'src/accuracy_testing/sql_templates'))
     dtf_template_path = paths.get('dtf_template_file')
     
+    # Get filename patterns from batch configuration
+    filename_patterns = batch_config.get('filename_patterns', {})
+    template_pattern = filename_patterns.get('template', '{fiscal_year} {quarter} {incident}.csv')
+    output_sql_pattern = filename_patterns.get('output_sql', '{incident}_{fiscal_year}_{quarter}.sql')
+    output_sql_batch_pattern = filename_patterns.get('output_sql_batch', '{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.sql')
+    output_dtf_pattern = filename_patterns.get('output_dtf', '{incident}_{fiscal_year}_{quarter}.dtf')
+    output_dtf_batch_pattern = filename_patterns.get('output_dtf_batch', '{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.dtf')
+    output_csv_pattern = filename_patterns.get('output_csv', '{incident}_{fiscal_year}_{quarter}.csv')
+    output_csv_batch_pattern = filename_patterns.get('output_csv_batch', '{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.csv')
+    
+    # Get processing options
     processing = config.get('processing', {})
     batch_size = processing.get('batch_size', 900)
     placeholder = processing.get('placeholder_pattern', '-- TRANSACTION REFERENCES --')
     transaction_column = processing.get('transaction_column', 'Transaction reference number')
-    
-    output_options = config.get('output_options', {})
-    output_format = output_options.get('format', 'both')
+    output_format = processing.get('output_format', 'both')
     
     if not incidents:
         print("ERROR: No incidents specified in config")
@@ -514,8 +537,10 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
             sql_template = get_sql_template_for_incident(incident, sql_template_dir)
             print(f"SQL template: {sql_template.name}")
             
-            # Build template CSV filename: "FY25 Q3 7_37.csv"
-            template_filename = f"{fiscal_year} {quarter} {incident}.csv"
+            # Build template CSV filename using configured pattern
+            template_filename = template_pattern.format(
+                incident=incident, fiscal_year=fiscal_year, quarter=quarter
+            )
             template_path = template_dir / template_filename
             
             # Check if template CSV exists
@@ -687,8 +712,9 @@ def main():
         if not dtf_template_path:
             dtf_template_path = paths.get('dtf_template_file')
     
-    # Check if batch mode
-    is_batch_mode = config and 'incidents' in config and 'testing_period' in config
+    # Check if batch mode (using mode field from config)
+    mode = config.get('mode', 'single')  # Default to single if not specified
+    is_batch_mode = mode == 'batch'
     
     if is_batch_mode:
         # Run batch SQL generation

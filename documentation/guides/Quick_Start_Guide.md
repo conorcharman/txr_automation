@@ -12,6 +12,37 @@ conda activate txr_automation
 
 If you haven't set up the environment yet, see [Conda_Setup_Guide.md](Conda_Setup_Guide.md).
 
+## Configuration System (v2.0)
+
+All accuracy testing scripts now use a **mode-based configuration** with configurable filename patterns:
+
+- **Batch Mode**: Process multiple incidents with auto-discovery and filename patterns
+- **Single Mode**: Process one incident with explicit file paths
+
+**See comprehensive documentation:**
+- [Accuracy Testing Configuration Guide](Accuracy_Testing_Configuration_Guide.md) - Complete reference
+- [Config Migration Guide](Config_Migration_Guide.md) - Migrate old configs to v2.0
+
+**Quick example:**
+
+```yaml
+mode: "batch"
+
+batch:
+  incidents: "auto"  # Auto-discovers standard incidents
+  testing_period:
+    fiscal_year: "2025"
+    quarter: "Q1"
+  
+  paths:
+    extract_dir: "/data/extracts"
+    output_dir: "/data/outputs"
+  
+  filename_patterns:
+    extract: "{incident}_{fiscal_year}_{quarter}.csv"
+    output: "validated_{fiscal_year}_{quarter}_{incident}.csv"
+```
+
 ## Running Processors
 
 ### Console Scripts (Recommended)
@@ -22,9 +53,22 @@ The package installs console scripts for easy command-line access:
 # Activate environment first
 conda activate txr_automation
 
-# Accuracy Testing
-validate-buyer          # Buyer ID validation
-validate-seller         # Seller ID validation
+# Accuracy Testing - Batch Mode
+validate-buyer          # Buyer ID validation (7_35, 7_37, 7_39)
+validate-seller         # Seller ID validation (16_19, 16_21, 16_23)
+validate-pricing        # Pricing validation (35_3)
+
+# Accuracy Testing - Single Mode
+validate-inconsistent-buyer   # Inconsistent buyer ID (7_66)
+validate-inconsistent-seller  # Inconsistent seller ID (16_20)
+validate-ftbdm               # Buyer decision maker (12_17)
+validate-ftsdm               # Seller decision maker (21_17)
+
+# Extract Generation
+sql-extract-generator   # Generate SQL extracts (all 11 incidents)
+
+# Data Push
+data-push              # Push validated data to templates (all 11 incidents)
 
 # Replay Processors
 replay-phase2           # Phase 2 processor
@@ -41,9 +85,9 @@ These commands automatically use your local configuration files from `config/loc
 **Override with custom config:**
 
 ```bash
-validate-buyer --config config/custom/buyer_validation.yaml
-replay-phase2 --config config/custom/phase2.yaml
-replay-phase3 --log-level DEBUG
+validate-buyer --config config/custom/buyer_q1_2025.yaml
+sql-extract-generator --config config/custom/extracts.yaml
+replay-phase2 --log-level DEBUG
 ```
 
 ### Accuracy Testing Commands
