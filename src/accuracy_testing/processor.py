@@ -255,6 +255,7 @@ class ClientRecord:
     gender: str
     primary_nationality: str
     secondary_nationality: str = ""
+    prefixed_nationality: str = ""  # Extracted from ID prefix (first 2 chars)
     
     # Processing results
     is_valid: bool = False
@@ -559,29 +560,94 @@ class InconsistentIDProcessor:
     
     def has_inconsistent_ids(self, records: List[ClientRecord], indices: List[int]) -> bool:
         """
-        Check if a group has different IDs or ID types.
+        Check if a group has different IDs or ID types (accounting for prefixed nationality).
+        
+        Different IDs with different nationality prefixes are NOT considered inconsistent
+        (person may have changed nationality). Only flag as inconsistent if IDs differ
+        within the same nationality prefix.
         
         Args:
             records: Full list of records
             indices: Indices of records in this person group
         
         Returns:
-            True if IDs or types differ within the group
+            True if IDs or types differ within the group for the same nationality
         """
         if len(indices) <= 1:
             return False
         
-        first_record = records[indices[0]]
-        first_id = str(first_record.id_value).strip()
-        first_type = str(first_record.id_type).strip()
+        # Extract prefixes and group records by prefix
+        prefix_groups = defaultdict(list)
         
-        for idx in indices[1:]:
+        for idx in indices:
             record = records[idx]
-            if (str(record.id_value).strip() != first_id or 
-                str(record.id_type).strip() != first_type):
-                return True
+            id_value = str(record.id_value).strip()
+            id_type = str(record.id_type).strip()
+            
+            # Extract prefix (inline, before it's officially set)
+            prefix = self._extract_nationality_prefix(record)
+            
+            # Group by prefix
+            key = prefix if prefix else "NO_PREFIX"
+            prefix_groups[key].append((idx, id_value, id_type, prefix))
         
+        # Check for inconsistencies WITHIN each prefix group
+        for prefix, group in prefix_groups.items():
+            if len(group) <= 1:
+                continue
+            
+            # Get first ID in this prefix group
+            first_idx, first_id, first_type, first_prefix = group[0]
+            
+            # Strip prefix for comparison if present
+            if first_prefix:
+                first_id_stripped = first_id[len(first_prefix):] if first_id.startswith(first_prefix) else first_id
+            else:
+                first_id_stripped = first_id
+            
+            # Compare with other IDs in same prefix group
+            for idx, id_value, id_type, prefix in group[1:]:
+                # Strip prefix for comparison
+                if prefix:
+                    id_stripped = id_value[len(prefix):] if id_value.startswith(prefix) else id_value
+                else:
+                    id_stripped = id_value
+                
+                # If IDs or types differ within same prefix group, it's inconsistent
+                if id_stripped != first_id_stripped or id_type != first_type:
+                    return True
+        
+        # No inconsistencies found within any prefix group
         return False
+    
+    def _extract_nationality_prefix(self, record: ClientRecord) -> Optional[str]:
+        """
+        Extract nationality prefix from ID if present.
+        
+        Helper method to detect prefixes inline before prefixed_nationality is set.
+        
+        Args:
+            record: Client record
+        
+        Returns:
+            Two-letter country code prefix if detected, None otherwise
+        """
+        id_value = str(record.id_value).strip().upper()
+        
+        # Check if ID starts with a 2-letter country code
+        if len(id_value) >= 2:
+            potential_prefix = id_value[:2]
+            
+            # Check if prefix is a valid country code
+            if potential_prefix.isalpha() and country_manager.validate_code(potential_prefix):
+                # Verify it matches one of the nationalities
+                nat1 = str(record.primary_nationality).strip().upper()
+                nat2 = str(record.secondary_nationality).strip().upper()
+                
+                if potential_prefix in [nat1, nat2]:
+                    return potential_prefix
+        
+        return None
     
     def validate_id_complete(
         self, 
@@ -632,10 +698,11 @@ class InconsistentIDProcessor:
         indices: List[int]
     ) -> None:
         """
-        Apply correction logic based on v1.3 rules:
+        Apply correction logic with prefixed nationality support:
         - Only correct INVALID or FALLBACK IDs
-        - Use most recent VALID ID (search backwards chronologically)
-        - Do NOT correct valid IDs even if they differ
+        - Search BOTH BACKWARD and FORWARD for chronologically closest valid ID
+        - Only use valid IDs with MATCHING PREFIX (same nationality)
+        - Do NOT correct valid IDs even if they differ (nationality changes allowed)
         
         Args:
             records: Full list of records
@@ -646,49 +713,66 @@ class InconsistentIDProcessor:
             
             # Only process invalid or fallback IDs
             if current_record.is_valid_id and not current_record.is_fallback_id:
-                # Valid ID - no correction needed (valid-to-valid is OK)
+                # Valid ID - no correction needed (valid-to-valid is OK, even different prefixes)
                 self.stats.valid_to_valid_changes += 1
                 current_record.requires_standard_validation = False
                 continue
             
-            # Search backwards from previous record for most recent valid ID
-            most_recent_valid_id = None
-            most_recent_valid_type = None
-            most_recent_valid_date = None
+            # Get current record's prefix nationality
+            current_prefix = current_record.prefixed_nationality or ""
             
-            for j in range(i - 1, -1, -1):  # Go backwards
-                prior_idx = indices[j]
-                prior_record = records[prior_idx]
+            # Search BOTH DIRECTIONS for closest valid ID with matching prefix
+            closest_valid_id = None
+            closest_valid_type = None
+            closest_valid_date = None
+            closest_distance = float('inf')
+            
+            for j, other_idx in enumerate(indices):
+                if j == i:  # Skip self
+                    continue
                 
-                # Found a valid ID that's not a fallback
-                if prior_record.is_valid_id and not prior_record.is_fallback_id:
-                    most_recent_valid_id = prior_record.id_value
-                    most_recent_valid_type = prior_record.id_type
-                    most_recent_valid_date = prior_record.trade_date_time_parsed
-                    break
+                other_record = records[other_idx]
+                
+                # Must be valid, non-fallback, and have matching prefix
+                if (other_record.is_valid_id and 
+                    not other_record.is_fallback_id and
+                    other_record.prefixed_nationality == current_prefix):
+                    
+                    # Calculate chronological distance
+                    distance = abs(j - i)
+                    
+                    if distance < closest_distance:
+                        closest_distance = distance
+                        closest_valid_id = other_record.id_value
+                        closest_valid_type = other_record.id_type
+                        closest_valid_date = other_record.trade_date_time_parsed
             
-            # Apply correction if we found a valid prior ID
-            if most_recent_valid_id:
-                current_record.correction = most_recent_valid_id
-                current_record.correction_type = most_recent_valid_type
-                current_record.correction_output = f"{most_recent_valid_id}:{most_recent_valid_type}"
+            # Apply correction if we found a valid ID with matching prefix
+            if closest_valid_id:
+                current_record.correction = closest_valid_id
+                current_record.correction_type = closest_valid_type
+                current_record.correction_output = f"{closest_valid_id}:{closest_valid_type}"
                 current_record.correction_fields = "ID:IDT"
                 current_record.requires_standard_validation = False
-                current_record.correction_source = f"Prior valid ID from {most_recent_valid_date}"
+                current_record.correction_source = f"Closest valid ID (same prefix: {current_prefix}) from {closest_valid_date}"
                 current_record.is_valid = False  # Mark as corrected
-                current_record.actions_taken.append("Inconsistent ID - Corrected to most recent valid ID")
+                current_record.actions_taken.append(f"Inconsistent ID - Corrected to closest valid ID (prefix: {current_prefix})")
                 self.stats.corrected_from_prior += 1
                 
-                self._log(f"Record {current_record.row_index}: Corrected to prior valid ID "
-                         f"{most_recent_valid_id}:{most_recent_valid_type}")
+                self._log(f"Record {current_record.row_index}: Corrected to closest valid ID with prefix {current_prefix}: "
+                         f"{closest_valid_id}:{closest_valid_type}")
             else:
-                # No prior valid ID - needs standard pipeline
+                # No valid ID with matching prefix - needs standard pipeline (will use prefix for CONCAT)
                 current_record.requires_standard_validation = True
-                current_record.correction_source = "No prior valid ID - requires standard correction"
-                current_record.actions_taken.append("Inconsistent ID - No prior valid ID to use")
+                if current_prefix:
+                    current_record.correction_source = f"No valid ID with matching prefix ({current_prefix}) - will use prefix for CONCAT"
+                    current_record.actions_taken.append(f"Inconsistent ID - No valid ID with prefix {current_prefix}, using CONCAT")
+                else:
+                    current_record.correction_source = "No prefix nationality - requires standard correction"
+                    current_record.actions_taken.append("Inconsistent ID - No prefix, using standard correction")
                 self.stats.no_prior_valid += 1
                 
-                self._log(f"Record {current_record.row_index}: No prior valid ID found, "
+                self._log(f"Record {current_record.row_index}: No valid ID with matching prefix found, "
                          f"will use standard correction pipeline")
     
     def preprocess_for_inconsistent_validation(
@@ -827,6 +911,45 @@ class InconsistentIDProcessor:
         else:
             for line in lines:
                 print(line)
+
+
+def extract_id_prefix(id_value: str, id_type: str) -> Optional[str]:
+    """
+    Extract and validate the country code prefix from an ID.
+    
+    IDs with country prefixes: NIDN, CCPT, CONCAT
+    IDs without prefixes: LEI
+    
+    Args:
+        id_value: The identification code
+        id_type: The type of ID
+    
+    Returns:
+        ISO-2 country code if valid prefix exists, None otherwise
+    
+    Examples:
+        >>> extract_id_prefix("NLNPPD7P215", "CCPT")
+        "NL"
+        >>> extract_id_prefix("GBSG500496A", "NIDN")
+        "GB"
+        >>> extract_id_prefix("123456789012345678", "LEI")
+        None
+    """
+    if not id_value or id_type == 'LEI':
+        return None
+    
+    if len(id_value) < 2:
+        return None
+    
+    # Extract first 2 characters as potential country code
+    prefix = id_value[:2].upper()
+    
+    # Validate it's a real country code
+    country = country_manager.get_by_alpha2(prefix)
+    if country:
+        return prefix
+    
+    return None
 
 
 class IDValidationProcessor:
@@ -1041,11 +1164,22 @@ class IDValidationProcessor:
         """
         Determine priority country code for validation.
         
-        Priority rules:
-        1. EEA countries take precedence over Rest of World countries
-        2. Within EEA countries, prioritize alphabetically by country code
-        3. Nationality field order (primary vs secondary) is irrelevant
+        Priority rules (NEW with prefixed nationality):
+        1. ID prefix (first 2 chars) if valid ISO-2 country code - HIGHEST PRIORITY
+        2. If no valid prefix, fall back to Primary/Secondary nationality:
+           a. EEA countries take precedence over Rest of World countries
+           b. Within EEA countries, prioritize alphabetically by country code
+           c. Nationality field order (primary vs secondary) is irrelevant
         """
+        # PRIORITY 1: Check ID prefix first
+        if record.id_value and record.id_type:
+            prefix = extract_id_prefix(record.id_value, record.id_type)
+            if prefix:
+                # Valid prefix found - store it and use it
+                record.prefixed_nationality = prefix
+                return prefix
+        
+        # PRIORITY 2: Fall back to nationality fields
         countries = []
         
         # Collect both nationalities
@@ -1103,12 +1237,22 @@ class IDValidationProcessor:
         # Normalize ID type
         id_type_upper = id_type.upper().strip()
         
-        # Strip country code prefix if present (first 2 characters)
-        # VBA extracts have country code prepended to ID value
-        id_without_prefix = id_value[2:] if len(id_value) > 2 else id_value
+        # Strip country code prefix if applicable
+        # Only NIDN, CCPT, CONCAT have country prefixes (not LEI)
+        # Only strip if there's a valid 2-character country code prefix
+        id_to_validate = id_value
+        
+        if id_type_upper in ['NIDN', 'CCPT', 'CONCAT']:
+            # Check if first 2 chars are a valid country code
+            prefix = extract_id_prefix(id_value, id_type_upper)
+            if prefix:
+                # Valid prefix found - strip it for validation
+                id_to_validate = id_value[2:] if len(id_value) > 2 else id_value
+            # else: No valid prefix or too short - validate full ID
+        # else: LEI or other type - validate full ID
         
         # Validate using Phase 1 library
-        result = validate_id(country_code, id_type_upper, id_without_prefix)
+        result = validate_id(country_code, id_type_upper, id_to_validate)
         
         # Extract detailed error message if validation failed
         error_message = ""

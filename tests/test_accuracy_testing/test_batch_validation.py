@@ -33,8 +33,9 @@ class TestBatchValidationDetection:
                     'quarter': 'Q3'
                 },
                 'paths': {
-                'template_dir': 'data/templates',
-                'output_dir': 'data/validated'
+                    'template_dir': 'data/templates',
+                    'output_dir': 'data/validated'
+                }
             }
         }
         
@@ -193,9 +194,10 @@ TXN003,ACC003,,,,,B,11111111,PASSPORT,Bob,Johnson,1992-12-20,M,CA,
                     'quarter': 'Q3'
                 },
                 'paths': {
-                'template_dir': str(self.template_dir),
-                'output_dir': str(self.output_dir),
-                'log_output': str(self.output_dir / 'logs')
+                    'template_dir': str(self.template_dir),
+                    'output_dir': str(self.output_dir),
+                    'log_output': str(self.output_dir / 'logs')
+                }
             },
             'processor': {
                 'log_level': 'ERROR'  # Suppress output
@@ -538,9 +540,10 @@ TXN001,ACC001,,,,,B,12345678,PASSPORT,John,Doe,1990-01-01,M,US,
                     'quarter': 'Q3'
                 },
                 'paths': {
-                'template_dir': str(self.template_dir),
-                'output_dir': str(self.output_dir),
-                'log_output': str(self.output_dir / 'logs')
+                    'template_dir': str(self.template_dir),
+                    'output_dir': str(self.output_dir),
+                    'log_output': str(self.output_dir / 'logs')
+                }
             },
             'processor': {
                 'log_level': 'ERROR'
@@ -594,17 +597,18 @@ class TestBatchValidationErrorHandling:
             output_dir.mkdir(parents=True)
             
             config = {
-            'mode': 'batch',
-            'batch': {
-                'incidents': ['MISSING1', 'MISSING2'],
-                'testing_period': {
-                    'fiscal_year': 'FY25',
-                    'quarter': 'Q3'
-                },
-                'paths': {
-                    'template_dir': str(template_dir),
-                    'output_dir': str(output_dir),
-                    'log_output': str(output_dir / 'logs')
+                'mode': 'batch',
+                'batch': {
+                    'incidents': ['MISSING1', 'MISSING2'],
+                    'testing_period': {
+                        'fiscal_year': 'FY25',
+                        'quarter': 'Q3'
+                    },
+                    'paths': {
+                        'template_dir': str(template_dir),
+                        'output_dir': str(output_dir),
+                        'log_output': str(output_dir / 'logs')
+                    }
                 },
                 'processor': {
                     'log_level': 'ERROR'
