@@ -47,15 +47,33 @@ class IDPattern:
         actual_len = len(value)
         total_length = 0
         
+        # Calculate expected length by parsing pattern
+        # Remove anchors and negative lookaheads for counting
+        pattern_for_counting = self.regex_pattern.replace('^', '').replace('$', '')
+        pattern_for_counting = re.sub(r'\(\?![^)]+\)', '', pattern_for_counting)
+        
         # Find all \d{n} patterns
-        digit_groups = re.findall(r'\\d\{(\d+)\}', self.regex_pattern)
+        digit_groups = re.findall(r'\\d\{(\d+)\}', pattern_for_counting)
         if digit_groups:
             total_length += sum(int(n) for n in digit_groups)
         
         # Find all [character_class]{n} patterns
-        char_class_groups = re.findall(r'\[(?:[^\]]+)\]\{(\d+)\}', self.regex_pattern)
+        char_class_groups = re.findall(r'\[(?:[^\]]+)\]\{(\d+)\}', pattern_for_counting)
         if char_class_groups:
             total_length += sum(int(n) for n in char_class_groups)
+        
+        # Find single \d (without quantifier)
+        single_digits = len(re.findall(r'\\d(?!\{)', pattern_for_counting))
+        total_length += single_digits
+        
+        # Find single character classes [xxx] (without quantifier)
+        single_char_classes = len(re.findall(r'\[(?:[^\]]+)\](?!\{)', pattern_for_counting))
+        total_length += single_char_classes
+        
+        # Find literal single characters (e.g., E, K, L in patterns)
+        # Count uppercase letters not in brackets or after backslash
+        literal_chars = re.findall(r'(?<!\[)(?<!\\)(?<![A-Z-])[A-Z](?![A-Z-]|\])', pattern_for_counting)
+        total_length += len(literal_chars)
         
         expected_len = total_length if total_length > 0 else None
         
@@ -106,13 +124,13 @@ _RAW_PATTERNS = [
     ("DK", "NIDN", r"^\d{6}\d{4}$"),
     ("DK", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
     ("EE", "NIDN", r"^\d{1}\d{6}\d{3}\d{1}$"),
-    ("ES", "NIDN", r"^\d{8}[A-Z]{1}[^IÑOU]$"),
-    ("ES", "NIDN", r"^L\d{7}[A-Z]{1}[^IÑOU]$"),
-    ("ES", "NIDN", r"^K\d{7}[A-Z]{1}[^IÑOU]$"),
+    ("ES", "NIDN", r"^\d{8}[A-HJ-NP-TV-Z]$"),
+    ("ES", "NIDN", r"^L\d{7}[A-HJ-NP-TV-Z]$"),
+    ("ES", "NIDN", r"^K\d{7}[A-HJ-NP-TV-Z]$"),
     ("FI", "NIDN", r"^\d{6}[+\-A]\d{3}\d{1}$"),
     ("FI", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
     ("FR", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
-    ("GB", "NIDN", r"^(?!OO|CR|FY|NW|NC|PP|PZ|TN)(?![A-Z]*[DFIQUV])[A-Z]{2}\d{6}(?!O)[A-Z]$"),
+    ("GB", "NIDN", r"^(?!OO|CR|FY|NW|NC|PP|PZ|TN)[A-CEG-HJ-NPR-TX-Z]{2}\d{6}[A-NP-Z]$"),
     ("GB", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
     ("GR", "NIDN", r"^\d{10}$"),
     ("GR", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
@@ -135,8 +153,8 @@ _RAW_PATTERNS = [
     ("MT", "NIDN", r"^\d{7}[A-Z]{1}$"),
     ("MT", "CCPT", r"^\d{7}$"),
     ("MT", "CCPT", r"^[A-Z]{2}\d{6}$"),
-    ("NL", "CCPT", r"^[A-Z]{2}[^O][A-Z0-9]{6}[^O]\d{1}$"),
-    ("NL", "NIDN", r"^[A-Z]{2}[^O][A-Z0-9]{6}[^O]\d{1}$"),
+    ("NL", "CCPT", r"^[A-NP-Z]{2}[A-NP-Z0-9]{6}\d{1}$"),
+    ("NL", "NIDN", r"^[A-NP-Z]{2}[A-NP-Z0-9]{6}\d{1}$"),
     ("NL", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
     ("NO", "NIDN", r"^\d{6}\d{5}$"),
     ("NO", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),

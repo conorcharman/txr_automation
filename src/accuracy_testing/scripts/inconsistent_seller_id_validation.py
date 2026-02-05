@@ -260,6 +260,7 @@ class InconsistentSellerIDValidator:
             "Surname",
             "Date of Birth",
             "Gender",
+            "Prefixed Nationality",
             "Primary Nationality",
             "Secondary Nationality",
             "Trade_Date_Time",
@@ -298,8 +299,6 @@ class InconsistentSellerIDValidator:
                                 # Swap them so priority country is first
                                 primary_nat = secondary_nat
                                 secondary_nat = record.primary_nationality
-                                primary_nat = secondary_nat
-                                secondary_nat = record.primary_nationality
                     
                     # Build output row from original data + validation results
                     output_row = [
@@ -313,6 +312,7 @@ class InconsistentSellerIDValidator:
                         record.surname,
                         record.date_of_birth,
                         record.gender,
+                        record.prefixed_nationality or "",
                         primary_nat,
                         secondary_nat,
                         record.trade_date_time_raw,
@@ -415,6 +415,7 @@ class InconsistentSellerIDValidator:
                         record.surname,
                         record.date_of_birth,
                         record.gender,
+                        record.prefixed_nationality or "",
                         primary_nat,
                         secondary_nat,
                         record.trade_date_time_raw,
