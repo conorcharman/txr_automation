@@ -3,6 +3,9 @@ Stage 2 Integration Tests - End-to-End Testing with Sample Data
 
 Tests that process real sample data through the refactored scripts
 to verify correct functionality, output format, and data accuracy.
+
+NOTE: These tests require sample data files that are not committed to the repository
+for confidentiality reasons. Tests will be skipped if data is not available.
 """
 
 import pytest
@@ -16,7 +19,15 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 SRC_DIR = PROJECT_ROOT / "src"
 SAMPLE_DATA_DIR = PROJECT_ROOT / "data" / "sample"
 
+# Check if sample data exists
+HAS_SAMPLE_DATA = (
+    (SAMPLE_DATA_DIR / "incident_code_files").exists() and 
+    (SAMPLE_DATA_DIR / "phase_ii").exists()
+)
+SKIP_REASON = "Sample data not available (requires confidential test data)"
 
+
+@pytest.mark.skipif(not HAS_SAMPLE_DATA, reason=SKIP_REASON)
 class TestPhase2ProcessorWithSampleData:
     """Test Phase 2 Processor with real sample data."""
     
@@ -174,6 +185,7 @@ replace_pattern:
             f"Processor encountered errors: {result.stderr}"
 
 
+@pytest.mark.skipif(not HAS_SAMPLE_DATA, reason=SKIP_REASON)
 class TestPhase3ProcessorWithSampleData:
     """Test Phase 3 Processor with sample data (XLSX files)."""
     
@@ -204,6 +216,7 @@ class TestPhase3ProcessorWithSampleData:
                 pytest.fail(f"Failed to read {xlsx_file.name}: {e}")
 
 
+@pytest.mark.skipif(not HAS_SAMPLE_DATA, reason=SKIP_REASON)
 class TestXLSXConverterWithSampleData:
     """Test XLSX Converter with Phase 3 sample data."""
     
@@ -246,6 +259,7 @@ class TestXLSXConverterWithSampleData:
             assert csv_file.stat().st_size > 0, f"CSV file is empty: {csv_file.name}"
 
 
+@pytest.mark.skipif(not HAS_SAMPLE_DATA, reason=SKIP_REASON)
 class TestDataIntegrity:
     """Test data integrity and processing accuracy."""
     

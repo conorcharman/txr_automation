@@ -1,7 +1,7 @@
 # Transaction Reporting Automation: VBA to Python Migration Plan
 
-**Version:** 2.4  
-**Date:** 28 January 2026  
+**Version:** 2.5  
+**Date:** 6 February 2026  
 **Status:** Phase 6 In Progress (All Migration Phases 0-5 Complete)  
 
 ---
@@ -390,12 +390,12 @@ def test_pricing_validation_basic(tmp_path):
 
 ---
 
-### **Phase 3: Decision Maker Validation (Weeks 5-6)**
+### **Phase 3: Decision Maker Validation (Weeks 5-6)** ✅ COMPLETE
 
 **Scripts:**
 
-1. **ValidateFTBDM3_0.vb → validate_ftbdm.py** (Buyer Decision Maker)
-2. **ValidateFTSDM3_0.vb → validate_ftsdm.py** (Seller Decision Maker)
+1. **ValidateFTBDM3_0.vb → validate_ftbdm.py** (Buyer Decision Maker) ✅
+2. **ValidateFTSDM3_0.vb → validate_ftsdm.py** (Seller Decision Maker) ✅
 
 **Complexity:** MEDIUM
 
@@ -444,10 +444,12 @@ Branch_Code,LEI
 - ✅ ID format validation accurate
 - ✅ Error handling comprehensive
 - ✅ Documentation complete
+- ✅ **Test Results:** 40/40 tests passing (100%)
+- ✅ **Console Scripts:** `validate-ftbdm`, `validate-ftsdm`
 
 ---
 
-### **Phase 4: Core ID Validation (Weeks 7-10)**
+### **Phase 4: Core ID Validation (Weeks 7-10)** ✅ COMPLETE
 
 **Scripts (in order):**
 
@@ -574,6 +576,15 @@ class ClientRecordIndex:
 - ✅ Output CSVs match VBA Excel outputs (converted)
 - ✅ Comprehensive test coverage (>85%)
 - ✅ Documentation complete
+- ✅ **ESMA Regex Pattern Fixes Applied** (6 Feb 2026)
+  - Fixed NL patterns: 11-char → 9-char format
+  - Fixed ES patterns: 10-char → 9-char format
+  - Improved GB pattern readability
+  - Enhanced error message calculator
+  - Implemented prefix-aware inconsistency detection
+  - Added "Prefixed Nationality" column to all validation outputs
+- ✅ **Test Results:** 307/322 tests passing (95.3%)
+- ✅ **Console Scripts:** `validate-buyer`, `validate-seller`, `validate-inconsistent-buyer`, `validate-inconsistent-seller`
 
 ---
 
@@ -629,17 +640,33 @@ def data_push(source_csv: str, target_csv: str,
 
 **Success Criteria:**
 
-- ✅ Both scripts converted and tested
+- ✅ Data push script converted and tested
 - ✅ CSV operations working correctly
 - ✅ Performance significantly improved vs Excel
 - ✅ No file locking issues
 - ✅ Documentation complete
+- ✅ **Test Results:** 32/32 tests passing (100%)
+- ✅ **Console Script:** `data-push`
 
 ---
 
-### **Phase 6: Integration & Testing (Weeks 13-14)**
+### **Phase 6: Integration & Testing (Weeks 13-14)** 🔄 IN PROGRESS
 
-**Activities:**
+**Status:** Partially Complete
+
+**Completed:**
+- ✅ Core cleanup complete
+- ✅ Documentation updated
+- ✅ Validation tools working
+- ✅ ESMA regex pattern validation and fixes (Feb 2026)
+- ✅ Prefix-aware nationality detection implemented
+- ✅ 307/322 tests passing (95.3%)
+
+**In Progress:**
+- 🔄 Test suite updates for v2.0 config format (15 failing tests)
+- 🔄 Documentation of new features (Prefixed Nationality column)
+
+**Remaining Activities:**
 
 1. **End-to-End Testing**
    - Create full workflow tests using real quarterly data
