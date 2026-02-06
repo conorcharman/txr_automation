@@ -1,0 +1,5 @@
+2026-02-06 09:17:51 - buyer_id_validation - INFO - Reading input file: C:\Users\ccharm\AppData\Local\Temp\pytest-of-ccharm\pytest-27\test_read_input_csv0\input.csv
+2026-02-06 09:17:51 - buyer_id_validation - INFO - Detected encoding: utf-8
+2026-02-06 09:17:51 - buyer_id_validation - INFO - Successfully read 3 records
+2026-02-06 09:17:51 - buyer_id_validation - INFO - Writing output file: C:\Users\ccharm\AppData\Local\Temp\pytest-of-ccharm\pytest-27\test_write_output_csv0\output.csv
+2026-02-06 09:17:51 - buyer_id_validation - INFO - Successfully wrote 1 records
