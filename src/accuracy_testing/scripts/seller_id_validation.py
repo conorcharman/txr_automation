@@ -231,6 +231,7 @@ class SellerIDValidator:
             "Surname",
             "Date of Birth",
             "Gender",
+            "Prefixed Nationality",
             "Primary Nationality",
             "Secondary Nationality",
             "Correction Output",  # VBA format: "ID:TYPE"
@@ -282,8 +283,9 @@ class SellerIDValidator:
                         record.surname,                  # 8. Surname
                         record.date_of_birth,            # 9. Date of Birth
                         record.gender,                   # 10. Gender
-                        primary_nat,                     # 11. Primary Nationality
-                        secondary_nat,                   # 12. Secondary Nationality
+                        record.prefixed_nationality or "",  # 11. Prefixed Nationality
+                        primary_nat,                     # 12. Primary Nationality
+                        secondary_nat,                   # 13. Secondary Nationality
                         record.correction_output or "",  # 13. Correction Output (ID:TYPE)
                         record.correction_fields or "",  # 14. Correction Fields
                         record.tracker_status or "",     # 15. Tracker Status
@@ -338,6 +340,7 @@ class SellerIDValidator:
             "Surname",
             "Date of Birth",
             "Gender",
+            "Prefixed Nationality",
             "Primary Nationality",
             "Secondary Nationality",
             "Correction Output",
@@ -384,6 +387,7 @@ class SellerIDValidator:
                         record.surname,
                         record.date_of_birth,
                         record.gender,
+                        record.prefixed_nationality or "",
                         primary_nat,
                         secondary_nat,
                         record.correction_output or "",
