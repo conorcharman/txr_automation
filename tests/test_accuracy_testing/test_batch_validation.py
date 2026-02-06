@@ -39,7 +39,7 @@ class TestBatchValidationDetection:
             }
         }
         
-        is_batch = 'incidents' in config and 'testing_period' in config
+        is_batch = 'batch' in config and 'incidents' in config.get('batch', {}) and 'testing_period' in config.get('batch', {})
         assert is_batch is True
     
     def test_detects_single_mode_without_incidents(self):
@@ -187,13 +187,14 @@ TXN003,ACC003,,,,,B,11111111,PASSPORT,Bob,Johnson,1992-12-20,M,CA,
         # Create config
         config = {
             'mode': 'batch',
+            'testing_period': {
+                'fiscal_year': 'FY25',
+                'quarter': 'Q3'
+            },
             'batch': {
                 'incidents': ['7_37'],
-                'testing_period': {
-                    'fiscal_year': 'FY25',
-                    'quarter': 'Q3'
-                },
                 'paths': {
+                    'extract_dir': str(self.template_dir),
                     'template_dir': str(self.template_dir),
                     'output_dir': str(self.output_dir),
                     'log_output': str(self.output_dir / 'logs')
@@ -228,11 +229,14 @@ TXN003,ACC003,,,,,B,11111111,PASSPORT,Bob,Johnson,1992-12-20,M,CA,
                 'fiscal_year': 'FY25',
                 'quarter': 'Q3'
             },
-            'incidents': incidents,
-            'paths': {
-                'template_dir': str(self.template_dir),
-                'output_dir': str(self.output_dir),
-                'log_output': str(self.output_dir / 'logs')
+            'batch': {
+                'incidents': incidents,
+                'paths': {
+                    'extract_dir': str(self.template_dir),
+                    'template_dir': str(self.template_dir),
+                    'output_dir': str(self.output_dir),
+                    'log_output': str(self.output_dir / 'logs')
+                }
             },
             'processor': {
                 'log_level': 'ERROR'
@@ -261,11 +265,14 @@ TXN003,ACC003,,,,,B,11111111,PASSPORT,Bob,Johnson,1992-12-20,M,CA,
                 'fiscal_year': 'FY25',
                 'quarter': 'Q3'
             },
-            'incidents': ['7_37', '16_21', 'MISSING'],  # MISSING template doesn't exist
-            'paths': {
-                'template_dir': str(self.template_dir),
-                'output_dir': str(self.output_dir),
-                'log_output': str(self.output_dir / 'logs')
+            'batch': {
+                'incidents': ['7_37', '16_21', 'MISSING'],  # MISSING template doesn't exist
+                'paths': {
+                    'extract_dir': str(self.template_dir),
+                    'template_dir': str(self.template_dir),
+                    'output_dir': str(self.output_dir),
+                    'log_output': str(self.output_dir / 'logs')
+                }
             },
             'processor': {
                 'log_level': 'ERROR'
@@ -298,22 +305,30 @@ TXN003,ACC003,,,,,B,11111111,PASSPORT,Bob,Johnson,1992-12-20,M,CA,
         
         # Create templates with different content
         for i, incident in enumerate(incidents):
-            filepath = self.template_dir / f"FY25 Q3 {incident}.csv"
+            # Create template file
+            template_filepath = self.template_dir / f"FY25 Q3 {incident}.csv"
+            # Also create extract file
+            extract_filepath = self.template_dir / f"{incident}_FY25_Q3.csv"
+            
             content = f"""Transaction Ref,Account ID,Col2,Col3,Col4,Person Code,Account Type,ID Value,ID Type,First Name,Surname,DOB,Gender,Primary Nationality,Secondary Nationality
 TXN{i:03d},ACC{i:03d},,,,,B,1234567{i},PASSPORT,Person{i},Name{i},1990-01-01,M,US,
 """
-            filepath.write_text(content)
+            template_filepath.write_text(content)
+            extract_filepath.write_text(content)
         
         config = {
             'testing_period': {
                 'fiscal_year': 'FY25',
                 'quarter': 'Q3'
             },
-            'incidents': incidents,
-            'paths': {
-                'template_dir': str(self.template_dir),
-                'output_dir': str(self.output_dir),
-                'log_output': str(self.output_dir / 'logs')
+            'batch': {
+                'incidents': incidents,
+                'paths': {
+                    'extract_dir': str(self.template_dir),
+                    'template_dir': str(self.template_dir),
+                    'output_dir': str(self.output_dir),
+                    'log_output': str(self.output_dir / 'logs')
+                }
             },
             'processor': {
                 'log_level': 'ERROR'
@@ -366,17 +381,28 @@ class TestSellerBatchValidation:
                     pass  # Best effort cleanup
     
     def create_seller_template(self, fiscal_year: str, quarter: str, incident: str) -> Path:
-        """Create a sample seller ID validation template CSV."""
-        filename = f"{fiscal_year} {quarter} {incident}.csv"
-        filepath = self.template_dir / filename
+        """Create sample files for seller ID validation.
+        
+        Creates both:
+        1. Extract file: {incident}_{FY}_{Q}.csv (SQL database export format)
+        2. Template file: {FY} {Q} {incident}.csv (Kaizen template format)
+        """
+        # Create extract file with new naming convention
+        extract_filename = f"{incident}_{fiscal_year}_{quarter}.csv"
+        extract_filepath = self.template_dir / extract_filename
+        
+        # Create template file with old naming convention (for Kaizen lookup)
+        template_filename = f"{fiscal_year} {quarter} {incident}.csv"
+        template_filepath = self.template_dir / template_filename
         
         # Match seller validation column structure (same as buyer)
         content = """Transaction Ref,Account ID,Col2,Col3,Col4,Person Code,Account Type,ID Value,ID Type,First Name,Surname,DOB,Gender,Primary Nationality,Secondary Nationality
 TXN001,ACC001,,,,,S,98765432,PASSPORT,Alice,Williams,1988-03-10,F,US,
 TXN002,ACC002,,,,,S,12345678,PASSPORT,Charlie,Brown,1991-07-22,M,GB,
 """
-        filepath.write_text(content)
-        return filepath
+        extract_filepath.write_text(content)
+        template_filepath.write_text(content)
+        return extract_filepath
     
     def test_processes_multiple_incidents(self):
         """Should process multiple seller incidents in batch mode."""
@@ -390,11 +416,14 @@ TXN002,ACC002,,,,,S,12345678,PASSPORT,Charlie,Brown,1991-07-22,M,GB,
                 'fiscal_year': 'FY25',
                 'quarter': 'Q3'
             },
-            'incidents': incidents,
-            'paths': {
-                'template_dir': str(self.template_dir),
-                'output_dir': str(self.output_dir),
-                'log_output': str(self.output_dir / 'logs')
+            'batch': {
+                'incidents': incidents,
+                'paths': {
+                    'extract_dir': str(self.template_dir),
+                    'template_dir': str(self.template_dir),
+                    'output_dir': str(self.output_dir),
+                    'log_output': str(self.output_dir / 'logs')
+                }
             },
             'processor': {
                 'log_level': 'ERROR'
@@ -465,11 +494,13 @@ TXN002,200.00,190.00,10.00
                 'fiscal_year': 'FY25',
                 'quarter': 'Q3'
             },
-            'incidents': incidents,
-            'paths': {
-                'template_dir': str(self.template_dir),
-                'output_dir': str(self.output_dir),
-                'log_output': str(self.output_dir / 'logs')
+            'batch': {
+                'incidents': incidents,
+                'paths': {
+                    'template_dir': str(self.template_dir),
+                    'output_dir': str(self.output_dir),
+                    'log_output': str(self.output_dir / 'logs')
+                }
             },
             'processor': {
                 'log_level': 'ERROR'

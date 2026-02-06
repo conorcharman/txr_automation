@@ -104,14 +104,17 @@ class DataPushRecord:
         # Determine action based on error flag
         # N = No error → only update error flag
         # Y = Error with correction → push all columns
-        # TBC (or variants) = Requires investigation → push all columns for review
+        # TBC (or variants) = Requires investigation → skip until decided
         # Empty/missing = Skip
         if not error_flag:
             action = PushAction.SKIP
         elif error_flag.upper() == "N":
             action = PushAction.UPDATE_ERROR_ONLY
-        elif error_flag.upper() == "Y" or error_flag.upper().startswith("TBC"):
+        elif error_flag.upper() == "Y":
             action = PushAction.UPDATE_ALL
+        elif error_flag.upper().startswith("TBC"):
+            # TBC records require investigation - skip until decided
+            action = PushAction.SKIP
         else:
             # Unknown error value - skip to be safe
             action = PushAction.SKIP

@@ -179,11 +179,13 @@ OutputFormat=CSV
                 'fiscal_year': 'FY25',
                 'quarter': 'Q3'
             },
-            'incidents': ['7_37'],
-            'paths': {
-                'template_dir': str(self.template_dir),
-                'sql_template_dir': str(self.sql_templates_dir),
-                'output_directory': str(self.output_dir)
+            'batch': {
+                'incidents': ['7_37'],
+                'paths': {
+                    'template_dir': str(self.template_dir),
+                    'sql_template_dir': str(self.sql_templates_dir),
+                    'output_dir': str(self.output_dir)
+                }
             },
             'processing': {
                 'batch_size': 900,
@@ -224,11 +226,13 @@ OutputFormat=CSV
                 'fiscal_year': 'FY25',
                 'quarter': 'Q3'
             },
-            'incidents': incidents,
-            'paths': {
-                'template_dir': str(self.template_dir),
-                'sql_template_dir': str(self.sql_templates_dir),
-                'output_directory': str(self.output_dir)
+            'batch': {
+                'incidents': incidents,
+                'paths': {
+                    'template_dir': str(self.template_dir),
+                    'sql_template_dir': str(self.sql_templates_dir),
+                    'output_dir': str(self.output_dir)
+                }
             },
             'processing': {
                 'batch_size': 900,
@@ -263,11 +267,13 @@ OutputFormat=CSV
                 'fiscal_year': 'FY25',
                 'quarter': 'Q3'
             },
-            'incidents': ['7_37'],
-            'paths': {
-                'template_dir': str(self.template_dir),
-                'sql_template_dir': str(self.sql_templates_dir),
-                'output_directory': str(self.output_dir)
+            'batch': {
+                'incidents': ['7_37'],
+                'paths': {
+                    'template_dir': str(self.template_dir),
+                    'sql_template_dir': str(self.sql_templates_dir),
+                    'output_dir': str(self.output_dir)
+                }
             },
             'processing': {
                 'batch_size': 900,
@@ -299,11 +305,13 @@ OutputFormat=CSV
                 'fiscal_year': 'FY25',
                 'quarter': 'Q3'
             },
-            'incidents': ['7_37', 'MISSING'],
-            'paths': {
-                'template_dir': str(self.template_dir),
-                'sql_template_dir': str(self.sql_templates_dir),
-                'output_directory': str(self.output_dir)
+            'batch': {
+                'incidents': ['7_37', 'MISSING'],
+                'paths': {
+                    'template_dir': str(self.template_dir),
+                    'sql_template_dir': str(self.sql_templates_dir),
+                    'output_dir': str(self.output_dir)
+                }
             },
             'processing': {
                 'batch_size': 900,
@@ -338,11 +346,13 @@ OutputFormat=CSV
                 'fiscal_year': 'FY25',
                 'quarter': 'Q3'
             },
-            'incidents': ['7_37'],
-            'paths': {
-                'template_dir': str(self.template_dir),
-                'sql_template_dir': str(self.sql_templates_dir),
-                'output_directory': str(self.output_dir)
+            'batch': {
+                'incidents': ['7_37'],
+                'paths': {
+                    'template_dir': str(self.template_dir),
+                    'sql_template_dir': str(self.sql_templates_dir),
+                    'output_dir': str(self.output_dir)
+                }
             },
             'processing': {
                 'batch_size': 900,
