@@ -78,7 +78,7 @@ class XLSXConverter:
         Initialize the enhanced XLSX converter.
         
         Args:
-            parent_dir: Parent directory to scan recursively (xlsx→csv in same structure)
+            parent_dir: Parent directory to scan recursively (xlsx->csv in same structure)
             input_dir: Single directory containing XLSX files (original mode)
             output_dir: Directory for CSV output files (used with input_dir)
             logger: StructuredLogger instance
@@ -197,7 +197,7 @@ class XLSXConverter:
             Output CSV file path
         """
         if self.parent_dir:
-            # Smart path replacement: xlsx → csv
+            # Smart path replacement: xlsx -> csv
             # Find the 'xlsx' folder in the path and replace with 'csv'
             parts = xlsx_file.parts
             new_parts = []
@@ -274,7 +274,7 @@ class XLSXConverter:
             
             # Warn about large files
             if file_size_mb > 50:
-                self.logger.warning(f"  ⚠ Large file detected - this may take several minutes")
+                self.logger.warning(f"  WARNING: Large file detected - this may take several minutes")
             
             if self.dry_run:
                 self.logger.info(f"  [DRY RUN] Would create: {csv_file}")
@@ -283,7 +283,7 @@ class XLSXConverter:
             
             # Check if CSV already exists
             if csv_file.exists() and not self.force:
-                self.logger.warning(f"  ⚠ CSV already exists (use --force to overwrite): {csv_file.name}")
+                self.logger.warning(f"  WARNING: CSV already exists (use --force to overwrite): {csv_file.name}")
                 self.stats.errors += 1
                 return False
             
@@ -334,7 +334,7 @@ class XLSXConverter:
             # Close workbook to free memory
             wb.close()
             
-            self.logger.info(f"  ✓ Created: {csv_file.name} ({row_count:,} input rows → {output_row_count:,} output rows)")
+            self.logger.info(f"  [OK] Created: {csv_file.name} ({row_count:,} input rows -> {output_row_count:,} output rows)")
             self.stats.successful_conversions += 1
             return True
             
@@ -369,7 +369,7 @@ class XLSXConverter:
             
             # Check if CSV already exists
             if csv_file.exists() and not self.force:
-                self.logger.warning(f"  ⚠ CSV already exists (use --force to overwrite): {csv_file.name}")
+                self.logger.warning(f"  WARNING: CSV already exists (use --force to overwrite): {csv_file.name}")
                 self.stats.errors += 1
                 return False
             
@@ -396,7 +396,7 @@ class XLSXConverter:
                 writer.writerow(headers)
                 writer.writerows(data_rows)
             
-            self.logger.info(f"  ✓ Created: {csv_file.name}")
+            self.logger.info(f"  [OK] Created: {csv_file.name}")
             self.stats.successful_conversions += 1
             return True
             
@@ -450,7 +450,7 @@ def parse_arguments():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
-  # Recursive mode with parent directory (xlsx → csv in same structure)
+  # Recursive mode with parent directory (xlsx -> csv in same structure)
   replay-xlsx-converter --parent-dir C:\\Data\\txr_replay_automation --recursive
   
   # Filter by fiscal year and quarter
@@ -486,7 +486,7 @@ Examples:
     parser.add_argument(
         '--parent-dir',
         type=str,
-        help='Parent directory to scan recursively (xlsx→csv in same structure)'
+        help='Parent directory to scan recursively (xlsx->csv in same structure)'
     )
     
     parser.add_argument(
@@ -662,7 +662,7 @@ def main():
     
     if parent_dir:
         logger.info(f"Parent directory: {parent_dir}")
-        logger.info(f"Mode:             Recursive (xlsx→csv in same structure)")
+        logger.info(f"Mode:             Recursive (xlsx->csv in same structure)")
     else:
         logger.info(f"Input directory:  {input_dir}")
         logger.info(f"Output directory: {output_dir}")
