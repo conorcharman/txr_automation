@@ -231,6 +231,7 @@ class BuyerIDValidator:
             "Surname",
             "Date of Birth",
             "Gender",
+            "Prefixed Nationality",
             "Primary Nationality",
             "Secondary Nationality",
             "Correction Output",  # VBA format: "ID:TYPE"
@@ -282,6 +283,7 @@ class BuyerIDValidator:
                         record.surname,
                         record.date_of_birth,
                         record.gender,
+                        record.prefixed_nationality or "",
                         primary_nat,
                         secondary_nat,
                         record.correction_output or "",  # ID:TYPE format
@@ -337,6 +339,7 @@ class BuyerIDValidator:
             "Surname",
             "Date of Birth",
             "Gender",
+            "Prefixed Nationality",
             "Primary Nationality",
             "Secondary Nationality",
             "Correction Output",
@@ -382,6 +385,7 @@ class BuyerIDValidator:
                         record.surname,
                         record.date_of_birth,
                         record.gender,
+                        record.prefixed_nationality or "",
                         primary_nat,
                         secondary_nat,
                         record.correction_output or "",
