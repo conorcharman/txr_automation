@@ -21,10 +21,10 @@ mode: "single"
 # =============================================================================
 testing_period:
   # Fiscal year (e.g., FY25, FY26)
-  fiscal_year: "FY26"
+  fiscal_year: "FY25"
   
   # Quarter (e.g., Q1, Q2, Q3, Q4)
-  quarter: "Q1"
+  quarter: "Q4"
 
 # =============================================================================
 # Single Mode Configuration
@@ -37,19 +37,19 @@ single:
   paths:
     # Extract file (SQL database export) - validation input
     # Example: 12_17_FY26_Q1.csv
-    input_file: "data/extracts/12_17_FY26_Q1.csv"
+    input_file: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\12_17_FY25_Q4.csv'
     
     # Template file (Kaizen expected values) - validation reference
     # Example: FY26 Q1 12_17.csv
-    template_file: "data/templates/FY26 Q1 12_17.csv"
+    template_file: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 12_17.csv'
     
     # Output file (validation results)
     # Example: validated_FY26_Q1_12_17.csv
-    output_file: "data/validated/validated_FY26_Q1_12_17.csv"
+    output_file: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_12_17.csv'
     
     # LEI reference data file (Branch Code -> LEI mapping)
     # Required columns: Branch Code, LEI
-    lei_data_file: "data/reference/lei_lookup.csv"
+    lei_data_file: 'c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\lei_reference.csv'
     
     # Log output directory
     log_output: "logs"

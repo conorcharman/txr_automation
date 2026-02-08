@@ -599,6 +599,8 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
         
         # Create modified config for this incident
         incident_config = config.copy()
+        # Remove 'single' key to prevent AccuracyConfigManager from using single mode paths
+        incident_config.pop('single', None)
         incident_config['paths'] = {
             **paths,
             'input_file': str(extract_path),
