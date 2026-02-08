@@ -130,7 +130,7 @@ _RAW_PATTERNS = [
     ("FI", "NIDN", r"^\d{6}[+\-A]\d{3}\d{1}$"),
     ("FI", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
     ("FR", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
-    ("GB", "NIDN", r"^(?!OO|CR|FY|NW|NC|PP|PZ|TN)[A-CEG-HJ-NPR-TX-Z]{2}\d{6}[A-NP-Z]$"),
+    ("GB", "NIDN", r"^(?!BG|GB|KN|NK|NT|TN|ZZ|OO|CR|FY|MW|NC|PP|PZ)[A-CEG-HJ-NPR-TX-Z]{2}\d{6}[A-NP-Z]$"),
     ("GB", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
     ("GR", "NIDN", r"^\d{10}$"),
     ("GR", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),

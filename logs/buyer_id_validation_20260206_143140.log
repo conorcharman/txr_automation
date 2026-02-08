@@ -1,0 +1,234 @@
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loading Italian tracker: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\Transaction Reporting - Italian Fiscal Code Validation.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loaded 188 Italian tracker records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loading template file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 7_35.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loaded 13 template records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - BUYER ID VALIDATION v3.0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_35_FY25_Q4.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_35.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Start time: 2026-02-06 14:31:40
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_35_FY25_Q4.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Detected encoding: utf-8
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Successfully read 12 records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - PROCESSING RECORDS
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [DEBUG] Sample record 1:
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   id_value: 'GB20210216ANTHOZALES'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   id_type: ''
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   person_code: 'ACCLKV'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   first_name: 'ANTHONY'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   surname: 'ZAKESKI-MILNER'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   dob: '16/02/21'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   primary_nationality: 'GB'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   secondary_nationality: ''
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 2: txn_ref='44625CF6KXV1', found=True
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 2 (44625CF6KXV1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='GB20210216ANTHOZAKES:CONCAT'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 2 (44625CF6KXV1): correction='GB20210216ANTHOZAKES:CONCAT' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 4: txn_ref='44625CHHC1K1', found=True
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CHHC1K1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='ESABQQNT:NIDN'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CHHC1K1): correction='ESABQQNT:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 7: txn_ref='44625CKLDWK1', found=True
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CKLDWK1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='GB20190316ISLA#EDWAR:CONCAT'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CKLDWK1): correction='GB20190316ISLA#EDWAR:CONCAT' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Writing output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_35.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Successfully wrote 12 records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Writing errors-only CSV (12 error records)...
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Writing errors-only file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_35_errors_only.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Successfully wrote 12 error records to C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_35_errors_only.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - PROCESSING COMPLETE
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - End time: 2026-02-06 14:31:40
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Duration: 0:00:00.044139
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ======================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - PROCESSING SUMMARY
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ======================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Total records processed:         12
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Valid records (no changes):       0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Invalid records found:           12
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   - Invalid format:              12
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   - Invalid logic:                0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Records corrected:               12
+2026-02-06 14:31:40 - buyer_id_validation - INFO - CONCAT IDs generated:             9
+2026-02-06 14:31:40 - buyer_id_validation - INFO - No correction possible:           0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - JNT accounts aggregated:          0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Processing errors:                0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ======================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - 
+ERRORS BY COUNTRY:
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   GB: 8
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   ES: 3
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   DE: 1
+2026-02-06 14:31:40 - buyer_id_validation - INFO - 
+ERRORS BY ID TYPE:
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   Unknown: 12
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loading Italian tracker: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\Transaction Reporting - Italian Fiscal Code Validation.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loaded 188 Italian tracker records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loading template file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 7_37.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loaded 852 template records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - BUYER ID VALIDATION v3.0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_37_FY25_Q4.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_37.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Start time: 2026-02-06 14:31:40
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_37_FY25_Q4.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Detected encoding: utf-8
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Successfully read 857 records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - PROCESSING RECORDS
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [DEBUG] Sample record 1:
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   id_value: 'ITDPSMRA55B12C034P'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   id_type: 'NIDN'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   person_code: 'ACCGJC'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   first_name: 'MARIO'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   surname: 'DI,PASCALE'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   dob: '12/02/55'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   primary_nationality: 'IT'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   secondary_nationality: ''
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 2: txn_ref='44625CHP68Q1', found=True
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 2 (44625CHP68Q1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='ITACCGJC:NIDN'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 2 (44625CHP68Q1): correction='ITACCGJC:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 4: txn_ref='44625CF9CBP1', found=True
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CF9CBP1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='ITABYPYV:NIDN'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CF9CBP1): correction='ITABYPYV:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 7: txn_ref='44625CJWL3J1', found=True
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CJWL3J1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='ITABQKPL:NIDN'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CJWL3J1): correction='ITABQKPL:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Found 14 JNT account records - aggregating pairs...
+2026-02-06 14:31:40 - buyer_id_validation - INFO - After aggregation: 7 JNT records (7 duplicate rows removed)
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Writing output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_37.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Successfully wrote 850 records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Writing errors-only CSV (519 error records)...
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Writing errors-only file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_37_errors_only.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Successfully wrote 519 error records to C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_37_errors_only.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - PROCESSING COMPLETE
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - End time: 2026-02-06 14:31:40
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Duration: 0:00:00.139015
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ======================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - PROCESSING SUMMARY
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ======================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Total records processed:        857
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Valid records (no changes):     337
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Invalid records found:          520
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   - Invalid format:             501
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   - Invalid logic:               19
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Records corrected:              727
+2026-02-06 14:31:40 - buyer_id_validation - INFO - CONCAT IDs generated:           398
+2026-02-06 14:31:40 - buyer_id_validation - INFO - No correction possible:           0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - JNT accounts aggregated:          7
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Processing errors:                0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ======================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - 
+ERRORS BY COUNTRY:
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   SE: 97
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   GB: 93
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   BG: 77
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   DK: 51
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   NO: 33
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   MT: 29
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   IT: 28
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   PL: 28
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   GR: 15
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   ES: 12
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   RO: 12
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   LV: 11
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   BE: 10
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   FI: 9
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   PT: 9
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   EE: 2
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   SK: 2
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   HR: 1
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   SI: 1
+2026-02-06 14:31:40 - buyer_id_validation - INFO - 
+ERRORS BY ID TYPE:
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   NIDN: 520
+2026-02-06 14:31:40 - buyer_id_validation - INFO - 
+ITALIAN TRACKER ACTIONS:
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   Checked Tracker - NIDN Confirmed: 118
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   Checked Tracker - Replaced With Fallback: 207
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loading Italian tracker: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\Transaction Reporting - Italian Fiscal Code Validation.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loaded 188 Italian tracker records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loading template file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 7_39.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Loaded 113 template records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - BUYER ID VALIDATION v3.0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_39_FY25_Q4.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_39.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Start time: 2026-02-06 14:31:40
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_39_FY25_Q4.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Detected encoding: utf-8
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Successfully read 122 records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - PROCESSING RECORDS
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [DEBUG] Sample record 1:
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   id_value: 'NGB000919008'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   id_type: 'CCPT'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   person_code: 'XB56NR'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   first_name: 'AYORINDE,SAMUEL'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   surname: 'AMUBIEYA'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   dob: '22/05/86'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   primary_nationality: 'NG'
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   secondary_nationality: ''
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 2: txn_ref='44625CH98TW1', found=True
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 2 (44625CH98TW1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='NGXB56NR:NIDN'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 2 (44625CH98TW1): correction='NGXB56NR:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 4: txn_ref='44625CF91L81', found=True
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CF91L81): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='ZAAC97C6:NIDN'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CF91L81): correction='ZAAC97C6:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 7: txn_ref='44625CLJTMG1', found=True
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CLJTMG1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='ECABYQDV:NIDN'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CLJTMG1): correction='ECABYQDV:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Found 20 JNT account records - aggregating pairs...
+2026-02-06 14:31:40 - buyer_id_validation - INFO - After aggregation: 10 JNT records (10 duplicate rows removed)
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Writing output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_39.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Successfully wrote 112 records
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Writing errors-only CSV (102 error records)...
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Writing errors-only file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_39_errors_only.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Successfully wrote 102 error records to C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_39_errors_only.csv
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - PROCESSING COMPLETE
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ================================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - End time: 2026-02-06 14:31:40
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Duration: 0:00:00.046463
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ======================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - PROCESSING SUMMARY
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ======================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Total records processed:        122
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Valid records (no changes):      10
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Invalid records found:          112
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   - Invalid format:             112
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   - Invalid logic:                0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Records corrected:              112
+2026-02-06 14:31:40 - buyer_id_validation - INFO - CONCAT IDs generated:            40
+2026-02-06 14:31:40 - buyer_id_validation - INFO - No correction possible:           0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - JNT accounts aggregated:         10
+2026-02-06 14:31:40 - buyer_id_validation - INFO - Processing errors:                0
+2026-02-06 14:31:40 - buyer_id_validation - INFO - ======================================================================
+2026-02-06 14:31:40 - buyer_id_validation - INFO - 
+ERRORS BY COUNTRY:
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   RO: 30
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   MY: 14
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   MT: 11
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   SY: 11
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   PT: 10
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   CY: 9
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   ZA: 8
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   EC: 5
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   PK: 3
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   GE: 3
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   CN: 2
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   IR: 2
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   SG: 2
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   NG: 1
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   HK: 1
+2026-02-06 14:31:40 - buyer_id_validation - INFO - 
+ERRORS BY ID TYPE:
+2026-02-06 14:31:40 - buyer_id_validation - INFO -   CCPT: 112
