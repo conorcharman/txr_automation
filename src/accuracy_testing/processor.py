@@ -857,19 +857,21 @@ class InconsistentIDProcessor:
                 
                 # Auto-detect CONCAT when ID type is missing
                 # CONCATs are not stored in database but generated alongside transaction records
-                # This prevents false positives of invalid IDs due to missing type
-                if record.id_value and not record.id_type and record.priority_country_code:
-                    # Check if the ID matches CONCAT format for this country
-                    is_concat = id_processor.id_format_manager.validate(
-                        record.priority_country_code, "CONCAT", record.id_value
-                    )
-                    if is_concat:
-                        record.id_type = "CONCAT"
-                        record.actions_taken.append("Auto-detected ID type as CONCAT")
-                        self._log(
-                            f"[AUTO-DETECT] Row {record.row_index}: Detected CONCAT format "
-                            f"for ID '{record.id_value}' (type was empty)"
-                        )
+                # Check ID prefix first to determine country for CONCAT validation
+                if record.id_value and not record.id_type:
+                    # Try to extract prefix from ID value
+                    id_prefix = extract_id_prefix(record.id_value, "CONCAT")
+                    if id_prefix:
+                        # Check if the ID matches CONCAT format using its own prefix
+                        is_concat = id_format_manager.validate(id_prefix, "CONCAT", record.id_value)
+                        if is_concat:
+                            record.id_type = "CONCAT"
+                            record.prefixed_nationality = id_prefix
+                            record.actions_taken.append(f"Auto-detected ID type as CONCAT (prefix: {id_prefix})")
+                            self._log(
+                                f"[AUTO-DETECT] Row {record.row_index}: Detected CONCAT format "
+                                f"for ID '{record.id_value}' with prefix '{id_prefix}' (type was empty)"
+                            )
                 
                 # Check if fallback ID pattern
                 record.is_fallback_id = self.is_fallback_id_pattern(
@@ -1031,6 +1033,25 @@ class IDValidationProcessor:
         """
         self.stats.total_records += 1
         
+        # Auto-detect CONCAT when ID type is missing
+        # CONCATs are not stored in database but generated alongside transaction records
+        # Check ID prefix first to determine country for CONCAT validation
+        if record.id_value and not record.id_type:
+            # Try to extract prefix from ID value
+            id_prefix = extract_id_prefix(record.id_value, "CONCAT")
+            if id_prefix:
+                # Check if the ID matches CONCAT format using its own prefix
+                is_concat = id_format_manager.validate(id_prefix, "CONCAT", record.id_value)
+                if is_concat:
+                    record.id_type = "CONCAT"
+                    record.prefixed_nationality = id_prefix
+                    record.actions_taken.append(f"Auto-detected ID type as CONCAT (prefix: {id_prefix})")
+                    if self.verbose and self.logger:
+                        self.logger.debug(
+                            f"[AUTO-DETECT] Row {record.row_index}: Detected CONCAT format "
+                            f"for ID '{record.id_value}' with prefix '{id_prefix}' (type was empty)"
+                        )
+        
         # Determine priority country for validation
         country_code = self._get_priority_country(record)
         
@@ -1039,21 +1060,6 @@ class IDValidationProcessor:
             record.actions_taken.append("ERROR: Invalid nationality codes")
             self.stats.errors += 1
             return record
-        
-        # Auto-detect CONCAT when ID type is missing
-        # CONCATs are not stored in database but generated alongside transaction records
-        # This prevents false positives of invalid IDs due to missing type
-        if record.id_value and not record.id_type:
-            # Check if the ID matches CONCAT format for this country
-            is_concat = self.id_format_manager.validate(country_code, "CONCAT", record.id_value)
-            if is_concat:
-                record.id_type = "CONCAT"
-                record.actions_taken.append("Auto-detected ID type as CONCAT")
-                if self.verbose and self.logger:
-                    self.logger.debug(
-                        f"[AUTO-DETECT] Row {record.row_index}: Detected CONCAT format "
-                        f"for ID '{record.id_value}' (type was empty)"
-                    )
         
         # Step 1: Validate existing ID
         if record.id_value and record.id_type:
@@ -1254,10 +1260,10 @@ class IDValidationProcessor:
         country_code: str
     ) -> Tuple[bool, str]:
         """
-        Validate an ID against its declared type and country.
-        
-        NOTE: Extract IDs contain country code prefix (first 2 chars) which must be stripped
+        Validate an ID against its declared type and country-specific patterns.
+        Strips country code prefix from NIDN/CCPT codes (stored in DB)
         before validation against patterns.
+        CONCAT IDs keep their prefix as it's part of the format.
         
         Returns:
             Tuple of (is_valid, error_message)
@@ -1269,18 +1275,18 @@ class IDValidationProcessor:
         id_type_upper = id_type.upper().strip()
         
         # Strip country code prefix if applicable
-        # Only NIDN, CCPT, CONCAT have country prefixes (not LEI)
-        # Only strip if there's a valid 2-character country code prefix
+        # Only NIDN and CCPT have prefixes that need stripping (not CONCAT or LEI)
+        # CONCAT format INCLUDES the prefix: ^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$
         id_to_validate = id_value
         
-        if id_type_upper in ['NIDN', 'CCPT', 'CONCAT']:
+        if id_type_upper in ['NIDN', 'CCPT']:
             # Check if first 2 chars are a valid country code
             prefix = extract_id_prefix(id_value, id_type_upper)
             if prefix:
                 # Valid prefix found - strip it for validation
                 id_to_validate = id_value[2:] if len(id_value) > 2 else id_value
             # else: No valid prefix or too short - validate full ID
-        # else: LEI or other type - validate full ID
+        # else: CONCAT, LEI or other type - validate full ID including prefix
         
         # Validate using Phase 1 library
         result = validate_id(country_code, id_type_upper, id_to_validate)
