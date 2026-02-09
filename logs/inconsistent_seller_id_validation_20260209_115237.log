@@ -1,0 +1,166 @@
+2026-02-09 11:52:37 - inconsistent_seller_id_validation - INFO - Loading Italian tracker: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\Transaction Reporting - Italian Fiscal Code Validation.csv
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Loaded 188 Italian tracker records
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Loading template file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 16_20.csv
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Loaded 565 template records
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ================================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - INCONSISTENT SELLER ID VALIDATION v1.3
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ================================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\16_20_FY25_Q4.csv
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_20.csv
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Start time: 2026-02-09 11:52:38
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\16_20_FY25_Q4.csv
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Detected encoding: utf-8
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Successfully read 605 records
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ================================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - PHASE 1: INCONSISTENT ID PREPROCESSING
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ================================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Grouping by Person Code, sorting chronologically, applying prior-valid corrections...
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Starting inconsistent ID preprocessing for 605 records
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Phase 1: Parsing Trade_Date_Time fields...
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Phase 2: Grouping records by Person Code...
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Found 78 unique Person Codes
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Phase 3: Processing person groups for inconsistencies...
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person ABRWHY: Found 9 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 78: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 6: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 417: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 231: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 332: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 341: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 198: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person AB2Y5G: Found 6 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person A96177: Found 15 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 606: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 48: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 101: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 419: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 287: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 261: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 536: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 364: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 390: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 442: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 140: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 406: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 531: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 559: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 21: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person ABMV57: Found 7 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 218: Corrected to closest valid ID with prefix RO: RO056971180:CCPT
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 203: Corrected to closest valid ID with prefix RO: RO056971180:CCPT
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person ACBYC9: Found 12 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person A42060: Found 2 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 80: Detected CONCAT format for ID 'GB20070812OLIVESIMPS' with prefix 'GB' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person B60993: Found 6 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 56: Corrected to closest valid ID with prefix GB: GBYX175383B:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 243: Corrected to closest valid ID with prefix GB: GBYX175383B:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 446: Corrected to closest valid ID with prefix GB: GBYX175383B:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 320: Corrected to closest valid ID with prefix GB: GBYX175383B:NIDN
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person BB9CCP: Found 3 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 539: Detected CONCAT format for ID 'CZ19760313PETR#KYSEL' with prefix 'CZ' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person BBC9FM: Found 5 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person ADDGXM: Found 15 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person A44559: Found 2 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 85: Detected CONCAT format for ID 'GB20070811IAN##TIEN#' with prefix 'GB' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person A41995: Found 8 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 145: Detected CONCAT format for ID 'GB20070808RUBY#HOFFE' with prefix 'GB' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 512: Detected CONCAT format for ID 'GB20070808RUBY#HOFFE' with prefix 'GB' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 270: Detected CONCAT format for ID 'GB20070808RUBY#HOFFE' with prefix 'GB' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 100: Detected CONCAT format for ID 'GB20070808RUBY#HOFFE' with prefix 'GB' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person A68339: Found 8 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 565: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 93: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 151: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 201: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 289: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 483: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 141: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Record 383: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person A83334: Found 4 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 283: Detected CONCAT format for ID 'GB20070823CASEYGRIBB' with prefix 'GB' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 95: Detected CONCAT format for ID 'GB20070823CASEYGRIBB' with prefix 'GB' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person ABCTGX: Found 8 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person ABPH9L: Found 2 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 275: Detected CONCAT format for ID 'GB19971001JESSIWILKI' with prefix 'GB' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person A11925: Found 6 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 149: Detected CONCAT format for ID 'NL19590411GERARPONTI' with prefix 'NL' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 327: Detected CONCAT format for ID 'NL19590411GERARPONTI' with prefix 'NL' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 563: Detected CONCAT format for ID 'NL19590411GERARPONTI' with prefix 'NL' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 432: Detected CONCAT format for ID 'NL19590411GERARPONTI' with prefix 'NL' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [AUTO-DETECT] Row 415: Detected CONCAT format for ID 'NL19590411GERARPONTI' with prefix 'NL' (type was empty)
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person ABLMHF: Found 4 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person A48570: Found 5 records with inconsistent IDs
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Preprocessing complete:
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   - Person groups processed: 78
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   - Inconsistent groups: 19
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   - Fallback IDs found: 0
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   - Invalid IDs found: 36
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   - Corrected from prior valid: 13
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   - No prior valid (need standard): 23
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ======================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - INCONSISTENT ID PREPROCESSING SUMMARY
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ======================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Total records:                  605
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Person groups:                   78
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Inconsistent groups:             19
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Fallback IDs found:               0
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Invalid IDs found:               36
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Corrected from prior valid:      13
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - No prior valid ID:               23
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Valid-to-valid (no change):      91
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ======================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ================================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - PHASE 2: STANDARD VALIDATION FOR REMAINING RECORDS
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ================================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Records corrected from prior valid: 104
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Records needing standard validation: 501
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [TEMPLATE] Row 2: txn_ref='44625CLK5H21', found=True
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [TEMPLATE] Row 2 (44625CLK5H21): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output=''
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [TEMPLATE] Row 4: txn_ref='44625CH3J761', found=True
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [TEMPLATE] Row 4 (44625CH3J761): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='GB19570219ALAN#SNOW#:CONCAT'
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [TEMPLATE] Row 4 (44625CH3J761): correction='GB19570219ALAN#SNOW#:CONCAT' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [TEMPLATE] Row 7: txn_ref='44625CHQCP11', found=True
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - [TEMPLATE] Row 7 (44625CHQCP11): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output=''
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Writing output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_20.csv
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Successfully wrote 605 records
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Writing errors-only CSV (257 records with corrections)...
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Writing errors-only file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_20_errors_only.csv
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Successfully wrote 257 error records
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ================================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - PROCESSING COMPLETE
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ================================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - End time: 2026-02-09 11:52:38
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Duration: 0:00:00.085120
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ======================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - PROCESSING SUMMARY
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ======================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Total records processed:        501
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Valid records (no changes):     348
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Invalid records found:          153
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   - Invalid format:             153
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   - Invalid logic:                0
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Records corrected:              153
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - CONCAT IDs generated:            92
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - No correction possible:           0
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - JNT accounts aggregated:          0
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Processing errors:                0
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - ======================================================================
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - 
+ERRORS BY COUNTRY:
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   GB: 92
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   HK: 11
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   MY: 11
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   ZA: 11
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   CA: 7
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   IN: 5
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   NG: 5
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   PK: 4
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   AU: 3
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   PL: 3
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   CN: 1
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - 
+ERRORS BY ID TYPE:
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   NIDN: 88
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   CCPT: 46
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO -   Unknown: 19
+2026-02-09 11:52:38 - inconsistent_seller_id_validation - INFO - Inconsistent Seller ID validation completed successfully

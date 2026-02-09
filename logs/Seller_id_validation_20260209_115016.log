@@ -1,0 +1,180 @@
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loading Italian tracker: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\Transaction Reporting - Italian Fiscal Code Validation.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loaded 188 Italian tracker records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loading template file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 16_19.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loaded 4 template records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - SELLER ID VALIDATION v3.0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\16_19_FY25_Q4.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_19.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Start time: 2026-02-09 11:50:16
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\16_19_FY25_Q4.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Detected encoding: utf-8
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Successfully read 3 records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - PROCESSING RECORDS
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 2: txn_ref='44625CKTGLD1', found=True
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 2 (44625CKTGLD1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output=''
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 4: txn_ref='44625CKTGNC1', found=True
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 4 (44625CKTGNC1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output=''
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Writing output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_19.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Successfully wrote 3 records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - PROCESSING COMPLETE
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - End time: 2026-02-09 11:50:16
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Duration: 0:00:00.029997
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ======================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - PROCESSING SUMMARY
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ======================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Total records processed:          3
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Valid records (no changes):       3
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Invalid records found:            0
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   - Invalid format:               0
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   - Invalid logic:                0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Records corrected:                0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - CONCAT IDs generated:             0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - No correction possible:           0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - JNT accounts aggregated:          0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Processing errors:                0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ======================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loading Italian tracker: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\Transaction Reporting - Italian Fiscal Code Validation.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loaded 188 Italian tracker records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loading template file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 16_21.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loaded 325 template records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - SELLER ID VALIDATION v3.0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\16_21_FY25_Q4.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_21.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Start time: 2026-02-09 11:50:16
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\16_21_FY25_Q4.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Detected encoding: utf-8
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Successfully read 326 records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - PROCESSING RECORDS
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 2: txn_ref='44625CH4GKX1', found=True
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 2 (44625CH4GKX1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='DK19850409KRITABAJAJ:CONCAT'
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 2 (44625CH4GKX1): correction='DK19850409KRITABAJAJ:CONCAT' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 4: txn_ref='44625CK32CK1', found=True
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 4 (44625CK32CK1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='ITBB2WFW:NIDN'
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 4 (44625CK32CK1): correction='ITBB2WFW:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 7: txn_ref='44625CKHCTJ1', found=True
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 7 (44625CKHCTJ1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output=''
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Found 6 JNT account records - aggregating pairs...
+2026-02-09 11:50:16 - Seller_id_validation - INFO - After aggregation: 3 JNT records (3 duplicate rows removed)
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Writing output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_21.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Successfully wrote 323 records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Writing errors-only CSV (157 error records)...
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Writing errors-only file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_21_errors_only.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Successfully wrote 157 error records to C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_21_errors_only.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - PROCESSING COMPLETE
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - End time: 2026-02-09 11:50:16
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Duration: 0:00:00.080908
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ======================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - PROCESSING SUMMARY
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ======================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Total records processed:        326
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Valid records (no changes):     168
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Invalid records found:          158
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   - Invalid format:             148
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   - Invalid logic:               10
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Records corrected:              261
+2026-02-09 11:50:16 - Seller_id_validation - INFO - CONCAT IDs generated:           123
+2026-02-09 11:50:16 - Seller_id_validation - INFO - No correction possible:           0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - JNT accounts aggregated:          3
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Processing errors:                0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ======================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - 
+ERRORS BY COUNTRY:
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   GB: 49
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   SE: 33
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   BG: 18
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   IT: 12
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   DK: 10
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   ES: 10
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   PT: 6
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   MT: 5
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   RO: 4
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   NO: 4
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   PL: 3
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   BE: 1
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   FI: 1
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   LV: 1
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   GR: 1
+2026-02-09 11:50:16 - Seller_id_validation - INFO - 
+ERRORS BY ID TYPE:
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   NIDN: 158
+2026-02-09 11:50:16 - Seller_id_validation - INFO - 
+ITALIAN TRACKER ACTIONS:
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   Checked Tracker - NIDN Confirmed: 61
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   Checked Tracker - Replaced With Fallback: 103
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loading Italian tracker: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\Transaction Reporting - Italian Fiscal Code Validation.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loaded 188 Italian tracker records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loading template file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 16_23.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Loaded 34 template records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - SELLER ID VALIDATION v3.0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\16_23_FY25_Q4.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_23.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Start time: 2026-02-09 11:50:16
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\16_23_FY25_Q4.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Detected encoding: utf-8
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Successfully read 33 records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - PROCESSING RECORDS
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 2: txn_ref='44625CGWB5L1', found=True
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 2 (44625CGWB5L1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='SYAC69C2:NIDN'
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 2 (44625CGWB5L1): correction='SYAC69C2:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 4: txn_ref='44625CK3KH41', found=True
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 4 (44625CK3KH41): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='ECAC8LPV:NIDN'
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 4 (44625CK3KH41): correction='ECAC8LPV:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 7: txn_ref='44625CG5CLJ1', found=True
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 7 (44625CG5CLJ1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='RO19830318SORINSTOIC:CONCAT'
+2026-02-09 11:50:16 - Seller_id_validation - INFO - [TEMPLATE] Row 7 (44625CG5CLJ1): correction='RO19830318SORINSTOIC:CONCAT' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Writing output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_23.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Successfully wrote 33 records
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Writing errors-only CSV (33 error records)...
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Writing errors-only file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_23_errors_only.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Successfully wrote 33 error records to C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_16_23_errors_only.csv
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - PROCESSING COMPLETE
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ================================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - End time: 2026-02-09 11:50:16
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Duration: 0:00:00.039808
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ======================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - PROCESSING SUMMARY
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ======================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Total records processed:         33
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Valid records (no changes):       0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Invalid records found:           33
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   - Invalid format:              33
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   - Invalid logic:                0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Records corrected:               33
+2026-02-09 11:50:16 - Seller_id_validation - INFO - CONCAT IDs generated:             4
+2026-02-09 11:50:16 - Seller_id_validation - INFO - No correction possible:           0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - JNT accounts aggregated:          0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - Processing errors:                0
+2026-02-09 11:50:16 - Seller_id_validation - INFO - ======================================================================
+2026-02-09 11:50:16 - Seller_id_validation - INFO - 
+ERRORS BY COUNTRY:
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   MT: 7
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   SY: 6
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   EC: 5
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   RO: 3
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   IR: 3
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   BD: 2
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   MY: 2
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   PT: 2
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   NG: 1
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   CN: 1
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   CY: 1
+2026-02-09 11:50:16 - Seller_id_validation - INFO - 
+ERRORS BY ID TYPE:
+2026-02-09 11:50:16 - Seller_id_validation - INFO -   CCPT: 33

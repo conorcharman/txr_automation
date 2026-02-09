@@ -1,0 +1,28 @@
+2026-02-09 10:57:55 - pricing_validation - INFO - ================================================================================
+2026-02-09 10:57:55 - pricing_validation - INFO - PRICING DATA VALIDATION v1.0
+2026-02-09 10:57:55 - pricing_validation - INFO - ================================================================================
+2026-02-09 10:57:55 - pricing_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\35_3_FY25_Q4.csv
+2026-02-09 10:57:55 - pricing_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\35_3_FY25_Q4.csv
+2026-02-09 10:57:55 - pricing_validation - INFO - Start time: 2026-02-09 10:57:55
+2026-02-09 10:57:55 - pricing_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\35_3_FY25_Q4.csv
+2026-02-09 10:57:55 - pricing_validation - INFO - Detected encoding: utf-8
+2026-02-09 10:57:55 - pricing_validation - INFO - Successfully read 351 records
+2026-02-09 10:57:55 - pricing_validation - INFO - ================================================================================
+2026-02-09 10:57:55 - pricing_validation - INFO - VALIDATING PRICING DATA
+2026-02-09 10:57:55 - pricing_validation - INFO - ================================================================================
+2026-02-09 10:57:55 - pricing_validation - INFO - Writing output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\35_3_FY25_Q4.csv
+2026-02-09 10:57:55 - pricing_validation - INFO - Successfully wrote 351 records
+2026-02-09 10:57:55 - pricing_validation - INFO - ================================================================================
+2026-02-09 10:57:55 - pricing_validation - INFO - VALIDATION COMPLETE
+2026-02-09 10:57:55 - pricing_validation - INFO - ================================================================================
+2026-02-09 10:57:55 - pricing_validation - INFO - End time: 2026-02-09 10:57:55
+2026-02-09 10:57:55 - pricing_validation - INFO - Duration: 0:00:00.008548
+2026-02-09 10:57:55 - pricing_validation - INFO - ======================================================================
+2026-02-09 10:57:55 - pricing_validation - INFO - PROCESSING SUMMARY
+2026-02-09 10:57:55 - pricing_validation - INFO - ======================================================================
+2026-02-09 10:57:55 - pricing_validation - INFO - Total records processed:        351
+2026-02-09 10:57:55 - pricing_validation - INFO - Valid records (correct):        335
+2026-02-09 10:57:55 - pricing_validation - INFO - Invalid records (TBC):           16
+2026-02-09 10:57:55 - pricing_validation - INFO - Processing errors:                0
+2026-02-09 10:57:55 - pricing_validation - INFO - ======================================================================
+2026-02-09 10:57:55 - pricing_validation - INFO - Pricing data validation completed successfully
