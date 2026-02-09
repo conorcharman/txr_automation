@@ -42,6 +42,46 @@ from core import (
 )
 from core.data import Phase3Columns, ClientErrorColumns
 
+
+class IncidentColumnMapper:
+    """Maps column names to indices in incident template files."""
+    
+    def __init__(self, header: List[str], column_config: Dict[str, str], logger=None):
+        """
+        Initialize column mapper.
+        
+        Args:
+            header: List of column names from CSV header
+            column_config: Dict mapping logical names to column names from config
+            logger: Logger instance
+        """
+        self.header = header
+        self.column_config = column_config
+        self.logger = logger
+        self.indices = {}
+        
+        self._map_columns()
+    
+    def _map_columns(self):
+        """Map column names to their indices."""
+        for logical_name, column_name in self.column_config.items():
+            try:
+                index = self.header.index(column_name)
+                self.indices[logical_name] = index
+            except ValueError:
+                if self.logger:
+                    self.logger.warning(f"Column '{column_name}' not found in incident file")
+                self.indices[logical_name] = None
+    
+    def get(self, logical_name: str, default=None) -> Optional[int]:
+        """Get column index by logical name."""
+        return self.indices.get(logical_name, default)
+    
+    def has_column(self, logical_name: str) -> bool:
+        """Check if column exists."""
+        return self.indices.get(logical_name) is not None
+
+
 # Local dataclass for Phase 3 specific client records
 @dataclass
 class ClientRecord:
@@ -60,10 +100,13 @@ class ClientRecord:
 class IncidentFileIndex:
     """Optimized incident file with pre-built indexes for fast lookups"""
     
-    def __init__(self, file_path: str, logger=None):
+    def __init__(self, file_path: str, column_config: Dict[str, str], logger=None):
         self.file_path = file_path
         self.data_rows = []
+        self.header = []
+        self.column_mapper = None
         self.logger = logger
+        self.column_config = column_config
         
         # Pre-built indexes for O(1) lookups
         self.buyer_id_index = {}      # id -> row_indices
@@ -89,8 +132,13 @@ class IncidentFileIndex:
             
             if len(rows) < 2:
                 return
-                
+            
+            self.header = rows[0]
             self.data_rows = rows[1:]  # Skip header
+            
+            # Initialize column mapper for correction data
+            self.column_mapper = IncidentColumnMapper(self.header, self.column_config, self.logger)
+            
             self._build_indexes()
             
             # Log index sizes for diagnostics
@@ -343,6 +391,17 @@ class Phase3Processor:
         
         # Similarity threshold for fuzzy matching
         self.similarity_threshold = self.config.get('processor', {}).get('similarity_threshold', 0.85)
+        
+        # Incident template column configuration
+        self.incident_columns = self.config.get('incident_columns', {
+            'transaction_ref': 'Transaction Reference',
+            'error_flag': 'Error Flag',
+            'correction': 'Correction',
+            'correction_field': 'Correction Field',
+            'agree_with_correction': 'Agree With Correction',
+            'suggested_correction': 'Suggested Correction',
+            'suggested_correction_field': 'Suggested Correction Field'
+        })
     
     def preload_and_index_incident_files(self):
         """Preload and index all required incident files"""
@@ -376,7 +435,11 @@ class Phase3Processor:
             incident_file = self.find_incident_file(incident_code)
             if incident_file:
                 self.logger.debug(f"Indexing {incident_code}...")
-                self.incident_indexes[incident_code] = IncidentFileIndex(incident_file, self.logger)
+                self.incident_indexes[incident_code] = IncidentFileIndex(
+                    incident_file, 
+                    self.incident_columns, 
+                    self.logger
+                )
                 loaded_count += 1
         
         self.logger.info(f"Successfully indexed {loaded_count} incident files")
@@ -494,27 +557,49 @@ class Phase3Processor:
             id_result = index.lookup_by_id(client.all_ids)
             if id_result:
                 row_idx, match_type = id_result
-                return self._create_lookup_result(index.data_rows[row_idx], match_type)
+                return self._create_lookup_result(index.data_rows[row_idx], index.column_mapper, match_type)
         
         # Try name lookup (O(1) with index)
         if client.first_name and client.surname:
             name_result = index.lookup_by_name(client.first_name, client.surname, client.date_of_birth)
             if name_result:
                 row_idx, match_type = name_result
-                return self._create_lookup_result(index.data_rows[row_idx], match_type)
+                return self._create_lookup_result(index.data_rows[row_idx], index.column_mapper, match_type)
         
         return LookupResult(found=False)
     
-    def _create_lookup_result(self, row: List[str], match_type: str) -> LookupResult:
-        """Create lookup result from row data"""
-        cols = ClientErrorColumns  # Alias for readability
+    def _create_lookup_result(self, row: List[str], column_mapper: IncidentColumnMapper, match_type: str) -> LookupResult:
+        """Create lookup result from row data, checking for analyst corrections"""
         try:
-            error_flag = row[cols.ERROR_FLAG].strip() if len(row) > cols.ERROR_FLAG else ""
-            transaction_ref = row[cols.TRANSACTION_REF].strip() if len(row) > cols.TRANSACTION_REF else ""
+            # Get column indices
+            error_flag_col = column_mapper.get('error_flag')
+            txn_ref_col = column_mapper.get('transaction_ref')
+            correction_col = column_mapper.get('correction')
+            correction_field_col = column_mapper.get('correction_field')
+            agree_col = column_mapper.get('agree_with_correction')
+            suggested_correction_col = column_mapper.get('suggested_correction')
+            suggested_correction_field_col = column_mapper.get('suggested_correction_field')
             
-            if error_flag.upper() == 'Y':
-                correction = row[cols.CORRECTION].strip() if len(row) > cols.CORRECTION else ""
-                correction_field = row[cols.CORRECTION_FIELD].strip() if len(row) > cols.CORRECTION_FIELD else ""
+            # Extract basic fields
+            error_flag = row[error_flag_col].strip() if error_flag_col is not None and len(row) > error_flag_col else ""
+            transaction_ref = row[txn_ref_col].strip() if txn_ref_col is not None and len(row) > txn_ref_col else ""
+            
+            # Check if analyst disagrees with correction
+            use_suggested = False
+            if agree_col is not None and len(row) > agree_col:
+                agree_value = row[agree_col].strip().upper()
+                if agree_value == 'N':
+                    use_suggested = True
+            
+            # Route to appropriate correction source
+            if use_suggested and suggested_correction_col is not None and suggested_correction_field_col is not None:
+                # Use analyst's suggested correction
+                correction = row[suggested_correction_col].strip() if len(row) > suggested_correction_col else ""
+                correction_field = row[suggested_correction_field_col].strip() if len(row) > suggested_correction_field_col else ""
+            elif error_flag.upper() == 'Y' and correction_col is not None and correction_field_col is not None:
+                # Use standard correction
+                correction = row[correction_col].strip() if len(row) > correction_col else ""
+                correction_field = row[correction_field_col].strip() if len(row) > correction_field_col else ""
             else:
                 correction = "No Change"
                 correction_field = ""

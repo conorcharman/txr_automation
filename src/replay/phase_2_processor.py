@@ -37,13 +37,56 @@ from core import (
 )
 from core.data import Phase2SingleColumns, Phase2CombinedColumns, ClientErrorColumns
 
+
+class IncidentColumnMapper:
+    """Maps column names to indices in incident template files."""
+    
+    def __init__(self, header: List[str], column_config: Dict[str, str], logger=None):
+        """
+        Initialize column mapper.
+        
+        Args:
+            header: List of column names from CSV header
+            column_config: Dict mapping logical names to column names from config
+            logger: Logger instance
+        """
+        self.header = header
+        self.column_config = column_config
+        self.logger = logger
+        self.indices = {}
+        
+        self._map_columns()
+    
+    def _map_columns(self):
+        """Map column names to their indices."""
+        for logical_name, column_name in self.column_config.items():
+            try:
+                index = self.header.index(column_name)
+                self.indices[logical_name] = index
+            except ValueError:
+                if self.logger:
+                    self.logger.warning(f"Column '{column_name}' not found in incident file")
+                self.indices[logical_name] = None
+    
+    def get(self, logical_name: str, default=None) -> Optional[int]:
+        """Get column index by logical name."""
+        return self.indices.get(logical_name, default)
+    
+    def has_column(self, logical_name: str) -> bool:
+        """Check if column exists."""
+        return self.indices.get(logical_name) is not None
+
+
 class IncidentFileIndex:
     """Optimized incident file with pre-built indexes for O(1) transaction reference lookups"""
     
-    def __init__(self, file_path: str, logger=None):
+    def __init__(self, file_path: str, column_config: Dict[str, str], logger=None):
         self.file_path = file_path
         self.data_rows = []
+        self.header = []
+        self.column_mapper = None
         self.logger = logger
+        self.column_config = column_config
         
         # Pre-built index for O(1) transaction reference lookups
         self.transaction_ref_index = {}  # transaction_ref -> row_index
@@ -60,8 +103,13 @@ class IncidentFileIndex:
             
             if len(rows) < 2:
                 return
-                
+            
+            self.header = rows[0]
             self.data_rows = rows[1:]  # Skip header
+            
+            # Initialize column mapper
+            self.column_mapper = IncidentColumnMapper(self.header, self.column_config, self.logger)
+            
             self._build_transaction_index()
             
         except Exception as e:
@@ -70,12 +118,18 @@ class IncidentFileIndex:
     
     def _build_transaction_index(self):
         """Build transaction reference lookup index"""
+        txn_ref_col = self.column_mapper.get('transaction_ref')
+        if txn_ref_col is None:
+            if self.logger:
+                self.logger.error(f"Transaction Reference column not found in {self.file_path}")
+            return
+        
         for i, row in enumerate(self.data_rows):
-            if len(row) < 7:  # Ensure minimum columns
+            if len(row) <= txn_ref_col:
                 continue
                 
-            # Index transaction reference (column 0)
-            transaction_ref = row[0].strip() if row[0] else ""
+            # Index transaction reference
+            transaction_ref = row[txn_ref_col].strip() if row[txn_ref_col] else ""
             if transaction_ref:
                 # Store first occurrence (as per requirement)
                 if transaction_ref not in self.transaction_ref_index:
@@ -121,6 +175,17 @@ class Phase2Processor:
         
         # Character replacement utility
         self.char_replacer = CharacterReplacement()
+        
+        # Incident template column configuration
+        self.incident_columns = self.config.get('incident_columns', {
+            'transaction_ref': 'Transaction Reference',
+            'error_flag': 'Error Flag',
+            'correction': 'Correction',
+            'correction_field': 'Correction Field',
+            'agree_with_correction': 'Agree With Correction',
+            'suggested_correction': 'Suggested Correction',
+            'suggested_correction_field': 'Suggested Correction Field'
+        })
         
         # Ultra-optimized: Pre-indexed incident files
         self.incident_indexes = {}  # incident_code -> IncidentFileIndex
@@ -253,7 +318,11 @@ class Phase2Processor:
             incident_file = self.find_incident_file(incident_code)
             if incident_file:
                 self.logger.debug(f"Indexing {incident_code}...")
-                self.incident_indexes[incident_code] = IncidentFileIndex(incident_file, self.logger)
+                self.incident_indexes[incident_code] = IncidentFileIndex(
+                    incident_file, 
+                    self.incident_columns, 
+                    self.logger
+                )
                 loaded_count += 1
             else:
                 self.logger.warning(f"Incident file not found for code: {incident_code}")
@@ -271,22 +340,42 @@ class Phase2Processor:
         row_idx = index.lookup_by_transaction_ref(record.transaction_reference)
         
         if row_idx is not None:
-            return self._create_lookup_result(index.data_rows[row_idx])
+            return self._create_lookup_result(index.data_rows[row_idx], index.column_mapper)
         
         return LookupResult(found=False)
     
-    def _create_lookup_result(self, row: List[str]) -> LookupResult:
-        """Create lookup result from incident file row"""
-        cols = ClientErrorColumns  # Alias for readability
+    def _create_lookup_result(self, row: List[str], column_mapper: IncidentColumnMapper) -> LookupResult:
+        """Create lookup result from incident file row, checking for analyst corrections"""
         try:
-            error_flag = row[cols.ERROR_FLAG].strip() if len(row) > cols.ERROR_FLAG else ""
-            transaction_ref = row[cols.TRANSACTION_REF].strip() if len(row) > cols.TRANSACTION_REF else ""
+            # Get column indices
+            error_flag_col = column_mapper.get('error_flag')
+            txn_ref_col = column_mapper.get('transaction_ref')
+            correction_col = column_mapper.get('correction')
+            correction_field_col = column_mapper.get('correction_field')
+            agree_col = column_mapper.get('agree_with_correction')
+            suggested_correction_col = column_mapper.get('suggested_correction')
+            suggested_correction_field_col = column_mapper.get('suggested_correction_field')
             
-            if error_flag.upper() == 'Y':
-                correction = row[cols.CORRECTION].strip() if len(row) > cols.CORRECTION else ""
-                correction_field = row[cols.CORRECTION_FIELD].strip() if len(row) > cols.CORRECTION_FIELD else ""
-                # Keep original values for consistency checking
-                # Character replacement done at output time
+            # Extract basic fields
+            error_flag = row[error_flag_col].strip() if error_flag_col is not None and len(row) > error_flag_col else ""
+            transaction_ref = row[txn_ref_col].strip() if txn_ref_col is not None and len(row) > txn_ref_col else ""
+            
+            # Check if analyst disagrees with correction
+            use_suggested = False
+            if agree_col is not None and len(row) > agree_col:
+                agree_value = row[agree_col].strip().upper()
+                if agree_value == 'N':
+                    use_suggested = True
+            
+            # Route to appropriate correction source
+            if use_suggested and suggested_correction_col is not None and suggested_correction_field_col is not None:
+                # Use analyst's suggested correction
+                correction = row[suggested_correction_col].strip() if len(row) > suggested_correction_col else ""
+                correction_field = row[suggested_correction_field_col].strip() if len(row) > suggested_correction_field_col else ""
+            elif error_flag.upper() == 'Y' and correction_col is not None and correction_field_col is not None:
+                # Use standard correction
+                correction = row[correction_col].strip() if len(row) > correction_col else ""
+                correction_field = row[correction_field_col].strip() if len(row) > correction_field_col else ""
             else:
                 correction = "No Change"
                 correction_field = "No Change"
