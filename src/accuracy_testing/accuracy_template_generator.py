@@ -66,10 +66,11 @@ class TemplateFormat:
         "Surname",
         "Date of Birth",
         "Gender",
+        "Prefixed Nationality",
         "Primary Nationality",
         "Secondary Nationality",
-        "Correction Output",
-        "Correction Fields",
+        "Correction",
+        "Correction Field",
         "Tracker Status"
     ]
     
@@ -84,10 +85,11 @@ class TemplateFormat:
         "Surname",
         "Date of Birth",
         "Gender",
+        "Prefixed Nationality",
         "Primary Nationality",
         "Secondary Nationality",
-        "Correction Output",
-        "Correction Fields",
+        "Correction",
+        "Correction Field",
         "Tracker Status"
     ]
     

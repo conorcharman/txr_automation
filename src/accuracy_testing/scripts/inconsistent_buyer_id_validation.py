@@ -48,8 +48,8 @@ Input CSV columns (minimum required):
     - Secondary Nationality (optional)
 
 Output CSV adds:
-    - Correction Output (ID:TYPE format from prior valid)
-    - Correction Fields
+    - Correction (ID:TYPE format from prior valid)
+    - Correction Field
     - Correction Source (where the correction came from)
     - Tracker Status
     - Pass/Fail
@@ -264,8 +264,8 @@ class InconsistentBuyerIDValidator:
             "Primary Nationality",
             "Secondary Nationality",
             "Trade_Date_Time",
-            "Correction Output",
-            "Correction Fields",
+            "Correction",
+            "Correction Field",
             "Correction Source",
             "Tracker Status",
             "Pass/Fail",
@@ -369,8 +369,8 @@ class InconsistentBuyerIDValidator:
             "Primary Nationality",
             "Secondary Nationality",
             "Trade_Date_Time",
-            "Correction Output",
-            "Correction Fields",
+            "Correction",
+            "Correction Field",
             "Correction Source",
             "Tracker Status",
             "Pass/Fail",

@@ -406,6 +406,7 @@ class BatchDataPushProcessor:
         base_target_dir: Path,
         fiscal_year: str,
         quarter: str,
+        column_mappings: Optional[List] = None,
         logger: Optional[logging.Logger] = None,
     ):
         """
@@ -416,12 +417,14 @@ class BatchDataPushProcessor:
             base_target_dir: Base directory for target files
             fiscal_year: Fiscal year (e.g., FY26)
             quarter: Quarter (e.g., Q1)
+            column_mappings: Optional list of column mappings to use
             logger: Optional logger instance
         """
         self.base_source_dir = Path(base_source_dir)
         self.base_target_dir = Path(base_target_dir)
         self.fiscal_year = fiscal_year
         self.quarter = quarter
+        self.column_mappings = column_mappings
         self.logger = logger or logging.getLogger(__name__)
         
         # Results storage
@@ -434,19 +437,36 @@ class BatchDataPushProcessor:
         Returns:
             List of incident codes found
         """
-        incidents = []
+        incidents = set()
         
-        # Look for files matching pattern: {FY} {Q} - {incident}.csv
-        # or {incident}_validated.csv
-        pattern = f"{self.fiscal_year}*{self.quarter}*.csv"
+        # Try multiple naming patterns to discover incidents
+        patterns = [
+            f"validated_{self.fiscal_year}_{self.quarter}_*.csv",  # New validation output format
+            f"{self.fiscal_year} {self.quarter} - *.csv",          # Legacy/template format
+            f"*_validated.csv",                                     # Generic fallback
+        ]
         
-        for file in self.base_source_dir.glob(pattern):
-            # Extract incident code from filename
-            name = file.stem
-            if " - " in name:
-                incident = name.split(" - ")[-1]
-                incidents.append(incident)
+        for pattern in patterns:
+            for file in self.base_source_dir.glob(pattern):
+                name = file.stem
+                
+                # Extract incident code based on pattern
+                if name.startswith(f"validated_{self.fiscal_year}_{self.quarter}_"):
+                    # Pattern: validated_FY25_Q4_7_37.csv or validated_FY25_Q4_7_37_errors_only.csv
+                    suffix = name.replace(f"validated_{self.fiscal_year}_{self.quarter}_", "")
+                    # Remove _errors_only suffix if present
+                    incident = suffix.replace("_errors_only", "")
+                    incidents.add(incident)
+                elif " - " in name:
+                    # Pattern: FY25 Q4 - 7_37.csv
+                    incident = name.split(" - ")[-1]
+                    incidents.add(incident)
+                elif name.endswith("_validated"):
+                    # Pattern: 7_37_validated.csv
+                    incident = name.replace("_validated", "")
+                    incidents.add(incident)
         
+        incidents = sorted(list(incidents))
         self.logger.info(f"Discovered {len(incidents)} incidents: {incidents}")
         return incidents
     
@@ -499,9 +519,25 @@ class BatchDataPushProcessor:
         Returns:
             PushStats for this incident
         """
-        # Construct target file path
-        target_name = f"{self.fiscal_year} {self.quarter} - {incident}.csv"
-        target_path = self.base_target_dir / target_name
+        # Try multiple naming patterns for target file (master tracking files)
+        target_patterns = [
+            f"{self.fiscal_year} {self.quarter} {incident}.csv",     # Common format (no dash)
+            f"{self.fiscal_year} {self.quarter} - {incident}.csv",   # Format with dash
+            f"{incident}.csv",                                        # Generic fallback
+        ]
+        
+        target_path = None
+        for pattern in target_patterns:
+            candidate = self.base_target_dir / pattern
+            if candidate.exists():
+                target_path = candidate
+                self.logger.debug(f"Found target file: {pattern}")
+                break
+        
+        if target_path is None:
+            raise FileNotFoundError(
+                f"Target file not found for {incident}. Tried patterns: {target_patterns}"
+            )
         
         # Try multiple naming patterns for source file (validation outputs)
         source_patterns = [
@@ -523,14 +559,12 @@ class BatchDataPushProcessor:
                 f"Source file not found for {incident}. Tried patterns: {source_patterns}"
             )
         
-        if not target_path.exists():
-            raise FileNotFoundError(f"Target file not found for {incident}")
-        
         # Create processor and run
         config = DataPushConfig(
             fiscal_year=self.fiscal_year,
             quarter=self.quarter,
             incident_code=incident,
+            column_mappings=self.column_mappings or [],
         )
         
         processor = DataPushProcessor(config=config, logger=self.logger)
