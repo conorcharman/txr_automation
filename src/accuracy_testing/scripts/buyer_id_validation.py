@@ -234,8 +234,8 @@ class BuyerIDValidator:
             "Prefixed Nationality",
             "Primary Nationality",
             "Secondary Nationality",
-            "Correction Output",  # VBA format: "ID:TYPE"
-            "Correction Fields",  # VBA: "ID:IDT"
+            "Correction",  # VBA format: "ID:TYPE"
+            "Correction Field",  # VBA: "ID:IDT"
             "Tracker Status",  # Tracker system status
             "Pass/Fail",  # Format and logic validation status
             "Failure Reason",  # Specific reason for validation failure
@@ -342,8 +342,8 @@ class BuyerIDValidator:
             "Prefixed Nationality",
             "Primary Nationality",
             "Secondary Nationality",
-            "Correction Output",
-            "Correction Fields",
+            "Correction",
+            "Correction Field",
             "Tracker Status",
             "Pass/Fail",
             "Failure Reason",

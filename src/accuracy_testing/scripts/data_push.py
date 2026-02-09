@@ -156,8 +156,16 @@ class DataPushCLI:
     def _setup_logging(self, log_level: str) -> None:
         """Setup logging configuration."""
         if CORE_LOGGING and create_logger:
+            # Get log directory from config, default to "logs"
+            log_dir = self.config.get("paths", {}).get("log_output", "logs")
+            if self.config.get("mode") == "batch":
+                log_dir = self.config.get("batch", {}).get("paths", {}).get("log_output", "logs")
+            elif self.config.get("mode") == "single":
+                log_dir = self.config.get("single", {}).get("paths", {}).get("log_output", "logs")
+            
             self.logger = create_logger(
                 name="data_push",
+                log_dir=log_dir,
                 log_level=log_level,
             )
         else:
@@ -268,6 +276,8 @@ class BatchDataPushCLI:
         fiscal_year: str,
         quarter: str,
         incidents: Optional[str] = None,
+        column_mappings: Optional[list] = None,
+        log_dir: str = "logs",
         log_level: str = "INFO",
         dry_run: bool = False,
         backup: bool = True,
@@ -282,6 +292,8 @@ class BatchDataPushCLI:
             fiscal_year: Fiscal year (e.g., FY26)
             quarter: Quarter (e.g., Q1)
             incidents: Comma-separated incident codes (or None for auto-discovery)
+            column_mappings: List of column mappings from config
+            log_dir: Directory for log files
             log_level: Logging level
             dry_run: If True, preview changes without writing
             backup: If True, create backups
@@ -292,20 +304,29 @@ class BatchDataPushCLI:
         self.fiscal_year = fiscal_year
         self.quarter = quarter
         self.incidents = incidents.split(",") if incidents else None
+        self.column_mappings = column_mappings
         self.dry_run = dry_run
         self.backup = backup
         self.verbose = verbose
+        self.log_dir = Path(log_dir) if log_dir else Path("logs")
         
         # Setup logging
-        self._setup_logging(log_level)
+        self._setup_logging(log_level, str(self.log_dir))
     
-    def _setup_logging(self, log_level: str) -> None:
+    def _setup_logging(self, log_level: str, log_dir: str = "logs") -> None:
         """Setup logging configuration."""
-        logging.basicConfig(
-            level=getattr(logging, log_level.upper(), logging.INFO),
-            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        )
-        self.logger = logging.getLogger("data_push_batch")
+        if CORE_LOGGING and create_logger:
+            self.logger = create_logger(
+                name="data_push_batch",
+                log_dir=log_dir,
+                log_level=log_level,
+            )
+        else:
+            logging.basicConfig(
+                level=getattr(logging, log_level.upper(), logging.INFO),
+                format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
+            )
+            self.logger = logging.getLogger("data_push_batch")
     
     def run(self) -> Dict[str, PushStats]:
         """
@@ -324,6 +345,7 @@ class BatchDataPushCLI:
             base_target_dir=self.target_dir,
             fiscal_year=self.fiscal_year,
             quarter=self.quarter,
+            column_mappings=self.column_mappings,
             logger=self.logger,
         )
         
@@ -370,6 +392,9 @@ def create_parser() -> argparse.ArgumentParser:
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
+    # Run with default config
+    data-push
+
     # Single file push with config
     python -m src.accuracy_testing.scripts.data_push --config config/data_push.yaml
 
@@ -401,7 +426,8 @@ Examples:
     parser.add_argument(
         "--config",
         type=str,
-        help="Path to YAML configuration file",
+        default="config/local/accuracy_testing/data_push.yaml",
+        help="Path to YAML configuration file (default: config/local/accuracy_testing/data_push.yaml)",
     )
     
     # Single file mode arguments
@@ -494,19 +520,74 @@ def main() -> int:
     args = parser.parse_args()
     
     try:
-        if args.batch:
+        # Load config to determine mode (if config provided)
+        config = None
+        config_mode = None
+        if args.config and Path(args.config).exists():
+            with open(args.config, 'r', encoding='utf-8') as f:
+                config = yaml.safe_load(f) or {}
+                config_mode = config.get('mode', 'single')
+        
+        # Determine if we should run in batch mode
+        # Priority: --batch flag > config mode > default (single)
+        batch_mode = args.batch or (config_mode == 'batch')
+        
+        if batch_mode:
             # Batch mode
-            if not args.source_dir or not args.target_dir:
-                parser.error("Batch mode requires --source-dir and --target-dir")
-            if not args.fiscal_year or not args.quarter:
-                parser.error("Batch mode requires --fiscal-year and --quarter")
+            # Get parameters from args or config
+            if config and config_mode == 'batch':
+                batch_config = config.get('batch', {})
+                batch_paths = batch_config.get('paths', {})
+                testing_period = config.get('testing_period', {})
+                
+                source_dir = args.source_dir or batch_paths.get('source_dir')
+                target_dir = args.target_dir or batch_paths.get('target_dir')
+                fiscal_year = args.fiscal_year or testing_period.get('fiscal_year')
+                quarter = args.quarter or testing_period.get('quarter')
+                
+                # Handle incidents config value
+                incidents_config = args.incidents or batch_config.get('incidents')
+                if incidents_config == 'all' or incidents_config is None:
+                    incidents = None  # Auto-discover
+                elif isinstance(incidents_config, str):
+                    incidents = incidents_config  # Will be split by CLI class
+                else:
+                    incidents = ','.join(incidents_config) if isinstance(incidents_config, list) else incidents_config
+                
+                # Get column mappings from config
+                column_mappings_raw = batch_config.get('column_mappings', [])
+                column_mappings = [
+                    ColumnMapping(
+                        source_col=m.get('source', ''),
+                        target_col=m.get('target', ''),
+                        description=m.get('description', '')
+                    )
+                    for m in column_mappings_raw
+                ]
+                
+                log_dir = batch_paths.get('log_output', 'logs')
+            else:
+                source_dir = args.source_dir
+                target_dir = args.target_dir
+                fiscal_year = args.fiscal_year
+                quarter = args.quarter
+                incidents = args.incidents
+                column_mappings = []
+                log_dir = 'logs'
+            
+            if not source_dir or not target_dir:
+                parser.error("Batch mode requires --source-dir and --target-dir (or batch config)")
+            if not fiscal_year or not quarter:
+                parser.error("Batch mode requires --fiscal-year and --quarter (or batch config)")
             
             cli = BatchDataPushCLI(
-                source_dir=args.source_dir,
-                target_dir=args.target_dir,
-                fiscal_year=args.fiscal_year,
-                quarter=args.quarter,
-                incidents=args.incidents,
+                source_dir=source_dir,
+                target_dir=target_dir,
+                fiscal_year=fiscal_year,
+                quarter=quarter,
+                incidents=incidents,
+                column_mappings=column_mappings,
+                log_dir=log_dir,
                 log_level=args.log_level,
                 dry_run=args.dry_run,
                 backup=not args.no_backup,
@@ -523,11 +604,18 @@ def main() -> int:
             
         else:
             # Single file mode
-            if not args.config and not (args.source_file and args.target_file):
-                parser.error("Either --config or both --source and --target are required")
+            # Check if config file exists (including default)
+            config_path = args.config if args.config else None
+            config_exists = config_path and Path(config_path).exists()
+            
+            if not config_exists and not (args.source_file and args.target_file):
+                if config_path:
+                    parser.error(f"Config file not found: {config_path}. Either provide a valid --config or both --source and --target")
+                else:
+                    parser.error("Either --config or both --source and --target are required")
             
             cli = DataPushCLI(
-                config_path=args.config,
+                config_path=config_path if config_exists else None,
                 source_file=args.source_file,
                 target_file=args.target_file,
                 output_file=args.output_file,

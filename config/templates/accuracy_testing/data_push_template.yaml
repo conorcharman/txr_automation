@@ -22,10 +22,10 @@ mode: "batch"
 # =============================================================================
 testing_period:
   # Fiscal year (e.g., FY25, FY26)
-  fiscal_year: "FY26"
+  fiscal_year: "FY25"
   
   # Quarter (e.g., Q1, Q2, Q3, Q4)
-  quarter: "Q1"
+  quarter: "Q4"
 
 # =============================================================================
 # Single Mode Configuration
@@ -53,11 +53,29 @@ single:
     log_output: "logs"
   
   # Column mappings (source → target)
+  # Note: Only columns that exist in BOTH source and target will be pushed
   column_mappings:
+    # Correction columns (main outputs)
     - source: "Correction"
       target: "Correction"
+    - source: "Correction Field"
+      target: "Correction Field"
+    
+    # Error/Status columns
     - source: "Error Flag"
       target: "Error Flag"
+    - source: "Error"
+      target: "Error"
+    - source: "Pass/Fail"
+      target: "Pass/Fail"
+    - source: "Failure Reason"
+      target: "Failure Reason"
+    
+    # Nationality columns
+    - source: "Prefixed Nationality"
+      target: "Prefixed Nationality"
+    - source: "Primary Nationality"
+      target: "Primary Nationality"
 
 # =============================================================================
 # Batch Mode Configuration
@@ -73,17 +91,17 @@ batch:
   
   paths:
     # Directory containing source files (validated data)
-    source_dir: "data/validated/FY26/Q1"
+    source_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated'
     
     # Directory containing target files (Kaizen master templates)
-    target_dir: "data/templates/FY26/Q1"
+    target_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis'
     
     # Backup directory (optional)
     # Original target files backed up before modification
-    backup_dir: "data/backups/FY26/Q1"
+    backup_dir: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\backups'
     
     # Log output directory
-    log_output: "logs"
+    log_output: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\logs'
   
   # Filename patterns - construct filenames for each incident
   # Available variables: {incident}, {fiscal_year}, {quarter}
@@ -99,20 +117,63 @@ batch:
       - "{incident}_validated.csv"
     
     # Target file (Kaizen master template) - file to update
-    # Example: FY26 Q1 7_37.csv
+    # Example: FY25 Q4 7_37.csv
     target: "{fiscal_year} {quarter} {incident}.csv"
     
     # Backup file (timestamped backup of target)
-    # Example: FY26_Q1_7_37_backup_20260128_143022.csv
+    # Example: FY25_Q4_7_37_backup_20260128_143022.csv
     backup: "{fiscal_year}_{quarter}_{incident}_backup_{timestamp}.csv"
   
   # Column mappings (source → target)
   # Applied to all incidents
+  # Note: Mapping between validation output columns and Kaizen template columns
   column_mappings:
+    # Identity columns (exist in both source and target)
+    - source: "Account ID"
+      target: "Account ID"
+    - source: "Person Code"
+      target: "Person Code"
+    
+    # ID columns (Buyer incidents - will be skipped for Seller incidents)
+    - source: "Buyer ID Code"
+      target: "Buyer ID Code"
+    - source: "Type of Buyer ID Code"
+      target: "Type of Buyer ID Code"
+    
+    # ID columns (Seller incidents - will be skipped for Buyer incidents)
+    - source: "Seller ID Code"
+      target: "Seller ID Code"
+    - source: "Type of Seller ID Code"
+      target: "Type of Seller ID Code"
+    
+    # Personal details (exist in both source and target)
+    - source: "First Name"
+      target: "First Name"
+    - source: "Surname"
+      target: "Surname"
+    - source: "Date of Birth"
+      target: "Date of Birth"
+    - source: "Gender"
+      target: "Gender"
+    - source: "Primary Nationality"
+      target: "Primary Nationality"
+    - source: "Secondary Nationality"
+      target: "Secondary Nationality"
+    - source: "Prefixed Nationality"
+      target: "Prefixed Nationality"
+    
+    # KEY MAPPINGS: Correction columns from validation
+    # Now using direct column names (no translation needed)
     - source: "Correction"
       target: "Correction"
-    - source: "Error Flag"
-      target: "Error Flag"
+      description: "Main correction output from validation"
+    - source: "Correction Field"
+      target: "Correction Field"
+      description: "Correction field identifier from validation"
+    
+    # Tracker status (exists in both)
+    - source: "Tracker Status"
+      target: "Tracker Status"
 
 # =============================================================================
 # Push Logic
@@ -134,7 +195,7 @@ push_logic:
     # If error flag = "N", push error flag only
     error_no:
       flag_value: "N"
-      push_columns: ["Error Flag"]
+      push_columns: "all"
     
     # If error flag = "TBC", skip (no push)
     error_tbc:
