@@ -1,0 +1,7 @@
+2026-02-09 10:57:05 - pricing_validation - INFO - ================================================================================
+2026-02-09 10:57:05 - pricing_validation - INFO - PRICING DATA VALIDATION v1.0
+2026-02-09 10:57:05 - pricing_validation - INFO - ================================================================================
+2026-02-09 10:57:05 - pricing_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\FY26 Q1 35_3.csv
+2026-02-09 10:57:05 - pricing_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\FY26 Q1 35_3.csv
+2026-02-09 10:57:05 - pricing_validation - INFO - Start time: 2026-02-09 10:57:05
+2026-02-09 10:57:05 - pricing_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\FY26 Q1 35_3.csv

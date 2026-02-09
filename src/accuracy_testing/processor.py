@@ -883,13 +883,32 @@ class InconsistentIDProcessor:
                 if record.is_fallback_id:
                     self.stats.fallback_ids_found += 1
                     record.is_valid_id = False  # Fallback IDs are not valid
+                    record.format_status = "Fail"
+                    record.logic_status = "N/A"
+                    record.failure_reason = "Fallback ID pattern detected"
                 else:
                     # Validate format + logic
                     format_valid, logic_valid = self.validate_id_complete(record, id_processor)
                     record.is_valid_id = format_valid and logic_valid
                     
-                    if not record.is_valid_id:
+                    # Populate Pass/Fail fields for all validated IDs
+                    if record.is_valid_id:
+                        record.format_status = "Pass"
+                        record.logic_status = "Pass"
+                        record.is_valid = True
+                        if "Pass" not in record.actions_taken:
+                            record.actions_taken.append("Pass")
+                    else:
                         self.stats.invalid_ids_found += 1
+                        # Populate failure details
+                        if not format_valid:
+                            record.format_status = "Fail"
+                            record.logic_status = "N/A"
+                            record.failure_reason = f"Invalid {record.id_type} format"
+                        else:
+                            record.format_status = "Pass"
+                            record.logic_status = "Fail"
+                            record.failure_reason = "ID logic validation failed (DOB/gender mismatch)"
             
             # Phase 5: Apply correction logic
             self.apply_prior_valid_corrections(records, record_indices)
