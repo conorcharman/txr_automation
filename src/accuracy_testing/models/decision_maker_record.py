@@ -138,45 +138,42 @@ class DecisionMakerRecord:
         row_index: int = 0
     ) -> "DecisionMakerRecord":
         """
-        Create DecisionMakerRecord from CSV row list.
+        Create DecisionMakerRecord from CSV row list (raw extract format).
 
         Args:
-            row: List of column values (minimum 10 columns required)
+            row: List of column values (minimum 7 columns required)
             party_type: "Buyer" or "Seller"
             row_index: Row number for tracking
 
         Returns:
             DecisionMakerRecord instance
 
-        Input Column Indices (0-based, 10 columns minimum):
+        Input Column Indices (0-based, 7 columns minimum from raw SQL extract):
             0: Transaction Reference
             1: Account ID
             2: Party Code (Buyer/Seller)
-            3: Type of Buyer/Seller ID (output column)
-            4: DM Code (Buyer/Seller Decision Maker)
-            5: Type of Buyer/Seller DM ID (output column)
-            6: Product (output column)
-            7: Account Type
-            8: Service Level
-            9: Branch Code
+            3: DM Code (Buyer/Seller Decision Maker)
+            4: Account Type
+            5: Service Level
+            6: Branch Code
 
-        Output columns (already included in input for validation):
-            - Type of Buyer/Seller ID (column 3)
-            - Type of Buyer/Seller DM ID (column 5)
-            - Product (column 6)
+        Output columns (derived during processing):
+            - Type of Buyer/Seller ID (derived from party_code)
+            - Type of Buyer/Seller DM ID (derived from dm_code)
+            - Product (derived from account_id prefix)
             - Error, Correction, Correction Field (added after validation)
         """
-        if len(row) < 10:
-            raise ValueError(f"Row must have at least 10 columns, got {len(row)}")
+        if len(row) < 7:
+            raise ValueError(f"Row must have at least 7 columns, got {len(row)}")
 
         return cls(
             transaction_ref=str(row[0]).strip() if row[0] else "",
             account_id=str(row[1]).strip() if row[1] else "",
             party_code=str(row[2]).strip() if row[2] else "",
-            dm_code=str(row[4]).strip() if len(row) > 4 and row[4] else "",
-            account_type=str(row[7]).strip() if len(row) > 7 and row[7] else "",
-            service_level=str(row[8]).strip() if len(row) > 8 and row[8] else "",
-            branch_code=str(row[9]).strip() if len(row) > 9 and row[9] else "",
+            dm_code=str(row[3]).strip() if len(row) > 3 and row[3] else "",
+            account_type=str(row[4]).strip() if len(row) > 4 and row[4] else "",
+            service_level=str(row[5]).strip() if len(row) > 5 and row[5] else "",
+            branch_code=str(row[6]).strip() if len(row) > 6 and row[6] else "",
             party_type=party_type,
             row_index=row_index,
         )

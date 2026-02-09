@@ -1,0 +1,968 @@
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Loading Italian tracker: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\Transaction Reporting - Italian Fiscal Code Validation.csv
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Loaded 188 Italian tracker records
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Loading template file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 7_66.csv
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Loaded 2327 template records
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - INCONSISTENT BUYER ID VALIDATION v1.3
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_66_FY25_Q4.csv
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_66.csv
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Start time: 2026-02-09 09:03:00
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_66_FY25_Q4.csv
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Detected encoding: utf-8
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Successfully read 2433 records
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - PHASE 1: INCONSISTENT ID PREPROCESSING
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Grouping by Person Code, sorting chronologically, applying prior-valid corrections...
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Starting inconsistent ID preprocessing for 2433 records
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Phase 1: Parsing Trade_Date_Time fields...
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Phase 2: Grouping records by Person Code...
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Found 309 unique Person Codes
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Phase 3: Processing person groups for inconsistencies...
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5VC6: Found 12 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 608: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1755: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1016: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 3: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 635: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2346: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 298: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1395: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 537: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1824: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2127: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 205: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A96177: Found 21 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1348: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1441: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2168: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1961: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 325: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 371: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1929: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1102: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 388: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1823: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1826: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2366: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2174: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1811: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 127: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 4: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2335: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1963: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2018: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2330: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2349: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADD9GX: Found 17 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCRCH: Found 39 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 19: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1367: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1126: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 319: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 399: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1962: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2049: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 722: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2309: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2034: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1531: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2050: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1075: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 855: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 685: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1662: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2432: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1939: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 845: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 883: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 645: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 922: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2025: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 829: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 49: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1604: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 495: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1277: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1620: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 359: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 825: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2368: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2099: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 61: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1852: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 587: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 7: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 10: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2235: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ACBYC9: Found 20 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AB8NGV: Found 20 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 598: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 583: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1462: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 955: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 459: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1116: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2147: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1527: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1764: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 139: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1588: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 779: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 545: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2219: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2238: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1333: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 9: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 533: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2226: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1935: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AB8NFC: Found 11 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABCTGX: Found 43 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABKT9T: Found 9 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 687: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 21: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5WML: Found 12 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2229: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1828: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 681: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 23: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1125: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 406: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1472: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1876: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1602: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1688: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1410: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2094: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5WKF: Found 27 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1214: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2082: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2067: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 134: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 861: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1519: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 539: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1429: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 964: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1248: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 327: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 374: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 476: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 200: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1468: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1146: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 28: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1459: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1593: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1913: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 97: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2259: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2221: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1134: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1460: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 764: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1413: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDTGH: Found 7 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 33: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 872: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2304: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1193: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1328: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 886: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 492: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADD2QW: Found 16 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1590: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1350: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 306: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1877: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 973: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1995: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1357: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 38: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 51: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 695: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1695: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1285: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 750: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 382: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 953: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 318: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5VXN: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 44: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1928: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1813: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1370: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AB5QKV: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 46: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A41995: Found 10 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 504: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 982: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1175: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 47: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 939: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB62R9: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 981: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 391: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 505: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 708: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 54: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2177: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABMV57: Found 14 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1971: Corrected to closest valid ID with prefix RO: RO056971180:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1179: Corrected to closest valid ID with prefix RO: RO056971180:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABT8HT: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1940: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 59: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1027: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A68339: Found 22 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 421: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 569: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 210: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 675: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 524: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 234: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1678: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1731: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1726: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1736: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1553: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 60: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 623: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 235: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1121: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1921: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1791: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 341: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1618: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2072: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1642: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2329: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A42347: Found 20 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 94: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1244: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1393: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 521: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1901: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 947: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1788: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1137: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 593: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1139: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 932: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 72: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2341: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 66: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 82: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1133: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1157: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 737: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADD99G: Found 12 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1778: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 67: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1434: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 986: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1719: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 304: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1701: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1296: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 393: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1024: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 74: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 378: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5T7L: Found 22 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 816: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 70: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 523: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1855: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1233: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 241: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 650: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2171: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2013: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1977: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1331: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 944: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 227: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 806: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2179: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1555: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2058: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 131: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 755: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1425: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2227: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 244: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDGXM: Found 27 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A39080: Found 19 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1830: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 603: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 73: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 462: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2289: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 439: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1297: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2016: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1263: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 928: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1235: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 772: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 293: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 162: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 451: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1275: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 361: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 704: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2182: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABLKPW: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1104: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADFJ8J: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 83: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 172: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2079: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2149: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABWW77: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 87: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 128: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AB9KJF: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDJNX: Found 14 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1200: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1500: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 880: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 725: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1606: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2044: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 567: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1353: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 432: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2084: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1554: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 90: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 133: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2030: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5VYG: Found 20 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1789: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1837: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1937: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1653: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 983: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 100: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 256: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1591: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 628: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 615: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 573: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1369: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1978: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2253: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 192: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1273: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1208: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1300: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 91: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1968: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5X9M: Found 39 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2282: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 616: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1933: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1763: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1321: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A83334: Found 7 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1522: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 575: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 95: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2114: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2161: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCXHP: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1890: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 96: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A02126: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 105: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ACCM7Y: Found 8 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 987: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2418: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 576: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2112: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1171: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 106: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 752: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1100: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person BBDB56: Found 19 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1349: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 994: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 508: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1377: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1854: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 377: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 108: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1540: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 195: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1096: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1957: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 423: Corrected to closest valid ID with prefix SE: SE197411144046:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB62MC: Found 5 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 119: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1526: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2274: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 586: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1951: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person BBCJRK: Found 22 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 712: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 937: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1270: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1989: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2358: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 506: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2035: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDYXN: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1363: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 126: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1035: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5X5N: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1739: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 132: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 232: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 747: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADD8WR: Found 5 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 800: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1582: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1352: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 141: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1627: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCX88: Found 7 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1306: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1714: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1028: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2345: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2190: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1032: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 146: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5TNQ: Found 12 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2041: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1766: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1833: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 445: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2029: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 703: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 417: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1099: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 149: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 805: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 280: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 461: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCVP7: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 807: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 154: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 340: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1634: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5TV8: Found 5 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 853: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1127: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 529: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2277: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 161: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A03520: Found 8 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABH8PR: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1272: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1318: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 183: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 268: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1237: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 167: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB62BL: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 657: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1383: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1818: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1547: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 174: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 818: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5TFH: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 179: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2126: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDLQ7: Found 11 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 948: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1546: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 601: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1391: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1159: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1038: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 380: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 180: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1457: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1312: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 216: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AC56XV: Found 7 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 718: Corrected to closest valid ID with prefix DK: DK1309772292:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1293: Corrected to closest valid ID with prefix DK: DK1309772292:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 892: Corrected to closest valid ID with prefix DK: DK1309772292:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 903: Corrected to closest valid ID with prefix DK: DK1309772292:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 494: Corrected to closest valid ID with prefix DK: DK1309772292:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDYMN: Found 13 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 941: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 190: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 991: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2038: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 871: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1124: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 604: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2110: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1374: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1998: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1031: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 520: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2104: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDPFN: Found 5 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2135: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 663: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 434: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 196: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1574: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person BB59W7: Found 10 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 199: Corrected to closest valid ID with prefix GB: GBYT382158A:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDJ55: Found 8 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 666: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDFG7: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 542: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 466: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 225: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1206: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1808: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 659: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A48570: Found 8 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5WJR: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 240: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 912: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 331: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2097: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABVQGP: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 286: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person BBGBYM: Found 11 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1040: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2012: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 249: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2069: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 699: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person BB59WR: Found 9 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1759: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 957: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABLMHF: Found 31 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABQQNR: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 980: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 261: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1006: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A31632: Found 14 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 528: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1754: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1162: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1243: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1358: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1732: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 267: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1059: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 867: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1687: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2371: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1335: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1647: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 396: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDPBT: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1735: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2297: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1599: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2151: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 272: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2066: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABRWHY: Found 13 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1518: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1718: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1988: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1311: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 784: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1073: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1809: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1832: Corrected to closest valid ID with prefix SE: SE198502141636:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person BB5JDJ: Found 16 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2107: Corrected to closest valid ID with prefix MT: MT0321068M:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 464: Corrected to closest valid ID with prefix MT: MT0321068M:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1761: Corrected to closest valid ID with prefix MT: MT0321068M:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 281: Corrected to closest valid ID with prefix MT: MT0321068M:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1231: Corrected to closest valid ID with prefix MT: MT0321068M:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 851: Corrected to closest valid ID with prefix MT: MT0321068M:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person BB5J7C: Found 16 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1402: Corrected to closest valid ID with prefix MT: MT1386635:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2404: Corrected to closest valid ID with prefix MT: MT1386635:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 612: Corrected to closest valid ID with prefix MT: MT1386635:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1884: Corrected to closest valid ID with prefix MT: MT1386635:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1008: Corrected to closest valid ID with prefix MT: MT1386635:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 345: Corrected to closest valid ID with prefix MT: MT1386635:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 323: Corrected to closest valid ID with prefix MT: MT1386635:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1295: Corrected to closest valid ID with prefix MT: MT1386635:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1692: Corrected to closest valid ID with prefix MT: MT1386635:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 365: Corrected to closest valid ID with prefix MT: MT1386635:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5VCY: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 285: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2086: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 443: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AC2YKF: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCVK5: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 749: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1838: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 856: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 321: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2225: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1799: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AB8RY8: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1242: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1309: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2199: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADD8YJ: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1230: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1643: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 351: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 588: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1767: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 968: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCW85: Found 9 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 363: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 891: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1279: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1303: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1981: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1210: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1663: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 493: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1345: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDBMB: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 969: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 370: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 787: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ACBFRX: Found 5 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 375: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1721: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1927: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2215: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1751: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5YDR: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 381: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 958: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDRCM: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1234: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 384: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 389: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABMNBR: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 701: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1835: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5W5X: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2210: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 409: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABKBTF: Found 5 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2180: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1346: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1109: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 420: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1720: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCVGN: Found 9 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 676: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 429: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 929: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2176: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1667: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1061: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1216: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 532: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2185: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person V00836: Found 16 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2021: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCWL5: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 804: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5XVJ: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1769: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2340: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 444: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2162: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A70013: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADD8RT: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AC6252: Found 8 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 875: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 512: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1142: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1115: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2023: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 497: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1184: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 467: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABQQNT: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2169: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 700: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 473: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AB2Y5G: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AC7N98: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 580: Corrected to closest valid ID with prefix SE: SE198908257416:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1068: Corrected to closest valid ID with prefix SE: SE198908257416:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDGXQ: Found 5 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 744: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 498: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1841: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 551: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1925: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5WQV: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1848: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 501: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDFYN: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 547: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1020: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5TRK: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1373: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABLJQJ: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 923: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADD77Q: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2298: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCVXJ: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 988: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1779: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1088: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABHYGF: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 599: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5W6X: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 602: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1245: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1229: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABPH9L: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 607: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADF7CJ: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1693: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 624: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABTT27: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 640: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2412: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1405: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCRDB: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2191: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1254: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 654: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABTJVJ: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1475: Corrected to closest valid ID with prefix SE: SE197802093356:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5TG8: Found 5 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 863: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 726: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2243: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1532: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1364: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADD6MQ: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2032: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2175: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1130: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 731: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ACCKNQ: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 743: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCPTT: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 754: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1138: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person A25084: Found 9 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCYG9: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 781: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1864: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 907: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5VBX: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 789: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1114: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5TRM: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1509: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 792: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABNL8W: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1403: Corrected to closest valid ID with prefix SE: SE199302052528:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1418: Corrected to closest valid ID with prefix SE: SE199302052528:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABF7BR: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person D02191: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 925: Corrected to closest valid ID with prefix GB: GBSN971779D:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABC5CR: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5WK9: Found 8 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1535: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1742: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1305: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1041: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 954: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1512: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1482: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2300: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABV9BD: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1013: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1983: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADCRR2: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1018: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1628: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADD6CY: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1969: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1072: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5WCG: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1119: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1908: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1438: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABT59P: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1147: Corrected to closest valid ID with prefix RO: RO063042805:CCPT
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5TLB: Found 6 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1617: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1887: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1148: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2217: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1568: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1189: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AC69JL: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1685: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1154: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABYTBB: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1597: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1665: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1178: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5WKR: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1537: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2137: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1301: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5TQF: Found 4 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1702: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABMRX9: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2120: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person V00997: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2248: Corrected to closest valid ID with prefix GB: GBJS568767D:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB62FH: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1511: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABDXV8: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1652: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2019: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2017: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person AC5562: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1659: Corrected to closest valid ID with prefix SE: SE198204215118:NIDN
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADF58W: Found 5 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1733: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1821: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2390: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1661: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2353: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person XB5WPH: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1696: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2062: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABRMXQ: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2068: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ABQGCV: Found 3 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2398: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 1753: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person ADDRWG: Found 2 records with inconsistent IDs
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Record 2024: No valid ID with matching prefix found, will use standard correction pipeline
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Preprocessing complete:
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   - Person groups processed: 309
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   - Inconsistent groups: 139
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   - Fallback IDs found: 0
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   - Invalid IDs found: 690
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   - Corrected from prior valid: 53
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   - No prior valid (need standard): 637
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - INCONSISTENT ID PREPROCESSING SUMMARY
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Total records:                 2433
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Person groups:                  309
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Inconsistent groups:            139
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Fallback IDs found:               0
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Invalid IDs found:              690
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Corrected from prior valid:      53
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - No prior valid ID:              637
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Valid-to-valid (no change):     401
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - PHASE 2: STANDARD VALIDATION FOR REMAINING RECORDS
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Records corrected from prior valid: 454
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Records needing standard validation: 1979
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 2: txn_ref='44625CKKTL61', found=True
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 2 (44625CKKTL61): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='FR19420530REGINDUQUE:CONCAT'
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 2 (44625CKKTL61): correction='FR19420530REGINDUQUE:CONCAT' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 4: txn_ref='44625CJGHM01', found=True
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CJGHM01): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='GB19610107MICHAROUTH:CONCAT'
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CJGHM01): correction='GB19610107MICHAROUTH:CONCAT' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 7: txn_ref='44625CLKVGB1', found=True
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CLKVGB1): Template found - kaizen_error='213800Y4I7TN34WUBD71:True', correction_output='AUADCRCH:NIDN'
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CLKVGB1): correction='AUADCRCH:NIDN' vs template='213800Y4I7TN34WUBD71:True'
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Writing output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_66.csv
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Successfully wrote 2433 records
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Writing errors-only CSV (1790 records with corrections)...
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Writing errors-only file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_66_errors_only.csv
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Successfully wrote 1790 error records
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - PROCESSING COMPLETE
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - End time: 2026-02-09 09:03:00
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Duration: 0:00:00.296256
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - PROCESSING SUMMARY
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Total records processed:       1979
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Valid records (no changes):     674
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Invalid records found:         1304
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   - Invalid format:            1297
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   - Invalid logic:                7
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Records corrected:             1335
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - CONCAT IDs generated:           606
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - No correction possible:           0
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - JNT accounts aggregated:          0
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Processing errors:                1
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - 
+ERRORS BY COUNTRY:
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   GB: 440
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   IN: 162
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   FR: 79
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   AU: 72
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   MY: 68
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   ZA: 44
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   HK: 41
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   NG: 38
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   IE: 30
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   BD: 25
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   PK: 24
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   CN: 23
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   PL: 22
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   ID: 21
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   CA: 18
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   NZ: 17
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   CY: 17
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   SE: 15
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   KR: 12
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   BR: 12
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   UA: 9
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   MX: 9
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   JP: 9
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   FI: 8
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   IL: 7
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   TN: 7
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   ZW: 7
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   IT: 6
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   TW: 5
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   BE: 5
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   PT: 5
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   DK: 5
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   RO: 5
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   ES: 4
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   DE: 4
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   MA: 4
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   GR: 3
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   MU: 3
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   NL: 3
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   KE: 2
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   AR: 2
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   TR: 2
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   LT: 2
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   BG: 2
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   PH: 2
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   PA: 1
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   GP: 1
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   CL: 1
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   VN: 1
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - 
+ERRORS BY ID TYPE:
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   Unknown: 599
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   CCPT: 454
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   NIDN: 251
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - 
+ITALIAN TRACKER ACTIONS:
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO -   Checked Tracker - Replaced With Fallback: 31
+2026-02-09 09:03:00 - inconsistent_buyer_id_validation - INFO - Inconsistent Buyer ID validation completed successfully

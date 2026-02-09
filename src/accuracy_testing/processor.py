@@ -855,6 +855,22 @@ class InconsistentIDProcessor:
             for idx in record_indices:
                 record = records[idx]
                 
+                # Auto-detect CONCAT when ID type is missing
+                # CONCATs are not stored in database but generated alongside transaction records
+                # This prevents false positives of invalid IDs due to missing type
+                if record.id_value and not record.id_type and record.priority_country_code:
+                    # Check if the ID matches CONCAT format for this country
+                    is_concat = id_processor.id_format_manager.validate(
+                        record.priority_country_code, "CONCAT", record.id_value
+                    )
+                    if is_concat:
+                        record.id_type = "CONCAT"
+                        record.actions_taken.append("Auto-detected ID type as CONCAT")
+                        self._log(
+                            f"[AUTO-DETECT] Row {record.row_index}: Detected CONCAT format "
+                            f"for ID '{record.id_value}' (type was empty)"
+                        )
+                
                 # Check if fallback ID pattern
                 record.is_fallback_id = self.is_fallback_id_pattern(
                     record.id_value,
@@ -1023,6 +1039,21 @@ class IDValidationProcessor:
             record.actions_taken.append("ERROR: Invalid nationality codes")
             self.stats.errors += 1
             return record
+        
+        # Auto-detect CONCAT when ID type is missing
+        # CONCATs are not stored in database but generated alongside transaction records
+        # This prevents false positives of invalid IDs due to missing type
+        if record.id_value and not record.id_type:
+            # Check if the ID matches CONCAT format for this country
+            is_concat = self.id_format_manager.validate(country_code, "CONCAT", record.id_value)
+            if is_concat:
+                record.id_type = "CONCAT"
+                record.actions_taken.append("Auto-detected ID type as CONCAT")
+                if self.verbose and self.logger:
+                    self.logger.debug(
+                        f"[AUTO-DETECT] Row {record.row_index}: Detected CONCAT format "
+                        f"for ID '{record.id_value}' (type was empty)"
+                    )
         
         # Step 1: Validate existing ID
         if record.id_value and record.id_type:
