@@ -1,0 +1,25 @@
+2026-02-09 09:51:03 - buyer_id_validation - INFO - Loading Italian tracker: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\Transaction Reporting - Italian Fiscal Code Validation.csv
+2026-02-09 09:51:04 - buyer_id_validation - INFO - Loaded 188 Italian tracker records
+2026-02-09 09:51:04 - buyer_id_validation - INFO - Loading template file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 7_35.csv
+2026-02-09 09:51:04 - buyer_id_validation - INFO - Loaded 13 template records
+2026-02-09 09:51:04 - buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:51:04 - buyer_id_validation - INFO - BUYER ID VALIDATION v3.0
+2026-02-09 09:51:04 - buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:51:04 - buyer_id_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_35_FY25_Q4.csv
+2026-02-09 09:51:04 - buyer_id_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_35.csv
+2026-02-09 09:51:04 - buyer_id_validation - INFO - Start time: 2026-02-09 09:51:04
+2026-02-09 09:51:04 - buyer_id_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_35_FY25_Q4.csv
+2026-02-09 09:51:04 - buyer_id_validation - INFO - Detected encoding: utf-8
+2026-02-09 09:51:04 - buyer_id_validation - INFO - Successfully read 12 records
+2026-02-09 09:51:04 - buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:51:04 - buyer_id_validation - INFO - PROCESSING RECORDS
+2026-02-09 09:51:04 - buyer_id_validation - INFO - ================================================================================
+2026-02-09 09:51:04 - buyer_id_validation - INFO - [DEBUG] Sample record 1:
+2026-02-09 09:51:04 - buyer_id_validation - INFO -   id_value: 'GB20210216ANTHOZALES'
+2026-02-09 09:51:04 - buyer_id_validation - INFO -   id_type: ''
+2026-02-09 09:51:04 - buyer_id_validation - INFO -   person_code: 'ACCLKV'
+2026-02-09 09:51:04 - buyer_id_validation - INFO -   first_name: 'ANTHONY'
+2026-02-09 09:51:04 - buyer_id_validation - INFO -   surname: 'ZAKESKI-MILNER'
+2026-02-09 09:51:04 - buyer_id_validation - INFO -   dob: '16/02/21'
+2026-02-09 09:51:04 - buyer_id_validation - INFO -   primary_nationality: 'GB'
+2026-02-09 09:51:04 - buyer_id_validation - INFO -   secondary_nationality: ''
