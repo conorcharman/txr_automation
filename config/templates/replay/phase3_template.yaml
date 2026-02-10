@@ -1,33 +1,37 @@
-# Example YAML configuration for Phase 3 Processor
-# Copy this file and modify paths as needed
+# Configuration for Phase 3 Processor
+# All sections are REQUIRED - no default values are provided
+# Copy this file and modify paths and patterns as needed
 
 paths:
   # Input replay files (CSV format)
-  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii/csv"
+  replay_input: 'C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii\FY25\Q4\csv'
   
   # Incident code reference files (CSV format)
-  incident_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files"
+  incident_files: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis'
   
   # Output directory for processed replay files
-  replay_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii"
+  replay_output: 'C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii\FY25\Q4\output'
   
   # Log output directory
-  log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
+  log_output: 'C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii\FY25\Q4\output\logs'
 
 files:
-  # Replay file patterns (glob syntax supported)
+  # REQUIRED: Replay file patterns (glob syntax supported)
   replay_patterns:
     - "Replay_*_PHASE 3_Inconsistent_IDs_Summary_FINAL.csv"
     - "Replay_*_PHASE 3_Inconsistent_Names_Summary_FINAL.csv"
   
-  # Incident file pattern (primary: space, fallback: dash for backwards compatibility)
-  incident_pattern: "FY25 Q3 *.csv"
+  # REQUIRED: Incident file pattern (e.g., "FY25 Q4 *.csv")
+  # Primary: space-separated (FY25 Q4 7_39.csv)
+  # Fallback: dash-separated for backwards compatibility (FY25 Q4 - 7_39.csv)
+  incident_pattern: "FY25 Q4 *.csv"
 
-# Incident template column mappings
+# REQUIRED: Incident template column mappings
 # These define which columns to read from incident template files
+# Column names must match exactly what's in your incident CSV headers
 incident_columns:
   transaction_ref: "Transaction Reference"
-  error_flag: "Error Flag"
+  error_flag: "Error"
   correction: "Correction"
   correction_field: "Correction Field"
   agree_with_correction: "Agree With Correction"
@@ -35,16 +39,19 @@ incident_columns:
   suggested_correction_field: "Suggested Correction Field"
 
 processor:
-  # Batch size for progress reporting
+  # REQUIRED: Batch size for progress reporting
   batch_size: 100
   
   # Log level (DEBUG, INFO, WARNING, ERROR)
   log_level: "INFO"
   
-  # Similarity threshold for fuzzy name matching (0.0 - 1.0)
+  # Optional: Similarity threshold for fuzzy name matching (0.0 - 1.0)
+  # Default: 0.85 if not specified
   similarity_threshold: 0.85
   
-  # Output filename pattern (e.g., replace KR with AJB)
+  # Optional: Output filename pattern replacement
+  # If specified, both 'from' and 'to' are required
+  # Example: replaces "_FINAL" with "_AJB" in output filenames
   replace_pattern:
-    from: "KR"
-    to: "AJB"
+    from: "_FINAL"
+    to: "_AJB"

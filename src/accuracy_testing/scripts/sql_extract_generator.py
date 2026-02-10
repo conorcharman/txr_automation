@@ -472,9 +472,11 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     # Check for incidents configuration
     incidents_config = batch_config.get('incidents', [])
     if incidents_config == 'all':
-        # Include ALL 11 automated incidents
-        incidents = ['7_35', '7_37', '7_39', '7_66', '12_17', '16_19', '16_21', '16_23', '16_20', '21_17', '35_3']
-        print(f"Auto-discovered all {len(incidents)} automated incidents")
+        # Get all automated incidents list from config
+        incidents = batch_config.get('all_incidents', [])
+        if not incidents:
+            raise ValueError("Configuration error: 'batch.all_incidents' is required when incidents: 'all' is specified")
+        print(f"Processing all {len(incidents)} automated incidents")
     elif isinstance(incidents_config, list):
         incidents = incidents_config
     else:

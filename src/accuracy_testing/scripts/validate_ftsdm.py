@@ -96,7 +96,6 @@ except ImportError:
 class SellerDecisionMakerValidator:
     """Main application class for Seller Decision Maker validation."""
 
-    INCIDENT_CODE = "21_17"
     PARTY_TYPE = "Seller"
 
     def __init__(
@@ -160,6 +159,11 @@ class SellerDecisionMakerValidator:
         processor_config["log_level"] = log_level
         processor_config["verbose"] = verbose
         self.config["processor"] = processor_config
+        
+        # Get incident code from config
+        self.incident_code = self.config.get("single", {}).get("incident_code")
+        if not self.incident_code:
+            raise ValueError("Configuration error: 'single.incident_code' is required in config file")
 
         # Setup logging
         self._setup_logging()
@@ -236,7 +240,7 @@ class SellerDecisionMakerValidator:
             FileNotFoundError: If required files are missing
             ValueError: If configuration is invalid
         """
-        self.logger.info(f"Starting Seller Decision Maker Validation (Incident {self.INCIDENT_CODE})")
+        self.logger.info(f"Starting Seller Decision Maker Validation (Incident {self.incident_code})")
         self.logger.info(f"Input file: {self.input_file}")
         self.logger.info(f"LEI data file: {self.lei_data_file}")
         self.logger.info(f"Output file: {self.output_file}")
@@ -275,7 +279,7 @@ class SellerDecisionMakerValidator:
     def _print_summary(self, stats: ValidationStats) -> None:
         """Print validation summary."""
         print("\n" + "=" * 60)
-        print(f"Seller Decision Maker Validation Complete (Incident {self.INCIDENT_CODE})")
+        print(f"Seller Decision Maker Validation Complete (Incident {self.incident_code})")
         print("=" * 60)
         print(f"Total records:              {stats.total:>8}")
         print(f"No error:                   {stats.no_error:>8}")

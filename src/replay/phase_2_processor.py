@@ -176,23 +176,29 @@ class Phase2Processor:
         # Character replacement utility
         self.char_replacer = CharacterReplacement()
         
-        # Incident template column configuration
-        self.incident_columns = self.config.get('incident_columns', {
-            'transaction_ref': 'Transaction Reference',
-            'error_flag': 'Error Flag',
-            'correction': 'Correction',
-            'correction_field': 'Correction Field',
-            'agree_with_correction': 'Agree With Correction',
-            'suggested_correction': 'Suggested Correction',
-            'suggested_correction_field': 'Suggested Correction Field'
-        })
+        # Incident file pattern from config (NO default - user must specify)
+        incident_pattern = self.config.get('files', {}).get('incident_pattern')
+        if not incident_pattern:
+            raise ValueError("Configuration error: 'files.incident_pattern' is required in config file")
+        self.incident_pattern = incident_pattern
+        
+        # Incident template column configuration (NO defaults - user must specify)
+        self.incident_columns = self.config.get('incident_columns')
+        if not self.incident_columns:
+            raise ValueError("Configuration error: 'incident_columns' section is required in config file")
         
         # Ultra-optimized: Pre-indexed incident files
         self.incident_indexes = {}  # incident_code -> IncidentFileIndex
         
-        # Output filename replacement pattern
-        self.replace_from = self.config.get('processor', {}).get('replace_pattern', {}).get('from', 'KR')
-        self.replace_to = self.config.get('processor', {}).get('replace_pattern', {}).get('to', 'AJB')
+        # Output filename replacement pattern (from config)
+        replace_config = self.config.get('processor', {}).get('replace_pattern', {})
+        self.replace_from = replace_config.get('from', '')
+        self.replace_to = replace_config.get('to', '')
+        
+        if self.replace_from and not self.replace_to:
+            raise ValueError("Configuration error: 'replace_pattern.to' is required when 'replace_pattern.from' is specified")
+        if self.replace_to and not self.replace_from:
+            raise ValueError("Configuration error: 'replace_pattern.from' is required when 'replace_pattern.to' is specified")
     
     def detect_file_type(self, filename: str) -> str:
         """Detect if file is single or combined incident type"""
@@ -268,16 +274,19 @@ class Phase2Processor:
             )
     
     def find_incident_file(self, incident_code: str) -> Optional[str]:
-        """Find incident file for given code"""
+        """Find incident file for given code using configurable pattern"""
+        # Extract prefix from pattern (e.g., "FY25 Q4 " from "FY25 Q4 *.csv")
+        pattern_prefix = self.incident_pattern.replace('*.csv', '').strip()
+        
         # Try primary pattern (space, no dash)
-        pattern = f"FY25 Q3 {incident_code}.csv"
+        pattern = f"{pattern_prefix} {incident_code}.csv"
         filepath = os.path.join(self.path_config.incident_files, pattern)
         
         if os.path.exists(filepath):
             return filepath
         
-        # Try backwards compatible pattern (with dash)
-        pattern_with_dash = f"FY25 Q3 - {incident_code}.csv"
+        # Backwards compatibility: Try with dash
+        pattern_with_dash = f"{pattern_prefix} - {incident_code}.csv"
         filepath_with_dash = os.path.join(self.path_config.incident_files, pattern_with_dash)
         
         if os.path.exists(filepath_with_dash):

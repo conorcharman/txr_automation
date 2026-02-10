@@ -61,9 +61,16 @@ single:
 batch:
   # Incidents to process
   # Options:
-  #   - "auto": Auto-discover all standard buyer incidents (7_35, 7_37, 7_39)
+  #   - "auto": Auto-discover all standard buyer incidents using auto_incidents list
   #   - List: ["7_35", "7_37", "7_39"]
   incidents: "auto"
+  
+  # Incident codes for auto-discovery mode
+  # Used when incidents: "auto" is specified
+  auto_incidents:
+    - "7_35"  # Incorrect CONCAT value
+    - "7_37"  # Incorrect NIDN value
+    - "7_39"  # Incorrect CCPT value
   
   paths:
     # Directory containing extract files (SQL database exports)
