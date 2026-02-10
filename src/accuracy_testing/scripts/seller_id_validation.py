@@ -509,8 +509,10 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
     # Check for auto-discovery of incidents
     incidents_config = batch_config.get('incidents', [])
     if incidents_config == 'auto':
-        # Auto-discover all standard seller incidents (16_19, 16_21, 16_23)
-        incidents = ['16_19', '16_21', '16_23']
+        # Get auto-discovery list from config
+        incidents = batch_config.get('auto_incidents', [])
+        if not incidents:
+            raise ValueError("Configuration error: 'batch.auto_incidents' is required when incidents: 'auto' is specified")
         print(f"Auto-discovered {len(incidents)} standard seller incidents: {', '.join(incidents)}")
     elif isinstance(incidents_config, list):
         incidents = incidents_config

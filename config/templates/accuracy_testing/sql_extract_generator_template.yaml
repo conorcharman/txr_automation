@@ -63,9 +63,23 @@ single:
 batch:
   # Incidents to process
   # Options:
-  #   - "all": Process ALL 11 automated incidents
+  #   - "all": Process ALL automated incidents using all_incidents list
   #   - List: ["7_35", "7_37", "7_39", "7_66", "12_17", "16_19", "16_21", "16_23", "16_20", "21_17", "35_3"]
   incidents: "all"
+  
+  # All automated incident codes (used when incidents: "all" is specified)
+  all_incidents:
+    - "7_35"   # Buyer ID: CONCAT
+    - "7_37"   # Buyer ID: NIDN
+    - "7_39"   # Buyer ID: CCPT
+    - "7_66"   # Inconsistent Buyer ID
+    - "12_17"  # Buyer Decision Maker
+    - "16_19"  # Seller ID: CONCAT
+    - "16_21"  # Seller ID: NIDN
+    - "16_23"  # Seller ID: CCPT
+    - "16_20"  # Inconsistent Seller ID
+    - "21_17"  # Seller Decision Maker
+    - "35_3"   # Pricing Validation
   
   paths:
     # Directory containing template CSV files

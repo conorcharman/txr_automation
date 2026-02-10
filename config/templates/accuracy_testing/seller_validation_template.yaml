@@ -61,9 +61,16 @@ single:
 batch:
   # Incidents to process
   # Options:
-  #   - "auto": Auto-discover all standard seller incidents (16_19, 16_21, 16_23)
+  #   - "auto": Auto-discover all standard seller incidents using auto_incidents list
   #   - List: ["16_19", "16_21", "16_23"]
   incidents: "auto"
+  
+  # Incident codes for auto-discovery mode
+  # Used when incidents: "auto" is specified
+  auto_incidents:
+    - "16_19"  # Incorrect CONCAT value
+    - "16_21"  # Incorrect NIDN value
+    - "16_23"  # Incorrect CCPT value
   
   paths:
     # Directory containing extract files (SQL database exports)

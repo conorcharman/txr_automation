@@ -55,9 +55,14 @@ single:
 batch:
   # Incidents to process
   # Options:
-  #   - "auto": Auto-discover all pricing incidents (35_3)
+  #   - "auto": Auto-discover all pricing incidents using auto_incidents list
   #   - List: ["35_3"]
   incidents: "auto"
+  
+  # Incident codes for auto-discovery mode
+  # Used when incidents: "auto" is specified
+  auto_incidents:
+    - "35_3"  # Incorrect Value Compensation for Trading Positions
   
   paths:
     # Directory containing template files (Kaizen expected values)

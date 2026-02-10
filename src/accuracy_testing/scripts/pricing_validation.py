@@ -378,9 +378,11 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
     # Check for incidents configuration
     incidents_config = batch_config.get('incidents', [])
     if incidents_config == 'auto':
-        # Auto-discover pricing incident (35_3)
-        incidents = ['35_3']
-        print(f"Auto-discovered pricing incident: 35_3")
+        # Get auto-discovery list from config
+        incidents = batch_config.get('auto_incidents', [])
+        if not incidents:
+            raise ValueError("Configuration error: 'batch.auto_incidents' is required when incidents: 'auto' is specified")
+        print(f"Auto-discovered {len(incidents)} pricing incident(s): {', '.join(incidents)}")
     elif isinstance(incidents_config, list):
         incidents = incidents_config
     else:
