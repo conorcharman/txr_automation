@@ -1,0 +1,46 @@
+# Run All Validations Configuration
+# This config file allows customization of which validations to run
+# and their respective configuration files
+
+validations:
+  - name: "buyer"
+    script_module: "src.accuracy_testing.scripts.buyer_id_validation"
+    config_file: "config/local/accuracy_testing/buyer_validation.yaml"
+    enabled: true
+    description: "Buyer ID Validation (7_5, 7_6)"
+
+  - name: "seller"
+    script_module: "src.accuracy_testing.scripts.seller_id_validation"
+    config_file: "config/local/accuracy_testing/seller_validation.yaml"
+    enabled: true
+    description: "Seller ID Validation (7_7, 7_8)"
+
+  - name: "inconsistent-buyer"
+    script_module: "src.accuracy_testing.scripts.inconsistent_buyer_id_validation"
+    config_file: "config/local/accuracy_testing/inconsistent_buyer_validation.yaml"
+    enabled: true
+    description: "Inconsistent Buyer ID Validation (7_37, 7_38)"
+
+  - name: "inconsistent-seller"
+    script_module: "src.accuracy_testing.scripts.inconsistent_seller_id_validation"
+    config_file: "config/local/accuracy_testing/inconsistent_seller_validation.yaml"
+    enabled: true
+    description: "Inconsistent Seller ID Validation (7_39, 7_40)"
+
+  - name: "ftbdm"
+    script_module: "src.accuracy_testing.scripts.validate_ftbdm"
+    config_file: "config/local/accuracy_testing/ftbdm_validation.yaml"
+    enabled: true
+    description: "Field 27 Buyer Decision Maker Validation"
+
+  - name: "ftsdm"
+    script_module: "src.accuracy_testing.scripts.validate_ftsdm"
+    config_file: "config/local/accuracy_testing/ftsdm_validation.yaml"
+    enabled: true
+    description: "Field 28 Seller Decision Maker Validation"
+
+  - name: "pricing"
+    script_module: "src.accuracy_testing.scripts.pricing_validation"
+    config_file: "config/local/accuracy_testing/pricing_validation.yaml"
+    enabled: true
+    description: "Pricing Validation"

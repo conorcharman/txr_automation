@@ -53,7 +53,10 @@ The package installs console scripts for easy command-line access:
 # Activate environment first
 conda activate txr_automation
 
-# Accuracy Testing - Batch Mode
+# Accuracy Testing - Run All Validations
+validate-all            # Run all validation scripts in sequence
+
+# Accuracy Testing - Individual Validations
 validate-buyer          # Buyer ID validation (7_35, 7_37, 7_39)
 validate-seller         # Seller ID validation (16_19, 16_21, 16_23)
 validate-pricing        # Pricing validation (35_3)

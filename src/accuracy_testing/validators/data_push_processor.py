@@ -6,19 +6,18 @@ Core logic for pushing validation results to master tracking files.
 
 This processor consolidates accuracy testing results back to centralised
 tracking files after validation is complete. It matches records by
-transaction reference and updates target columns based on the error flag.
+transaction reference and updates target columns with validation results.
 
-Business Logic (from VBA DataPush1_0.vb):
-    1. Load source CSV (validation output with Error column)
-    2. Load target CSV (master tracking file)
+Business Logic (Updated v1.1):
+    1. Load source CSV (validation output with "Error" column)
+    2. Load target CSV (master tracking file/template with "Error" column)
     3. For each source record:
        a. Find matching row in target by Transaction Reference
-       b. If Error = "Y": Push all configured columns
-       c. If Error = "N": Only push "N" to error column
-       d. If no match: Log as not found
+       b. Push ALL validation columns (Error, Correction, etc.)
+       c. This allows QA to see all records regardless of error status
     4. Write updated target file
 
-Version: 1.0
+Version: 1.1 (Push all records for QA)
 Migrated from: DataPush1_0.vb
 """
 
@@ -231,6 +230,14 @@ class DataPushProcessor:
             # Push all mapped columns
             push_values = record.get_push_values(self.config.column_mappings)
             
+            # Debug logging for Error column
+            if "Error" in record.source_data:
+                self.logger.debug(
+                    f"Transaction {record.transaction_ref}: "
+                    f"Error value in source = '{record.source_data.get('Error')}', "
+                    f"pushing {len(push_values)} columns"
+                )
+            
             for target_col, value in push_values.items():
                 if target_col in self.target_df.columns:
                     self.target_df.at[record.target_row_index, target_col] = value
@@ -282,7 +289,17 @@ class DataPushProcessor:
             return None
         
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        backup_path = target_path.with_suffix(f".backup_{timestamp}.csv")
+        
+        # Determine backup location
+        if self.config.backup_dir:
+            # Use configured backup directory
+            backup_dir = Path(self.config.backup_dir)
+            backup_dir.mkdir(parents=True, exist_ok=True)
+            backup_filename = f"{target_path.stem}.backup_{timestamp}.csv"
+            backup_path = backup_dir / backup_filename
+        else:
+            # Default: same directory as target file
+            backup_path = target_path.with_suffix(f".backup_{timestamp}.csv")
         
         try:
             shutil.copy2(target_path, backup_path)
@@ -407,6 +424,7 @@ class BatchDataPushProcessor:
         fiscal_year: str,
         quarter: str,
         column_mappings: Optional[List] = None,
+        backup_dir: Optional[Path] = None,
         logger: Optional[logging.Logger] = None,
     ):
         """
@@ -418,6 +436,7 @@ class BatchDataPushProcessor:
             fiscal_year: Fiscal year (e.g., FY26)
             quarter: Quarter (e.g., Q1)
             column_mappings: Optional list of column mappings to use
+            backup_dir: Optional directory for backup files
             logger: Optional logger instance
         """
         self.base_source_dir = Path(base_source_dir)
@@ -425,6 +444,7 @@ class BatchDataPushProcessor:
         self.fiscal_year = fiscal_year
         self.quarter = quarter
         self.column_mappings = column_mappings
+        self.backup_dir = Path(backup_dir) if backup_dir else None
         self.logger = logger or logging.getLogger(__name__)
         
         # Results storage
@@ -565,6 +585,7 @@ class BatchDataPushProcessor:
             quarter=self.quarter,
             incident_code=incident,
             column_mappings=self.column_mappings or [],
+            backup_dir=self.backup_dir,
         )
         
         processor = DataPushProcessor(config=config, logger=self.logger)

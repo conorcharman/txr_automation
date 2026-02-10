@@ -550,9 +550,9 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
     total_failed = 0
     
     for incident in incidents:
-        print(f"\n{'─'*70}")
+        print(f"\n{'-'*70}")
         print(f"Processing incident: {incident}")
-        print(f"{'─'*70}")
+        print(f"{'-'*70}")
         
         # Check validation type and route accordingly
         validation_type = get_validation_type(incident)
@@ -617,11 +617,11 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
             )
             validator.run()
             
-            print(f"✓ Completed: {incident}")
+            print(f"[PASS] Completed: {incident}")
             total_success += 1
             
         except Exception as e:
-            print(f"✗ Failed: {incident} - {e}")
+            print(f"[FAIL] Failed: {incident} - {e}")
             total_failed += 1
             continue
     

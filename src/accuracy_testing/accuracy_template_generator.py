@@ -69,7 +69,7 @@ class TemplateFormat:
         "Prefixed Nationality",
         "Primary Nationality",
         "Secondary Nationality",
-        "Error Flag",
+        "Error",
         "Correction",
         "Correction Field",
         "Tracker Status"
@@ -89,7 +89,7 @@ class TemplateFormat:
         "Prefixed Nationality",
         "Primary Nationality",
         "Secondary Nationality",
-        "Error Flag",
+        "Error",
         "Correction",
         "Correction Field",
         "Tracker Status"

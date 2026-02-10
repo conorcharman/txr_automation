@@ -269,11 +269,19 @@ class Phase2Processor:
     
     def find_incident_file(self, incident_code: str) -> Optional[str]:
         """Find incident file for given code"""
-        pattern = f"FY25 Q3 - {incident_code}.csv"
+        # Try primary pattern (space, no dash)
+        pattern = f"FY25 Q3 {incident_code}.csv"
         filepath = os.path.join(self.path_config.incident_files, pattern)
         
         if os.path.exists(filepath):
             return filepath
+        
+        # Try backwards compatible pattern (with dash)
+        pattern_with_dash = f"FY25 Q3 - {incident_code}.csv"
+        filepath_with_dash = os.path.join(self.path_config.incident_files, pattern_with_dash)
+        
+        if os.path.exists(filepath_with_dash):
+            return filepath_with_dash
         
         # Fallback glob search
         glob_pattern = os.path.join(self.path_config.incident_files, f"*{incident_code}*.csv")

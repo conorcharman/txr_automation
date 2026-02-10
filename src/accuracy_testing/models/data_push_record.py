@@ -7,7 +7,13 @@ Data structure for pushing validation results to master tracking files.
 This module handles the consolidation of accuracy testing results back
 to centralised tracking files after validation is complete.
 
-Version: 1.0
+Business Logic:
+    - ALL records are pushed to templates for QA purposes
+    - Records are matched by Transaction Reference
+    - All validation columns are copied (Error, Correction, etc.)
+    - Both validation outputs and templates use "Error" column name
+
+Version: 1.1 (Updated to push all records)
 Migrated from: DataPush1_0.vb
 """
 
@@ -101,23 +107,10 @@ class DataPushRecord:
         transaction_ref = str(data.get(transaction_ref_column, "")).strip()
         error_flag = str(data.get(error_column, "")).strip()
         
-        # Determine action based on error flag
-        # N = No error → only update error flag
-        # Y = Error with correction → push all columns
-        # TBC (or variants) = Requires investigation → skip until decided
-        # Empty/missing = Skip
-        if not error_flag:
-            action = PushAction.SKIP
-        elif error_flag.upper() == "N":
-            action = PushAction.UPDATE_ERROR_ONLY
-        elif error_flag.upper() == "Y":
-            action = PushAction.UPDATE_ALL
-        elif error_flag.upper().startswith("TBC"):
-            # TBC records require investigation - skip until decided
-            action = PushAction.SKIP
-        else:
-            # Unknown error value - skip to be safe
-            action = PushAction.SKIP
+        # Push ALL records for QA purposes
+        # Default to UPDATE_ALL to push all columns regardless of error status
+        # This allows QA to see all records in the template
+        action = PushAction.UPDATE_ALL
         
         return cls(
             transaction_ref=transaction_ref,
@@ -158,12 +151,12 @@ class DataPushRecord:
         result = {}
         
         if self.action == PushAction.UPDATE_ALL:
-            # Push all mapped columns
+            # Push all mapped columns (including empty values for QA)
             for mapping in column_mappings:
                 if mapping.source_col in self.source_data:
                     value = self.source_data[mapping.source_col]
-                    if value is not None and str(value).strip():
-                        result[mapping.target_col] = value
+                    # Push all values including empty ones for QA purposes
+                    result[mapping.target_col] = value if value is not None else ""
                         
         elif self.action == PushAction.UPDATE_ERROR_ONLY:
             # Only push error flag column
@@ -235,6 +228,7 @@ class DataPushConfig:
     transaction_ref_column: str = "Transaction Reference"
     dry_run: bool = False
     backup: bool = True
+    backup_dir: Optional[Path] = None
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "DataPushConfig":
@@ -261,6 +255,8 @@ class DataPushConfig:
         paths = data.get("paths", {})
         source_file = Path(paths.get("source_file", ""))
         target_file = Path(paths.get("target_file", ""))
+        backup_dir_str = paths.get("backup_dir")
+        backup_dir = Path(backup_dir_str) if backup_dir_str else None
         
         # Get testing period
         period = data.get("testing_period", {})
@@ -278,6 +274,7 @@ class DataPushConfig:
             ),
             dry_run=data.get("options", {}).get("dry_run", False),
             backup=data.get("options", {}).get("backup", True),
+            backup_dir=backup_dir,
         )
 
 
@@ -298,16 +295,19 @@ DEFAULT_COLUMN_MAPPINGS = [
     ColumnMapping("Gender", "Gender", "Client gender"),
     ColumnMapping("Primary Nationality", "Primary Nationality", "Primary nationality code"),
     ColumnMapping("Secondary Nationality", "Secondary Nationality", "Secondary nationality code"),
-    # Correction columns
-    ColumnMapping("Correction Output", "Correction Output", "Suggested correction (ID:TYPE format)"),
-    ColumnMapping("Correction Fields", "Correction Fields", "Fields being corrected (ID:IDT format)"),
+    # Correction columns (same column names in validation output and template)
+    ColumnMapping("Error", "Error", "Validation error flag (Y/N)"),
+    ColumnMapping("Correction", "Correction", "Suggested correction (ID:TYPE format)"),
+    ColumnMapping("Correction Field", "Correction Field", "Fields being corrected (ID:IDT format)"),
+    ColumnMapping("Agree With Correction", "Agree With Correction", "Analyst agreement with correction"),
+    ColumnMapping("Suggested Correction", "Suggested Correction", "Analyst suggested alternative correction"),
+    ColumnMapping("Suggested Correction Field", "Suggested Correction Field", "Fields for analyst correction"),
     # Status columns
     ColumnMapping("Tracker Status", "Tracker Status", "Status from tracker system"),
     ColumnMapping("Pass/Fail", "Pass/Fail", "Format and logic validation result"),
     ColumnMapping("Failure Reason", "Failure Reason", "Specific reason for validation failure"),
     ColumnMapping("Actions Taken", "Actions Taken", "Actions taken on this record"),
-    # Error/Match columns
-    ColumnMapping("Error", "Error", "Validation error flag (Y/N)"),
+    # Match columns
     ColumnMapping("Kaizen Error", "Kaizen Error", "Template lookup result (ID:TYPE)"),
     ColumnMapping("Match", "Match", "Match result (TRUE/FALSE)"),
 ]

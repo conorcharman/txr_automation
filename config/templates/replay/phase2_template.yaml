@@ -19,8 +19,8 @@ files:
   replay_patterns:
     - "*.csv"
   
-  # Incident file pattern
-  incident_pattern: "FY25 Q3 - *.csv"
+  # Incident file pattern (primary: space, fallback: dash for backwards compatibility)
+  incident_pattern: "FY25 Q3 *.csv"
 
 # Incident template column mappings
 # These define which columns to read from incident template files

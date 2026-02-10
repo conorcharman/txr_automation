@@ -1,0 +1,10 @@
+2026-02-09 17:09:54 - validate_ftbdm - INFO - Starting Buyer Decision Maker Validation (Incident 12_17)
+2026-02-09 17:09:54 - validate_ftbdm - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\12_17_FY25_Q4.csv
+2026-02-09 17:09:54 - validate_ftbdm - INFO - LEI data file: c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\lei_reference.csv
+2026-02-09 17:09:54 - validate_ftbdm - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_12_17.csv
+2026-02-09 17:09:54 - validate_ftbdm - INFO - Loaded 15 LEI mappings
+2026-02-09 17:09:54 - validate_ftbdm - INFO - Loaded 2882 records from C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\12_17_FY25_Q4.csv
+2026-02-09 17:09:54 - validate_ftbdm - INFO - Loaded 2882 records
+2026-02-09 17:09:54 - validate_ftbdm - INFO - Validation complete: 2882 total, 2882 no error, 0 errors, 0 TBC
+2026-02-09 17:09:54 - validate_ftbdm - INFO - Wrote 2882 records to C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_12_17.csv
+2026-02-09 17:09:54 - validate_ftbdm - INFO - Results written to C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_12_17.csv
