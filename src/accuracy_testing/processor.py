@@ -66,8 +66,8 @@ class AccuracyPathConfig:
         italian_tracker: Path to Italian tracker Excel file (optional)
         main_tracker: Path to main tracker Excel file (optional)
         template_file: Path to template Excel file for Kaizen lookup (optional)
-        template_id_column: Column index for expected ID in template (0-based, default 23 for column X)
-        template_type_column: Column index for expected type in template (0-based, default 24 for column Y)
+        template_id_column: Column name for expected ID in template (default: auto-detect based on client_type)
+        template_type_column: Column name for expected type in template (default: auto-detect based on client_type)
     """
     input_file: str
     output_file: str
@@ -75,8 +75,8 @@ class AccuracyPathConfig:
     italian_tracker: str = ""
     main_tracker: str = ""
     template_file: str = ""
-    template_id_column: int = 23
-    template_type_column: int = 24
+    template_id_column: str = ""
+    template_type_column: str = ""
 
 
 @dataclass
@@ -207,8 +207,8 @@ class AccuracyConfigManager:
             italian_tracker=paths.get('italian_tracker', ''),
             main_tracker=paths.get('main_tracker', ''),
             template_file=paths.get('template_file', ''),
-            template_id_column=paths.get('template_id_column', 23),
-            template_type_column=paths.get('template_type_column', 24)
+            template_id_column=paths.get('template_id_column', ''),
+            template_type_column=paths.get('template_type_column', '')
         )
     
     @staticmethod
@@ -997,7 +997,7 @@ class IDValidationProcessor:
     
     def __init__(self, client_type: str = "buyer", logger=None, verbose: bool = False, 
                  italian_tracker_path: str = "", main_tracker_path: str = "", template_path: str = "",
-                 template_id_column: int = 23, template_type_column: int = 24):
+                 template_id_column: str = "", template_type_column: str = ""):
         """
         Initialize processor.
         
@@ -1016,6 +1016,13 @@ class IDValidationProcessor:
         self.italian_tracker_path = italian_tracker_path
         self.main_tracker_path = main_tracker_path
         self.template_path = template_path
+        
+        # Auto-detect column names based on client type if not provided
+        if not template_id_column:
+            template_id_column = "Buyer ID Code" if client_type == "buyer" else "Seller ID Code"
+        if not template_type_column:
+            template_type_column = "Type of Buyer ID Code" if client_type == "buyer" else "Type of Seller ID Code"
+        
         self.template_id_column = template_id_column
         self.template_type_column = template_type_column
         
@@ -1078,6 +1085,8 @@ class IDValidationProcessor:
             record.validation_error = "No valid country code found"
             record.actions_taken.append("ERROR: Invalid nationality codes")
             self.stats.errors += 1
+            # Perform template validation before early exit to ensure Error field is populated
+            self._perform_template_validation(record)
             return record
         
         # Step 1: Validate existing ID
@@ -1546,12 +1555,26 @@ class IDValidationProcessor:
         """
         Clean name for CONCAT generation following VBA CleanNameForCONCAT logic.
         
+        IMPORTANT: For surnames, ALL parts (except prefixes) should be included.
+        Multi-part surnames like "ROIG-MEYN" become "ROIGMEYN" then truncated to "ROIGM".
+        
         Args:
             name_value: Name to clean
-            is_surname: True if surname (applies prefix removal), False if first name
+            is_surname: True if surname (applies prefix removal, keeps ALL parts), 
+                       False if first name (takes FIRST word only)
             
         Returns:
             5-character cleaned name padded with #
+            
+        Examples:
+            >>> _clean_name_for_concat("ROIG-MEYN", True)   # surname
+            "ROIGM"  # All parts included: ROIG-MEYN → ROIGMEYN → ROIGM
+            
+            >>> _clean_name_for_concat("VON SMITH", True)  # surname with prefix
+            "SMITH"  # Prefix removed: VON SMITH → SMITH → SMITH
+            
+            >>> _clean_name_for_concat("JEAN PAUL", False)  # first name
+            "JEAN#"  # Only first word: JEAN PAUL → JEAN → JEAN#
         """
         if not name_value or not name_value.strip():
             return "#####"
@@ -1563,33 +1586,56 @@ class IDValidationProcessor:
             cleaned_name = cleaned_name.split(",")[0].strip()
         
         if is_surname:
-            # Remove common surname prefixes
+            # Remove common surname prefixes (VON, VAN, DE, etc.)
+            # IMPORTANT: After prefix removal, ALL remaining parts of the surname 
+            # are kept (including parts separated by hyphens, spaces, apostrophes)
             cleaned_name = self._remove_name_prefixes(cleaned_name)
+            
+            # DO NOT split or truncate multi-part surnames here
+            # Examples:
+            #   "ROIG-MEYN" stays as "ROIG-MEYN" (not split to "ROIG")
+            #   "O'BRIEN" stays as "O'BRIEN" (not split to "O")
+            #   "VAN DER BERG" (after prefix removal) → "BERG"
+            
         else:
-            # For first names, take first word only
+            # For first names, take ONLY the first word (split on whitespace)
+            # This handles cases like "JEAN PAUL" → "JEAN"
+            # Note: Hyphens are NOT treated as word separators here
+            # "JEAN-PAUL" is one word → "JEAN-PAUL" (hyphen removed later)
             name_parts = cleaned_name.split()
             if name_parts:
                 cleaned_name = name_parts[0]
         
-        # Remove special characters
+        # Remove ALL special characters (hyphens, apostrophes, dots, spaces)
+        # This happens AFTER prefix removal and AFTER first-word extraction
+        # Ensures multi-part surnames like "ROIG-MEYN" → "ROIGMEYN" (not "ROIG")
         for char in ["-", "'", ".", " "]:
             cleaned_name = cleaned_name.replace(char, "")
         
         if not cleaned_name:
             return "#####"
         
-        # Pad to 5 characters with #
+        # Take first 5 characters and pad with # if needed
         return (cleaned_name + "#####")[:5]
     
     def _remove_name_prefixes(self, surname: str) -> str:
         """
         Remove common surname prefixes (VON, VAN, DE, etc.) following VBA logic.
         
+        IMPORTANT: This only removes the PREFIX, not any other parts of the surname.
+        Multi-part surnames after prefix removal keep ALL remaining parts.
+        
         Args:
             surname: Surname to process
             
         Returns:
-            Surname with prefix removed
+            Surname with prefix removed (all other parts intact)
+            
+        Examples:
+            >>> _remove_name_prefixes("VON SMITH")      → "SMITH"
+            >>> _remove_name_prefixes("VAN DER BERG")   → "BERG"
+            >>> _remove_name_prefixes("DE ROIG-MEYN")   → "ROIG-MEYN"  # All parts kept!
+            >>> _remove_name_prefixes("ROIG-MEYN")      → "ROIG-MEYN"  # No prefix, unchanged
         """
         prefixes = [
             "VON DER ", "VAN DER ", "VAN DE ", "DE LA ",
@@ -1598,10 +1644,14 @@ class IDValidationProcessor:
         
         surname_upper = surname.upper().strip()
         
+        # Check each prefix in order (longer prefixes first to avoid partial matches)
         for prefix in prefixes:
             if surname_upper.startswith(prefix):
-                return surname_upper[len(prefix):].strip()
+                # Remove ONLY the prefix, keep all remaining parts
+                remaining = surname_upper[len(prefix):].strip()
+                return remaining
         
+        # No prefix found, return surname unchanged
         return surname_upper
     
     def process_batch(
@@ -1685,18 +1735,32 @@ class IDValidationProcessor:
         try:
             if self.logger:
                 self.logger.info(f"Loading template file: {file_path}")
+                self.logger.info(f"Using column names: ID='{self.template_id_column}', Type='{self.template_type_column}'")
             
             with open(file_path, 'r', encoding='utf-8') as f:
-                reader = csv.reader(f)
-                next(reader)  # Skip header
+                reader = csv.DictReader(f)
                 
-                min_cols = max(self.template_id_column, self.template_type_column) + 1
+                # Verify required columns exist
+                if not reader.fieldnames:
+                    raise ValueError("Template file has no header row")
+                
+                if self.template_id_column not in reader.fieldnames:
+                    raise ValueError(
+                        f"Template column '{self.template_id_column}' not found. "
+                        f"Available columns: {list(reader.fieldnames)}"
+                    )
+                
+                if self.template_type_column not in reader.fieldnames:
+                    raise ValueError(
+                        f"Template column '{self.template_type_column}' not found. "
+                        f"Available columns: {list(reader.fieldnames)}"
+                    )
                 
                 for row in reader:
-                    if len(row) >= min_cols and row[0]:
-                        txn_ref = row[0].strip()
-                        expected_id = row[self.template_id_column].strip() if row[self.template_id_column] else ""
-                        expected_type = row[self.template_type_column].strip() if row[self.template_type_column] else ""
+                    txn_ref = row.get('Transaction Reference', '').strip()
+                    if txn_ref:
+                        expected_id = row.get(self.template_id_column, '').strip()
+                        expected_type = row.get(self.template_type_column, '').strip()
                         # Store both ID and type for flexible formatting
                         self.template_data[txn_ref] = {
                             'id': expected_id,
