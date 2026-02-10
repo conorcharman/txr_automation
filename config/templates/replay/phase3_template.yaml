@@ -20,8 +20,8 @@ files:
     - "Replay_*_PHASE 3_Inconsistent_IDs_Summary_FINAL.csv"
     - "Replay_*_PHASE 3_Inconsistent_Names_Summary_FINAL.csv"
   
-  # Incident file pattern
-  incident_pattern: "FY25 Q3 - *.csv"
+  # Incident file pattern (primary: space, fallback: dash for backwards compatibility)
+  incident_pattern: "FY25 Q3 *.csv"
 
 # Incident template column mappings
 # These define which columns to read from incident template files

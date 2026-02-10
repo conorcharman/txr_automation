@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Data Push Script v1.0
+Data Push Script v1.1
 =====================
 
 Push validation results to master tracking files.
 
 This script consolidates accuracy testing results back to centralised
 tracking files after validation is complete. It matches records by
-transaction reference and updates target columns based on the error flag.
+transaction reference and pushes all validation columns.
 
 Migrated from: DataPush1_0.vb
 
@@ -35,11 +35,13 @@ Usage:
         --quarter Q1
 
 Business Logic:
-    - Error = "Y": Push all configured columns to target
-    - Error = "N": Only push "N" to error column
+    - Match records by Transaction Reference
+    - Push ALL validation columns to template for QA purposes
+    - Both validation outputs and templates use "Error" column
+    - All records (with or without errors) are pushed
     - No match: Log as not found (no update)
 
-Version: 1.0
+Version: 1.1 (Push all records for QA)
 """
 
 import sys
@@ -277,6 +279,7 @@ class BatchDataPushCLI:
         quarter: str,
         incidents: Optional[str] = None,
         column_mappings: Optional[list] = None,
+        backup_dir: Optional[str] = None,
         log_dir: str = "logs",
         log_level: str = "INFO",
         dry_run: bool = False,
@@ -293,6 +296,7 @@ class BatchDataPushCLI:
             quarter: Quarter (e.g., Q1)
             incidents: Comma-separated incident codes (or None for auto-discovery)
             column_mappings: List of column mappings from config
+            backup_dir: Optional directory for backup files
             log_dir: Directory for log files
             log_level: Logging level
             dry_run: If True, preview changes without writing
@@ -305,6 +309,7 @@ class BatchDataPushCLI:
         self.quarter = quarter
         self.incidents = incidents.split(",") if incidents else None
         self.column_mappings = column_mappings
+        self.backup_dir = Path(backup_dir) if backup_dir else None
         self.dry_run = dry_run
         self.backup = backup
         self.verbose = verbose
@@ -346,6 +351,7 @@ class BatchDataPushCLI:
             fiscal_year=self.fiscal_year,
             quarter=self.quarter,
             column_mappings=self.column_mappings,
+            backup_dir=self.backup_dir,
             logger=self.logger,
         )
         
@@ -566,6 +572,7 @@ def main() -> int:
                 ]
                 
                 log_dir = batch_paths.get('log_output', 'logs')
+                backup_dir = batch_paths.get('backup_dir')
             else:
                 source_dir = args.source_dir
                 target_dir = args.target_dir
@@ -574,6 +581,7 @@ def main() -> int:
                 incidents = args.incidents
                 column_mappings = []
                 log_dir = 'logs'
+                backup_dir = None
             
             if not source_dir or not target_dir:
                 parser.error("Batch mode requires --source-dir and --target-dir (or batch config)")
@@ -587,6 +595,7 @@ def main() -> int:
                 quarter=quarter,
                 incidents=incidents,
                 column_mappings=column_mappings,
+                backup_dir=backup_dir,
                 log_dir=log_dir,
                 log_level=args.log_level,
                 dry_run=args.dry_run,

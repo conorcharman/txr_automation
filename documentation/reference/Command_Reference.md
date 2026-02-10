@@ -168,6 +168,84 @@ generate-sql-extract \
 
 ---
 
+### validate-all
+
+Run all validation scripts in sequence with unified progress tracking and reporting.
+
+**Usage:**
+
+```bash
+# Run all validations with default configurations
+validate-all
+
+# Run specific validations
+validate-all --validations buyer seller
+
+# Use custom config file
+validate-all --config config/local/accuracy_testing/run_all_validations.yaml
+
+# Stop on first failure
+validate-all --stop-on-error
+
+# List available validations
+validate-all --list
+
+# Verbose output
+validate-all --verbose
+```
+
+**Included Validations:**
+
+1. **buyer** - Buyer ID Validation (7_5, 7_6)
+2. **seller** - Seller ID Validation (7_7, 7_8)
+3. **inconsistent-buyer** - Inconsistent Buyer ID Validation (7_37, 7_38)
+4. **inconsistent-seller** - Inconsistent Seller ID Validation (7_39, 7_40)
+5. **ftbdm** - Field 27 Buyer Decision Maker Validation
+6. **ftsdm** - Field 28 Seller Decision Maker Validation
+7. **pricing** - Pricing Validation
+
+**Options:**
+
+- `--config PATH` - Configuration YAML file (optional)
+- `--validations NAME [NAME ...]` - Specific validations to run
+- `--stop-on-error` - Stop execution on first validation failure
+- `--list` - List available validations and exit
+- `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
+- `--verbose` - Enable verbose output
+
+**Configuration File Format:**
+
+```yaml
+validations:
+  - name: "buyer"
+    script_module: "src.accuracy_testing.scripts.buyer_id_validation"
+    config_file: "config/local/accuracy_testing/buyer_validation.yaml"
+    enabled: true
+    description: "Buyer ID Validation (7_5, 7_6)"
+  
+  - name: "seller"
+    script_module: "src.accuracy_testing.scripts.seller_id_validation"
+    config_file: "config/local/accuracy_testing/seller_validation.yaml"
+    enabled: true
+    description: "Seller ID Validation (7_7, 7_8)"
+  
+  # ... more validations
+```
+
+**Output:**
+
+- Execution plan with all validations to run
+- Real-time progress for each validation
+- Summary table with results and duration
+- Overall success/failure status
+
+**Related:**
+
+- Individual validation commands: `validate-buyer`, `validate-seller`, etc.
+- Config template: `config/templates/accuracy_testing/run_all_validations_template.yaml`
+
+---
+
 ### validate-buyer
 
 Validate buyer identification codes in transaction data.

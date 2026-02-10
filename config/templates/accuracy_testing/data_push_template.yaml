@@ -171,6 +171,11 @@ batch:
       target: "Correction Field"
       description: "Correction field identifier from validation"
     
+    # Error flag (Y/N indicating validation failure)
+    - source: "Error"
+      target: "Error"
+      description: "Error flag from validation (Y/N)"
+
     # Tracker status (exists in both)
     - source: "Tracker Status"
       target: "Tracker Status"

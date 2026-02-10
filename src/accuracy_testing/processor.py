@@ -1325,11 +1325,14 @@ class IDValidationProcessor:
         """
         Generate a correction for invalid or missing ID.
         
-        Following VBA logic:
+        Following VBA logic with EEA/Rest of World distinction:
         1. Test alternative ID types in priority order (NIDN, PASSPORT, CONCAT, CCPT, PASS, DLIC)
         2. Try Swedish century fix (if SE + NIDN + 10 digits)
         3. Generate CONCAT from client data
+           - EEA countries: CONCAT must pass format validation
+           - Rest of World: CONCAT is default correction (no validation required)
         4. Generate fallback ID (CountryCode + PersonCode as NIDN)
+           - For Rest of World, only used if CONCAT generation fails
         
         Returns:
             Tuple of (correction_value, correction_type) or None
@@ -1354,21 +1357,32 @@ class IDValidationProcessor:
                 if swedish_fix:
                     return swedish_fix
         
+        # Check if country is EEA/ESMA
+        is_eea = country_manager.is_eea(country_code)
+        
         # Step 3: Try to generate CONCAT
         concat_id = self._generate_concat(record, country_code)
         if concat_id:
             if self.verbose:
                 if self.logger:
                     self.logger.debug(f"[CORRECTION] Generated CONCAT: {concat_id}")
-            # Validate the generated CONCAT against format patterns
+            
+            # For EEA countries: Validate the generated CONCAT against format patterns
             # VBA: "tested against format patterns and logic validation. If both pass"
-            is_valid = id_format_manager.validate(country_code, "CONCAT", concat_id)
-            if self.verbose:
-                if self.logger:
-                    self.logger.debug(f"[CORRECTION] CONCAT validation result: {is_valid}")
-            if is_valid:
+            if is_eea:
+                is_valid = id_format_manager.validate(country_code, "CONCAT", concat_id)
+                if self.verbose:
+                    if self.logger:
+                        self.logger.debug(f"[CORRECTION] CONCAT validation result (EEA): {is_valid}")
+                if is_valid:
+                    return (concat_id, "CONCAT")
+                # If CONCAT validation fails for EEA, continue to fallback
+            else:
+                # For Rest of World countries: Use CONCAT as default correction without validation
+                if self.verbose:
+                    if self.logger:
+                        self.logger.debug(f"[CORRECTION] Using CONCAT for Rest of World country (no validation)")
                 return (concat_id, "CONCAT")
-            # If CONCAT validation fails, continue to fallback
         else:
             if self.verbose:
                 if self.logger:
@@ -1376,6 +1390,7 @@ class IDValidationProcessor:
         
         # Step 4: Generate fallback ID (CountryCode + PersonCode as NIDN)
         # VBA: "No format or logic validation performed" - always return if person_code exists
+        # Note: For Rest of World, this is only reached if CONCAT generation failed
         if record.person_code:
             fallback_id = country_code.upper() + record.person_code.strip()
             if self.verbose:
