@@ -40,7 +40,7 @@ from core import (
     CharacterReplacement,
     safe_open_csv,
 )
-from core.data import Phase3Columns, ClientErrorColumns
+from core.data import ClientErrorColumns
 
 
 class IncidentColumnMapper:
@@ -154,82 +154,123 @@ class IncidentFileIndex:
                 self.logger.error(f"Error loading {self.file_path}: {e}")
     
     def _build_indexes(self):
-        """Build all lookup indexes"""
-        cols = Phase3Columns  # Alias for readability
+        """Build all lookup indexes using column mapper from config"""
+        # Get column mapper for data columns
+        col = self.column_mapper
         
         for i, row in enumerate(self.data_rows):
-            if len(row) < cols.MIN_COLS:  # Minimum for buyer ID at index 21
+            if not row:
                 continue
                 
             # Index buyer data
-            buyer_id = row[cols.BUYER_ID].strip().lower() if len(row) > cols.BUYER_ID else ""
-            if buyer_id:
-                if buyer_id not in self.buyer_id_index:
-                    self.buyer_id_index[buyer_id] = []
-                self.buyer_id_index[buyer_id].append(i)
+            buyer_id_col = col.get('buyer_id')
+            if buyer_id_col is not None and len(row) > buyer_id_col:
+                buyer_id = row[buyer_id_col].strip().lower()
+                if buyer_id:
+                    if buyer_id not in self.buyer_id_index:
+                        self.buyer_id_index[buyer_id] = []
+                    self.buyer_id_index[buyer_id].append(i)
             
             # Index seller data
-            seller_id = row[cols.SELLER_ID].strip().lower() if len(row) > cols.SELLER_ID else ""
-            if seller_id:
-                if seller_id not in self.seller_id_index:
-                    self.seller_id_index[seller_id] = []
-                self.seller_id_index[seller_id].append(i)
+            seller_id_col = col.get('seller_id')
+            if seller_id_col is not None and len(row) > seller_id_col:
+                seller_id = row[seller_id_col].strip().lower()
+                if seller_id:
+                    if seller_id not in self.seller_id_index:
+                        self.seller_id_index[seller_id] = []
+                    self.seller_id_index[seller_id].append(i)
             
             # Index buyer names
-            buyer_first = row[cols.BUYER_FIRST_NAME].strip().lower() if len(row) > cols.BUYER_FIRST_NAME else ""
-            buyer_last = row[cols.BUYER_LAST_NAME].strip().lower() if len(row) > cols.BUYER_LAST_NAME else ""
-            buyer_dob = DateParser.parse_date(row[cols.BUYER_DOB]) if len(row) > cols.BUYER_DOB else ""
+            buyer_first_col = col.get('buyer_first_name')
+            buyer_last_col = col.get('buyer_last_name')
+            buyer_dob_col = col.get('buyer_dob')
             
-            if buyer_first and buyer_last:
-                name_key = (buyer_first, buyer_last, buyer_dob or "")
-                if name_key not in self.buyer_name_index:
-                    self.buyer_name_index[name_key] = []
-                self.buyer_name_index[name_key].append(i)
+            if (buyer_first_col is not None and buyer_last_col is not None and 
+                len(row) > max(buyer_first_col, buyer_last_col)):
+                buyer_first = row[buyer_first_col].strip().lower()
+                buyer_last = row[buyer_last_col].strip().lower()
+                buyer_dob = ""
+                if buyer_dob_col is not None and len(row) > buyer_dob_col:
+                    buyer_dob = DateParser.parse_date(row[buyer_dob_col]) or ""
+                
+                if buyer_first and buyer_last:
+                    name_key = (buyer_first, buyer_last, buyer_dob)
+                    if name_key not in self.buyer_name_index:
+                        self.buyer_name_index[name_key] = []
+                    self.buyer_name_index[name_key].append(i)
             
             # Index seller names
-            seller_first = row[cols.SELLER_FIRST_NAME].strip().lower() if len(row) > cols.SELLER_FIRST_NAME else ""
-            seller_last = row[cols.SELLER_LAST_NAME].strip().lower() if len(row) > cols.SELLER_LAST_NAME else ""
-            seller_dob = DateParser.parse_date(row[cols.SELLER_DOB]) if len(row) > cols.SELLER_DOB else ""
+            seller_first_col = col.get('seller_first_name')
+            seller_last_col = col.get('seller_last_name')
+            seller_dob_col = col.get('seller_dob')
             
-            if seller_first and seller_last:
-                name_key = (seller_first, seller_last, seller_dob or "")
-                if name_key not in self.seller_name_index:
-                    self.seller_name_index[name_key] = []
-                self.seller_name_index[name_key].append(i)
+            if (seller_first_col is not None and seller_last_col is not None and
+                len(row) > max(seller_first_col, seller_last_col)):
+                seller_first = row[seller_first_col].strip().lower()
+                seller_last = row[seller_last_col].strip().lower()
+                seller_dob = ""
+                if seller_dob_col is not None and len(row) > seller_dob_col:
+                    seller_dob = DateParser.parse_date(row[seller_dob_col]) or ""
+                
+                if seller_first and seller_last:
+                    name_key = (seller_first, seller_last, seller_dob)
+                    if name_key not in self.seller_name_index:
+                        self.seller_name_index[name_key] = []
+                    self.seller_name_index[name_key].append(i)
             
             # Index buyer decision maker data
-            buyer_dm_id = row[cols.BUYER_DM_ID].strip().lower() if len(row) > cols.BUYER_DM_ID else ""
-            if buyer_dm_id:
-                if buyer_dm_id not in self.buyer_dm_id_index:
-                    self.buyer_dm_id_index[buyer_dm_id] = []
-                self.buyer_dm_id_index[buyer_dm_id].append(i)
+            buyer_dm_id_col = col.get('buyer_dm_id')
+            if buyer_dm_id_col is not None and len(row) > buyer_dm_id_col:
+                buyer_dm_id = row[buyer_dm_id_col].strip().lower()
+                if buyer_dm_id:
+                    if buyer_dm_id not in self.buyer_dm_id_index:
+                        self.buyer_dm_id_index[buyer_dm_id] = []
+                    self.buyer_dm_id_index[buyer_dm_id].append(i)
             
-            buyer_dm_first = row[cols.BUYER_DM_FIRST_NAME].strip().lower() if len(row) > cols.BUYER_DM_FIRST_NAME else ""
-            buyer_dm_last = row[cols.BUYER_DM_LAST_NAME].strip().lower() if len(row) > cols.BUYER_DM_LAST_NAME else ""
-            buyer_dm_dob = DateParser.parse_date(row[cols.BUYER_DM_DOB]) if len(row) > cols.BUYER_DM_DOB else ""
+            buyer_dm_first_col = col.get('buyer_dm_first_name')
+            buyer_dm_last_col = col.get('buyer_dm_last_name')
+            buyer_dm_dob_col = col.get('buyer_dm_dob')
             
-            if buyer_dm_first and buyer_dm_last:
-                name_key = (buyer_dm_first, buyer_dm_last, buyer_dm_dob or "")
-                if name_key not in self.buyer_dm_name_index:
-                    self.buyer_dm_name_index[name_key] = []
-                self.buyer_dm_name_index[name_key].append(i)
+            if (buyer_dm_first_col is not None and buyer_dm_last_col is not None and
+                len(row) > max(buyer_dm_first_col, buyer_dm_last_col)):
+                buyer_dm_first = row[buyer_dm_first_col].strip().lower()
+                buyer_dm_last = row[buyer_dm_last_col].strip().lower()
+                buyer_dm_dob = ""
+                if buyer_dm_dob_col is not None and len(row) > buyer_dm_dob_col:
+                    buyer_dm_dob = DateParser.parse_date(row[buyer_dm_dob_col]) or ""
+                
+                if buyer_dm_first and buyer_dm_last:
+                    name_key = (buyer_dm_first, buyer_dm_last, buyer_dm_dob)
+                    if name_key not in self.buyer_dm_name_index:
+                        self.buyer_dm_name_index[name_key] = []
+                    self.buyer_dm_name_index[name_key].append(i)
             
             # Index seller decision maker data
-            seller_dm_id = row[cols.SELLER_DM_ID].strip().lower() if len(row) > cols.SELLER_DM_ID else ""
-            if seller_dm_id:
-                if seller_dm_id not in self.seller_dm_id_index:
-                    self.seller_dm_id_index[seller_dm_id] = []
-                self.seller_dm_id_index[seller_dm_id].append(i)
+            seller_dm_id_col = col.get('seller_dm_id')
+            if seller_dm_id_col is not None and len(row) > seller_dm_id_col:
+                seller_dm_id = row[seller_dm_id_col].strip().lower()
+                if seller_dm_id:
+                    if seller_dm_id not in self.seller_dm_id_index:
+                        self.seller_dm_id_index[seller_dm_id] = []
+                    self.seller_dm_id_index[seller_dm_id].append(i)
             
-            seller_dm_first = row[cols.SELLER_DM_FIRST_NAME].strip().lower() if len(row) > cols.SELLER_DM_FIRST_NAME else ""
-            seller_dm_last = row[cols.SELLER_DM_LAST_NAME].strip().lower() if len(row) > cols.SELLER_DM_LAST_NAME else ""
-            seller_dm_dob = DateParser.parse_date(row[cols.SELLER_DM_DOB]) if len(row) > cols.SELLER_DM_DOB else ""
+            seller_dm_first_col = col.get('seller_dm_first_name')
+            seller_dm_last_col = col.get('seller_dm_last_name')
+            seller_dm_dob_col = col.get('seller_dm_dob')
             
-            if seller_dm_first and seller_dm_last:
-                name_key = (seller_dm_first, seller_dm_last, seller_dm_dob or "")
-                if name_key not in self.seller_dm_name_index:
-                    self.seller_dm_name_index[name_key] = []
-                self.seller_dm_name_index[name_key].append(i)
+            if (seller_dm_first_col is not None and seller_dm_last_col is not None and
+                len(row) > max(seller_dm_first_col, seller_dm_last_col)):
+                seller_dm_first = row[seller_dm_first_col].strip().lower()
+                seller_dm_last = row[seller_dm_last_col].strip().lower()
+                seller_dm_dob = ""
+                if seller_dm_dob_col is not None and len(row) > seller_dm_dob_col:
+                    seller_dm_dob = DateParser.parse_date(row[seller_dm_dob_col]) or ""
+                
+                if seller_dm_first and seller_dm_last:
+                    name_key = (seller_dm_first, seller_dm_last, seller_dm_dob)
+                    if name_key not in self.seller_dm_name_index:
+                        self.seller_dm_name_index[name_key] = []
+                    self.seller_dm_name_index[name_key].append(i)
     
     def lookup_by_id(self, client_ids: List[str]) -> Optional[Tuple[int, str]]:
         """Fast O(1) ID lookup using indexes"""

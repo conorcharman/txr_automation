@@ -43,6 +43,10 @@ single:
     # Template file (Kaizen expected values) - validation reference
     template_file: "data/templates/FY26 Q1 7_37.csv"
     
+    # Template column names for Kaizen lookup
+    template_id_column: "Buyer ID Code"
+    template_type_column: "Type of Buyer ID Code"
+    
     # Output file (validation results)
     output_file: "data/validated/validated_FY26_Q1_7_37.csv"
     

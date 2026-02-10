@@ -30,6 +30,7 @@ files:
 # These define which columns to read from incident template files
 # Column names must match exactly what's in your incident CSV headers
 incident_columns:
+  # Correction data columns (used to extract correction information)
   transaction_ref: "Transaction Reference"
   error_flag: "Error"
   correction: "Correction"
@@ -37,6 +38,29 @@ incident_columns:
   agree_with_correction: "Agree With Correction"
   suggested_correction: "Suggested Correction"
   suggested_correction_field: "Suggested Correction Field"
+  
+  # Data columns for matching (used to find records in incident files)
+  # Buyer matching columns
+  buyer_id: "Buyer identification code"
+  buyer_first_name: "Buyer - First name(s)"
+  buyer_last_name: "Buyer - Surname(s)"
+  buyer_dob: "Buyer - Date of birth"
+  
+  # Seller matching columns
+  seller_id: "Seller identification code"
+  seller_first_name: "Seller - First name(s)"
+  seller_last_name: "Seller - Surname(s)"
+  seller_dob: "Seller - Date of birth"
+  
+  # Decision Maker columns (optional, for fallback matching)
+  buyer_dm_id: "Buyer decision maker code"
+  buyer_dm_first_name: "Buy decision maker - First name(s)"
+  buyer_dm_last_name: "Buy decision maker - Surname(s)"
+  buyer_dm_dob: "Buy decision maker - Date of birth"
+  seller_dm_id: "Seller decision maker code"
+  seller_dm_first_name: "Sell decision maker - First name(s)"
+  seller_dm_last_name: "Sell decision maker - Surname(s)"
+  seller_dm_dob: "Sell decision maker - Date of birth"
 
 processor:
   # REQUIRED: Batch size for progress reporting

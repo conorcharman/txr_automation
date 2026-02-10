@@ -51,6 +51,10 @@ single:
     # Example: FY26 Q1 16_20.csv
     template_file: "data/templates/FY26 Q1 16_20.csv"
     
+    # Template column names for Kaizen lookup
+    template_id_column: "Seller ID Code"
+    template_type_column: "Type of Seller ID Code"
+    
     # Output file (validation results)
     # Example: validated_FY26_Q1_16_20.csv
     output_file: "data/validated/validated_FY26_Q1_16_20.csv"
