@@ -236,6 +236,9 @@ options:
   # Create backups before modifying target files
   create_backups: true
   
+  # Create missing columns in target files if they don't exist
+  create_missing_columns: true
+  
   # Show progress bars during processing
   show_progress: true
   

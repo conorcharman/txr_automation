@@ -244,9 +244,19 @@ class DataPushProcessor:
                 if target_col in self.target_df.columns:
                     self.target_df.at[record.target_row_index, target_col] = value
                 else:
-                    self.logger.warning(
-                        f"Target column '{target_col}' not found, skipping"
-                    )
+                    # Create column if configured to do so
+                    if self.config.create_missing_columns:
+                        self.logger.info(
+                            f"Creating missing target column: '{target_col}'"
+                        )
+                        # Initialize column with empty strings
+                        self.target_df[target_col] = ""
+                        # Now set the value
+                        self.target_df.at[record.target_row_index, target_col] = value
+                    else:
+                        self.logger.warning(
+                            f"Target column '{target_col}' not found, skipping"
+                        )
             
             record.push_result = f"Updated {len(push_values)} columns"
             self.stats.updated_all += 1
