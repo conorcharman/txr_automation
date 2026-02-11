@@ -24,6 +24,18 @@ from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
 from collections import defaultdict
 
+# Import country manager for generic CONCAT validation
+try:
+    from .country_codes import country_manager
+    COUNTRY_MANAGER_AVAILABLE = True
+except ImportError:
+    COUNTRY_MANAGER_AVAILABLE = False
+    country_manager = None
+
+# Generic CONCAT pattern for universal validation (rest-of-world countries)
+# Format: 2-letter country code + 8 digits (YYYYMMDD) + 5 chars (first name) + 5 chars (last name)
+GENERIC_CONCAT_PATTERN = re.compile(r'^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$')
+
 
 @dataclass(frozen=True)
 class IDPattern:
@@ -234,20 +246,50 @@ class IDFormatManager:
         """Validate an ID value against country and type-specific patterns."""
         key = (country_code.upper(), id_type.upper())
         patterns = self._patterns_by_key.get(key, [])
-        return any(pattern.matches(id_value) for pattern in patterns)
+        
+        # Try specific patterns first
+        if any(pattern.matches(id_value) for pattern in patterns):
+            return True
+        
+        # Fallback: If no specific pattern exists for CONCAT, use generic validation
+        if not patterns and id_type.upper() == "CONCAT" and COUNTRY_MANAGER_AVAILABLE:
+            # Check generic CONCAT format with valid country prefix
+            if len(id_value) == 20 and GENERIC_CONCAT_PATTERN.match(id_value.upper()):
+                prefix = id_value[:2].upper()
+                return country_manager.validate_code(prefix)
+        
+        return False
     
     def validate_with_details(self, country_code: str, id_type: str, id_value: str) -> Tuple[bool, Optional[str]]:
         """Validate an ID value and provide detailed error message if it fails."""
         key = (country_code.upper(), id_type.upper())
         patterns = self._patterns_by_key.get(key, [])
         
+        # If no specific patterns exist, check for generic CONCAT validation
         if not patterns:
-            return (False, f"No {id_type} format patterns defined for {country_code}")
+            if id_type.upper() == "CONCAT" and COUNTRY_MANAGER_AVAILABLE:
+                # Use generic CONCAT validation for rest-of-world countries
+                if len(id_value) != 20:
+                    return (False, f"Invalid CONCAT format for {country_code}: Expected 20 characters, got {len(id_value)}")
+                
+                if not GENERIC_CONCAT_PATTERN.match(id_value.upper()):
+                    return (False, f"Invalid CONCAT format for {country_code}: Does not match pattern [CC][YYYYMMDD][FFFFF][LLLLL] where CC=country, YYYY=year, MM=month, DD=day, F=first name chars, L=last name chars")
+                
+                prefix = id_value[:2].upper()
+                if not country_manager.validate_code(prefix):
+                    return (False, f"Invalid CONCAT format for {country_code}: Invalid country code prefix '{prefix}'")
+                
+                # Passed generic CONCAT validation
+                return (True, None)
+            else:
+                return (False, f"No {id_type} format patterns defined for {country_code}")
         
+        # Try specific patterns
         for pattern in patterns:
             if pattern.matches(id_value):
                 return (True, None)
         
+        # Specific patterns exist but none matched
         if len(patterns) == 1:
             reason = patterns[0].get_mismatch_reason(id_value)
             return (False, f"Invalid {id_type} format for {country_code}: {reason}")
