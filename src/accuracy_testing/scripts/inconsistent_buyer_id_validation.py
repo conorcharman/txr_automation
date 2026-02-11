@@ -286,12 +286,24 @@ class InconsistentBuyerIDValidator:
             "Match"
         ]
         
+        # Sort records before writing: Surname (A-Z), First Name (A-Z), Person Code (A-Z), Trade_Date_Time (oldest to newest)
+        from datetime import datetime
+        sorted_records = sorted(
+            records,
+            key=lambda r: (
+                r.surname.upper() if r.surname else "",
+                r.first_name.upper() if r.first_name else "",
+                r.person_code.upper() if r.person_code else "",
+                r.trade_date_time_parsed if r.trade_date_time_parsed else datetime.max
+            )
+        )
+        
         try:
             with open(self.output_file, 'w', encoding='utf-8', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(output_columns)
                 
-                for record in records:
+                for record in sorted_records:
                     # Swap nationalities if priority country is in secondary position
                     primary_nat = record.primary_nationality
                     secondary_nat = record.secondary_nationality
@@ -362,6 +374,18 @@ class InconsistentBuyerIDValidator:
             self.logger.info("No errors to write - all records passed validation")
             return
         
+        # Sort error records before writing
+        from datetime import datetime
+        sorted_error_records = sorted(
+            error_records,
+            key=lambda r: (
+                r.surname.upper() if r.surname else "",
+                r.first_name.upper() if r.first_name else "",
+                r.person_code.upper() if r.person_code else "",
+                r.trade_date_time_parsed if r.trade_date_time_parsed else datetime.max
+            )
+        )
+        
         errors_file.parent.mkdir(parents=True, exist_ok=True)
         
         output_columns = [
@@ -396,7 +420,7 @@ class InconsistentBuyerIDValidator:
                 writer = csv.writer(f)
                 writer.writerow(output_columns)
                 
-                for record in error_records:
+                for record in sorted_error_records:
                     # Swap nationalities if priority country is in secondary position
                     primary_nat = record.primary_nationality
                     secondary_nat = record.secondary_nationality

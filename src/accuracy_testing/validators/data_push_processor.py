@@ -8,16 +8,18 @@ This processor consolidates accuracy testing results back to centralised
 tracking files after validation is complete. It matches records by
 transaction reference and updates target columns with validation results.
 
-Business Logic (Updated v1.1):
+Business Logic (Updated v1.2):
     1. Load source CSV (validation output with "Error" column)
     2. Load target CSV (master tracking file/template with "Error" column)
     3. For each source record:
        a. Find matching row in target by Transaction Reference
        b. Push ALL validation columns (Error, Correction, etc.)
-       c. This allows QA to see all records regardless of error status
+       c. Exception: If Error="N" and Correction has a value, do not push
+          Correction or Correction Field columns (not relevant for passing records)
+       d. This allows QA to see all records regardless of error status
     4. Write updated target file
 
-Version: 1.1 (Push all records for QA)
+Version: 1.2 (Conditional correction push based on Error flag)
 Migrated from: DataPush1_0.vb
 """
 

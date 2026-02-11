@@ -44,8 +44,8 @@ single:
     template_file: "data/templates/FY26 Q1 16_21.csv"
     
     # Template column names for Kaizen lookup
-    template_id_column: "Seller ID Code"
-    template_type_column: "Type of Seller ID Code"
+    template_id_column: "Seller identification code"
+    template_type_column: "Type of seller identification code"
     
     # Output file (validation results)
     output_file: "data/validated/validated_FY26_Q1_16_21.csv"
