@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Inconsistent Buyer ID Validation Script v1.3
+Inconsistent Buyer ID Validation Script v1.4
 =============================================
 
 Validates buyer identification codes for INCONSISTENT ID scenarios (incident 7_66).
@@ -11,13 +11,23 @@ It applies a specialized algorithm that:
 1. Groups records by Person Code
 2. Sorts each group chronologically by Trade_Date_Time
 3. Validates each ID using standard format + logic rules
-4. Corrects INVALID IDs using the most recent PRIOR VALID ID
+4. For each (Person Code, ID Type, Nationality Prefix) group:
+   - Finds the MOST RECENT (latest datetime) VALID ID
+   - Corrects ALL records with DIFFERENT ID values to the most recent valid one
+   - This includes both INVALID and VALID IDs with different values
 
 Key differences from standard validation:
 - Groups by Person Code, not just individual record validation
 - Uses Trade_Date_Time for chronological ordering
 - Detects fallback IDs (CC_PersonCode pattern)
-- Only corrects invalid IDs - valid-to-valid changes are preserved
+- Standardizes ALL IDs to most recent valid (both invalid and valid-but-different)
+- Only IDs matching most recent valid are left unchanged
+
+Version 1.4 Changes (2026-02-11):
+- Now corrects VALID IDs that differ from most recent valid (standardization)
+- Previous versions only corrected invalid IDs to closest valid
+- Example: If person has GBNZ283821B (valid, 2024-01-01), GBNZG283821B (invalid, 2024-02-01),
+  and GBNZ283821A (valid, 2024-03-01), now ALL are corrected to GBNZ283821A
 
 Usage:
     # With YAML configuration file
@@ -503,6 +513,19 @@ class InconsistentBuyerIDValidator:
                 if record.requires_standard_validation:
                     self.id_processor.process_record(record)
                     record.correction_source = "Standard validation (no prior valid ID)"
+        
+        # Step 3.5: KAIZEN TEMPLATE VALIDATION for preprocessed records
+        # Records corrected by preprocessing didn't go through process_record(), so they missed Kaizen validation
+        self.logger.log_header("PHASE 3: KAIZEN TEMPLATE VALIDATION FOR PREPROCESSED RECORDS")
+        if records_already_corrected and self.id_processor.template_data:
+            self.logger.info(f"Performing Kaizen validation on {len(records_already_corrected)} preprocessed records...")
+            for record in records_already_corrected:
+                self.id_processor._perform_template_validation(record)
+        else:
+            if not self.id_processor.template_data:
+                self.logger.info("No template file loaded - skipping Kaizen validation")
+            else:
+                self.logger.info("No preprocessed records to validate against template")
         
         # Combine all records, sorted by Person Code (primary) and Trade_Date_Time (secondary)
         all_records = sorted(

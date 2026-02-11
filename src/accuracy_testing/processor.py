@@ -19,6 +19,7 @@ Version: 3.0 - Independent configuration management
 """
 
 import os
+import re
 import yaml
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict, Tuple, Any
@@ -419,9 +420,10 @@ class InconsistentIDStats:
     inconsistent_groups: int = 0
     fallback_ids_found: int = 0
     invalid_ids_found: int = 0
-    corrected_from_prior: int = 0
-    no_prior_valid: int = 0
-    valid_to_valid_changes: int = 0  # No correction needed
+    corrected_to_most_recent: int = 0  # Invalid/fallback IDs corrected to most recent valid
+    valid_standardized: int = 0  # Valid but different IDs corrected to most recent valid
+    no_valid_in_group: int = 0  # No valid ID found, needs standard correction
+    already_most_recent: int = 0  # Already matches most recent valid, no change
 
 
 class InconsistentIDProcessor:
@@ -432,7 +434,25 @@ class InconsistentIDProcessor:
     - Grouping records by Person Code
     - Chronological sorting by Trade_Date_Time
     - Detection of fallback ID patterns
+    - Standardization of IDs within (ID Type, Nationality Prefix) groups
     - Application of corrections from most recent valid ID
+    
+    New behavior (v1.4, 2026-02-11):
+    - Corrects ALL IDs (including valid ones) to most recent valid within each group
+    - Only IDs matching the most recent valid ID value are left unchanged
+    - Previous versions only corrected invalid IDs to closest valid
+    
+    Algorithm:
+    1. Parse Trade_Date_Time and compute priority country codes
+    2. Group records by Person Code
+    3. Sort each group chronologically
+    4. Validate each ID (format + logic validation)
+    5. Detect fallback ID patterns
+    6. Within each (ID Type, Nationality Prefix) group:
+       - Find the MOST RECENT (latest datetime) VALID ID
+       - Correct ALL records with different ID values to most recent valid
+       - This includes both INVALID and VALID-but-different IDs
+    7. If no valid ID in group, mark all for standard correction pipeline
     
     IMPORTANT: This is a PRE-PROCESSOR, not a replacement for IDValidationProcessor.
     After preprocessing, records that still need correction go through standard validation.
@@ -692,88 +712,150 @@ class InconsistentIDProcessor:
         # (This matches the VBA behavior for inconsistent ID validation)
         return (is_valid, is_valid)
     
+    def _find_most_recent_valid_id(
+        self,
+        records: List[ClientRecord],
+        indices: List[int],
+        id_type: str,
+        prefix: str
+    ) -> Optional[Tuple[str, str, datetime]]:
+        """
+        Find the most recent (latest trade_date_time) valid ID for a given ID type and prefix.
+        
+        Args:
+            records: Full list of records
+            indices: Indices of records in this person group (already sorted chronologically)
+            id_type: The ID type to search for (e.g., "NIDN", "CCPT")
+            prefix: The nationality prefix to match (e.g., "GB", "NL")
+        
+        Returns:
+            Tuple of (id_value, id_type, trade_date_time) if found, None otherwise
+        """
+        most_recent_valid = None
+        most_recent_datetime = None
+        most_recent_type = None
+        
+        for idx in indices:
+            record = records[idx]
+            
+            # Must match ID type, prefix, and be valid (not fallback)
+            if (record.id_type == id_type and
+                record.prefixed_nationality == prefix and
+                record.is_valid_id and
+                not record.is_fallback_id):
+                
+                # Compare datetimes to find most recent
+                if most_recent_datetime is None or (
+                    record.trade_date_time_parsed and 
+                    record.trade_date_time_parsed > most_recent_datetime
+                ):
+                    most_recent_valid = record.id_value
+                    most_recent_type = record.id_type
+                    most_recent_datetime = record.trade_date_time_parsed
+        
+        if most_recent_valid:
+            return (most_recent_valid, most_recent_type, most_recent_datetime)
+        return None
+    
     def apply_prior_valid_corrections(
         self, 
         records: List[ClientRecord], 
         indices: List[int]
     ) -> None:
         """
-        Apply correction logic with prefixed nationality support:
-        - Only correct INVALID or FALLBACK IDs
-        - Search BOTH BACKWARD and FORWARD for chronologically closest valid ID
-        - Only use valid IDs with MATCHING PREFIX (same nationality)
-        - Do NOT correct valid IDs even if they differ (nationality changes allowed)
+        Apply correction logic to standardize IDs within groups:
+        - Group records by (ID Type, Nationality Prefix)
+        - Find the MOST RECENT (latest datetime) VALID ID for each group
+        - Correct ALL records with DIFFERENT ID values to the most recent valid one
+        - This includes both INVALID and VALID IDs with different values
+        - If no valid ID exists in group, mark all for standard correction
+        
+        New behavior (2026-02-11):
+        - Valid IDs that differ from most recent valid are now corrected
+        - Only IDs matching the most recent valid ID value are left unchanged
         
         Args:
             records: Full list of records
             indices: Indices of records in this person group (already sorted chronologically)
         """
-        for i, current_idx in enumerate(indices):
-            current_record = records[current_idx]
+        # Group records by (ID Type, Nationality Prefix)
+        id_type_groups = defaultdict(list)
+        
+        for idx in indices:
+            record = records[idx]
             
-            # Only process invalid or fallback IDs
-            if current_record.is_valid_id and not current_record.is_fallback_id:
-                # Valid ID - no correction needed (valid-to-valid is OK, even different prefixes)
-                self.stats.valid_to_valid_changes += 1
-                current_record.requires_standard_validation = False
+            # Skip records without ID type
+            if not record.id_type:
+                record.requires_standard_validation = True
                 continue
             
-            # Get current record's prefix nationality
-            current_prefix = current_record.prefixed_nationality or ""
+            # Group by ID type and prefix nationality
+            prefix = record.prefixed_nationality or ""
+            group_key = (record.id_type, prefix)
+            id_type_groups[group_key].append(idx)
+        
+        # Process each ID type + prefix group
+        for (id_type, prefix), group_indices in id_type_groups.items():
+            # Find the most recent valid ID for this group
+            most_recent_valid = self._find_most_recent_valid_id(
+                records, group_indices, id_type, prefix
+            )
             
-            # Search BOTH DIRECTIONS for closest valid ID with matching prefix
-            closest_valid_id = None
-            closest_valid_type = None
-            closest_valid_date = None
-            closest_distance = float('inf')
-            
-            for j, other_idx in enumerate(indices):
-                if j == i:  # Skip self
-                    continue
-                
-                other_record = records[other_idx]
-                
-                # Must be valid, non-fallback, and have matching prefix
-                if (other_record.is_valid_id and 
-                    not other_record.is_fallback_id and
-                    other_record.prefixed_nationality == current_prefix):
+            if not most_recent_valid:
+                # No valid ID found in this group - mark all for standard correction
+                for idx in group_indices:
+                    record = records[idx]
+                    record.requires_standard_validation = True
+                    if prefix:
+                        record.correction_source = f"No valid {id_type} with prefix {prefix} - will use CONCAT"
+                        record.actions_taken.append(f"Inconsistent ID - No valid {id_type} with prefix {prefix}, using CONCAT")
+                    else:
+                        record.correction_source = f"No valid {id_type} found - requires standard correction"
+                        record.actions_taken.append(f"Inconsistent ID - No valid {id_type}, using standard correction")
+                    self.stats.no_valid_in_group += 1
                     
-                    # Calculate chronological distance
-                    distance = abs(j - i)
-                    
-                    if distance < closest_distance:
-                        closest_distance = distance
-                        closest_valid_id = other_record.id_value
-                        closest_valid_type = other_record.id_type
-                        closest_valid_date = other_record.trade_date_time_parsed
+                self._log(f"ID Type {id_type} (prefix: {prefix}): No valid ID found, marking {len(group_indices)} records for standard correction")
+                continue
             
-            # Apply correction if we found a valid ID with matching prefix
-            if closest_valid_id:
-                current_record.correction = closest_valid_id
-                current_record.correction_type = closest_valid_type
-                current_record.correction_output = f"{closest_valid_id}:{closest_valid_type}"
-                current_record.correction_fields = "ID:IDT"
-                current_record.requires_standard_validation = False
-                current_record.correction_source = f"Closest valid ID (same prefix: {current_prefix}) from {closest_valid_date}"
-                current_record.is_valid = False  # Mark as corrected
-                current_record.actions_taken.append(f"Inconsistent ID - Corrected to closest valid ID (prefix: {current_prefix})")
-                self.stats.corrected_from_prior += 1
+            # Unpack most recent valid ID details
+            most_recent_id, most_recent_type, most_recent_datetime = most_recent_valid
+            
+            # Apply corrections to ALL records where ID differs from most recent valid
+            for idx in group_indices:
+                record = records[idx]
                 
-                self._log(f"Record {current_record.row_index}: Corrected to closest valid ID with prefix {current_prefix}: "
-                         f"{closest_valid_id}:{closest_valid_type}")
-            else:
-                # No valid ID with matching prefix - needs standard pipeline (will use prefix for CONCAT)
-                current_record.requires_standard_validation = True
-                if current_prefix:
-                    current_record.correction_source = f"No valid ID with matching prefix ({current_prefix}) - will use prefix for CONCAT"
-                    current_record.actions_taken.append(f"Inconsistent ID - No valid ID with prefix {current_prefix}, using CONCAT")
+                # Check if this record's ID matches the most recent valid
+                if record.id_value == most_recent_id:
+                    # Already matches most recent valid - no correction needed
+                    record.requires_standard_validation = False
+                    record.correction_source = f"Already matches most recent valid {id_type} (prefix: {prefix})"
+                    if record.is_valid_id and not record.is_fallback_id:
+                        record.actions_taken.append(f"Pass - Most recent valid {id_type}")
+                    self.stats.already_most_recent += 1
+                    
+                    self._log(f"Record {record.row_index}: Already matches most recent valid {id_type}: {most_recent_id}")
                 else:
-                    current_record.correction_source = "No prefix nationality - requires standard correction"
-                    current_record.actions_taken.append("Inconsistent ID - No prefix, using standard correction")
-                self.stats.no_prior_valid += 1
-                
-                self._log(f"Record {current_record.row_index}: No valid ID with matching prefix found, "
-                         f"will use standard correction pipeline")
+                    # ID differs from most recent valid - apply correction
+                    was_valid = record.is_valid_id and not record.is_fallback_id
+                    
+                    record.correction = most_recent_id
+                    record.correction_type = most_recent_type
+                    record.correction_output = f"{most_recent_id}:{most_recent_type}"
+                    record.correction_fields = "ID:IDT"
+                    record.requires_standard_validation = False
+                    record.correction_source = f"Most recent valid {id_type} (prefix: {prefix}) from {most_recent_datetime}"
+                    record.is_valid = False  # Mark as corrected
+                    
+                    if was_valid:
+                        # Valid but different ID - standardizing to most recent
+                        record.actions_taken.append(f"Inconsistent ID - Valid {id_type} standardized to most recent: {most_recent_id}")
+                        self.stats.valid_standardized += 1
+                        self._log(f"Record {record.row_index}: Standardized valid {id_type} '{record.id_value}' to most recent: {most_recent_id}")
+                    else:
+                        # Invalid or fallback ID - correcting to most recent
+                        record.actions_taken.append(f"Inconsistent ID - Corrected to most recent valid {id_type} (prefix: {prefix})")
+                        self.stats.corrected_to_most_recent += 1
+                        self._log(f"Record {record.row_index}: Corrected invalid {id_type} to most recent: {most_recent_id}")
     
     def preprocess_for_inconsistent_validation(
         self,
@@ -862,8 +944,14 @@ class InconsistentIDProcessor:
                     # Try to extract prefix from ID value
                     id_prefix = extract_id_prefix(record.id_value, "CONCAT")
                     if id_prefix:
-                        # Check if the ID matches CONCAT format using its own prefix
+                        # First try specific pattern validation for EEA countries
                         is_concat = id_format_manager.validate(id_prefix, "CONCAT", record.id_value)
+                        
+                        # If no specific pattern exists, use generic CONCAT validation
+                        # This allows detection of rest-of-world CONCATs
+                        if not is_concat:
+                            is_concat = is_valid_concat_format(record.id_value)
+                        
                         if is_concat:
                             record.id_type = "CONCAT"
                             record.prefixed_nationality = id_prefix
@@ -918,8 +1006,10 @@ class InconsistentIDProcessor:
         self._log(f"  - Inconsistent groups: {self.stats.inconsistent_groups}")
         self._log(f"  - Fallback IDs found: {self.stats.fallback_ids_found}")
         self._log(f"  - Invalid IDs found: {self.stats.invalid_ids_found}")
-        self._log(f"  - Corrected from prior valid: {self.stats.corrected_from_prior}")
-        self._log(f"  - No prior valid (need standard): {self.stats.no_prior_valid}")
+        self._log(f"  - Invalid corrected to most recent: {self.stats.corrected_to_most_recent}")
+        self._log(f"  - Valid standardized to most recent: {self.stats.valid_standardized}")
+        self._log(f"  - No valid in group (need standard): {self.stats.no_valid_in_group}")
+        self._log(f"  - Already most recent (no change): {self.stats.already_most_recent}")
         
         return records
     
@@ -931,14 +1021,15 @@ class InconsistentIDProcessor:
             "=" * 70,
             "INCONSISTENT ID PREPROCESSING SUMMARY",
             "=" * 70,
-            f"Total records:               {self.stats.total_records:>6}",
-            f"Person groups:               {self.stats.person_groups:>6}",
-            f"Inconsistent groups:         {self.stats.inconsistent_groups:>6}",
-            f"Fallback IDs found:          {self.stats.fallback_ids_found:>6}",
-            f"Invalid IDs found:           {self.stats.invalid_ids_found:>6}",
-            f"Corrected from prior valid:  {self.stats.corrected_from_prior:>6}",
-            f"No prior valid ID:           {self.stats.no_prior_valid:>6}",
-            f"Valid-to-valid (no change):  {self.stats.valid_to_valid_changes:>6}",
+            f"Total records:                      {self.stats.total_records:>6}",
+            f"Person groups:                      {self.stats.person_groups:>6}",
+            f"Inconsistent groups:                {self.stats.inconsistent_groups:>6}",
+            f"Fallback IDs found:                 {self.stats.fallback_ids_found:>6}",
+            f"Invalid IDs found:                  {self.stats.invalid_ids_found:>6}",
+            f"Invalid corrected to most recent:   {self.stats.corrected_to_most_recent:>6}",
+            f"Valid standardized to most recent:  {self.stats.valid_standardized:>6}",
+            f"No valid ID in group:               {self.stats.no_valid_in_group:>6}",
+            f"Already most recent (no change):    {self.stats.already_most_recent:>6}",
             "=" * 70,
         ]
         
@@ -989,6 +1080,46 @@ def extract_id_prefix(id_value: str, id_type: str) -> Optional[str]:
     return None
 
 
+# Generic CONCAT pattern for universal validation
+# Format: 2-letter country code + 8 digits (YYYYMMDD) + 5 chars (first name) + 5 chars (last name)
+GENERIC_CONCAT_PATTERN = re.compile(r'^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$')
+
+
+def is_valid_concat_format(id_value: str) -> bool:
+    """
+    Check if an ID matches the universal CONCAT format with a valid country prefix.
+    
+    Uses generic CONCAT pattern validation combined with country code verification.
+    This allows detection of CONCATs for countries without specific patterns in id_formats.py.
+    
+    Args:
+        id_value: The identification code to check
+    
+    Returns:
+        True if ID matches CONCAT format and has a valid country prefix, False otherwise
+    
+    Examples:
+        >>> is_valid_concat_format("MU19900720SHABNIBRAH")
+        True
+        >>> is_valid_concat_format("BD19970130SHABIHOSSA")
+        True
+        >>> is_valid_concat_format("XX19900720SHABNIBRAH")  # Invalid country code
+        False
+        >>> is_valid_concat_format("MU1990072")
+        False
+    """
+    if not id_value or len(id_value) != 20:
+        return False
+    
+    # Check if matches generic CONCAT pattern
+    if not GENERIC_CONCAT_PATTERN.match(id_value.upper()):
+        return False
+    
+    # Extract and validate country code prefix
+    prefix = id_value[:2].upper()
+    return country_manager.validate_code(prefix)
+
+
 class IDValidationProcessor:
     """
     Processes ID validation for buyer/seller identification codes.
@@ -1019,9 +1150,9 @@ class IDValidationProcessor:
         
         # Auto-detect column names based on client type if not provided
         if not template_id_column:
-            template_id_column = "Buyer ID Code" if client_type == "buyer" else "Seller ID Code"
+            template_id_column = "Buyer identification code" if client_type == "buyer" else "Seller identification code"
         if not template_type_column:
-            template_type_column = "Type of Buyer ID Code" if client_type == "buyer" else "Type of Seller ID Code"
+            template_type_column = "Type of buyer identification code" if client_type == "buyer" else "Type of seller identification code"
         
         self.template_id_column = template_id_column
         self.template_type_column = template_type_column
@@ -1066,8 +1197,14 @@ class IDValidationProcessor:
             # Try to extract prefix from ID value
             id_prefix = extract_id_prefix(record.id_value, "CONCAT")
             if id_prefix:
-                # Check if the ID matches CONCAT format using its own prefix
+                # First try specific pattern validation for EEA countries
                 is_concat = id_format_manager.validate(id_prefix, "CONCAT", record.id_value)
+                
+                # If no specific pattern exists, use generic CONCAT validation
+                # This allows detection of rest-of-world CONCATs
+                if not is_concat:
+                    is_concat = is_valid_concat_format(record.id_value)
+                
                 if is_concat:
                     record.id_type = "CONCAT"
                     record.prefixed_nationality = id_prefix
@@ -1769,6 +1906,12 @@ class IDValidationProcessor:
             
             if self.logger:
                 self.logger.info(f"Loaded {len(self.template_data)} template records")
+                # Show a sample of what was loaded for debugging
+                sample_count = 0
+                for txn_ref, data in list(self.template_data.items())[:5]:
+                    if sample_count < 3:
+                        self.logger.info(f"  Sample: {txn_ref} -> id='{data['id']}', type='{data['type']}'")
+                        sample_count += 1
         except Exception as e:
             if self.logger:
                 self.logger.warning(f"Failed to load template file: {e}")
@@ -1913,6 +2056,10 @@ class IDValidationProcessor:
         if template_entry:
             expected_id = template_entry.get('id', '')
             expected_type = template_entry.get('type', '')
+            
+            # DIAGNOSTIC: Log what we got from template
+            if self.logger and record.row_index in [2, 4, 7]:
+                self.logger.info(f"[TEMPLATE] Row {record.row_index} ({record.transaction_ref}): Raw template data - id='{expected_id}', type='{expected_type}'")
             
             # Build template lookup result (Formula2)
             if expected_id and expected_type:
