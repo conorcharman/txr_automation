@@ -179,7 +179,8 @@ _RAW_PATTERNS = [
     ("RO", "NIDN", r"^\d{1}\d{6}\d{2}\d{3}\d{1}$"),
     ("RO", "CCPT", r"^\d{9}$"),
     ("RO", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
-    ("SE", "NIDN", r"^\d{8}\d{3}\d{1}$"),
+    ("SE", "NIDN", r"^\d{8}\d{3}\d{1}$"),  # 12-digit format: CCYYMMDDBBBC
+    ("SE", "NIDN", r"^\d{6}\d{3}\d{1}$"),  # 10-digit format: YYMMDDBBBC (without century)
     ("SE", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),
     ("SI", "NIDN", r"^\d{7}\d{2}\d{3}\d{1}$"),
     ("SI", "CONCAT", r"^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"),

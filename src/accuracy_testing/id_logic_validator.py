@@ -789,17 +789,57 @@ class IDLogicValidator:
     
     def _validate_swedish_nidn(self, nidn: str, provided_dob: str, provided_gender: str) -> bool:
         """
-        Swedish NIDN: CCYYMMDD + sequence (odd=M, even=F) + Luhn check digit.
+        Swedish NIDN (Personnummer): CCYYMMDD + sequence (odd=M, even=F) + Luhn check digit.
+        
+        Format variations:
+        - 10-digit format: YYMMDDBBBC (official format, without century)
+        - 12-digit format: CCYYMMDDBBBC (storage format, with century prefix)
+        
+        IMPORTANT: The Luhn check digit is ALWAYS calculated on the 10-digit format.
+        For 12-digit format, we strip the first 2 digits (century) before validation.
+        
+        Example:
+        - Official ID: 8110314955 (10 digits, checksum on 811031495)
+        - Stored ID: 198110314955 (12 digits, but checksum still on 811031495)
         """
-        if len(nidn) != 12 or not nidn.isdigit():
+        # Accept both 10-digit and 12-digit formats
+        if len(nidn) not in (10, 12) or not nidn.isdigit():
             return True
         
         try:
-            # Extract DOB
-            year = int(nidn[0:4])
-            month = int(nidn[4:6])
-            day = int(nidn[6:8])
+            # Determine if this is 10-digit or 12-digit format
+            if len(nidn) == 12:
+                # 12-digit format: CCYYMMDDBBBC
+                year = int(nidn[0:4])
+                month = int(nidn[4:6])
+                day = int(nidn[6:8])
+                gender_digit_pos = 10
+                nidn_10_digit = nidn[2:]  # Strip century for Luhn validation
+            else:
+                # 10-digit format: YYMMDDBBBC - need to infer century from DOB
+                year_2digit = int(nidn[0:2])
+                month = int(nidn[2:4])
+                day = int(nidn[4:6])
+                gender_digit_pos = 8
+                nidn_10_digit = nidn  # Already 10 digits
+                
+                # Infer century from provided DOB if available
+                if provided_dob:
+                    try:
+                        if len(provided_dob) == 10:  # YYYY-MM-DD format
+                            provided_year = int(provided_dob[0:4])
+                            year = (provided_year // 100) * 100 + year_2digit
+                        else:
+                            # Assume 1900s if < 50, 2000s if >= 50 (common heuristic)
+                            year = 1900 + year_2digit if year_2digit >= 50 else 2000 + year_2digit
+                    except (ValueError, IndexError):
+                        # Fallback heuristic
+                        year = 1900 + year_2digit if year_2digit >= 50 else 2000 + year_2digit
+                else:
+                    # Fallback heuristic when no DOB provided
+                    year = 1900 + year_2digit if year_2digit >= 50 else 2000 + year_2digit
             
+            # Validate date
             try:
                 dob_obj = datetime(year, month, day)
                 extracted_dob = dob_obj.strftime('%Y-%m-%d')
@@ -807,17 +847,50 @@ class IDLogicValidator:
                 return True
             
             if not self._compare_dob(extracted_dob, provided_dob):
+                self.last_failure_reason = f"Swedish NIDN DOB mismatch: extracted {extracted_dob} vs provided {provided_dob}"
                 return False
             
-            # Gender: penultimate digit (position 10), odd=male, even=female
-            gender_digit = int(nidn[10])
+            # Gender: penultimate digit, odd=male, even=female
+            gender_digit = int(nidn[gender_digit_pos])
             extracted_gender = 'M' if gender_digit % 2 == 1 else 'F'
             if not self._compare_gender(extracted_gender, provided_gender):
+                self.last_failure_reason = f"Swedish NIDN gender mismatch: extracted {extracted_gender} vs provided {provided_gender}"
                 return False
             
-            # Luhn algorithm check digit
-            digits = [int(d) for d in nidn[:11]]  # Exclude check digit
+            # Luhn algorithm check digit - ALWAYS validate on 10-digit format
+            luhn_valid = self._validate_swedish_luhn(nidn_10_digit, 10)
+            
+            if not luhn_valid:
+                if self.verbose:
+                    print(f"Swedish NIDN Luhn check failed on 10-digit format: {nidn_10_digit} (from {nidn})")
+                self.last_failure_reason = f"Swedish NIDN Luhn checksum failed (validated on 10-digit format: {nidn_10_digit})"
+                return False
+            
+            return True
+            
+        except (ValueError, IndexError) as e:
+            self._log_validation_exception("SE", nidn, e, "Swedish NIDN validation")
+            return True  # Pass with warning logged
+    
+    def _validate_swedish_luhn(self, nidn: str, expected_length: int) -> bool:
+        """
+        Validate Swedish NIDN using Luhn algorithm.
+        
+        Args:
+            nidn: The NIDN to validate (10 or 12 digits)
+            expected_length: Expected length (10 or 12)
+        
+        Returns:
+            True if Luhn checksum is valid, False otherwise
+        """
+        if len(nidn) != expected_length or not nidn.isdigit():
+            return False
+        
+        try:
+            # Luhn algorithm on all digits except the last (check digit)
+            digits = [int(d) for d in nidn[:-1]]  # Exclude check digit
             doubled_sum = 0
+            
             for i, digit in enumerate(digits):
                 if i % 2 == 0:
                     doubled = digit * 2
@@ -826,17 +899,11 @@ class IDLogicValidator:
                     doubled_sum += digit
             
             check_digit_expected = (10 - (doubled_sum % 10)) % 10
-            check_digit_actual = int(nidn[11])
+            check_digit_actual = int(nidn[-1])
             
-            if check_digit_expected != check_digit_actual:
-                if self.verbose:
-                    print(f"Swedish NIDN Luhn check failed: {nidn}")
-                return False
-            
-            return True
-        except (ValueError, IndexError) as e:
-            self._log_validation_exception("SE", nidn, e, "Swedish NIDN validation")
-            return True  # Pass with warning logged
+            return check_digit_expected == check_digit_actual
+        except (ValueError, IndexError):
+            return False
     
     # ========================================================================
     # SLOVENIAN NIDN VALIDATION (SI)
