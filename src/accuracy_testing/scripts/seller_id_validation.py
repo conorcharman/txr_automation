@@ -245,12 +245,23 @@ class SellerIDValidator:
             "Match"  # "TRUE" if match, "FALSE" if not
         ]
         
+        # Sort records before writing: Surname (A-Z), First Name (A-Z), Person Code (A-Z), Transaction Reference (A-Z)
+        sorted_records = sorted(
+            records,
+            key=lambda r: (
+                r.surname.upper() if r.surname else "",
+                r.first_name.upper() if r.first_name else "",
+                r.person_code.upper() if r.person_code else "",
+                r.transaction_ref.upper() if r.transaction_ref else ""
+            )
+        )
+        
         try:
             with open(self.output_file, 'w', encoding='utf-8', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(output_columns)
                 
-                for record in records:
+                for record in sorted_records:
                     # Swap nationalities if priority country is in secondary position (for easier review)
                     primary_nat = record.primary_nationality
                     secondary_nat = record.secondary_nationality
@@ -325,6 +336,17 @@ class SellerIDValidator:
             self.logger.info("No errors to write - all records passed validation")
             return
         
+        # Sort error records before writing
+        sorted_error_records = sorted(
+            error_records,
+            key=lambda r: (
+                r.surname.upper() if r.surname else "",
+                r.first_name.upper() if r.first_name else "",
+                r.person_code.upper() if r.person_code else "",
+                r.transaction_ref.upper() if r.transaction_ref else ""
+            )
+        )
+        
         # Ensure output directory exists
         errors_file.parent.mkdir(parents=True, exist_ok=True)
         
@@ -359,7 +381,7 @@ class SellerIDValidator:
                 writer = csv.writer(f)
                 writer.writerow(output_columns)
                 
-                for record in error_records:
+                for record in sorted_error_records:
                     # Swap nationalities if needed (same logic as main output)
                     primary_nat = record.primary_nationality
                     secondary_nat = record.secondary_nationality
@@ -608,8 +630,8 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
             'input_file': str(extract_path),
             'output_file': str(output_path),
             'template_file': str(template_path) if template_path.exists() else '',  # Optional Kaizen lookup
-            'template_id_column': paths.get('template_id_column', 'Seller ID Code'),
-            'template_type_column': paths.get('template_type_column', 'Type of Seller ID Code')
+            'template_id_column': paths.get('template_id_column', 'Seller identification code'),
+            'template_type_column': paths.get('template_type_column', 'Type of seller identification code')
         }
         
         try:

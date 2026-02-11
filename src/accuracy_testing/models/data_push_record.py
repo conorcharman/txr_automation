@@ -12,8 +12,10 @@ Business Logic:
     - Records are matched by Transaction Reference
     - All validation columns are copied (Error, Correction, etc.)
     - Both validation outputs and templates use "Error" column name
+    - Exception: If Error="N" and Correction has a value, do not push
+      Correction or Correction Field columns (these are not relevant)
 
-Version: 1.1 (Updated to push all records)
+Version: 1.2 (Conditional correction push based on Error flag)
 Migrated from: DataPush1_0.vb
 """
 
@@ -142,6 +144,9 @@ class DataPushRecord:
         """
         Get values to push based on action and column mappings.
         
+        Exception: If Error="N" and there is a correction value, 
+        do not push Correction or Correction Field columns.
+        
         Args:
             column_mappings: List of column mappings to apply
             
@@ -151,9 +156,19 @@ class DataPushRecord:
         result = {}
         
         if self.action == PushAction.UPDATE_ALL:
+            # Check if we should skip correction columns
+            # Skip if: Error="N" AND Correction has a value
+            error_is_n = self.error_flag.strip().upper() == "N"
+            correction_value = str(self.source_data.get("Correction", "")).strip()
+            skip_corrections = error_is_n and bool(correction_value)
+            
             # Push all mapped columns (including empty values for QA)
             for mapping in column_mappings:
                 if mapping.source_col in self.source_data:
+                    # Skip correction columns if Error="N" and correction exists
+                    if skip_corrections and mapping.source_col in ("Correction", "Correction Field"):
+                        continue
+                    
                     value = self.source_data[mapping.source_col]
                     # Push all values including empty ones for QA purposes
                     result[mapping.target_col] = value if value is not None else ""
@@ -297,6 +312,7 @@ DEFAULT_COLUMN_MAPPINGS = [
     ColumnMapping("Secondary Nationality", "Secondary Nationality", "Secondary nationality code"),
     # Correction columns (same column names in validation output and template)
     ColumnMapping("Error", "Error", "Validation error flag (Y/N)"),
+    ColumnMapping("Failure Reason", "Failure Reason", "Specific reason for validation failure"),
     ColumnMapping("Correction", "Correction", "Suggested correction (ID:TYPE format)"),
     ColumnMapping("Correction Field", "Correction Field", "Fields being corrected (ID:IDT format)"),
     ColumnMapping("Agree With Correction", "Agree With Correction", "Analyst agreement with correction"),
@@ -305,7 +321,6 @@ DEFAULT_COLUMN_MAPPINGS = [
     # Status columns
     ColumnMapping("Tracker Status", "Tracker Status", "Status from tracker system"),
     ColumnMapping("Pass/Fail", "Pass/Fail", "Format and logic validation result"),
-    ColumnMapping("Failure Reason", "Failure Reason", "Specific reason for validation failure"),
     ColumnMapping("Actions Taken", "Actions Taken", "Actions taken on this record"),
     # Match columns
     ColumnMapping("Kaizen Error", "Kaizen Error", "Template lookup result (ID:TYPE)"),

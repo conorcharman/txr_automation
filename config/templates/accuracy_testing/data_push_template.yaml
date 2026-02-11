@@ -189,6 +189,11 @@ batch:
     - source: "Error"
       target: "Error"
       description: "Error flag from validation (Y/N)"
+    
+    # Failure reason (specific reason for validation failure)
+    - source: "Failure Reason"
+      target: "Failure Reason"
+      description: "Specific reason for validation failure"
 
     # Tracker status (exists in both)
     - source: "Tracker Status"

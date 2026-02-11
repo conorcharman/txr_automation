@@ -203,22 +203,24 @@ class TestDataPushRecord:
         assert record.should_push is True
     
     def test_from_dict_error_n(self, sample_source_data):
-        """Test creating record with Error = N."""
+        """Test creating record with Error = N - should push all fields."""
         record = DataPushRecord.from_dict(sample_source_data[1])
         
         assert record.transaction_ref == "TXN002"
         assert record.error_flag == "N"
-        assert record.action == PushAction.UPDATE_ERROR_ONLY
+        # Changed: Now all records are pushed (UPDATE_ALL for QA purposes)
+        assert record.action == PushAction.UPDATE_ALL
         assert record.should_push is True
     
     def test_from_dict_error_tbc(self, sample_source_data):
-        """Test creating record with Error = TBC (should skip)."""
+        """Test creating record with Error = TBC - should push all fields."""
         record = DataPushRecord.from_dict(sample_source_data[3])
         
         assert record.transaction_ref == "TXN004"
         assert record.error_flag == "TBC"
-        assert record.action == PushAction.SKIP
-        assert record.should_push is False
+        # Changed: Now all records are pushed (UPDATE_ALL for QA purposes)
+        assert record.action == PushAction.UPDATE_ALL
+        assert record.should_push is True
     
     def test_from_dict_empty_transaction_ref(self):
         """Test record with empty transaction reference is invalid."""
@@ -238,14 +240,84 @@ class TestDataPushRecord:
         assert values["ID Value"] == "549300CLIENT00000001"
         assert values["Correction"] == "549300CORRECT0000001"
     
-    def test_get_push_values_error_only(self, sample_source_data, column_mappings):
-        """Test getting push values for UPDATE_ERROR_ONLY action."""
+    def test_get_push_values_error_n_without_correction_value(self, sample_source_data, column_mappings):
+        """Test that all fields including empty Correction are pushed when Error=N and no correction value."""
+        # TXN002 has Error="N" and empty Correction
         record = DataPushRecord.from_dict(sample_source_data[1])
         
         values = record.get_push_values(column_mappings)
         
-        # Should only have Error column
-        assert values == {"Error": "N"}
+        # Should push all fields including empty Correction fields
+        assert "Account ID" in values
+        assert "Error" in values
+        assert values["Error"] == "N"
+        assert "Correction" in values  # Empty correction should be pushed
+        assert values["Correction"] == ""
+        assert "Correction Field" in values
+        assert values["Correction Field"] == ""
+    
+    def test_get_push_values_error_n_with_correction(self, column_mappings):
+        """Test that Correction fields are NOT pushed when Error=N and correction exists."""
+        # Create a record with Error="N" but has a correction value
+        data = {
+            "Transaction Reference": "TXN005",
+            "Account ID": "C33333333",
+            "ID Value": "AB123456C",
+            "Error": "N",
+            "Correction": "AB123456D",  # Has correction but Error is N
+            "Correction Field": "ID Value",
+            "ID Type": "NIDN",
+        }
+        record = DataPushRecord.from_dict(data)
+        
+        values = record.get_push_values(column_mappings)
+        
+        # Should push all fields EXCEPT Correction and Correction Field
+        assert "Account ID" in values
+        assert values["Account ID"] == "C33333333"
+        assert "ID Value" in values
+        assert values["ID Value"] == "AB123456C"
+        assert "ID Type" in values
+        assert values["ID Type"] == "NIDN"
+        assert "Error" in values
+        assert values["Error"] == "N"
+        
+        # These should NOT be in the pushed values
+        assert "Correction" not in values
+        assert "Correction Field" not in values
+    
+    def test_get_push_values_error_y_with_correction(self, sample_source_data, column_mappings):
+        """Test that Correction fields ARE pushed when Error=Y."""
+        record = DataPushRecord.from_dict(sample_source_data[0])  # Error="Y" with correction
+        
+        values = record.get_push_values(column_mappings)
+        
+        # Should push ALL fields including Correction
+        assert "Correction" in values
+        assert values["Correction"] == "549300CORRECT0000001"
+        assert "Correction Field" in values
+        assert values["Correction Field"] == "ID Value"
+    
+    def test_get_push_values_error_n_no_correction(self, column_mappings):
+        """Test that empty Correction fields ARE pushed when Error=N and no correction."""
+        data = {
+            "Transaction Reference": "TXN006",
+            "Account ID": "D44444444",
+            "ID Value": "VALID123",
+            "Error": "N",
+            "Correction": "",  # No correction
+            "Correction Field": "",
+            "ID Type": "CONCAT",
+        }
+        record = DataPushRecord.from_dict(data)
+        
+        values = record.get_push_values(column_mappings)
+        
+        # Should push all fields including empty Correction fields (no correction exists)
+        assert "Correction" in values
+        assert values["Correction"] == ""
+        assert "Correction Field" in values
+        assert values["Correction Field"] == ""
     
     def test_was_matched_property(self):
         """Test was_matched property."""
@@ -431,12 +503,13 @@ class TestDataPushProcessor:
         processor.match_records()
         stats = processor.push_data()
         
+        # Changed: All matched records now push all fields (UPDATE_ALL)
         # TXN001: Error=Y -> update all
-        # TXN002: Error=N -> update error only
+        # TXN002: Error=N -> update all (but skip corrections if present)
         # TXN003: Error=Y -> update all
         # TXN004: not matched
-        assert stats.updated_all == 2
-        assert stats.updated_error_only == 1
+        assert stats.updated_all == 3
+        assert stats.updated_error_only == 0
     
     def test_full_process(
         self, 
@@ -629,12 +702,13 @@ class TestEdgeCases:
         
         processor.load_source(source_path)
         
+        # Changed: All records now use UPDATE_ALL action
         # Check actions are correctly determined regardless of case
         actions = [r.action for r in processor.source_records]
         assert actions[0] == PushAction.UPDATE_ALL  # y -> Y
-        assert actions[1] == PushAction.UPDATE_ERROR_ONLY  # n -> N
+        assert actions[1] == PushAction.UPDATE_ALL  # n -> N (now pushes all)
         assert actions[2] == PushAction.UPDATE_ALL  # Y
-        assert actions[3] == PushAction.UPDATE_ERROR_ONLY  # N
+        assert actions[3] == PushAction.UPDATE_ALL  # N (now pushes all)
 
 
 # =============================================================================
