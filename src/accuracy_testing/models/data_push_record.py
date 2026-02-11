@@ -244,6 +244,7 @@ class DataPushConfig:
     dry_run: bool = False
     backup: bool = True
     backup_dir: Optional[Path] = None
+    create_missing_columns: bool = True  # Create columns in target if they don't exist
     
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "DataPushConfig":

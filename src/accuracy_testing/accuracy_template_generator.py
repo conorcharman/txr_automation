@@ -70,6 +70,7 @@ class TemplateFormat:
         "Primary Nationality",
         "Secondary Nationality",
         "Error",
+        "Failure Reason",
         "Correction",
         "Correction Field",
         "Tracker Status"
@@ -90,6 +91,7 @@ class TemplateFormat:
         "Primary Nationality",
         "Secondary Nationality",
         "Error",
+        "Failure Reason",
         "Correction",
         "Correction Field",
         "Tracker Status"
