@@ -511,7 +511,12 @@ class InconsistentBuyerIDValidator:
             for record in record_iter:
                 # Only process if not already corrected
                 if record.requires_standard_validation:
+                    # Preserve existing failure_reason before standard validation
+                    existing_failure_reason = record.failure_reason
                     self.id_processor.process_record(record)
+                    # If failure_reason was set during preprocessing and still relevant, preserve it
+                    if existing_failure_reason and not record.failure_reason:
+                        record.failure_reason = existing_failure_reason
                     record.correction_source = "Standard validation (no prior valid ID)"
         
         # Step 3.5: KAIZEN TEMPLATE VALIDATION for preprocessed records

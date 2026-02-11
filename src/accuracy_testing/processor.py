@@ -673,19 +673,19 @@ class InconsistentIDProcessor:
         self, 
         record: ClientRecord, 
         id_processor: 'IDValidationProcessor'
-    ) -> Tuple[bool, bool]:
+    ) -> Tuple[bool, bool, Optional[str]]:
         """
         Validate ID completely (format + logic) using the processor's methods.
         
-        This method delegates to IDValidationProcessor's _validate_existing_id method
-        which handles both format and logic validation.
+        This method performs BOTH format and logic validation separately,
+        matching the behavior of process_record().
         
         Args:
             record: ClientRecord to validate
             id_processor: IDValidationProcessor for validation logic
         
         Returns:
-            Tuple of (format_valid, logic_valid)
+            Tuple of (format_valid, logic_valid, error_message)
         """
         # Use the processor's validation method
         # This reuses the existing v5.6 validation logic
@@ -697,20 +697,39 @@ class InconsistentIDProcessor:
             record.priority_country_code = country_code
         
         if not country_code:
-            return (False, False)
+            return (False, False, "No valid country code found")
         
-        # Validate the existing ID (this handles both format and logic validation)
-        is_valid, error_message = id_processor._validate_existing_id(
+        # Step 1: Validate format
+        format_valid, format_error = id_processor._validate_existing_id(
             record.id_value,
             record.id_type,
             country_code
         )
         
-        # For inconsistent ID validation, we consider both format and logic together
-        # If validation passes, both format and logic are valid
-        # If validation fails, we consider both format and logic invalid
-        # (This matches the VBA behavior for inconsistent ID validation)
-        return (is_valid, is_valid)
+        # Step 2: If format is valid, validate logic (DOB/gender/checksum)
+        logic_valid = True
+        logic_error = ""
+        
+        if format_valid:
+            logic_valid = id_processor.id_logic_validator.validate_id_logic(
+                record.id_value,
+                record.id_type,
+                country_code,
+                record.date_of_birth,
+                record.gender
+            )
+            if not logic_valid:
+                logic_error = id_processor.id_logic_validator.last_failure_reason or "Logic validation failed"
+        
+        # Combine error messages
+        if not format_valid:
+            error_message = format_error
+        elif not logic_valid:
+            error_message = logic_error
+        else:
+            error_message = ""
+        
+        return (format_valid, logic_valid, error_message)
     
     def _find_most_recent_valid_id(
         self,
@@ -803,6 +822,7 @@ class InconsistentIDProcessor:
             
             if not most_recent_valid:
                 # No valid ID found in this group - mark all for standard correction
+                # BUT preserve failure_reason from validation so it appears in output
                 for idx in group_indices:
                     record = records[idx]
                     record.requires_standard_validation = True
@@ -813,6 +833,7 @@ class InconsistentIDProcessor:
                         record.correction_source = f"No valid {id_type} found - requires standard correction"
                         record.actions_taken.append(f"Inconsistent ID - No valid {id_type}, using standard correction")
                     self.stats.no_valid_in_group += 1
+                    # Note: failure_reason is preserved from validation phase above
                     
                 self._log(f"ID Type {id_type} (prefix: {prefix}): No valid ID found, marking {len(group_indices)} records for standard correction")
                 continue
@@ -831,6 +852,8 @@ class InconsistentIDProcessor:
                     record.correction_source = f"Already matches most recent valid {id_type} (prefix: {prefix})"
                     if record.is_valid_id and not record.is_fallback_id:
                         record.actions_taken.append(f"Pass - Most recent valid {id_type}")
+                    # If this record is invalid, preserve its failure_reason for output
+                    # (failure_reason was already set during validation phase)
                     self.stats.already_most_recent += 1
                     
                     self._log(f"Record {record.row_index}: Already matches most recent valid {id_type}: {most_recent_id}")
@@ -845,6 +868,7 @@ class InconsistentIDProcessor:
                     record.requires_standard_validation = False
                     record.correction_source = f"Most recent valid {id_type} (prefix: {prefix}) from {most_recent_datetime}"
                     record.is_valid = False  # Mark as corrected
+                    # Preserve failure_reason from validation phase (already set above)
                     
                     if was_valid:
                         # Valid but different ID - standardizing to most recent
@@ -976,27 +1000,35 @@ class InconsistentIDProcessor:
                     record.failure_reason = "Fallback ID pattern detected"
                 else:
                     # Validate format + logic
-                    format_valid, logic_valid = self.validate_id_complete(record, id_processor)
+                    format_valid, logic_valid, error_message = self.validate_id_complete(record, id_processor)
                     record.is_valid_id = format_valid and logic_valid
                     
-                    # Populate Pass/Fail fields for all validated IDs
-                    if record.is_valid_id:
+                    # Populate Pass/Fail fields based on separate format and logic validations
+                    if format_valid and logic_valid:
+                        # Both pass
                         record.format_status = "Pass"
                         record.logic_status = "Pass"
                         record.is_valid = True
                         if "Pass" not in record.actions_taken:
                             record.actions_taken.append("Pass")
-                    else:
+                    elif format_valid and not logic_valid:
+                        # Format passes but logic fails
+                        record.format_status = "Pass"
+                        record.logic_status = "Fail"
+                        record.failure_reason = error_message or f"{record.id_type} logic validation failed"
                         self.stats.invalid_ids_found += 1
-                        # Populate failure details
-                        if not format_valid:
-                            record.format_status = "Fail"
-                            record.logic_status = "N/A"
-                            record.failure_reason = f"Invalid {record.id_type} format"
-                        else:
-                            record.format_status = "Pass"
-                            record.logic_status = "Fail"
-                            record.failure_reason = "ID logic validation failed (DOB/gender mismatch)"
+                    elif not format_valid:
+                        # Format fails (logic not tested)
+                        record.format_status = "Fail"
+                        record.logic_status = "N/A"
+                        record.failure_reason = error_message or f"Invalid {record.id_type} format"
+                        self.stats.invalid_ids_found += 1
+                    else:
+                        # Both fail (shouldn't reach here, but handle it)
+                        self.stats.invalid_ids_found += 1
+                        record.format_status = "Fail"
+                        record.logic_status = "Fail"
+                        record.failure_reason = error_message or "Validation failed"
             
             # Phase 5: Apply correction logic
             self.apply_prior_valid_corrections(records, record_indices)

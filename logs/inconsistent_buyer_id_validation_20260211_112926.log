@@ -1,0 +1,1270 @@
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Loading Italian tracker: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\reference\Transaction Reporting - Italian Fiscal Code Validation.csv
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Loaded 188 Italian tracker records
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Loading template file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 7_66.csv
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Using column names: ID='Buyer identification code', Type='Type of buyer identification code'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Loaded 2327 template records
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   Sample: 44625CH8X1Q1 -> id='GR104051934', type='NIDN'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   Sample: 44625CH1VKM1 -> id='AU19750815DIKLAYANIV', type='CONCAT'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   Sample: 44625CF47JW1 -> id='UAEX622504', type='CCPT'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - INCONSISTENT BUYER ID VALIDATION v1.3
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_66_FY25_Q4.csv
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_66.csv
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Start time: 2026-02-11 11:29:26
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Reading input file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\extracts\csv\7_66_FY25_Q4.csv
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Detected encoding: utf-8
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Successfully read 2433 records
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - PHASE 1: INCONSISTENT ID PREPROCESSING
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Grouping by Person Code, sorting chronologically, applying prior-valid corrections...
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Starting inconsistent ID preprocessing for 2433 records
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Phase 1: Parsing Trade_Date_Time fields...
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Phase 2: Grouping records by Person Code...
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Found 309 unique Person Codes
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Phase 3: Processing person groups for inconsistencies...
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5VC6: Found 12 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 608: Detected CONCAT format for ID 'IN20000209BALJISINGH' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 608: Already matches most recent valid CONCAT: IN20000209BALJISINGH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 11 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A96177: Found 21 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GB): No valid ID found, marking 21 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADD9GX: Found 17 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1756: Standardized valid NIDN 'GBJR772529B' to most recent: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1965: Standardized valid NIDN 'GBJR772529B' to most recent: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1992: Standardized valid NIDN 'GBJR772529B' to most recent: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 815: Standardized valid NIDN 'GBJR772529B' to most recent: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 924: Standardized valid NIDN 'GBJR772529B' to most recent: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2374: Standardized valid NIDN 'GBJR772529B' to most recent: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 984: Standardized valid NIDN 'GBJR772529B' to most recent: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1423: Already matches most recent valid NIDN: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 386: Already matches most recent valid NIDN: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 5: Already matches most recent valid NIDN: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 446: Already matches most recent valid NIDN: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1694: Already matches most recent valid NIDN: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1748: Already matches most recent valid NIDN: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1550: Already matches most recent valid NIDN: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 458: Already matches most recent valid NIDN: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 965: Already matches most recent valid NIDN: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1283: Already matches most recent valid NIDN: GBJR773529B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCRCH: Found 39 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 19: Detected CONCAT format for ID 'AU19690922GRANTABT##' with prefix 'AU' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 19: Already matches most recent valid CONCAT: AU19690922GRANTABT##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: AU): No valid ID found, marking 38 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ACBYC9: Found 20 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 349: Standardized valid NIDN 'GBNS973736C' to most recent: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2315: Standardized valid NIDN 'GBNS973736C' to most recent: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 455: Standardized valid NIDN 'GBNS973736C' to most recent: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2389: Standardized valid NIDN 'GBNS973736C' to most recent: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 862: Standardized valid NIDN 'GBNS973736C' to most recent: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2293: Standardized valid NIDN 'GBNS973736C' to most recent: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1760: Standardized valid NIDN 'GBNS973736C' to most recent: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 292: Standardized valid NIDN 'GBNS973736C' to most recent: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 933: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 519: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2379: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2102: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1136: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 332: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1505: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 187: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 8: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2419: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 642: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 68: Already matches most recent valid NIDN: GBNS973738C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AB8NGV: Found 20 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GB): No valid ID found, marking 20 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AB8NFC: Found 11 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 118: Standardized valid NIDN 'GBXT666652C' to most recent: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1026: Standardized valid NIDN 'GBXT666652C' to most recent: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 12: Standardized valid NIDN 'GBXT666652C' to most recent: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 437: Standardized valid NIDN 'GBXT666652C' to most recent: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 952: Already matches most recent valid NIDN: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 372: Already matches most recent valid NIDN: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1577: Already matches most recent valid NIDN: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2305: Already matches most recent valid NIDN: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 27: Already matches most recent valid NIDN: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 515: Already matches most recent valid NIDN: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1117: Already matches most recent valid NIDN: GBZT666652C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABCTGX: Found 43 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1738: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 320: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1683: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1135: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1953: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1787: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 37: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 817: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1836: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 173: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1315: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 684: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 565: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 15: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1417: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2388: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 335: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 530: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 163: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1544: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 115: Standardized valid NIDN 'GBSC080743D' to most recent: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 171: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1882: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 951: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2261: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1105: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1484: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 638: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2005: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 85: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 552: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 175: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 690: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1409: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 821: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1083: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 797: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 998: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1240: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 209: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1388: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 490: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2186: Already matches most recent valid NIDN: GBSC087043D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABKT9T: Found 9 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 687: Detected CONCAT format for ID 'GB20070721EVIE#TURNE' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 21: Detected CONCAT format for ID 'GB20070721EVIE#TURNE' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 687: Already matches most recent valid CONCAT: GB20070721EVIE#TURNE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 21: Already matches most recent valid CONCAT: GB20070721EVIE#TURNE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 564: Already matches most recent valid NIDN: GBPM283477B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2230: Already matches most recent valid NIDN: GBPM283477B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1645: Already matches most recent valid NIDN: GBPM283477B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1972: Already matches most recent valid NIDN: GBPM283477B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1514: Already matches most recent valid NIDN: GBPM283477B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1320: Already matches most recent valid NIDN: GBPM283477B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2361: Already matches most recent valid NIDN: GBPM283477B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5WML: Found 12 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2229: Detected CONCAT format for ID 'IN19930515PRAMOKUMBH' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2229: Already matches most recent valid CONCAT: IN19930515PRAMOKUMBH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 11 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5WKF: Found 27 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1214: Detected CONCAT format for ID 'MY19971209YUNG#NG###' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2082: Detected CONCAT format for ID 'MY19971209YUNG#NG###' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2067: Detected CONCAT format for ID 'MY19971209YUNG#NG###' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 134: Detected CONCAT format for ID 'MY19971209YUNG#NG###' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 861: Detected CONCAT format for ID 'MY19971209YUNG#NG###' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1519: Detected CONCAT format for ID 'MY19971209YUNG#NG###' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1214: Already matches most recent valid CONCAT: MY19971209YUNG#NG###
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2082: Already matches most recent valid CONCAT: MY19971209YUNG#NG###
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2067: Already matches most recent valid CONCAT: MY19971209YUNG#NG###
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 134: Already matches most recent valid CONCAT: MY19971209YUNG#NG###
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 861: Already matches most recent valid CONCAT: MY19971209YUNG#NG###
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1519: Already matches most recent valid CONCAT: MY19971209YUNG#NG###
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: MY): No valid ID found, marking 21 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDTGH: Found 7 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 33: Detected CONCAT format for ID 'TN20020815MAHERCHAAB' with prefix 'TN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 872: Detected CONCAT format for ID 'TN20020815MAHERCHAAB' with prefix 'TN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 33: Already matches most recent valid CONCAT: TN20020815MAHERCHAAB
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 872: Already matches most recent valid CONCAT: TN20020815MAHERCHAAB
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: TN): No valid ID found, marking 5 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADD2QW: Found 16 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1590: Detected CONCAT format for ID 'PK19910720ASIM#JAVED' with prefix 'PK' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1350: Detected CONCAT format for ID 'PK19910720ASIM#JAVED' with prefix 'PK' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1590: Already matches most recent valid CONCAT: PK19910720ASIM#JAVED
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1350: Already matches most recent valid CONCAT: PK19910720ASIM#JAVED
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: PK): No valid ID found, marking 14 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5VXN: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 44: Detected CONCAT format for ID 'IN19971206SIDDHMANIK' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 44: Already matches most recent valid CONCAT: IN19971206SIDDHMANIK
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AB5QKV: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 46: Detected CONCAT format for ID 'GB20070701AMELIKUNER' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 46: Already matches most recent valid CONCAT: GB20070701AMELIKUNER
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1084: Already matches most recent valid NIDN: GBPM234073B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 974: Already matches most recent valid NIDN: GBPM234073B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A41995: Found 10 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 504: Detected CONCAT format for ID 'GB20070808RUBY#HOFFE' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 982: Detected CONCAT format for ID 'GB20070808RUBY#HOFFE' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1175: Detected CONCAT format for ID 'GB20070808RUBY#HOFFE' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 47: Detected CONCAT format for ID 'GB20070808RUBY#HOFFE' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 939: Detected CONCAT format for ID 'GB20070808RUBY#HOFFE' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 504: Already matches most recent valid CONCAT: GB20070808RUBY#HOFFE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 982: Already matches most recent valid CONCAT: GB20070808RUBY#HOFFE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1175: Already matches most recent valid CONCAT: GB20070808RUBY#HOFFE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 47: Already matches most recent valid CONCAT: GB20070808RUBY#HOFFE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 939: Already matches most recent valid CONCAT: GB20070808RUBY#HOFFE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 312: Already matches most recent valid NIDN: GBPM345671D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1247: Already matches most recent valid NIDN: GBPM345671D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1155: Already matches most recent valid NIDN: GBPM345671D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1065: Already matches most recent valid NIDN: GBPM345671D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 297: Already matches most recent valid NIDN: GBPM345671D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB62R9: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 981: Detected CONCAT format for ID 'IN19980802HAFSABHAYL' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 391: Detected CONCAT format for ID 'IN19980802HAFSABHAYL' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 981: Already matches most recent valid CONCAT: IN19980802HAFSABHAYL
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 391: Already matches most recent valid CONCAT: IN19980802HAFSABHAYL
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 4 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABMV57: Found 14 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: RO): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 425: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 448: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 390: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 698: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 80: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1118: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2214: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 869: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 55: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1900: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 160: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2434: Already matches most recent valid CCPT: RO056971180
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABT8HT: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1940: Detected CONCAT format for ID 'FI19920208SEBASCHARP' with prefix 'FI' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1940: Already matches most recent valid CONCAT: FI19920208SEBASCHARP
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: FI): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A68339: Found 22 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GB): No valid ID found, marking 22 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A42347: Found 20 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 94: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1244: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1393: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 521: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1901: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 947: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1788: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1137: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 593: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1139: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 932: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 72: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2341: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 66: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 82: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1133: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1157: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 737: Detected CONCAT format for ID 'GB20081230JAMESSHAW#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 94: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1244: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1393: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 521: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1901: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 947: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1788: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1137: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 593: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1139: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 932: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 72: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2341: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 66: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 82: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1133: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1157: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 737: Already matches most recent valid CONCAT: GB20081230JAMESSHAW#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2198: Already matches most recent valid NIDN: GBPN341808A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 780: Already matches most recent valid NIDN: GBPN341808A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADD99G: Found 12 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1778: Detected CONCAT format for ID 'KR19920902SUNAHYANG#' with prefix 'KR' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 67: Detected CONCAT format for ID 'KR19920902SUNAHYANG#' with prefix 'KR' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1434: Detected CONCAT format for ID 'KR19920902SUNAHYANG#' with prefix 'KR' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1778: Already matches most recent valid CONCAT: KR19920902SUNAHYANG#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 67: Already matches most recent valid CONCAT: KR19920902SUNAHYANG#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1434: Already matches most recent valid CONCAT: KR19920902SUNAHYANG#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: KR): No valid ID found, marking 9 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5T7L: Found 22 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 816: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 70: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 523: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1855: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1233: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 241: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 650: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2171: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2013: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1977: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1331: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 944: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 227: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 806: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2179: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1555: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2058: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 131: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 755: Detected CONCAT format for ID 'NG19890812LIBERIKENG' with prefix 'NG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 816: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 70: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 523: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1855: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1233: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 241: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 650: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2171: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2013: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1977: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1331: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 944: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 227: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 806: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2179: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1555: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2058: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 131: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 755: Already matches most recent valid CONCAT: NG19890812LIBERIKENG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: NG): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDGXM: Found 27 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 193: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1170: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1521: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1999: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1523: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 221: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1895: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1354: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2323: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1676: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1310: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 71: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 942: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1543: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 541: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2291: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2059: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 927: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1938: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1845: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 931: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1316: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 943: Standardized valid NIDN 'GBNE183096D' to most recent: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1426: Already matches most recent valid NIDN: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2354: Already matches most recent valid NIDN: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 230: Already matches most recent valid NIDN: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 669: Already matches most recent valid NIDN: GBNE183096B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A39080: Found 19 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GB): No valid ID found, marking 19 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABLKPW: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1104: Detected CONCAT format for ID 'GB20070713HANNALEE##' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1104: Already matches most recent valid CONCAT: GB20070713HANNALEE##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2401: Already matches most recent valid NIDN: GBPM338015D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 81: Already matches most recent valid NIDN: GBPM338015D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADFJ8J: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 83: Detected CONCAT format for ID 'GB19711122RAJEEMIRCH' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 172: Detected CONCAT format for ID 'GB19711122RAJEEMIRCH' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 83: Already matches most recent valid CONCAT: GB19711122RAJEEMIRCH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 172: Already matches most recent valid CONCAT: GB19711122RAJEEMIRCH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GB): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABWW77: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 128: Detected CONCAT format for ID 'GB20231218SEBASTABOA' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GB): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 128: Already matches most recent valid CONCAT: GB20231218SEBASTABOA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AB9KJF: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2020: Standardized valid NIDN 'GBSC699660A' to most recent: GBSC699360A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 89: Already matches most recent valid NIDN: GBSC699360A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDJNX: Found 14 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1200: Detected CONCAT format for ID 'ID19821102SITI#MUWAH' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1500: Detected CONCAT format for ID 'ID19821102SITI#MUWAH' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 880: Detected CONCAT format for ID 'ID19821102SITI#MUWAH' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 725: Detected CONCAT format for ID 'ID19821102SITI#MUWAH' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1606: Detected CONCAT format for ID 'ID19821102SITI#MUWAH' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2044: Detected CONCAT format for ID 'ID19821102SITI#MUWAH' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 567: Detected CONCAT format for ID 'ID19821102SITI#MUWAH' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1353: Detected CONCAT format for ID 'ID19821102SITI#MUWAH' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 432: Detected CONCAT format for ID 'ID19821102SITI#MUWAH' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2084: Detected CONCAT format for ID 'ID19821102SITI#MUWAH' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1200: Already matches most recent valid CONCAT: ID19821102SITI#MUWAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1500: Already matches most recent valid CONCAT: ID19821102SITI#MUWAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 880: Already matches most recent valid CONCAT: ID19821102SITI#MUWAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 725: Already matches most recent valid CONCAT: ID19821102SITI#MUWAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1606: Already matches most recent valid CONCAT: ID19821102SITI#MUWAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2044: Already matches most recent valid CONCAT: ID19821102SITI#MUWAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 567: Already matches most recent valid CONCAT: ID19821102SITI#MUWAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1353: Already matches most recent valid CONCAT: ID19821102SITI#MUWAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 432: Already matches most recent valid CONCAT: ID19821102SITI#MUWAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2084: Already matches most recent valid CONCAT: ID19821102SITI#MUWAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: ID): No valid ID found, marking 4 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5VYG: Found 20 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1789: Detected CONCAT format for ID 'IN19970318ZIYADBHAYL' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1837: Detected CONCAT format for ID 'IN19970318ZIYADBHAYL' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1789: Already matches most recent valid CONCAT: IN19970318ZIYADBHAYL
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1837: Already matches most recent valid CONCAT: IN19970318ZIYADBHAYL
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 18 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5X9M: Found 39 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2282: Detected CONCAT format for ID 'FI19970623LILJAVALTO' with prefix 'FI' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 616: Detected CONCAT format for ID 'FI19970623LILJAVALTO' with prefix 'FI' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1933: Detected CONCAT format for ID 'FI19970623LILJAVALTO' with prefix 'FI' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1763: Detected CONCAT format for ID 'FI19970623LILJAVALTO' with prefix 'FI' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1321: Detected CONCAT format for ID 'FI19970623LILJAVALTO' with prefix 'FI' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2282: Already matches most recent valid CONCAT: FI19970623LILJAVALTO
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 616: Already matches most recent valid CONCAT: FI19970623LILJAVALTO
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1933: Already matches most recent valid CONCAT: FI19970623LILJAVALTO
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1763: Already matches most recent valid CONCAT: FI19970623LILJAVALTO
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1321: Already matches most recent valid CONCAT: FI19970623LILJAVALTO
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1710: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2310: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2232: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 224: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1959: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 442: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 245: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 153: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1563: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 527: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1727: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2156: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 314: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1638: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 997: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 730: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1584: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1866: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 301: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1396: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 93: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 142: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2129: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1622: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1868: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1897: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 411: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 422: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1108: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1782: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1548: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2254: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 410: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1909: Already matches most recent valid NIDN: FI230697-2049
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A83334: Found 7 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1522: Detected CONCAT format for ID 'GB20070823CASEYGRIBB' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 575: Detected CONCAT format for ID 'GB20070823CASEYGRIBB' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 95: Detected CONCAT format for ID 'GB20070823CASEYGRIBB' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2114: Detected CONCAT format for ID 'GB20070823CASEYGRIBB' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2161: Detected CONCAT format for ID 'GB20070823CASEYGRIBB' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1522: Already matches most recent valid CONCAT: GB20070823CASEYGRIBB
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 575: Already matches most recent valid CONCAT: GB20070823CASEYGRIBB
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 95: Already matches most recent valid CONCAT: GB20070823CASEYGRIBB
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2114: Already matches most recent valid CONCAT: GB20070823CASEYGRIBB
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2161: Already matches most recent valid CONCAT: GB20070823CASEYGRIBB
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 203: Already matches most recent valid NIDN: GBPM333087D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 499: Already matches most recent valid NIDN: GBPM333087D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCXHP: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1890: Detected CONCAT format for ID 'IL19840803SHIRAPELEG' with prefix 'IL' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1890: Already matches most recent valid CONCAT: IL19840803SHIRAPELEG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IL): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A02126: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 105: Detected CONCAT format for ID 'GB20070708DALE#LOMAX' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 105: Already matches most recent valid CONCAT: GB20070708DALE#LOMAX
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1805: Already matches most recent valid NIDN: GBPM226084A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 219: Already matches most recent valid NIDN: GBPM226084A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 910: Already matches most recent valid NIDN: GBPM226084A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ACCM7Y: Found 8 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 987: Detected CONCAT format for ID 'UA19860419OLENAOHURI' with prefix 'UA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2418: Detected CONCAT format for ID 'UA19860419OLENAOHURI' with prefix 'UA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 576: Detected CONCAT format for ID 'UA19860419OLENAOHURI' with prefix 'UA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 987: Already matches most recent valid CONCAT: UA19860419OLENAOHURI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2418: Already matches most recent valid CONCAT: UA19860419OLENAOHURI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 576: Already matches most recent valid CONCAT: UA19860419OLENAOHURI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: UA): No valid ID found, marking 5 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person BBDB56: Found 19 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1349: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 994: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 508: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1377: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1854: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 377: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 108: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1540: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 195: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1096: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1957: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 423: Corrected invalid NIDN to most recent: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1636: Already matches most recent valid NIDN: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1658: Already matches most recent valid NIDN: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1044: Already matches most recent valid NIDN: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 768: Already matches most recent valid NIDN: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1875: Already matches most recent valid NIDN: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 935: Already matches most recent valid NIDN: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 310: Already matches most recent valid NIDN: SE197411144046
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB62MC: Found 5 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 119: Detected CONCAT format for ID 'TW19950130YUCHUCHUAN' with prefix 'TW' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 119: Already matches most recent valid CONCAT: TW19950130YUCHUCHUAN
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: TW): No valid ID found, marking 4 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person BBCJRK: Found 22 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 712: Detected CONCAT format for ID 'GB20070424GUY##PREST' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 937: Detected CONCAT format for ID 'GB20070424GUY##PREST' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1270: Detected CONCAT format for ID 'GB20070424GUY##PREST' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1989: Detected CONCAT format for ID 'GB20070424GUY##PREST' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2358: Detected CONCAT format for ID 'GB20070424GUY##PREST' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 506: Detected CONCAT format for ID 'GB20070424GUY##PREST' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2035: Detected CONCAT format for ID 'GB20070424GUY##PREST' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 712: Already matches most recent valid CONCAT: GB20070424GUY##PREST
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 937: Already matches most recent valid CONCAT: GB20070424GUY##PREST
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1270: Already matches most recent valid CONCAT: GB20070424GUY##PREST
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1989: Already matches most recent valid CONCAT: GB20070424GUY##PREST
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2358: Already matches most recent valid CONCAT: GB20070424GUY##PREST
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 506: Already matches most recent valid CONCAT: GB20070424GUY##PREST
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2035: Already matches most recent valid CONCAT: GB20070424GUY##PREST
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1729: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 124: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 385: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2342: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1262: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1265: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1946: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 978: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1629: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1050: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1804: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 197: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1264: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2056: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 651: Already matches most recent valid NIDN: GBPM363560A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDYXN: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1363: Detected CONCAT format for ID 'CN19880906YUZHULIANG' with prefix 'CN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 126: Detected CONCAT format for ID 'CN19880906YUZHULIANG' with prefix 'CN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1363: Already matches most recent valid CONCAT: CN19880906YUZHULIANG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 126: Already matches most recent valid CONCAT: CN19880906YUZHULIANG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: CN): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5X5N: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1739: Detected CONCAT format for ID 'IN19920601AAKANRAI##' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 132: Detected CONCAT format for ID 'IN19920601AAKANRAI##' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 232: Detected CONCAT format for ID 'IN19920601AAKANRAI##' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1739: Already matches most recent valid CONCAT: IN19920601AAKANRAI##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 132: Already matches most recent valid CONCAT: IN19920601AAKANRAI##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 232: Already matches most recent valid CONCAT: IN19920601AAKANRAI##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADD8WR: Found 5 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 800: Detected CONCAT format for ID 'SE19870910HANS#HANSS' with prefix 'SE' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1582: Detected CONCAT format for ID 'SE19870910HANS#HANSS' with prefix 'SE' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 800: Already matches most recent valid CONCAT: SE19870910HANS#HANSS
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1582: Already matches most recent valid CONCAT: SE19870910HANS#HANSS
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: SE): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCX88: Found 7 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1306: Detected CONCAT format for ID 'ZW19890920CHIDONYANG' with prefix 'ZW' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1714: Detected CONCAT format for ID 'ZW19890920CHIDONYANG' with prefix 'ZW' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1028: Detected CONCAT format for ID 'ZW19890920CHIDONYANG' with prefix 'ZW' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2345: Detected CONCAT format for ID 'ZW19890920CHIDONYANG' with prefix 'ZW' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1306: Already matches most recent valid CONCAT: ZW19890920CHIDONYANG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1714: Already matches most recent valid CONCAT: ZW19890920CHIDONYANG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1028: Already matches most recent valid CONCAT: ZW19890920CHIDONYANG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2345: Already matches most recent valid CONCAT: ZW19890920CHIDONYANG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: ZW): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5TNQ: Found 12 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2041: Detected CONCAT format for ID 'ZA19881214MATTHFISHE' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1766: Detected CONCAT format for ID 'ZA19881214MATTHFISHE' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1833: Detected CONCAT format for ID 'ZA19881214MATTHFISHE' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 445: Detected CONCAT format for ID 'ZA19881214MATTHFISHE' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2029: Detected CONCAT format for ID 'ZA19881214MATTHFISHE' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 703: Detected CONCAT format for ID 'ZA19881214MATTHFISHE' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2041: Already matches most recent valid CONCAT: ZA19881214MATTHFISHE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1766: Already matches most recent valid CONCAT: ZA19881214MATTHFISHE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1833: Already matches most recent valid CONCAT: ZA19881214MATTHFISHE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 445: Already matches most recent valid CONCAT: ZA19881214MATTHFISHE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2029: Already matches most recent valid CONCAT: ZA19881214MATTHFISHE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 703: Already matches most recent valid CONCAT: ZA19881214MATTHFISHE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: ZA): No valid ID found, marking 6 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCVP7: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 807: Detected CONCAT format for ID 'IN19820615SURESJALLU' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 807: Already matches most recent valid CONCAT: IN19820615SURESJALLU
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5TV8: Found 5 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 853: Detected CONCAT format for ID 'ZA19960427JAMESDONAL' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 853: Already matches most recent valid CONCAT: ZA19960427JAMESDONAL
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: ZA): No valid ID found, marking 4 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A03520: Found 8 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 164: Standardized valid NIDN 'GBYS045550D' to most recent: GBYS045150D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 591: Standardized valid NIDN 'GBYS045550D' to most recent: GBYS045150D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 346: Already matches most recent valid NIDN: GBYS045150D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2150: Already matches most recent valid NIDN: GBYS045150D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2216: Already matches most recent valid NIDN: GBYS045150D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2241: Already matches most recent valid NIDN: GBYS045150D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1649: Already matches most recent valid NIDN: GBYS045150D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2393: Already matches most recent valid NIDN: GBYS045150D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABH8PR: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GB): No valid ID found, marking 6 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB62BL: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 657: Detected CONCAT format for ID 'IN20061125SHAURBAFNA' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 657: Already matches most recent valid CONCAT: IN20061125SHAURBAFNA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 5 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5TFH: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 179: Detected CONCAT format for ID 'KE19930403BRIANKIMAN' with prefix 'KE' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 179: Already matches most recent valid CONCAT: KE19930403BRIANKIMAN
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: KE): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDLQ7: Found 11 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 948: Detected CONCAT format for ID 'IN19910715SWATIRANI#' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1546: Detected CONCAT format for ID 'IN19910715SWATIRANI#' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 601: Detected CONCAT format for ID 'IN19910715SWATIRANI#' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 948: Already matches most recent valid CONCAT: IN19910715SWATIRANI#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1546: Already matches most recent valid CONCAT: IN19910715SWATIRANI#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 601: Already matches most recent valid CONCAT: IN19910715SWATIRANI#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 8 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AC56XV: Found 7 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 718: Corrected invalid NIDN to most recent: DK1309772292
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1293: Corrected invalid NIDN to most recent: DK1309772292
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 892: Corrected invalid NIDN to most recent: DK1309772292
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 903: Corrected invalid NIDN to most recent: DK1309772292
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 494: Corrected invalid NIDN to most recent: DK1309772292
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 186: Already matches most recent valid NIDN: DK1309772292
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 790: Already matches most recent valid NIDN: DK1309772292
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDYMN: Found 13 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 941: Detected CONCAT format for ID 'MY19811221PEY##ENG##' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 190: Detected CONCAT format for ID 'MY19811221PEY##ENG##' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 991: Detected CONCAT format for ID 'MY19811221PEY##ENG##' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2038: Detected CONCAT format for ID 'MY19811221PEY##ENG##' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 871: Detected CONCAT format for ID 'MY19811221PEY##ENG##' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 941: Already matches most recent valid CONCAT: MY19811221PEY##ENG##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 190: Already matches most recent valid CONCAT: MY19811221PEY##ENG##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 991: Already matches most recent valid CONCAT: MY19811221PEY##ENG##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2038: Already matches most recent valid CONCAT: MY19811221PEY##ENG##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 871: Already matches most recent valid CONCAT: MY19811221PEY##ENG##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: MY): No valid ID found, marking 8 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDPFN: Found 5 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2135: Detected CONCAT format for ID 'IN19820718KUNALLATHE' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 663: Detected CONCAT format for ID 'IN19820718KUNALLATHE' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2135: Already matches most recent valid CONCAT: IN19820718KUNALLATHE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 663: Already matches most recent valid CONCAT: IN19820718KUNALLATHE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person BB59W7: Found 10 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 622: Already matches most recent valid NIDN: GBYT382158A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 305: Already matches most recent valid NIDN: GBYT382158A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 199: Corrected invalid NIDN to most recent: GBYT382158A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1448: Already matches most recent valid NIDN: GBYT382158A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2142: Already matches most recent valid NIDN: GBYT382158A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2140: Already matches most recent valid NIDN: GBYT382158A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1707: Already matches most recent valid NIDN: GBYT382158A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1801: Already matches most recent valid NIDN: GBYT382158A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1945: Already matches most recent valid NIDN: GBYT382158A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 683: Already matches most recent valid NIDN: GBYT382158A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDJ55: Found 8 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1794: Already matches most recent valid NIDN: GBSL101764A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1990: Already matches most recent valid NIDN: GBSL101764A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 215: Already matches most recent valid NIDN: GBSL101764A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1002: Already matches most recent valid NIDN: GBSL101764A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 794: Standardized valid NIDN 'GBSC015704A' to most recent: GBSL101764A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 993: Already matches most recent valid NIDN: GBSL101764A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1740: Already matches most recent valid NIDN: GBSL101764A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: PL): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDFG7: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 542: Detected CONCAT format for ID 'MY19961029AMANDTANWE' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 466: Detected CONCAT format for ID 'MY19961029AMANDTANWE' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 542: Already matches most recent valid CONCAT: MY19961029AMANDTANWE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 466: Already matches most recent valid CONCAT: MY19961029AMANDTANWE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: MY): No valid ID found, marking 4 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A48570: Found 8 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 231: Standardized valid NIDN 'GBNZ283821A' to most recent: GBNZ283821B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 568: Standardized valid NIDN 'GBNZ283821A' to most recent: GBNZ283821B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1690: Standardized valid NIDN 'GBNZ283821A' to most recent: GBNZ283821B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 720: Standardized valid NIDN 'GBNZ283821A' to most recent: GBNZ283821B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1650: Standardized valid NIDN 'GBNZ283821A' to most recent: GBNZ283821B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1185: Already matches most recent valid NIDN: GBNZ283821B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 719: Already matches most recent valid NIDN: GBNZ283821B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2384: Already matches most recent valid NIDN: GBNZ283821B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5WJR: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 240: Detected CONCAT format for ID 'ZA19890311ADUSHRAJPA' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 912: Detected CONCAT format for ID 'ZA19890311ADUSHRAJPA' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 331: Detected CONCAT format for ID 'ZA19890311ADUSHRAJPA' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 240: Already matches most recent valid CONCAT: ZA19890311ADUSHRAJPA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 912: Already matches most recent valid CONCAT: ZA19890311ADUSHRAJPA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 331: Already matches most recent valid CONCAT: ZA19890311ADUSHRAJPA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: ZA): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABVQGP: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 286: Detected CONCAT format for ID 'PT19920622FERNATORRE' with prefix 'PT' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 243: Already matches most recent valid CCPT: PTCC905987
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 286: Already matches most recent valid CONCAT: PT19920622FERNATORRE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person BBGBYM: Found 11 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 844: Already matches most recent valid NIDN: GBPX326701B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1499: Already matches most recent valid NIDN: GBPX326701B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2207: Already matches most recent valid NIDN: GBPX326701B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2028: Already matches most recent valid NIDN: GBPX326701B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1772: Already matches most recent valid NIDN: GBPX326701B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1325: Already matches most recent valid NIDN: GBPX326701B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GP): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: NZ): No valid ID found, marking 4 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person BB59WR: Found 9 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1759: Detected CONCAT format for ID 'GB20070810SOPHIMORRI' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 957: Detected CONCAT format for ID 'GB20070810SOPHIMORRI' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1759: Already matches most recent valid CONCAT: GB20070810SOPHIMORRI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 957: Already matches most recent valid CONCAT: GB20070810SOPHIMORRI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 250: Already matches most recent valid NIDN: GBPM325201B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1253: Already matches most recent valid NIDN: GBPM325201B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1926: Already matches most recent valid NIDN: GBPM325201B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2360: Already matches most recent valid NIDN: GBPM325201B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1332: Already matches most recent valid NIDN: GBPM325201B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 577: Already matches most recent valid NIDN: GBPM325201B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1996: Already matches most recent valid NIDN: GBPM325201B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABLMHF: Found 31 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1058: Standardized valid NIDN 'GBJK255071B' to most recent: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1302: Standardized valid NIDN 'GBJK255071B' to most recent: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 677: Standardized valid NIDN 'GBJK255071B' to most recent: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 260: Standardized valid NIDN 'GBJK255071B' to most recent: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1066: Standardized valid NIDN 'GBJK255071B' to most recent: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1246: Standardized valid NIDN 'GBJK255071B' to most recent: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 500: Standardized valid NIDN 'GBJK255071B' to most recent: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2145: Standardized valid NIDN 'GBJK255071B' to most recent: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 672: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 793: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 594: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 355: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1495: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 826: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2237: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2362: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2295: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1792: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 558: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2299: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1886: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 387: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1979: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1469: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1847: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2344: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1019: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1857: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 960: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 723: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1846: Already matches most recent valid NIDN: GBJK255017B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABQQNR: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1006: Detected CONCAT format for ID 'GB20090916ARIELROIG#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GB): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1006: Already matches most recent valid CONCAT: GB20090916ARIELROIG#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A31632: Found 14 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 528: Detected CONCAT format for ID 'CY19830614MARIODIAS#' with prefix 'CY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 528: Already matches most recent valid CONCAT: CY19830614MARIODIAS#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: CY): No valid ID found, marking 13 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDPBT: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1735: Detected CONCAT format for ID 'IN19780815PAULOTALAP' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2297: Detected CONCAT format for ID 'IN19780815PAULOTALAP' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1599: Detected CONCAT format for ID 'IN19780815PAULOTALAP' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1735: Already matches most recent valid CONCAT: IN19780815PAULOTALAP
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2297: Already matches most recent valid CONCAT: IN19780815PAULOTALAP
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1599: Already matches most recent valid CONCAT: IN19780815PAULOTALAP
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABRWHY: Found 13 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1518: Corrected invalid NIDN to most recent: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1718: Corrected invalid NIDN to most recent: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1988: Corrected invalid NIDN to most recent: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1311: Corrected invalid NIDN to most recent: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 784: Corrected invalid NIDN to most recent: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1073: Corrected invalid NIDN to most recent: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1809: Corrected invalid NIDN to most recent: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1832: Corrected invalid NIDN to most recent: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1021: Already matches most recent valid NIDN: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 273: Already matches most recent valid NIDN: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 447: Already matches most recent valid NIDN: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1557: Already matches most recent valid NIDN: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2383: Already matches most recent valid NIDN: SE198502141636
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person BB5JDJ: Found 16 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2107: Corrected invalid NIDN to most recent: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 464: Corrected invalid NIDN to most recent: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1761: Corrected invalid NIDN to most recent: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 281: Corrected invalid NIDN to most recent: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1231: Corrected invalid NIDN to most recent: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 851: Corrected invalid NIDN to most recent: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1401: Already matches most recent valid NIDN: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2403: Already matches most recent valid NIDN: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 611: Already matches most recent valid NIDN: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1883: Already matches most recent valid NIDN: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1007: Already matches most recent valid NIDN: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 344: Already matches most recent valid NIDN: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 322: Already matches most recent valid NIDN: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1294: Already matches most recent valid NIDN: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1691: Already matches most recent valid NIDN: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 364: Already matches most recent valid NIDN: MT0321068M
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person BB5J7C: Found 16 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2108: Already matches most recent valid CCPT: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 465: Already matches most recent valid CCPT: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1762: Already matches most recent valid CCPT: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 282: Already matches most recent valid CCPT: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1232: Already matches most recent valid CCPT: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1952: Already matches most recent valid CCPT: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1402: Corrected invalid CCPT to most recent: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2404: Corrected invalid CCPT to most recent: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 612: Corrected invalid CCPT to most recent: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1884: Corrected invalid CCPT to most recent: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1008: Corrected invalid CCPT to most recent: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 345: Corrected invalid CCPT to most recent: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 323: Corrected invalid CCPT to most recent: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1295: Corrected invalid CCPT to most recent: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1692: Corrected invalid CCPT to most recent: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 365: Corrected invalid CCPT to most recent: MT1386635
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5VCY: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 285: Detected CONCAT format for ID 'GR19780926ANASTSPILI' with prefix 'GR' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2086: Detected CONCAT format for ID 'GR19780926ANASTSPILI' with prefix 'GR' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 285: Already matches most recent valid CONCAT: GR19780926ANASTSPILI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2086: Already matches most recent valid CONCAT: GR19780926ANASTSPILI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GR): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AC2YKF: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2004: Standardized valid NIDN 'GBPM147422C' to most recent: GBPK147422C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 563: Already matches most recent valid NIDN: GBPK147422C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 311: Already matches most recent valid NIDN: GBPK147422C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1502: Already matches most recent valid NIDN: GBPK147422C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCVK5: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 749: Detected CONCAT format for ID 'ZA19991103JENNAFROST' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1838: Detected CONCAT format for ID 'ZA19991103JENNAFROST' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 856: Detected CONCAT format for ID 'ZA19991103JENNAFROST' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 749: Already matches most recent valid CONCAT: ZA19991103JENNAFROST
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1838: Already matches most recent valid CONCAT: ZA19991103JENNAFROST
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 856: Already matches most recent valid CONCAT: ZA19991103JENNAFROST
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: ZA): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AB8RY8: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1242: Detected CONCAT format for ID 'GB20070802JOHN#ALLEN' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1309: Detected CONCAT format for ID 'GB20070802JOHN#ALLEN' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2199: Detected CONCAT format for ID 'GB20070802JOHN#ALLEN' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1242: Already matches most recent valid CONCAT: GB20070802JOHN#ALLEN
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1309: Already matches most recent valid CONCAT: GB20070802JOHN#ALLEN
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2199: Already matches most recent valid CONCAT: GB20070802JOHN#ALLEN
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 330: Already matches most recent valid NIDN: GBPM299327D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADD8YJ: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1230: Detected CONCAT format for ID 'AU19750815DIKLAYANIV' with prefix 'AU' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1643: Detected CONCAT format for ID 'AU19750815DIKLAYANIV' with prefix 'AU' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 351: Detected CONCAT format for ID 'AU19750815DIKLAYANIV' with prefix 'AU' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 588: Detected CONCAT format for ID 'AU19750815DIKLAYANIV' with prefix 'AU' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1767: Detected CONCAT format for ID 'AU19750815DIKLAYANIV' with prefix 'AU' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1230: Already matches most recent valid CONCAT: AU19750815DIKLAYANIV
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1643: Already matches most recent valid CONCAT: AU19750815DIKLAYANIV
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 351: Already matches most recent valid CONCAT: AU19750815DIKLAYANIV
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 588: Already matches most recent valid CONCAT: AU19750815DIKLAYANIV
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1767: Already matches most recent valid CONCAT: AU19750815DIKLAYANIV
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: AU): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCW85: Found 9 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 363: Detected CONCAT format for ID 'MX19970417GABRIMONTE' with prefix 'MX' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 363: Already matches most recent valid CONCAT: MX19970417GABRIMONTE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: MX): No valid ID found, marking 8 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDBMB: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 969: Detected CONCAT format for ID 'MU19900720SHABNIBRAH' with prefix 'MU' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 370: Detected CONCAT format for ID 'MU19900720SHABNIBRAH' with prefix 'MU' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 969: Already matches most recent valid CONCAT: MU19900720SHABNIBRAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 370: Already matches most recent valid CONCAT: MU19900720SHABNIBRAH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: MU): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ACBFRX: Found 5 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GB): No valid ID found, marking 4 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: IT): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5YDR: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 381: Detected CONCAT format for ID 'ID19960108SHYLLPRAMA' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 381: Already matches most recent valid CONCAT: ID19960108SHYLLPRAMA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: ID): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDRCM: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1234: Detected CONCAT format for ID 'HK19700110YANQISHAO#' with prefix 'HK' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1234: Already matches most recent valid CONCAT: HK19700110YANQISHAO#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: HK): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABMNBR: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 701: Detected CONCAT format for ID 'GB20070714JAMIETILLE' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1835: Detected CONCAT format for ID 'GB20070714JAMIETILLE' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 701: Already matches most recent valid CONCAT: GB20070714JAMIETILLE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1835: Already matches most recent valid CONCAT: GB20070714JAMIETILLE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 402: Already matches most recent valid NIDN: GBPM237403D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 887: Already matches most recent valid NIDN: GBPM237403D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5W5X: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2210: Detected CONCAT format for ID 'IN19971021JAYARSIVAR' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2210: Already matches most recent valid CONCAT: IN19971021JAYARSIVAR
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABKBTF: Found 5 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: NZ): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: NZ): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCVGN: Found 9 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 676: Detected CONCAT format for ID 'MY19771025KER##PANG#' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 676: Already matches most recent valid CONCAT: MY19771025KER##PANG#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: MY): No valid ID found, marking 8 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person V00836: Found 16 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2021: Detected CONCAT format for ID 'GB20070513ELLIOBOURN' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2021: Already matches most recent valid CONCAT: GB20070513ELLIOBOURN
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 962: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1036: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1156: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1281: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1954: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2064: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 430: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 536: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1539: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1708: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1861: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1894: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1648: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1167: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2077: Already matches most recent valid NIDN: GBPM208691D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCWL5: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 804: Detected CONCAT format for ID 'PT19900220DORA#MARTI' with prefix 'PT' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 804: Already matches most recent valid CONCAT: PT19900220DORA#MARTI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2220: Already matches most recent valid CCPT: PTCF627011
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1722: Already matches most recent valid CCPT: PTCF627011
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 668: Already matches most recent valid CCPT: PTCF627011
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1723: Already matches most recent valid CCPT: PTCF627011
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 431: Already matches most recent valid CCPT: PTCF627011
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5XVJ: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1769: Detected CONCAT format for ID 'MY19990722FAIZABINTI' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1769: Already matches most recent valid CONCAT: MY19990722FAIZABINTI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: MY): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A70013: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 449: Standardized valid NIDN 'GBYR326540D' to most recent: GBYR326540B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1322: Standardized valid NIDN 'GBYR326540D' to most recent: GBYR326540B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2212: Standardized valid NIDN 'GBYR326540D' to most recent: GBYR326540B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2213: Already matches most recent valid NIDN: GBYR326540B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADD8RT: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1752: Standardized valid NIDN 'GBSY269726C' to most recent: GBSY264726C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 460: Already matches most recent valid NIDN: GBSY264726C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AC6252: Found 8 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: BR): No valid ID found, marking 8 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABQQNT: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 473: Detected CONCAT format for ID 'GB20110301ROGERROIG#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: GB): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 473: Already matches most recent valid CONCAT: GB20110301ROGERROIG#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AB2Y5G: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2233: Standardized valid NIDN 'GBNM693883A' to most recent: GBNM693883D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 488: Standardized valid NIDN 'GBNM693883A' to most recent: GBNM693883D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2414: Standardized valid NIDN 'GBNM693883A' to most recent: GBNM693883D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1896: Standardized valid NIDN 'GBNM693883A' to most recent: GBNM693883D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2209: Already matches most recent valid NIDN: GBNM693883D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1299: Already matches most recent valid NIDN: GBNM693883D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AC7N98: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 580: Corrected invalid NIDN to most recent: SE198908257416
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1068: Corrected invalid NIDN to most recent: SE198908257416
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 489: Already matches most recent valid NIDN: SE198908257416
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2100: Already matches most recent valid NIDN: SE198908257416
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 509: Already matches most recent valid NIDN: SE198908257416
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2157: Already matches most recent valid NIDN: SE198908257416
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDGXQ: Found 5 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 744: Detected CONCAT format for ID 'CN19911011QINGLMOU##' with prefix 'CN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 744: Already matches most recent valid CONCAT: CN19911011QINGLMOU##
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: CN): No valid ID found, marking 4 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5WQV: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1848: Detected CONCAT format for ID 'IN19930917DEEPAAGARW' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1848: Already matches most recent valid CONCAT: IN19930917DEEPAAGARW
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDFYN: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 547: Detected CONCAT format for ID 'NZ20010329JAYDETABAN' with prefix 'NZ' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 547: Already matches most recent valid CONCAT: NZ20010329JAYDETABAN
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: NZ): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5TRK: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1373: Detected CONCAT format for ID 'RO19930801ALEXAMOCAN' with prefix 'RO' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1373: Already matches most recent valid CONCAT: RO19930801ALEXAMOCAN
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 571: Already matches most recent valid CCPT: RO062298443
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1260: Already matches most recent valid CCPT: RO062298443
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2022: Already matches most recent valid CCPT: RO062298443
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABLJQJ: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 923: Detected CONCAT format for ID 'GB20070726AMELIJARMA' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 923: Already matches most recent valid CONCAT: GB20070726AMELIJARMA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1777: Already matches most recent valid NIDN: GBSZ920079D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 581: Already matches most recent valid NIDN: GBSZ920079D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 956: Already matches most recent valid NIDN: GBSZ920079D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADD77Q: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2298: Detected CONCAT format for ID 'LT19770304RASA#YURIY' with prefix 'LT' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2298: Already matches most recent valid CONCAT: LT19770304RASA#YURIY
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 831: Already matches most recent valid CCPT: LT26738309
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 584: Already matches most recent valid CCPT: LT26738309
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCVXJ: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 988: Detected CONCAT format for ID 'RO19791103CONSTCHIRC' with prefix 'RO' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1779: Detected CONCAT format for ID 'RO19791103CONSTCHIRC' with prefix 'RO' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1088: Detected CONCAT format for ID 'RO19791103CONSTCHIRC' with prefix 'RO' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 988: Already matches most recent valid CONCAT: RO19791103CONSTCHIRC
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1779: Already matches most recent valid CONCAT: RO19791103CONSTCHIRC
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1088: Already matches most recent valid CONCAT: RO19791103CONSTCHIRC
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 906: Already matches most recent valid CCPT: RO063524692
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2133: Already matches most recent valid CCPT: RO063524692
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 597: Already matches most recent valid CCPT: RO063524692
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABHYGF: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 599: Detected CONCAT format for ID 'GB20070823DECLACAMPB' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 599: Already matches most recent valid CONCAT: GB20070823DECLACAMPB
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 949: Already matches most recent valid NIDN: GBPM317241B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5W6X: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 602: Detected CONCAT format for ID 'IN19900502SONIYGUPTA' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 602: Already matches most recent valid CONCAT: IN19900502SONIYGUPTA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABPH9L: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 607: Detected CONCAT format for ID 'GB19971001JESSIWILKI' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 607: Already matches most recent valid CONCAT: GB19971001JESSIWILKI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 670: Already matches most recent valid NIDN: GBPC337495D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADF7CJ: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1693: Detected CONCAT format for ID 'AU19770421JORDAWIADR' with prefix 'AU' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1693: Already matches most recent valid CONCAT: AU19770421JORDAWIADR
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: AU): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABTT27: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: ZA): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCRDB: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2191: Detected CONCAT format for ID 'PK19890913MUHAMKHAN#' with prefix 'PK' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1254: Detected CONCAT format for ID 'PK19890913MUHAMKHAN#' with prefix 'PK' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2191: Already matches most recent valid CONCAT: PK19890913MUHAMKHAN#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1254: Already matches most recent valid CONCAT: PK19890913MUHAMKHAN#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: PK): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABTJVJ: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1475: Corrected invalid NIDN to most recent: SE197802093356
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 656: Already matches most recent valid NIDN: SE197802093356
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5TG8: Found 5 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 863: Detected CONCAT format for ID 'MY19900726PRETHGOPAL' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 863: Already matches most recent valid CONCAT: MY19900726PRETHGOPAL
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: MY): No valid ID found, marking 4 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADD6MQ: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2032: Detected CONCAT format for ID 'IN19730529RUBINALVI#' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2175: Detected CONCAT format for ID 'IN19730529RUBINALVI#' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1130: Detected CONCAT format for ID 'IN19730529RUBINALVI#' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2032: Already matches most recent valid CONCAT: IN19730529RUBINALVI#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2175: Already matches most recent valid CONCAT: IN19730529RUBINALVI#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1130: Already matches most recent valid CONCAT: IN19730529RUBINALVI#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ACCKNQ: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 743: Detected CONCAT format for ID 'LT19821206JUSTIBEREI' with prefix 'LT' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 743: Already matches most recent valid CONCAT: LT19821206JUSTIBEREI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1842: Already matches most recent valid CCPT: LT25113870
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCPTT: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 754: Detected CONCAT format for ID 'IN19970302NISHAKEDIA' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 754: Already matches most recent valid CONCAT: IN19970302NISHAKEDIA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person A25084: Found 9 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2070: Standardized valid NIDN 'GBYH655474C' to most recent: GBYH655874C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1473: Standardized valid NIDN 'GBYH655474C' to most recent: GBYH655874C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 916: Standardized valid NIDN 'GBYH655474C' to most recent: GBYH655874C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1432: Standardized valid NIDN 'GBYH655474C' to most recent: GBYH655874C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2426: Standardized valid NIDN 'GBYH655474C' to most recent: GBYH655874C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1314: Standardized valid NIDN 'GBYH655474C' to most recent: GBYH655874C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 854: Already matches most recent valid NIDN: GBYH655874C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 774: Already matches most recent valid NIDN: GBYH655874C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2042: Already matches most recent valid NIDN: GBYH655874C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCYG9: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 781: Detected CONCAT format for ID 'HK19601220YIN##LEUNG' with prefix 'HK' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 781: Already matches most recent valid CONCAT: HK19601220YIN##LEUNG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: HK): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5VBX: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 789: Detected CONCAT format for ID 'NL19830202ANNIEMYATT' with prefix 'NL' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1114: Detected CONCAT format for ID 'NL19830202ANNIEMYATT' with prefix 'NL' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 789: Already matches most recent valid CONCAT: NL19830202ANNIEMYATT
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1114: Already matches most recent valid CONCAT: NL19830202ANNIEMYATT
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1152: Already matches most recent valid CCPT: NLNRF81R3K4
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5TRM: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1509: Detected CONCAT format for ID 'ZA19890626WARREKEET#' with prefix 'ZA' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1509: Already matches most recent valid CONCAT: ZA19890626WARREKEET#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: ZA): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABNL8W: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1403: Corrected invalid NIDN to most recent: SE199302052528
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1418: Corrected invalid NIDN to most recent: SE199302052528
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 877: Already matches most recent valid NIDN: SE199302052528
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABF7BR: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 885: Standardized valid NIDN 'GBNH964292C' to most recent: GBNH964192C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1906: Already matches most recent valid NIDN: GBNH964192C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1069: Already matches most recent valid NIDN: GBNH964192C
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person D02191: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 925: Corrected invalid NIDN to most recent: GBSN971779D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1660: Already matches most recent valid NIDN: GBSN971779D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABC5CR: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 934: Standardized valid NIDN 'ITNDDFNC72L15I453R' to most recent: ITNDDFNC72L15I452R
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1097: Already matches most recent valid NIDN: ITNDDFNC72L15I452R
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1785: Already matches most recent valid NIDN: ITNDDFNC72L15I452R
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5WK9: Found 8 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1535: Detected CONCAT format for ID 'IN19890827RAHULSINGH' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1742: Detected CONCAT format for ID 'IN19890827RAHULSINGH' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1305: Detected CONCAT format for ID 'IN19890827RAHULSINGH' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1041: Detected CONCAT format for ID 'IN19890827RAHULSINGH' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 954: Detected CONCAT format for ID 'IN19890827RAHULSINGH' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1512: Detected CONCAT format for ID 'IN19890827RAHULSINGH' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1535: Already matches most recent valid CONCAT: IN19890827RAHULSINGH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1742: Already matches most recent valid CONCAT: IN19890827RAHULSINGH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1305: Already matches most recent valid CONCAT: IN19890827RAHULSINGH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1041: Already matches most recent valid CONCAT: IN19890827RAHULSINGH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 954: Already matches most recent valid CONCAT: IN19890827RAHULSINGH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1512: Already matches most recent valid CONCAT: IN19890827RAHULSINGH
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABV9BD: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1013: Detected CONCAT format for ID 'GB20190316ISLA#EDWAR' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1983: Detected CONCAT format for ID 'GB20190316ISAL#EDWAR' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1013: Standardized valid CONCAT 'GB20190316ISLA#EDWAR' to most recent: GB20190316ISAL#EDWAR
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1983: Already matches most recent valid CONCAT: GB20190316ISAL#EDWAR
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADCRR2: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1018: Detected CONCAT format for ID 'ID19960122SAMUEWIDIJ' with prefix 'ID' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1018: Already matches most recent valid CONCAT: ID19960122SAMUEWIDIJ
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: ID): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADD6CY: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1969: Detected CONCAT format for ID 'PT19880825TIAGOVIEIR' with prefix 'PT' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1072: Detected CONCAT format for ID 'PT19880825TIAGOVIEIR' with prefix 'PT' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1969: Already matches most recent valid CONCAT: PT19880825TIAGOVIEIR
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1072: Already matches most recent valid CONCAT: PT19880825TIAGOVIEIR
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1931: Already matches most recent valid CCPT: PTCC379054
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5WCG: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1119: Detected CONCAT format for ID 'BD20010426ABDULNAHIA' with prefix 'BD' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1119: Already matches most recent valid CONCAT: BD20010426ABDULNAHIA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: BD): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABT59P: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1147: Corrected invalid CCPT to most recent: RO063042805
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1920: Already matches most recent valid CCPT: RO063042805
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2060: Already matches most recent valid CCPT: RO063042805
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5TLB: Found 6 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1617: Detected CONCAT format for ID 'IN19940502RAJATVATS#' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1887: Detected CONCAT format for ID 'IN19940502RAJATVATS#' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1617: Already matches most recent valid CONCAT: IN19940502RAJATVATS#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1887: Already matches most recent valid CONCAT: IN19940502RAJATVATS#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 4 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AC69JL: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: SE): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABYTBB: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1665: Detected CONCAT format for ID 'MY19601218ROSALCHELL' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1178: Detected CONCAT format for ID 'MY19601218ROSALCHELL' with prefix 'MY' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: MY): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1665: Already matches most recent valid CONCAT: MY19601218ROSALCHELL
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1178: Already matches most recent valid CONCAT: MY19601218ROSALCHELL
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5WKR: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1537: Detected CONCAT format for ID 'HK20050123KIK##LEUNG' with prefix 'HK' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1537: Already matches most recent valid CONCAT: HK20050123KIK##LEUNG
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: HK): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5TQF: Found 4 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1702: Detected CONCAT format for ID 'RO19920922STEFAMOCAN' with prefix 'RO' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1702: Already matches most recent valid CONCAT: RO19920922STEFAMOCAN
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1930: Already matches most recent valid CCPT: RO057502651
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1307: Already matches most recent valid CCPT: RO057502651
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1871: Already matches most recent valid CCPT: RO057502651
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABMRX9: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2120: Detected CONCAT format for ID 'GB20070727TOMMAWOOD#' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2120: Already matches most recent valid CONCAT: GB20070727TOMMAWOOD#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1317: Already matches most recent valid NIDN: GBPM278536A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1324: Already matches most recent valid NIDN: GBPM278536A
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person V00997: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2248: Corrected invalid NIDN to most recent: GBJS568767D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1341: Already matches most recent valid NIDN: GBJS568767D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB62FH: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1511: Detected CONCAT format for ID 'NL19900929JAWARARSHA' with prefix 'NL' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1511: Already matches most recent valid CONCAT: NL19900929JAWARARSHA
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1576: Already matches most recent valid CCPT: NLNTC6K15L1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABDXV8: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type NIDN (prefix: DK): No valid ID found, marking 3 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person AC5562: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1659: Corrected invalid NIDN to most recent: SE198204215118
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1812: Already matches most recent valid NIDN: SE198204215118
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADF58W: Found 5 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1733: Detected CONCAT format for ID 'CN19890403YAHANYING#' with prefix 'CN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1821: Detected CONCAT format for ID 'CN19890403YAHANYING#' with prefix 'CN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2390: Detected CONCAT format for ID 'CN19890403YAHANYING#' with prefix 'CN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1733: Already matches most recent valid CONCAT: CN19890403YAHANYING#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1821: Already matches most recent valid CONCAT: CN19890403YAHANYING#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2390: Already matches most recent valid CONCAT: CN19890403YAHANYING#
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: CN): No valid ID found, marking 2 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person XB5WPH: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1696: Detected CONCAT format for ID 'IN19881222RAHULAGARW' with prefix 'IN' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1696: Already matches most recent valid CONCAT: IN19881222RAHULAGARW
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ID Type CCPT (prefix: IN): No valid ID found, marking 1 records for standard correction
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABRMXQ: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2068: Detected CONCAT format for ID 'GB20070701MADELCOLLI' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2068: Already matches most recent valid CONCAT: GB20070701MADELCOLLI
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1712: Already matches most recent valid NIDN: GBPM217627D
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ABQGCV: Found 3 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2398: Detected CONCAT format for ID 'GB20070726ALBERCHAMB' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 1753: Detected CONCAT format for ID 'GB20070726ALBERCHAMB' with prefix 'GB' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2398: Already matches most recent valid CONCAT: GB20070726ALBERCHAMB
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 1753: Already matches most recent valid CONCAT: GB20070726ALBERCHAMB
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2423: Already matches most recent valid NIDN: GBPM347221B
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person ADDRWG: Found 2 records with inconsistent IDs
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [AUTO-DETECT] Row 2024: Detected CONCAT format for ID 'BG19940417IVAN#DIMIT' with prefix 'BG' (type was empty)
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2024: Already matches most recent valid CONCAT: BG19940417IVAN#DIMIT
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Record 2290: Already matches most recent valid NIDN: BG9404174465
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Preprocessing complete:
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   - Person groups processed: 309
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   - Inconsistent groups: 139
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   - Fallback IDs found: 0
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   - Invalid IDs found: 463
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   - Invalid corrected to most recent: 51
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   - Valid standardized to most recent: 98
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   - No valid in group (need standard): 412
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   - Already most recent (no change): 530
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - INCONSISTENT ID PREPROCESSING SUMMARY
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Total records:                        2433
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Person groups:                         309
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Inconsistent groups:                   139
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Fallback IDs found:                      0
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Invalid IDs found:                     463
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Invalid corrected to most recent:       51
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Valid standardized to most recent:      98
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - No valid ID in group:                  412
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Already most recent (no change):       530
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - PHASE 2: STANDARD VALIDATION FOR REMAINING RECORDS
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Records corrected from prior valid: 679
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Records needing standard validation: 1754
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 2: txn_ref='44625CKKTL61', found=True
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 2 (44625CKKTL61): Raw template data - id='FR19420530REGINDUQUE', type='CONCAT'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 2 (44625CKKTL61): Template found - kaizen_error='FR19420530REGINDUQUE:CONCAT', correction_output=''
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 4: txn_ref='44625CJGHM01', found=True
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CJGHM01): Raw template data - id='GBWL956271C', type='NIDN'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CJGHM01): Template found - kaizen_error='GBWL956271C:NIDN', correction_output='GB19610107MICHAROUTH:CONCAT'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 4 (44625CJGHM01): correction='GB19610107MICHAROUTH:CONCAT' vs template='GBWL956271C:NIDN'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 7: txn_ref='44625CLKVGB1', found=True
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CLKVGB1): Raw template data - id='AUPA9071168', type='CCPT'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CLKVGB1): Template found - kaizen_error='AUPA9071168:CCPT', correction_output='AU19690922GRANTABT##:CONCAT'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - [TEMPLATE] Row 7 (44625CLKVGB1): correction='AU19690922GRANTABT##:CONCAT' vs template='AUPA9071168:CCPT'
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - PHASE 3: KAIZEN TEMPLATE VALIDATION FOR PREPROCESSED RECORDS
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Performing Kaizen validation on 679 preprocessed records...
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Writing output file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_66.csv
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Successfully wrote 2433 records
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Writing errors-only CSV (880 records with corrections)...
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Writing errors-only file: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\validated\validated_FY25_Q4_7_66_errors_only.csv
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Successfully wrote 880 error records
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - PROCESSING COMPLETE
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ================================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - End time: 2026-02-11 11:29:26
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Duration: 0:00:00.396806
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - PROCESSING SUMMARY
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Total records processed:       1754
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Valid records (no changes):    1054
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Invalid records found:          700
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   - Invalid format:             700
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   - Invalid logic:                0
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Records corrected:              731
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - CONCAT IDs generated:           698
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - No correction possible:           0
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - JNT accounts aggregated:          0
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Processing errors:                0
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - ======================================================================
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - 
+ERRORS BY COUNTRY:
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   GB: 200
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   IN: 118
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   MY: 50
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   AU: 40
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   ZA: 30
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   HK: 23
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   PL: 22
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   BD: 22
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   PK: 19
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   NG: 19
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   CA: 18
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   CN: 15
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   CY: 14
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   NZ: 10
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   KR: 9
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   ID: 9
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   BR: 8
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   MX: 8
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   JP: 7
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   IL: 6
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   UA: 6
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   SE: 6
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   IT: 6
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   TN: 5
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   MA: 4
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   TW: 4
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   ZW: 3
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   DK: 3
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   FI: 2
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   AR: 2
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   RO: 2
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   GR: 1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   PA: 1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   MU: 1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   ES: 1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   GP: 1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   CL: 1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   KE: 1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   VN: 1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   PH: 1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   PT: 1
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - 
+ERRORS BY ID TYPE:
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   CCPT: 454
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   NIDN: 246
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - 
+ITALIAN TRACKER ACTIONS:
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO -   Checked Tracker - Replaced With Fallback: 31
+2026-02-11 11:29:26 - inconsistent_buyer_id_validation - INFO - Inconsistent Buyer ID validation completed successfully
