@@ -1011,6 +1011,35 @@ class InconsistentIDProcessor:
                         record.is_valid = True
                         if "Pass" not in record.actions_taken:
                             record.actions_taken.append("Pass")
+                        
+                        # NORMALIZATION: Add century prefix to 10-digit Swedish NIDNs
+                        if (record.priority_country_code == "SE" and 
+                            record.id_type == "NIDN" and 
+                            record.id_value):
+                            # Check if ID is 10 digits (after stripping country prefix)
+                            id_without_prefix = record.id_value[2:] if len(record.id_value) > 2 and record.id_value[:2].upper() == "SE" else record.id_value
+                            if len(id_without_prefix) == 10 and id_without_prefix.isdigit():
+                                # Extract century from DOB
+                                if record.date_of_birth:
+                                    try:
+                                        # Parse DOB to get century
+                                        from src.accuracy_testing.core.validators import validate_date_format
+                                        dob_result = validate_date_format(record.date_of_birth, "%Y-%m-%d")
+                                        if not dob_result.is_valid:
+                                            dob_result = validate_date_format(record.date_of_birth, "%d/%m/%Y")
+                                        if not dob_result.is_valid:
+                                            dob_result = validate_date_format(record.date_of_birth, "%d-%m-%Y")
+                                        
+                                        if dob_result.is_valid and dob_result.corrected_value:
+                                            century = str(dob_result.corrected_value.year)[:2]  # "19" or "20"
+                                            # Reconstruct with century: SE + CC + YYMMDDBBBC
+                                            normalized_id = record.id_value[:2] + century + id_without_prefix
+                                            
+                                            if normalized_id != record.id_value:
+                                                record.id_value = normalized_id
+                                                self._log(f"Normalized SE NIDN from 10 to 12 digits: {id_without_prefix} -> {normalized_id}")
+                                    except Exception as e:
+                                        self._log(f"Warning: Could not normalize SE NIDN: {e}")
                     elif format_valid and not logic_valid:
                         # Format passes but logic fails
                         record.format_status = "Pass"
@@ -1305,6 +1334,39 @@ class IDValidationProcessor:
                     record.logic_status = "Pass"
                     record.actions_taken.append("Pass")
                     self.stats.valid_records += 1
+                    
+                    # NORMALIZATION: Add century prefix to 10-digit Swedish NIDNs
+                    if country_code == "SE" and record.id_type == "NIDN" and record.id_value:
+                        # Check if ID is 10 digits (after stripping country prefix)
+                        id_without_prefix = record.id_value[2:] if len(record.id_value) > 2 and record.id_value[:2].upper() == "SE" else record.id_value
+                        if len(id_without_prefix) == 10 and id_without_prefix.isdigit():
+                            # Extract century from DOB
+                            if record.date_of_birth:
+                                try:
+                                    # Parse DOB to get century
+                                    from src.accuracy_testing.core.validators import validate_date_format
+                                    dob_result = validate_date_format(record.date_of_birth, "%Y-%m-%d")
+                                    if not dob_result.is_valid:
+                                        dob_result = validate_date_format(record.date_of_birth, "%d/%m/%Y")
+                                    if not dob_result.is_valid:
+                                        dob_result = validate_date_format(record.date_of_birth, "%d-%m-%Y")
+                                    
+                                    if dob_result.is_valid and dob_result.corrected_value:
+                                        century = str(dob_result.corrected_value.year)[:2]  # "19" or "20"
+                                        # Reconstruct with century: SE + CC + YYMMDDBBBC
+                                        has_prefix = record.id_value[:2].upper() == "SE"
+                                        if has_prefix:
+                                            normalized_id = "SE" + century + id_without_prefix
+                                        else:
+                                            normalized_id = century + id_without_prefix
+                                        
+                                        if normalized_id != record.id_value:
+                                            if self.verbose and self.logger:
+                                                self.logger.debug(f"Normalized SE NIDN from 10 to 12 digits: {record.id_value} -> {normalized_id}")
+                                            record.id_value = normalized_id
+                                except Exception as e:
+                                    if self.verbose and self.logger:
+                                        self.logger.warning(f"Could not normalize SE NIDN: {e}")
                     
                     # Apply Italian tracker logic for valid IT records
                     self._apply_italian_tracker_logic(record, country_code)
