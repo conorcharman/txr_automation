@@ -25,9 +25,10 @@ files:
   # Note: incident_matrix is no longer needed - now in txr_replay_core.incident_codes
 
 # Incident template column mappings (not used in final lookup but kept for consistency)
+# NOTE: error_flag is DEPRECATED - no longer used in correction decision logic
 incident_columns:
   transaction_ref: "Transaction Reference"
-  error_flag: "Error Flag"
+  error_flag: "Error Flag"  # DEPRECATED - kept for backwards compatibility only
   correction: "Correction"
   correction_field: "Correction Field"
   agree_with_correction: "Agree With Correction"

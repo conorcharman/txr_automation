@@ -1,12 +1,20 @@
 #!/usr/bin/env python3
 """
-Phase 2 Processor v4.0
+Phase 2 Processor v4.1
 Refactored processor for Phase II replay files using shared txr_replay_core library.
 Leverages ConfigManager, StructuredLogger, and shared data structures for maintainability.
 
 Author: GitHub Copilot
 Date: December 23, 2025
-Version: 4.0 - Refactored to use txr_replay_core library
+Version: 4.1 - Updated correction decision logic
+
+CHANGES IN v4.1:
+- Implemented new correction decision logic (February 2026)
+- Removed Error Flag dependency from decision flow
+- Correction column existence checked first (not last)
+- Agree With Correction now supports Y/P (apply) and N/F (don't apply) values
+- Suggested Correction is fallback when Correction is empty or analyst disagrees
+- Added detailed debug logging for correction routing
 
 CHANGES IN v4.0:
 - Migrated to txr_replay_core library (ConfigManager, StructuredLogger, data structures)
@@ -362,10 +370,17 @@ class Phase2Processor:
         return LookupResult(found=False)
     
     def _create_lookup_result(self, row: List[str], column_mapper: IncidentColumnMapper) -> LookupResult:
-        """Create lookup result from incident file row, checking for analyst corrections"""
+        """Create lookup result from incident file row with new correction decision logic.
+        
+        Decision Flow:
+        1. Check if Correction column has value:
+           - If YES: Check Agree With Correction
+             - If Y/P/empty: Apply Correction
+             - If N/F: Check Suggested Correction -> Apply if exists, else No Change
+           - If NO: Check Suggested Correction -> Apply if exists, else No Change
+        """
         try:
             # Get column indices
-            error_flag_col = column_mapper.get('error_flag')
             txn_ref_col = column_mapper.get('transaction_ref')
             correction_col = column_mapper.get('correction')
             correction_field_col = column_mapper.get('correction_field')
@@ -373,35 +388,58 @@ class Phase2Processor:
             suggested_correction_col = column_mapper.get('suggested_correction')
             suggested_correction_field_col = column_mapper.get('suggested_correction_field')
             
-            # Extract basic fields
-            error_flag = row[error_flag_col].strip() if error_flag_col is not None and len(row) > error_flag_col else ""
+            # Extract transaction reference
             transaction_ref = row[txn_ref_col].strip() if txn_ref_col is not None and len(row) > txn_ref_col else ""
             
-            # Check if analyst disagrees with correction
-            use_suggested = False
-            if agree_col is not None and len(row) > agree_col:
-                agree_value = row[agree_col].strip().upper()
-                if agree_value == 'N':
-                    use_suggested = True
+            # Extract correction values
+            correction_value = row[correction_col].strip() if correction_col is not None and len(row) > correction_col else ""
+            correction_field_value = row[correction_field_col].strip() if correction_field_col is not None and len(row) > correction_field_col else ""
             
-            # Route to appropriate correction source
-            if use_suggested and suggested_correction_col is not None and suggested_correction_field_col is not None:
-                # Use analyst's suggested correction
-                correction = row[suggested_correction_col].strip() if len(row) > suggested_correction_col else ""
-                correction_field = row[suggested_correction_field_col].strip() if len(row) > suggested_correction_field_col else ""
-            elif error_flag.upper() == 'Y' and correction_col is not None and correction_field_col is not None:
-                # Use standard correction
-                correction = row[correction_col].strip() if len(row) > correction_col else ""
-                correction_field = row[correction_field_col].strip() if len(row) > correction_field_col else ""
+            # Extract suggested correction values
+            suggested_correction_value = row[suggested_correction_col].strip() if suggested_correction_col is not None and len(row) > suggested_correction_col else ""
+            suggested_correction_field_value = row[suggested_correction_field_col].strip() if suggested_correction_field_col is not None and len(row) > suggested_correction_field_col else ""
+            
+            # NEW DECISION LOGIC
+            correction = "No Change"
+            correction_field = "No Change"
+            
+            # Check if Correction column has a value
+            if correction_value:
+                # Extract Agree With Correction value
+                agree_value = row[agree_col].strip().upper() if agree_col is not None and len(row) > agree_col else ""
+                
+                # If agree is Y, P, or empty -> apply Correction
+                if agree_value in ('Y', 'P', ''):
+                    correction = correction_value
+                    correction_field = correction_field_value
+                    self.logger.debug(f"Applying Correction (Agree={agree_value or 'empty'})")
+                # If agree is N or F -> check Suggested Correction
+                elif agree_value in ('N', 'F'):
+                    if suggested_correction_value:
+                        correction = suggested_correction_value
+                        correction_field = suggested_correction_field_value
+                        self.logger.debug(f"Applying Suggested Correction (analyst disagreed)")
+                    else:
+                        self.logger.debug(f"No correction (analyst disagreed, no suggestion provided)")
+                else:
+                    # Unknown agree value - default to applying Correction
+                    correction = correction_value
+                    correction_field = correction_field_value
+                    self.logger.warning(f"Unknown Agree value '{agree_value}', defaulting to Correction")
             else:
-                correction = "No Change"
-                correction_field = "No Change"
+                # No Correction value -> check Suggested Correction as fallback
+                if suggested_correction_value:
+                    correction = suggested_correction_value
+                    correction_field = suggested_correction_field_value
+                    self.logger.debug(f"Applying Suggested Correction (no automated correction)")
+                else:
+                    self.logger.debug(f"No correction to apply")
             
             return LookupResult(
                 found=True,
                 correction=correction,
                 correction_field=correction_field,
-                error_flag=error_flag,
+                error_flag="",  # Deprecated - no longer used
                 transaction_ref=transaction_ref
             )
         except Exception as e:
