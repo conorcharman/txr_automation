@@ -28,9 +28,16 @@ files:
 # REQUIRED: Incident template column mappings
 # These define which columns to read from incident template files
 # Column names must match exactly what's in your incident CSV headers
+#
+# CORRECTION DECISION LOGIC (v2.0):
+# 1. If "Correction" column has a value:
+#    - If "Agree With Correction" is Y/P/empty: Apply Correction + Correction Field
+#    - If "Agree With Correction" is N/F: Apply Suggested Correction (if exists), else No Change
+# 2. If "Correction" column is empty:
+#    - Apply Suggested Correction (if exists), else No Change
 incident_columns:
   transaction_ref: "Transaction Reference"
-  error_flag: "Error"
+  error_flag: "Error"  # DEPRECATED - no longer used in decision logic
   correction: "Correction"
   correction_field: "Correction Field"
   agree_with_correction: "Agree With Correction"
