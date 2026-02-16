@@ -1,0 +1,55 @@
+# Code Review
+
+## Questions
+
+1. System Context & Design Decisions
+What was the original VBA architecture? (monolithic macros, separate workbooks, etc.)
+Why did you choose the current Python structure? (separation of accuracy_testing vs replay, core library design)
+What were the key architectural decisions during the refactor?
+
+2. Data Flow & Processing Pipelines
+End-to-end workflow: How does data move through the system?
+Where does input data come from? (CSV exports, database, manual files?)
+What are the typical processing steps? (validation → SQL generation → data push?)
+Where do outputs go? (back to database, Excel, reporting system?)
+Typical quarterly processing volume? (number of transactions, file sizes)
+
+3. Integration & Dependencies
+External systems this integrates with?
+Any database connections? (SQL Server, Oracle, etc.)
+File system dependencies? (specific directory structures, network drives?)
+How much of the VBA functionality is not yet migrated?
+
+4. Configuration & Deployment
+Current config management strategy (YAML files in config/local/)
+Is there a prod/dev/test environment split?
+How do users currently run these scripts? (manual CLI, scheduled jobs, GUI?)
+Deployment process? (copy files, conda environment, CI/CD?)
+
+5. Usage Patterns & User Needs
+Who are the primary users? (analysts, compliance team, automated processes?)
+How often is this run? (quarterly for reporting, daily for validation?)
+What's the typical user workflow?
+Any plans to add a GUI or web interface?
+
+6. Pain Points & Future Direction
+Current technical debt or workarounds?
+Features you wish were there but aren't yet?
+Known bugs or limitations?
+What's your vision for Phase 8 CLI Tool Plan?
+
+## Answers
+
+1. The macros were in separate workbooks. The current Python structrue was chosen to unify the testing/validation approach across the accuracy testing incidents, and to cut down on duplicated code.
+
+2. Input data comes from a database, extracted using SQL scripts to CSV files. The typical processing steps are template generation - SQL generation - database extraction - validation - data push.
+Validation outputs go to CSV files, then data push moves these to the CSV template files.
+Around 1.5 million transactions across 129 incidents, but only 11 incidents are currently automated (around 20,000 transactions) - this will increase over time.
+
+3. This doesn't currently have any external integrations or database connections. There are specific directory structures (but these are handled by config files, I think - review this). Network drives will possibly become a factor in the near future, so consider this. All of the VBA functionality is fully migrated.
+
+4. There is currently no prod/dev/test env split - is this worth considering, and how would it work? Users currently run these scripts manually using the CLI but I have plans for a GUI of sorts. The deployment process as it stands will be cloning the Git repo and installing the environment in a Conda venv, but I am open to suggestions.
+
+5. The primary users are analysts on the Oversight team, but the plan is to automate the process in the future (provide some options for how this could be done). It is run quarterly, but will be moving to monthly and eventually daily. The typical user workflow mirrors the processing workflow, but with manual intervention (running the scripts) at each stage, then output validation after. The plan is to add some sort of GUI - I am looking at options for this currently, but I would like you to tell me what options I have.
+
+6. No current workarounds, or bugs that I'm aware of. The vision for the CLI Tool is to have a UI that allows the user to select which script they want to run from the command line, but could this be passed over in favour of a proper GUI? The GUI would allow the user to select scripts, but also select files/directories without having to edit the config file themself.
