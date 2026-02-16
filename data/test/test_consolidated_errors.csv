@@ -1,6 +1,0 @@
-INCIDENT_CODE,INCIDENT_DESCRIPTION,KR_RECORD_KEY,Transaction reference number,Buyer identification code
-7_37,Buyer identification code is missing,REC001,TXN001,
-7_37|16_21,Multiple issues,REC002,TXN002,BUY123
-16_21,Seller identification code is missing,REC003,TXN003,BUY456
-35_3,Price is missing,REC004,TXN004,BUY789
-99_1,Other error,REC005,TXN005,BUY000

@@ -57,8 +57,10 @@ coverage.xml
 .env.local
 
 # Logs
+
 *.log
-logs/
+.log
+
 
 # Configuration (local overrides)
 config/environments/local.yaml
