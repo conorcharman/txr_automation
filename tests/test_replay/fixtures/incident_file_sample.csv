@@ -1,0 +1,13 @@
+Transaction Reference,Error,Correction,Correction Field,Agree With Correction,Suggested Correction,Suggested Correction Field
+TXN001,Y,NewValue1,Field1,Y,,,
+TXN002,Y,NewValue2,Field2,P,,,
+TXN003,Y,NewValue3,Field3,,,,
+TXN004,Y,NewValue4,Field4,N,SuggestedValue4,SuggestedField4
+TXN005,Y,NewValue5,Field5,F,SuggestedValue5,SuggestedField5
+TXN006,Y,NewValue6,Field6,N,,,
+TXN007,Y,NewValue7,Field7,F,,,
+TXN008,N,,,,SuggestedValue8,SuggestedField8
+TXN009,N,,,,,,
+TXN010,Y,NewValue10,Field10,INVALID,,,
+TXN011,Y,NewValue11,Field11,y,,,
+TXN012,Y,NewValue12,Field12,n,SuggestedValue12,SuggestedField12
