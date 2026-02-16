@@ -5,16 +5,16 @@ Refactored version using shared txr_replay_core library.
 Leverages ConfigManager, StructuredLogger, DateParser, and shared data structures.
 
 Author: GitHub Copilot
-Date: December 23, 2025
-Version: 5.1 - Updated correction decision logic
+Date: February 13, 2026
+Version: 5.1 - Name disambiguation fix for duplicate IDs
 
 CHANGES IN v5.1:
-- Implemented new correction decision logic (February 2026)
-- Removed Error Flag dependency from decision flow
-- Correction column existence checked first (not last)
-- Agree With Correction now supports Y/P (apply) and N/F (don't apply) values
-- Suggested Correction is fallback when Correction is empty or analyst disagrees
-- Added detailed debug logging for correction routing with match type
+- **BUG FIX**: Fixed ID lookup to disambiguate when multiple records share the same ID
+- When multiple incident file rows have the same ID, now checks name to find correct match
+- Previously took first match blindly, causing wrong corrections to be applied
+- Example: GB20140522ALEXASTEID matched to both STEID and STEIDL records - now correctly selects STEIDL
+- Updated lookup_by_id() to accept client_first and client_surname parameters for disambiguation
+- Applies to both buyer and seller ID indexes
 
 CHANGES IN v5.0:
 - Migrated to txr_replay_core library (ConfigManager, StructuredLogger, DateParser)
@@ -23,6 +23,11 @@ CHANGES IN v5.0:
 - Using shared ReplayRecord, LookupResult, ProcessingStats
 - Eliminated duplicate DateParser class
 - Improved logging with structured logger
+- Implemented new correction decision logic (February 2026)
+- Removed Error Flag dependency from decision flow
+- Correction column existence checked first (not last)
+- Agree With Correction now supports Y/P (apply) and N/F (don't apply) values
+- Suggested Correction is fallback when Correction is empty or analyst disagrees
 """
 
 import csv
@@ -280,8 +285,16 @@ class IncidentFileIndex:
                         self.seller_dm_name_index[name_key] = []
                     self.seller_dm_name_index[name_key].append(i)
     
-    def lookup_by_id(self, client_ids: List[str]) -> Optional[Tuple[int, str]]:
-        """Fast O(1) ID lookup using indexes"""
+    def lookup_by_id(self, client_ids: List[str], client_first: str = "", client_surname: str = "") -> Optional[Tuple[int, str]]:
+        """Fast O(1) ID lookup using indexes
+        
+        When multiple records share the same ID, prefers the one matching the client name.
+        
+        Args:
+            client_ids: List of client IDs to search for
+            client_first: Client first name for disambiguation (optional)
+            client_surname: Client surname for disambiguation (optional)
+        """
         if self.logger:
             self.logger.debug(f"Looking up IDs: {client_ids}")
         
@@ -292,16 +305,59 @@ class IncidentFileIndex:
             
             # Check buyer index
             if client_id_lower in self.buyer_id_index:
-                row_idx = self.buyer_id_index[client_id_lower][0]  # Take first match
+                row_indices = self.buyer_id_index[client_id_lower]
+                
+                # If multiple matches and we have name info, try to disambiguate
+                if len(row_indices) > 1 and client_first and client_surname:
+                    col = self.column_mapper
+                    buyer_first_col = col.get('buyer_first_name')
+                    buyer_last_col = col.get('buyer_last_name')
+                    
+                    if buyer_first_col is not None and buyer_last_col is not None:
+                        # Check each row for name match
+                        for row_idx in row_indices:
+                            row = self.data_rows[row_idx]
+                            if len(row) > max(buyer_first_col, buyer_last_col):
+                                first = row[buyer_first_col].strip().lower()
+                                last = row[buyer_last_col].strip().lower()
+                                
+                                # Exact name match
+                                if first == client_first.lower() and last == client_surname.lower():
+                                    if self.logger:
+                                        self.logger.debug(f"Found ID '{client_id}' with name match in buyer_id_index (row {row_idx})")
+                                    return (row_idx, "id_buyer")
+                
+                # No name match or no disambiguation needed - take first match
+                row_idx = row_indices[0]
                 if self.logger:
-                    self.logger.debug(f"Found ID '{client_id}' in buyer_id_index")
+                    self.logger.debug(f"Found ID '{client_id}' in buyer_id_index (row {row_idx}, {len(row_indices)} total matches)")
                 return (row_idx, "id_buyer")
             
             # Check seller index
             if client_id_lower in self.seller_id_index:
-                row_idx = self.seller_id_index[client_id_lower][0]  # Take first match
+                row_indices = self.seller_id_index[client_id_lower]
+                
+                # If multiple matches and we have name info, try to disambiguate
+                if len(row_indices) > 1 and client_first and client_surname:
+                    col = self.column_mapper
+                    seller_first_col = col.get('seller_first_name')
+                    seller_last_col = col.get('seller_last_name')
+                    
+                    if seller_first_col is not None and seller_last_col is not None:
+                        for row_idx in row_indices:
+                            row = self.data_rows[row_idx]
+                            if len(row) > max(seller_first_col, seller_last_col):
+                                first = row[seller_first_col].strip().lower()
+                                last = row[seller_last_col].strip().lower()
+                                
+                                if first == client_first.lower() and last == client_surname.lower():
+                                    if self.logger:
+                                        self.logger.debug(f"Found ID '{client_id}' with name match in seller_id_index (row {row_idx})")
+                                    return (row_idx, "id_seller")
+                
+                row_idx = row_indices[0]
                 if self.logger:
-                    self.logger.debug(f"Found ID '{client_id}' in seller_id_index")
+                    self.logger.debug(f"Found ID '{client_id}' in seller_id_index (row {row_idx}, {len(row_indices)} total matches)")
                 return (row_idx, "id_seller")
             
             # Check buyer decision maker index (fallback)
@@ -623,7 +679,7 @@ class Phase3Processor:
         
         # Try ID lookup first (O(1) with index)
         if client.all_ids and any(client.all_ids):
-            id_result = index.lookup_by_id(client.all_ids)
+            id_result = index.lookup_by_id(client.all_ids, client.first_name, client.surname)
             if id_result:
                 row_idx, match_type = id_result
                 return self._create_lookup_result(index.data_rows[row_idx], index.column_mapper, match_type)
@@ -634,7 +690,6 @@ class Phase3Processor:
             if name_result:
                 row_idx, match_type = name_result
                 return self._create_lookup_result(index.data_rows[row_idx], index.column_mapper, match_type)
-        
         return LookupResult(found=False)
     
     def _create_lookup_result(self, row: List[str], column_mapper: IncidentColumnMapper, match_type: str) -> LookupResult:
@@ -680,28 +735,34 @@ class Phase3Processor:
                 if agree_value in ('Y', 'P', ''):
                     correction = correction_value
                     correction_field = correction_field_value
-                    self.logger.debug(f"Applying Correction (Agree={agree_value or 'empty'}, match={match_type})")
+                    if self.logger:
+                        self.logger.debug(f"Applying Correction (Agree={agree_value or 'empty'}, match={match_type})")
                 # If agree is N or F -> check Suggested Correction
                 elif agree_value in ('N', 'F'):
                     if suggested_correction_value:
                         correction = suggested_correction_value
                         correction_field = suggested_correction_field_value
-                        self.logger.debug(f"Applying Suggested Correction (analyst disagreed, match={match_type})")
+                        if self.logger:
+                            self.logger.debug(f"Applying Suggested Correction (analyst disagreed, match={match_type})")
                     else:
-                        self.logger.debug(f"No correction (analyst disagreed, no suggestion, match={match_type})")
+                        if self.logger:
+                            self.logger.debug(f"No correction (analyst disagreed, no suggestion, match={match_type})")
                 else:
                     # Unknown agree value - default to applying Correction
                     correction = correction_value
                     correction_field = correction_field_value
-                    self.logger.warning(f"Unknown Agree value '{agree_value}', defaulting to Correction")
+                    if self.logger:
+                        self.logger.warning(f"Unknown Agree value '{agree_value}', defaulting to Correction")
             else:
                 # No Correction value -> check Suggested Correction as fallback
                 if suggested_correction_value:
                     correction = suggested_correction_value
                     correction_field = suggested_correction_field_value
-                    self.logger.debug(f"Applying Suggested Correction (no automated correction, match={match_type})")
+                    if self.logger:
+                        self.logger.debug(f"Applying Suggested Correction (no automated correction, match={match_type})")
                 else:
-                    self.logger.debug(f"No correction to apply (match={match_type})")
+                    if self.logger:
+                        self.logger.debug(f"No correction to apply (match={match_type})")
             
             return LookupResult(
                 found=True,
@@ -716,36 +777,41 @@ class Phase3Processor:
             return LookupResult(found=False)
     
     def process_client_record(self, client: ClientRecord) -> Tuple[str, str]:
-        """Process client record with ultra-fast lookups"""
+        """Process client record with ultra-fast lookups
+        
+        Returns:
+            Tuple of (correction_value, correction_field) for Phase 3 output columns 6 and 7
+        """
         if not client.incident_codes:
             self.logger.debug(f"No incident codes for client: {client.id_value} {client.first_name} {client.surname}")
             return "Client not found", ""
         
-        all_corrections = []
+        all_correction_values = []
+        all_correction_fields = []
         
         for incident_code in client.incident_codes:
             result = self.lookup_client(client, incident_code)
             
             if result.found:
-                correction_pair = f"{result.correction}~{result.correction_field}" if result.correction_field else result.correction
-                all_corrections.append(correction_pair)
+                all_correction_values.append(result.correction)
+                all_correction_fields.append(result.correction_field)
         
-        if not all_corrections:
+        if not all_correction_values:
             self.stats.increment('not_found')
             return "Client not found", ""
         
-        # Handle multiple corrections
-        unique_corrections = list(set(all_corrections))
+        # Handle multiple corrections from different incident codes
+        unique_corrections = list(set(zip(all_correction_values, all_correction_fields)))
+        
         if len(unique_corrections) > 1:
+            # Multiple different corrections - concatenate with pipe separator
             self.stats.increment('inconsistent_corrections')
-            return "|".join(unique_corrections), ""
+            correction_values = "|".join([c[0] for c in unique_corrections])
+            correction_fields = "|".join([c[1] for c in unique_corrections])
+            return correction_values, correction_fields
         else:
-            correction_data = unique_corrections[0]
-            if '~' in correction_data and correction_data != "No Change":
-                parts = correction_data.split('~', 1)
-                return parts[0], parts[1]
-            else:
-                return correction_data, ""
+            # Single correction - return as separate values
+            return unique_corrections[0][0], unique_corrections[0][1]
     
     def process_replay_file(self, filename: str):
         """Process replay file with batch optimizations"""
@@ -867,7 +933,7 @@ class Phase3Processor:
         """Main execution with ultra optimizations"""
         start_time = datetime.now()
         
-        self.logger.log_header("PHASE 3 PROCESSOR v5.0")
+        self.logger.log_header("PHASE 3 PROCESSOR v5.1 (NAME DISAMBIGUATION FIX)")
         self.logger.info(f"Replay input path: {self.path_config.replay_input}")
         self.logger.info(f"Incident files path: {self.path_config.incident_files}")
         self.logger.info(f"Output path: {self.path_config.replay_output}")
@@ -900,13 +966,13 @@ class Phase3Processor:
         self.logger.info(f"Incident files indexed: {len(self.incident_indexes)}")
         self.logger.info(f"Total IDs indexed: {total_indexed}")
         
-        self.logger.info("Phase 3 Processor v5.0 completed successfully")
+        self.logger.info("Phase 3 Processor v5.1 completed successfully")
 
 
 def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description="Phase 3 Processor v5.0 - Inconsistent IDs/Names Processor",
+        description="Phase 3 Processor v5.1 - Inconsistent IDs/Names Processor",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
