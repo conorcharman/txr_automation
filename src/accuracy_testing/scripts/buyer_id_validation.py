@@ -627,7 +627,7 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
         
         # Check if extract file exists (input data to validate)
         if not extract_path.exists():
-            print(f"⚠️  Extract file not found: {extract_path}")
+            print(f"[!] Extract file not found: {extract_path}")
             print(f"   Skipping incident {incident}")
             total_failed += 1
             continue
