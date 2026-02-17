@@ -1,0 +1,18 @@
+{
+  "benchmark_type": "scalability",
+  "timestamp": "2026-02-17T15:47:02.898818",
+  "results": [
+    {
+      "dataset_size": 1500000,
+      "processing_time_sec": 131.97,
+      "peak_memory_mb": 4062.3,
+      "avg_memory_mb": 3912.37,
+      "throughput_records_per_sec": 11366.07,
+      "memory_per_record_kb": 2.77,
+      "valid_records": 500000,
+      "invalid_records": 1000000,
+      "corrected_records": 900000,
+      "timestamp": "2026-02-17T15:47:02.154801"
+    }
+  ]
+}

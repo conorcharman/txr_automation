@@ -108,7 +108,8 @@ class TestCLIArgumentParsing:
         else:
             # Should fail if no default config exists
             assert result.returncode != 0
-            assert "input_dir" in result.stdout.lower() or "output_dir" in result.stdout.lower()
+            # Check for the actual error message (with hyphens)
+            assert "parent-dir" in result.stdout.lower() or "input-dir" in result.stdout.lower()
     
     def test_invalid_log_level(self, tmp_path):
         """Test that invalid log level is rejected."""

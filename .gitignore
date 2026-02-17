@@ -97,6 +97,10 @@ tmp/
 temp/
 *.tmp
 
+# Benchmark temp data (large files)
+benchmarks/temp_data/
+benchmarks/**/*.csv
+
 # OS files
 Thumbs.db
 .DS_Store
