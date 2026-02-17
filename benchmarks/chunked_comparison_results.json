@@ -1,0 +1,31 @@
+{
+  "benchmark_type": "chunked_comparison",
+  "timestamp": "2026-02-17T15:52:40.886734",
+  "dataset_size": 1500000,
+  "chunk_size": 50000,
+  "full_processing": {
+    "mode": "full",
+    "dataset_size": 1500000,
+    "chunk_size": 1500000,
+    "processing_time_sec": 193.76,
+    "peak_memory_mb": 4050.96,
+    "throughput_records_per_sec": 7741.44,
+    "memory_per_record_kb": 2.77,
+    "timestamp": "2026-02-17T15:50:24.784737"
+  },
+  "chunked_processing": {
+    "mode": "chunked",
+    "dataset_size": 1500000,
+    "chunk_size": 50000,
+    "processing_time_sec": 135.19,
+    "peak_memory_mb": 135.13,
+    "throughput_records_per_sec": 11095.21,
+    "memory_per_record_kb": 0.09,
+    "timestamp": "2026-02-17T15:52:40.886329"
+  },
+  "comparison": {
+    "time_overhead_percent": -30.23,
+    "memory_savings_percent": 96.66,
+    "throughput_change_percent": 43.32
+  }
+}

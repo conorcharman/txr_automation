@@ -533,19 +533,26 @@ class InconsistentIDProcessor:
         """
         Check if ID matches the fallback pattern: CountryCode_PersonCode
         
+        This method validates that:
+        1. The ID has the pattern CC_PersonCode where CC is a 2-letter country code
+        2. The country code matches the expected country_code argument
+        3. The PersonCode matches the expected person_code argument
+        
         Args:
             id_value: The ID to check
             person_code: The person code for this record
-            country_code: ISO-2 country code
+            country_code: ISO-2 country code (expected nationality)
         
         Returns:
-            True if ID matches fallback pattern
+            True if ID matches fallback pattern AND is correct for this client
             
         Examples:
             >>> InconsistentIDProcessor.is_fallback_id_pattern("GB_12345", "12345", "GB")
             True
+            >>> InconsistentIDProcessor.is_fallback_id_pattern("FR_12345", "12345", "GB")
+            False  # Country code mismatch
             >>> InconsistentIDProcessor.is_fallback_id_pattern("AB123456C", "12345", "GB")
-            False
+            False  # Not fallback pattern
         """
         if not id_value or not person_code or not country_code:
             return False
@@ -559,6 +566,29 @@ class InconsistentIDProcessor:
             return clean_id == expected
         
         return False
+    
+    @staticmethod
+    def supports_concat(country_code: str) -> bool:
+        """
+        Check if a country supports CONCAT as an ID type.
+        
+        Args:
+            country_code: ISO-2 country code
+        
+        Returns:
+            True if country has CONCAT patterns defined, False otherwise
+            
+        Examples:
+            >>> InconsistentIDProcessor.supports_concat("GB")
+            True
+            >>> InconsistentIDProcessor.supports_concat("ES")
+            False
+        """
+        if not country_code:
+            return False
+        
+        patterns = id_format_manager.get_patterns(country_code.upper(), "CONCAT")
+        return len(patterns) > 0
     
     def group_by_person_code(self, records: List[ClientRecord]) -> Dict[str, List[int]]:
         """
@@ -993,11 +1023,21 @@ class InconsistentIDProcessor:
                 )
                 
                 if record.is_fallback_id:
+                    # Fallback ID detected - verify it's correct
                     self.stats.fallback_ids_found += 1
-                    record.is_valid_id = False  # Fallback IDs are not valid
-                    record.format_status = "Fail"
+                    # The is_fallback_id_pattern method already validates that:
+                    # 1. ID matches CountryCode_PersonCode pattern
+                    # 2. CountryCode matches priority_country_code
+                    # 3. PersonCode matches person_code
+                    # Therefore, if we reach here, the fallback ID is VALID
+                    record.is_valid_id = True
+                    record.format_status = "Pass"
                     record.logic_status = "N/A"
-                    record.failure_reason = "Fallback ID pattern detected"
+                    record.is_valid = True
+                    record.actions_taken.append("Valid fallback ID")
+                    self._log(
+                        f"[FALLBACK] Row {record.row_index}: Valid fallback ID detected: {record.id_value}"
+                    )
                 else:
                     # Validate format + logic
                     format_valid, logic_valid, error_message = self.validate_id_complete(record, id_processor)
@@ -1557,6 +1597,29 @@ class IDValidationProcessor:
         
         return (result.is_valid, error_message)
     
+    @staticmethod
+    def supports_concat(country_code: str) -> bool:
+        """
+        Check if a country supports CONCAT as an ID type.
+        
+        Args:
+            country_code: ISO-2 country code
+        
+        Returns:
+            True if country has CONCAT patterns defined, False otherwise
+            
+        Examples:
+            >>> IDValidationProcessor.supports_concat("GB")
+            True
+            >>> IDValidationProcessor.supports_concat("ES")
+            False
+        """
+        if not country_code:
+            return False
+        
+        patterns = id_format_manager.get_patterns(country_code.upper(), "CONCAT")
+        return len(patterns) > 0
+    
     def _generate_correction(
         self, 
         record: ClientRecord, 
@@ -1568,11 +1631,13 @@ class IDValidationProcessor:
         Following VBA logic with EEA/Rest of World distinction:
         1. Test alternative ID types in priority order (NIDN, PASSPORT, CONCAT, CCPT, PASS, DLIC)
         2. Try Swedish century fix (if SE + NIDN + 10 digits)
-        3. Generate CONCAT from client data
+        3. Generate CONCAT from client data (ONLY if country supports CONCAT)
+           - Skip this step if country does not have CONCAT patterns defined
            - EEA countries: CONCAT must pass format validation
            - Rest of World: CONCAT is default correction (no validation required)
-        4. Generate fallback ID (CountryCode + PersonCode as NIDN)
-           - For Rest of World, only used if CONCAT generation fails
+        4. Generate fallback ID (CountryCode_PersonCode as NIDN)
+           - Used when CONCAT is not supported or generation fails
+           - Used for EEA countries if CONCAT validation fails
         
         Returns:
             Tuple of (correction_value, correction_type) or None
@@ -1600,37 +1665,49 @@ class IDValidationProcessor:
         # Check if country is EEA/ESMA
         is_eea = country_manager.is_eea(country_code)
         
-        # Step 3: Try to generate CONCAT
-        concat_id = self._generate_concat(record, country_code)
-        if concat_id:
-            if self.verbose:
-                if self.logger:
-                    self.logger.debug(f"[CORRECTION] Generated CONCAT: {concat_id}")
-            
-            # For EEA countries: Validate the generated CONCAT against format patterns
-            # VBA: "tested against format patterns and logic validation. If both pass"
-            if is_eea:
-                is_valid = id_format_manager.validate(country_code, "CONCAT", concat_id)
+        # Check if country supports CONCAT ID type
+        concat_supported = self.supports_concat(country_code)
+        
+        # Step 3: Try to generate CONCAT (only if supported by country)
+        if concat_supported:
+            concat_id = self._generate_concat(record, country_code)
+            if concat_id:
                 if self.verbose:
                     if self.logger:
-                        self.logger.debug(f"[CORRECTION] CONCAT validation result (EEA): {is_valid}")
-                if is_valid:
+                        self.logger.debug(f"[CORRECTION] Generated CONCAT: {concat_id}")
+                
+                # For EEA countries: Validate the generated CONCAT against format patterns
+                # VBA: "tested against format patterns and logic validation. If both pass"
+                if is_eea:
+                    is_valid = id_format_manager.validate(country_code, "CONCAT", concat_id)
+                    if self.verbose:
+                        if self.logger:
+                            self.logger.debug(f"[CORRECTION] CONCAT validation result (EEA): {is_valid}")
+                    if is_valid:
+                        return (concat_id, "CONCAT")
+                    # If CONCAT validation fails for EEA, continue to fallback
+                else:
+                    # For Rest of World countries: Use CONCAT as default correction without validation
+                    if self.verbose:
+                        if self.logger:
+                            self.logger.debug(f"[CORRECTION] Using CONCAT for Rest of World country (no validation)")
                     return (concat_id, "CONCAT")
-                # If CONCAT validation fails for EEA, continue to fallback
             else:
-                # For Rest of World countries: Use CONCAT as default correction without validation
                 if self.verbose:
                     if self.logger:
-                        self.logger.debug(f"[CORRECTION] Using CONCAT for Rest of World country (no validation)")
-                return (concat_id, "CONCAT")
+                        self.logger.debug(f"[CORRECTION] CONCAT generation failed - missing data (fname={bool(record.first_name)}, sname={bool(record.surname)}, dob={bool(record.date_of_birth)})")
         else:
+            # Country does not support CONCAT - skip to fallback ID
             if self.verbose:
                 if self.logger:
-                    self.logger.debug(f"[CORRECTION] CONCAT generation failed - missing data (fname={bool(record.first_name)}, sname={bool(record.surname)}, dob={bool(record.date_of_birth)})")
+                    self.logger.debug(f"[CORRECTION] Country {country_code} does not support CONCAT - skipping to fallback ID")
         
         # Step 4: Generate fallback ID (CountryCode + PersonCode as NIDN)
+        # Used when:
+        # - CONCAT generation failed (missing data)
+        # - Country does not support CONCAT
+        # - CONCAT validation failed (for EEA countries)
         # VBA: "No format or logic validation performed" - always return if person_code exists
-        # Note: For Rest of World, this is only reached if CONCAT generation failed
         if record.person_code:
             fallback_id = country_code.upper() + record.person_code.strip()
             if self.verbose:
