@@ -86,7 +86,7 @@ class TestTemplateFormat:
     def test_get_validation_columns_buyer(self):
         """Test buyer validation columns."""
         cols = TemplateFormat.get_validation_columns('buyer')
-        assert len(cols) == 14
+        assert len(cols) == 17
         assert cols[0] == 'Transaction Reference'
         assert 'Account ID' in cols
         assert 'Buyer ID Code' in cols
@@ -94,7 +94,7 @@ class TestTemplateFormat:
     def test_get_validation_columns_seller(self):
         """Test seller validation columns."""
         cols = TemplateFormat.get_validation_columns('seller')
-        assert len(cols) == 14
+        assert len(cols) == 17
         assert cols[0] == 'Transaction Reference'
         assert 'Account ID' in cols
         assert 'Seller ID Code' in cols
@@ -255,9 +255,9 @@ class TestAccuracyTemplateGenerator:
         header = generator.create_template_header('7_37')
         
         # Should have validation cols + comparison cols + consolidated cols
-        assert len(header) == 14 + 3 + len(SAMPLE_CONSOLIDATED_HEADER)
+        assert len(header) == 17 + 3 + len(SAMPLE_CONSOLIDATED_HEADER)
         assert header[0] == 'Transaction Reference'
-        assert header[14] == 'Agree With Correction'  # First comparison col
+        assert header[17] == 'Agree With Correction'  # First comparison col
         assert 'INCIDENT_CODE' in header
     
     def test_create_template_header_seller(self):
@@ -269,7 +269,7 @@ class TestAccuracyTemplateGenerator:
         
         header = generator.create_template_header('16_21')
         
-        assert len(header) == 14 + 3 + len(SAMPLE_CONSOLIDATED_HEADER)
+        assert len(header) == 17 + 3 + len(SAMPLE_CONSOLIDATED_HEADER)
         assert header[0] == 'Transaction Reference'
     
     def test_create_template_header_pricing(self):
@@ -492,18 +492,18 @@ class TestTemplateGeneratorIntegration:
             row2 = next(reader)
             
             # Verify structure
-            assert len(header) == 14 + 3 + 5  # validation + comparison + consolidated
+            assert len(header) == 17 + 3 + 5  # validation + comparison + consolidated
             
             # Verify transaction references are populated
             assert row1[0] == 'TXN001'
             assert row2[0] == 'TXN002'
             
             # Verify other validation columns are empty
-            assert all(row1[i] == '' for i in range(1, 14))
+            assert all(row1[i] == '' for i in range(1, 17))
             
             # Verify consolidated data is appended
-            assert row1[17] == '7_37'  # INCIDENT_CODE
-            assert row1[20] == 'TXN001'  # Transaction reference number
+            assert row1[20] == '7_37'  # INCIDENT_CODE
+            assert row1[23] == 'TXN001'  # Transaction reference number
         
         # Test that pipe-delimited record appears in both templates
         seller_template = generated['16_21']

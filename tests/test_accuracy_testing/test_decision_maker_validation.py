@@ -153,13 +153,10 @@ class TestDecisionMakerRecord:
             "TXN004",           # 0: Transaction Reference
             "X22222222",        # 1: Account ID
             "549300PARTY000001", # 2: Party Code
-            "",                 # 3: Type (output)
-            "549300DM000000001", # 4: DM Code
-            "",                 # 5: DM Type (output)
-            "",                 # 6: Product (output)
-            "Managed",          # 7: Account Type
-            "E",                # 8: Service Level
-            "ABC001",           # 9: Branch Code
+            "549300DM000000001", # 3: DM Code
+            "Managed",          # 4: Account Type
+            "E",                # 5: Service Level
+            "ABC001",           # 6: Branch Code
         ]
         
         record = DecisionMakerRecord.from_row(row, party_type="Buyer", row_index=5)
@@ -784,5 +781,5 @@ class TestEdgeCases:
         """Test from_row raises error for insufficient columns."""
         row = ["TXN", "ACCT", "CODE"]  # Only 3 columns
         
-        with pytest.raises(ValueError, match="at least 10 columns"):
+        with pytest.raises(ValueError, match="at least 7 columns"):
             DecisionMakerRecord.from_row(row)

@@ -56,7 +56,7 @@ class TestIDFormatManager:
     def test_total_patterns(self):
         """Test total pattern count."""
         manager = IDFormatManager()
-        assert manager.total_patterns == 67
+        assert manager.total_patterns == 68
         assert len(ID_PATTERNS) == 67
     
     def test_supported_countries(self):

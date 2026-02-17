@@ -1,4 +1,5 @@
 # Level 4: Architectural Review
+
 ## Transaction Reporting Automation System
 
 **Review Date:** 16 February 2026  
@@ -15,6 +16,7 @@ This architectural review assesses the Transaction Reporting Automation system f
 ### Key Findings
 
 **Strengths:**
+
 - ✅ Clean separation of concerns (core library, accuracy_testing, replay)
 - ✅ CSV-first approach eliminates Excel dependencies
 - ✅ Comprehensive test suite (45 test files, 307/322 tests passing)
@@ -22,6 +24,7 @@ This architectural review assesses the Transaction Reporting Automation system f
 - ✅ Strong foundation for scaling (batch processing patterns in place)
 
 **Areas Requiring Attention:**
+
 - ⚠️ Configuration architecture has duplication between core and accuracy_testing
 - ⚠️ No environment separation (dev/test/prod)
 - ⚠️ Deployment strategy is manual (Git clone + conda setup)
@@ -29,6 +32,7 @@ This architectural review assesses the Transaction Reporting Automation system f
 - ⚠️ No automation framework for scheduled/unattended execution
 
 **Strategic Recommendations:**
+
 1. Implement environment-based configuration strategy
 2. Design distributed/parallel processing architecture for scale
 3. Create containerised deployment pipeline
@@ -41,52 +45,52 @@ This architectural review assesses the Transaction Reporting Automation system f
 
 ### 1.1 Current Architecture
 
-```
+```md
 ┌─────────────────────────────────────────────────────────────────┐
-│                     User Interface Layer                         │
-│                      (CLI Scripts)                               │
+│                     User Interface Layer                        │
+│                      (CLI Scripts)                              │
 │  • validate-buyer, validate-seller                              │
 │  • generate-sql-extract, data-push                              │
 │  • replay-phase2, replay-phase3                                 │
 └──────────────────────┬──────────────────────────────────────────┘
                        │
 ┌──────────────────────┴──────────────────────────────────────────┐
-│                  Application Logic Layer                         │
+│                  Application Logic Layer                        │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌────────────────────┐  ┌─────────────────┐  ┌──────────────┐ │
-│  │  accuracy_testing  │  │     replay      │  │    utils     │ │
-│  ├────────────────────┤  ├─────────────────┤  ├──────────────┤ │
-│  │ • Validation       │  │ • Phase 2       │  │ • XLSX Conv  │ │
-│  │ • SQL Generation   │  │ • Phase 3       │  │              │ │
-│  │ • Template Gen     │  │ • Lookup        │  │              │ │
-│  │ • Data Push        │  │                 │  │              │ │
-│  └────────┬───────────┘  └────────┬────────┘  └──────┬───────┘ │
-│           │                       │                    │         │
-│           └───────────────────────┴────────────────────┘         │
+│  ┌────────────────────┐  ┌─────────────────┐  ┌──────────────┐  │
+│  │  accuracy_testing  │  │     replay      │  │    utils     │  │
+│  ├────────────────────┤  ├─────────────────┤  ├──────────────┤  │
+│  │ • Validation       │  │ • Phase 2       │  │ • XLSX Conv  │  │
+│  │ • SQL Generation   │  │ • Phase 3       │  │              │  │
+│  │ • Template Gen     │  │ • Lookup        │  │              │  │
+│  │ • Data Push        │  │                 │  │              │  │
+│  └────────┬───────────┘  └────────┬────────┘  └──────┬───────┘  │
+│           │                       │                  │          │
+│           └───────────────────────┴──────────────────┘          │
 └──────────────────────┬──────────────────────────────────────────┘
                        │
 ┌──────────────────────┴──────────────────────────────────────────┐
-│                    Core Library Layer                            │
+│                    Core Library Layer                           │
 ├─────────────────────────────────────────────────────────────────┤
-│  ┌────────┐ ┌─────────┐ ┌────────┐ ┌──────────┐ ┌────────────┐│
-│  │ Config │ │  Data   │ │Logging │ │  Utils   │ │ Validation ││
-│  │  Mgmt  │ │Structures│ │        │ │          │ │   Logic    ││
-│  └────────┘ └─────────┘ └────────┘ └──────────┘ └────────────┘│
+│  ┌────────┐ ┌──────────┐ ┌────────┐ ┌──────────┐ ┌────────────┐ │
+│  │ Config │ │  Data    │ │Logging │ │  Utils   │ │ Validation │ │
+│  │  Mgmt  │ │Structures│ │        │ │          │ │   Logic    │ │
+│  └────────┘ └──────────┘ └────────┘ └──────────┘ └────────────┘ │
 └──────────────────────┬──────────────────────────────────────────┘
                        │
 ┌──────────────────────┴──────────────────────────────────────────┐
-│                  Data/Integration Layer                          │
+│                  Data/Integration Layer                         │
 ├─────────────────────────────────────────────────────────────────┤
 │  • CSV Files (Input/Output)                                     │
 │  • YAML Configuration Files                                     │
-│  • Reference Data (country_codes.csv, id_formats.csv)          │
-│  • Log Files (Structured JSON logs)                            │
+│  • Reference Data (country_codes.csv, id_formats.csv)           │
+│  • Log Files (Structured JSON logs)                             │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
 ### 1.2 Data Flow Pipeline
 
-```
+```md
 Database (SQL Server)
       │
       ├─── SQL Extract Scripts ───→ CSV Extracts
@@ -120,11 +124,13 @@ Database (SQL Server)
 ```
 
 **Processing Frequency:**
+
 - Current: Quarterly
 - Near-term: Monthly
 - Target: Daily
 
 **Volume:**
+
 - Current: ~20,000 transactions (11 incidents)
 - Target: ~1.5M transactions (129 incidents)
 - Scale Factor: **75x increase**
@@ -138,7 +144,8 @@ Database (SQL Server)
 **Purpose:** Shared foundation for all automation modules
 
 **Structure:**
-```
+
+```md
 core/
 ├── config/              # Configuration management
 │   └── config_manager.py
@@ -158,12 +165,14 @@ core/
 ```
 
 **Assessment:**
+
 - ✅ **Well-defined boundaries:** Clear separation of concerns
 - ✅ **Reusability:** Successfully shared between replay and accuracy_testing
 - ✅ **Version control:** Version 1.1.0 with clear exports
 - ⚠️ **Documentation:** Could benefit from architecture decision records (ADRs)
 
 **Recommendations:**
+
 1. Add `ARCHITECTURE.md` explaining design decisions
 2. Create dependency graph showing what depends on what
 3. Consider extracting `core` to separate package for formal versioning
@@ -173,7 +182,8 @@ core/
 **Purpose:** Quarterly accuracy testing workflows (VBA migration)
 
 **Structure:**
-```
+
+```md
 accuracy_testing/
 ├── core/                # Accuracy-specific core library
 │   ├── country_codes.py
@@ -203,12 +213,13 @@ accuracy_testing/
 ```
 
 **Assessment:**
+
 - ✅ **Clean separation:** Scripts vs core logic vs validators
 - ✅ **Console scripts:** Well-integrated with `setup.py`
 - ⚠️ **Configuration duplication:** Has its own `AccuracyConfigManager` separate from `core.config`
 - ⚠️ **Core duplication:** `accuracy_testing.core` re-implements some `core` functionality
 
-**Critical Issue: Configuration Architecture Duplication**
+***Critical Issue: Configuration Architecture Duplication***
 
 There are **two separate configuration systems:**
 
@@ -216,12 +227,14 @@ There are **two separate configuration systems:**
 2. **`accuracy_testing.processor.AccuracyConfigManager`** - Used by accuracy testing scripts
 
 This creates:
+
 - Code duplication
 - Maintenance burden
 - Inconsistent behaviour between modules
 - Confusion for new developers
 
 **Recommendations:**
+
 1. **Consolidate configuration management:**
    - Extend `core.config.ConfigManager` to support both replay and accuracy testing
    - Add `mode: single|batch` support to `PathConfig`
@@ -243,7 +256,8 @@ This creates:
 **Purpose:** Quarterly replay comparison workflows
 
 **Structure:**
-```
+
+```md
 replay/
 ├── phase_2_processor.py  # Single/combined mode
 ├── phase_3_processor.py  # Main replay comparison
@@ -251,12 +265,14 @@ replay/
 ```
 
 **Assessment:**
+
 - ✅ **Mature implementation:** Batch processing, indexing, performance optimised
 - ✅ **Clean CLI:** `replay-phase2`, `replay-phase3`, `replay-phase3-final`
 - ✅ **Uses core library:** Good integration with `core.config`, `core.logging`
 - ⚠️ **Duplicated patterns:** Performance patterns (indexing, batching) not shared with accuracy_testing
 
 **Recommendations:**
+
 1. Extract batch processing patterns to `core.processing.BatchProcessor`
 2. Extract indexing patterns to `core.processing.RecordIndex`
 3. Share these patterns with accuracy_testing for consistent performance
@@ -266,16 +282,19 @@ replay/
 **Purpose:** Standalone utilities
 
 **Structure:**
-```
+
+```md
 utils/
 └── xlsx_csv_converter.py
 ```
 
 **Assessment:**
+
 - ✅ **Simple and focused:** Does one thing well
 - ⚠️ **Placement:** Consider moving to `core.utils` or keeping separate?
 
 **Recommendation:**
+
 - Keep separate for now (it's a standalone tool)
 - If more utilities accumulate, establish criteria for core vs utils
 
@@ -286,7 +305,9 @@ utils/
 ### 3.1 Current State
 
 **Configuration Locations:**
-```
+
+```md
+
 config/
 ├── templates/                    # Template configs for each script
 │   ├── accuracy_testing/        # 15 templates
@@ -301,6 +322,7 @@ config/
 ```
 
 **Configuration Formats:**
+
 ```yaml
 # Single mode (accuracy_testing)
 mode: "single"
@@ -336,12 +358,14 @@ processor:
 ### 3.2 Assessment
 
 **Strengths:**
+
 - ✅ YAML format is human-readable and version-controllable
 - ✅ Template pattern helps users get started
 - ✅ Supports environment variables via `load_from_env()`
 - ✅ Batch mode enables multi-incident processing
 
 **Weaknesses:**
+
 - ⚠️ **Duplication:** Two separate config manager implementations
 - ⚠️ **No validation:** No schema validation for YAML files
 - ⚠️ **No environment separation:** No dev/test/prod distinction
@@ -351,7 +375,9 @@ processor:
 ### 3.3 Recommended Architecture
 
 **Unified Configuration Hierarchy:**
-```
+
+```md
+
 ┌─────────────────────────────────────────────────┐
 │           Environment Variables                  │  (Highest priority)
 │  TXR_ENV=production                             │
@@ -377,7 +403,9 @@ processor:
 **Implementation Plan:**
 
 1. **Create environment structure:**
-```
+
+```md
+
 config/
 ├── environments/
 │   ├── development/
@@ -397,8 +425,10 @@ config/
 └── templates/                # Unchanged
 ```
 
-2. **Unified ConfigManager:**
+1. **Unified ConfigManager:**
+
 ```python
+
 class ConfigManager:
     """Unified configuration management for all modules."""
     
@@ -426,8 +456,9 @@ class ConfigManager:
         """
 ```
 
-3. **Schema validation:**
-```python
+1. **Schema validation:**
+
+```json
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Accuracy Testing Configuration",
@@ -452,7 +483,8 @@ class ConfigManager:
 }
 ```
 
-4. **Path resolution:**
+1. **Path resolution:**
+
 ```python
 class PathResolver:
     """Resolve relative paths based on environment."""
@@ -482,7 +514,7 @@ class PathResolver:
 ### 4.1 Current Scale vs Target Scale
 
 | Metric | Current | Target | Scale Factor |
-|--------|---------|--------|--------------|
+| -------- | --------- | -------- | -------------- |
 | **Transactions** | 20,000 | 1,500,000 | 75x |
 | **Incidents** | 11 | 129 | 11.7x |
 | **Frequency** | Quarterly | Daily | 90x |
@@ -493,7 +525,7 @@ class PathResolver:
 
 **Critical Path Analysis:**
 
-1. **CSV I/O:** 
+1. **CSV I/O:**
    - Current: `pd.read_csv()` for entire file
    - Issue: 375 MB CSV files may cause memory pressure
    - Solution: Chunked reading or streaming parsing
@@ -521,12 +553,14 @@ class PathResolver:
 ### 4.3 Memory Profile
 
 **Current Memory Usage (estimated):**
+
 - CSV file: 5 MB
 - DataFrame in memory: ~15 MB (3x file size)
 - Working memory: ~10 MB
 - **Total:** ~30 MB per process
 
 **Target Memory Usage (estimated):**
+
 - CSV file: 375 MB
 - DataFrame in memory: ~1.1 GB (3x file size)
 - Working memory: ~400 MB
@@ -541,17 +575,18 @@ class PathResolver:
 **Goal:** Handle 1.5M transactions on single machine
 
 1. **Implement chunked CSV processing:**
+
 ```python
 class ChunkedProcessor:
     """Process large CSV files in chunks to limit memory usage."""
-    
-    def process_file(self, 
+
+    def process_file(self,
                      input_path: str,
                      output_path: str,
                      chunk_size: int = 50000) -> ProcessingStats:
         """
         Process CSV in chunks of chunk_size rows.
-        
+
         Memory usage: chunk_size * row_size * 3
         Example: 50K rows * 1KB * 3 = 150 MB
         """
@@ -559,13 +594,14 @@ class ChunkedProcessor:
         for chunk_df in pd.read_csv(input_path, chunksize=chunk_size):
             processed_chunk = self.process_chunk(chunk_df)
             chunks.append(processed_chunk)
-        
+
         # Concatenate and write
         result_df = pd.concat(chunks, ignore_index=True)
         result_df.to_csv(output_path, index=False)
 ```
 
-2. **Vectorise operations where possible:**
+1. **Vectorise operations where possible:**
+
 ```python
 # Before (row-by-row):
 for idx, row in df.iterrows():
@@ -582,7 +618,8 @@ eea_countries = set(['GB', 'DE', 'FR', ...])
 df['EEA_Priority'] = df['Nationality_1'].isin(eea_countries).astype(int)
 ```
 
-3. **Add progress reporting:**
+1. **Add progress reporting:**
+
 ```python
 from tqdm import tqdm
 
@@ -590,7 +627,7 @@ for chunk in tqdm(chunks, desc="Processing"):
     process_chunk(chunk)
 ```
 
-4. **Implement batch mode for all scripts:**
+1. **Implement batch mode for all scripts:**
    - Already done for validation scripts ✅
    - Extend to SQL generation, data push
    - Enable processing all 129 incidents in one command
@@ -600,37 +637,39 @@ for chunk in tqdm(chunks, desc="Processing"):
 **Goal:** Process 1.5M transactions in <2 hours
 
 1. **Multiprocessing for CPU-bound tasks:**
+
 ```python
 from multiprocessing import Pool
 from functools import partial
 
-def process_record_batch(records: List[ClientRecord], 
+def process_record_batch(records: List[ClientRecord],
                          config: ProcessorConfig) -> List[ClientRecord]:
     """Process batch of records (CPU-bound validation)."""
     processor = IDValidationProcessor(config)
     return [processor.validate_record(r) for r in records]
 
-def process_file_parallel(input_path: str, 
+def process_file_parallel(input_path: str,
                          output_path: str,
                          num_workers: int = 4) -> ProcessingStats:
     """Process file using multiple CPU cores."""
-    
+
     # Split into batches
     df = pd.read_csv(input_path)
     batch_size = len(df) // num_workers
     batches = [df.iloc[i:i+batch_size] for i in range(0, len(df), batch_size)]
-    
+
     # Process in parallel
     with Pool(num_workers) as pool:
         process_func = partial(process_record_batch, config=config)
         results = pool.map(process_func, batches)
-    
+
     # Combine results
     result_df = pd.concat(results, ignore_index=True)
     result_df.to_csv(output_path, index=False)
 ```
 
-2. **Distributed processing for 129 incidents:**
+1. **Distributed processing for 129 incidents:**
+
 ```python
 # Celery task queue
 from celery import Celery
@@ -653,7 +692,8 @@ job = group(
 result = job.apply_async()
 ```
 
-3. **Database-backed intermediate storage:**
+1. **Database-backed intermediate storage:**
+
 ```python
 # Instead of passing 1.5M records between processes,
 # write to SQLite or PostgreSQL
@@ -685,7 +725,7 @@ def process_with_database(input_csv: str, output_csv: str):
 
 **Goal:** Handle daily processing with auto-scaling
 
-```
+```md
 ┌─────────────────────────────────────────────────┐
 │              Orchestration Layer                │
 │         (Airflow / Prefect / Dagster)           │
@@ -702,31 +742,32 @@ def process_with_database(input_csv: str, output_csv: str):
 │              Compute Layer                      │
 │                                                 │
 │   Container Pool (Docker/Kubernetes)            │
-│   ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐         │
-│   │Worker│ │Worker│ │Worker│ │Worker│  ...    │
-│   │  1   │ │  2   │ │  3   │ │  N   │         │
-│   └──────┘ └──────┘ └──────┘ └──────┘         │
+│   ┌──────┐ ┌──────┐ ┌──────┐ ┌──────┐           │
+│   │Worker│ │Worker│ │Worker│ │Worker│  ...      │
+│   │  1   │ │  2   │ │  3   │ │  N   │           │
+│   └──────┘ └──────┘ └──────┘ └──────┘           │
 │   Auto-scaling based on queue depth             │
 └──────────────────┬──────────────────────────────┘
                    │
 ┌──────────────────┴──────────────────────────────┐
 │              Storage Layer                      │
 │                                                 │
-│  ┌──────────────┐  ┌──────────────────────┐   │
-│  │  SQL Server  │  │  Object Storage      │   │
-│  │  (Source DB) │  │  (S3/Azure Blob)     │   │
-│  └──────────────┘  └──────────────────────┘   │
+│  ┌──────────────┐  ┌──────────────────────┐     │
+│  │  SQL Server  │  │  Object Storage      │     │
+│  │  (Source DB) │  │  (S3/Azure Blob)     │     │
+│  └──────────────┘  └──────────────────────┘     │
 │                                                 │
-│  ┌──────────────────────────────────────────┐  │
-│  │  Results Database (PostgreSQL)           │  │
-│  │  - Validation results                    │  │
-│  │  - Audit logs                            │  │
-│  │  - Processing metrics                    │  │
-│  └──────────────────────────────────────────┘  │
+│  ┌──────────────────────────────────────────┐   │
+│  │  Results Database (PostgreSQL)           │   │
+│  │  - Validation results                    │   │
+│  │  - Audit logs                            │   │
+│  │  - Processing metrics                    │   │ 
+│  └──────────────────────────────────────────┘   │ 
 └─────────────────────────────────────────────────┘
 ```
 
 **Implementation:**
+
 - Docker containers for each worker
 - Kubernetes for orchestration and auto-scaling
 - Message queue (RabbitMQ/Redis) for task distribution
@@ -741,6 +782,7 @@ def process_with_database(input_csv: str, output_csv: str):
 ### 5.1 Current Deployment Process
 
 **Manual Process:**
+
 1. Clone Git repository
 2. Create conda environment from `environment.yml`
 3. Install package in editable mode (`pip install -e .`)
@@ -749,6 +791,7 @@ def process_with_database(input_csv: str, output_csv: str):
 6. Run scripts via console scripts
 
 **Assessment:**
+
 - ⚠️ **Manual and error-prone:** Easy to miss steps
 - ⚠️ **No versioning:** No guarantee of consistent environments
 - ⚠️ **No rollback:** Can't easily revert to previous version
@@ -760,6 +803,7 @@ def process_with_database(input_csv: str, output_csv: str):
 #### 5.2.1 Environment Separation
 
 **Development Environment:**
+
 - **Purpose:** Active development and testing
 - **Location:** Developer laptops
 - **Data:** Small sample datasets (1000 records)
@@ -767,6 +811,7 @@ def process_with_database(input_csv: str, output_csv: str):
 - **Deployment:** Git clone + conda env
 
 **Test Environment:**
+
 - **Purpose:** Integration testing and UAT
 - **Location:** Shared test server or developer laptop
 - **Data:** Realistic test data (10,000 records)
@@ -774,6 +819,7 @@ def process_with_database(input_csv: str, output_csv: str):
 - **Deployment:** Git clone + conda env
 
 **Production Environment:**
+
 - **Purpose:** Live processing for regulatory reporting
 - **Location:** Production server or analyst workstations
 - **Data:** Full dataset (1.5M records)
@@ -781,6 +827,7 @@ def process_with_database(input_csv: str, output_csv: str):
 - **Deployment:** Docker container or conda env
 
 **Environment Configuration:**
+
 ```yaml
 # config/environments/development/defaults.yaml
 data:
@@ -816,6 +863,7 @@ logging:
 #### 5.2.2 Containerised Deployment (Docker)
 
 **Benefits:**
+
 - ✅ Consistent environment across all machines
 - ✅ Easy rollback to previous versions
 - ✅ Isolated dependencies
@@ -823,6 +871,7 @@ logging:
 - ✅ Can be orchestrated (Docker Compose, Kubernetes)
 
 **Dockerfile:**
+
 ```dockerfile
 FROM python:3.11-slim
 
@@ -859,6 +908,7 @@ CMD ["bash"]
 ```
 
 **Docker Compose (for local testing):**
+
 ```yaml
 version: '3.8'
 
@@ -877,6 +927,7 @@ services:
 ```
 
 **Usage:**
+
 ```bash
 # Build image
 docker build -t txr_automation:1.0.0 .
@@ -897,27 +948,30 @@ docker-compose up txr_automation
 **Options:**
 
 1. **Private PyPI Repository (Recommended for Production):**
-```bash
-# Build wheel
-python setup.py sdist bdist_wheel
 
-# Upload to private PyPI
-twine upload --repository-url https://pypi.company.com/simple dist/*
+   ```bash
+   # Build wheel
+   python setup.py sdist bdist_wheel
 
-# Install on user machines
-pip install --index-url https://pypi.company.com/simple txr-automation==1.0.0
-```
+   # Upload to private PyPI
+   twine upload --repository-url https://pypi.company.com/simple dist/*
+
+   # Install on user machines
+   pip install --index-url https://pypi.company.com/simple txr-automation==1.0.0
+   ```
 
 2. **Git + Conda (Current approach, good for development):**
-```bash
-git clone https://github.com/company/txr_automation.git
-cd txr_automation
-conda env create -f environment.yml
-conda activate txr_automation
-pip install -e .
-```
+
+   ```bash
+   git clone https://github.com/company/txr_automation.git
+   cd txr_automation
+   conda env create -f environment.yml
+   conda activate txr_automation
+   pip install -e .
+   ```
 
 3. **Executable Bundle (easiest for analysts):**
+
 ```bash
 # Use PyInstaller to create standalone executable
 pyinstaller --onefile \
@@ -1007,12 +1061,14 @@ jobs:
 ### 6.1 Current State
 
 **Manual Execution:**
+
 - User runs each script sequentially
 - Manual checking of outputs between steps
 - Manual selection of files and directories
 - No error recovery or retry logic
 
 **Issues:**
+
 - ⚠️ Error-prone (easy to skip steps or use wrong files)
 - ⚠️ Time-consuming (user must monitor all steps)
 - ⚠️ No auditability (no record of what was run when)
@@ -1022,7 +1078,7 @@ jobs:
 
 #### 6.2.1 Workflow Engine (Short-Term Solution)
 
-**Option 1: Simple Shell Scripts**
+***Option 1: Simple Shell Scripts***
 
 Good for quarterly processing with manual triggers.
 
@@ -1087,7 +1143,7 @@ echo "✅ Quarterly accuracy testing complete!"
 echo "📊 Summary report: $LOG_DIR/summary_report.html"
 ```
 
-**Option 2: Python Workflow Manager**
+***Option 2: Python Workflow Manager***
 
 Better for daily processing with dependencies and error handling.
 
@@ -1114,42 +1170,42 @@ class Task:
     dependencies: List[str] = None
     retry_count: int = 3
     timeout: Optional[int] = None
-    
+
 class WorkflowManager:
     """Manage workflow execution with dependency resolution."""
-    
+
     def __init__(self):
         self.tasks = {}
         self.results = {}
         self.logger = logging.getLogger(__name__)
-    
+
     def add_task(self, task: Task):
         """Add task to workflow."""
         self.tasks[task.name] = task
         self.results[task.name] = TaskStatus.PENDING
-    
+
     def run(self):
         """Execute workflow with dependency resolution."""
         for task_name in self._topological_sort():
             task = self.tasks[task_name]
-            
+
             # Check dependencies
             if not self._dependencies_met(task):
                 self.logger.warning(f"Skipping {task_name} - dependencies not met")
                 self.results[task_name] = TaskStatus.SKIPPED
                 continue
-            
+
             # Execute with retry
             self.results[task_name] = TaskStatus.RUNNING
             success = self._execute_with_retry(task)
-            
+
             if success:
                 self.results[task_name] = TaskStatus.SUCCESS
             else:
                 self.results[task_name] = TaskStatus.FAILED
                 if task.critical:
                     raise RuntimeError(f"Critical task {task_name} failed")
-    
+
     def _execute_with_retry(self, task: Task) -> bool:
         """Execute task with retry logic."""
         for attempt in range(task.retry_count):
@@ -1189,9 +1245,10 @@ workflow.run()
 
 #### 6.2.2 Enterprise Workflow Orchestration (Long-Term)
 
-**Recommended: Apache Airflow**
+***Recommended: Apache Airflow***
 
 Benefits:
+
 - ✅ Industry-standard workflow orchestration
 - ✅ Web UI for monitoring
 - ✅ Built-in scheduling (cron-like)
@@ -1278,7 +1335,7 @@ generate_report = PythonOperator(
 generate_templates >> generate_sql >> validation_tasks >> aggregate >> data_push_task >> generate_report
 ```
 
-**Alternative: Prefect (Modern, Python-native)**
+***Alternative: Prefect (Modern, Python-native)***
 
 ```python
 from prefect import flow, task
@@ -1297,14 +1354,14 @@ def validate_incident(incident_code: str):
 @flow(task_runner=DaskTaskRunner())
 def quarterly_accuracy_testing(fiscal_year: str, quarter: str):
     """Run quarterly accuracy testing workflow."""
-    
+
     # Step 1
     generate_templates(fiscal_year, quarter)
-    
+
     # Step 2: Validate all incidents in parallel
     incident_codes = get_all_incident_codes()
     validation_results = validate_incident.map(incident_codes)
-    
+
     # Step 3: Aggregate
     aggregate_results(validation_results)
 
@@ -1320,12 +1377,13 @@ if __name__ == "__main__":
 ### 6.3 Scheduling Recommendations
 
 | Frequency | Mechanism | Rationale |
-|-----------|-----------|-----------|
+| ----------- | ----------- | ----------- |
 | **Quarterly** | Manual trigger with shell script | Current workflow, user needs control |
 | **Monthly** | Cron job + shell script | Simple, reliable for monthly tasks |
 | **Daily** | Airflow/Prefect with monitoring | Complex dependencies, need error handling |
 
 **Implementation Priority:**
+
 1. **Now:** Shell script for quarterly automation
 2. **Q2 2026:** Python workflow manager for monthly processing
 3. **Q4 2026:** Airflow/Prefect for daily processing
@@ -1337,6 +1395,7 @@ if __name__ == "__main__":
 ### 7.1 Requirements Analysis
 
 Based on user needs:
+
 - ✅ Select which script to run
 - ✅ Select files/directories without editing config
 - ✅ View progress and logs in real-time
@@ -1349,9 +1408,10 @@ Based on user needs:
 
 ### 7.2 Architecture Pattern
 
-**Recommended: Decoupled Architecture**
+***Recommended: Decoupled Architecture***
 
-```
+```md
+
 ┌─────────────────────────────────────────────────┐
 │            Presentation Layer (GUI)             │
 │              (Electron / PyQt / Web)            │
@@ -1385,6 +1445,7 @@ Based on user needs:
 ```
 
 **Key Principles:**
+
 1. **Keep existing CLI scripts:** GUI is a wrapper, not a replacement
 2. **API layer:** Enables future web interface or integration
 3. **Loose coupling:** GUI can be replaced without changing business logic
@@ -1394,7 +1455,9 @@ Based on user needs:
 #### Option 1: Electron + React (Web Technologies)
 
 **Architecture:**
-```
+
+```md
+
 ┌──────────────────────────────────────────┐
 │         Electron Application             │
 ├──────────────────────────────────────────┤
@@ -1411,6 +1474,7 @@ Based on user needs:
 ```
 
 **Pros:**
+
 - ✅ Modern, polished UI
 - ✅ Cross-platform (Windows, macOS, Linux)
 - ✅ Easy to iterate and prototype
@@ -1418,11 +1482,13 @@ Based on user needs:
 - ✅ Can become web app later
 
 **Cons:**
+
 - ⚠️ Larger bundle size (~150 MB)
 - ⚠️ Requires JavaScript/TypeScript knowledge
 - ⚠️ Two-language project (Python + JS)
 
 **Code Example:**
+
 ```typescript
 // frontend/src/components/ScriptRunner.tsx
 import React, { useState } from 'react';
@@ -1487,7 +1553,9 @@ async def run_script(request: ScriptRequest):
 #### Option 2: PyQt6 (Native Python)
 
 **Architecture:**
-```
+
+```md
+
 ┌──────────────────────────────────────────┐
 │        PyQt6 Desktop Application         │
 ├──────────────────────────────────────────┤
@@ -1505,6 +1573,7 @@ async def run_script(request: ScriptRequest):
 ```
 
 **Pros:**
+
 - ✅ Pure Python (no JavaScript)
 - ✅ Native look and feel
 - ✅ Smaller bundle size (~50 MB)
@@ -1512,11 +1581,13 @@ async def run_script(request: ScriptRequest):
 - ✅ Faster performance
 
 **Cons:**
+
 - ⚠️ Steeper learning curve (Qt framework)
 - ⚠️ Less modern-looking UI
 - ⚠️ Platform-specific packaging
 
 **Code Example:**
+
 ```python
 # gui/main_window.py
 from PyQt6.QtWidgets import (
@@ -1620,7 +1691,9 @@ class MainWindow(QMainWindow):
 #### Option 3: Streamlit (Rapid Prototyping)
 
 **Architecture:**
-```
+
+```md
+
 ┌──────────────────────────────────────────┐
 │       Streamlit Web Application          │
 │   (Runs local web server, opens browser) │
@@ -1637,17 +1710,20 @@ class MainWindow(QMainWindow):
 ```
 
 **Pros:**
+
 - ✅ Fastest to develop (can build in hours)
 - ✅ Pure Python (no HTML/CSS/JS)
 - ✅ Beautiful, modern UI
 - ✅ Great for prototyping
 
 **Cons:**
+
 - ⚠️ Not a true desktop app (runs in browser)
 - ⚠️ Limited customisation
 - ⚠️ Not suitable for production GUI
 
 **Code Example:**
+
 ```python
 # gui/streamlit_app.py
 import streamlit as st
@@ -1704,21 +1780,25 @@ if st.button("Run Script"):
 
 ### 7.4 Recommendation
 
-**Phase 1 (Q2 2026): Streamlit Prototype**
+***Phase 1 (Q2 2026): Streamlit Prototype***
+
 - Build working GUI in 2-3 days
 - Get user feedback quickly
 - Iterate on design
 
-**Phase 2 (Q3 2026): PyQt6 Production GUI**
+***Phase 2 (Q3 2026): PyQt6 Production GUI***
+
 - Build polished desktop application
 - Package as standalone executable
 - Deploy to analyst workstations
 
-**Phase 3 (2027+): Optional Web Interface**
+***Phase 3 (2027+): Optional Web Interface***
+
 - If needed, build web version with FastAPI + React
 - Enable remote access and multi-user scenarios
 
 **Rationale:**
+
 - PyQt6 is best fit for desktop application for analysts
 - Easier to deploy (single executable)
 - Better performance
@@ -1732,7 +1812,7 @@ if st.button("Run Script"):
 ### 8.1 Current Technical Debt
 
 | Item | Severity | Impact | Effort to Fix |
-|------|----------|--------|---------------|
+| ------ | ---------- | -------- | --------------- |
 | **Configuration duplication** (core vs accuracy_testing) | High | Maintenance burden, inconsistent behavior | Medium (2 weeks) |
 | **15 failing tests** (v2.0 config format) | High | Can't trust test suite | Low (1 week) |
 | **No environment separation** | Medium | Risky deployments | Medium (2 weeks) |
@@ -1744,7 +1824,7 @@ if st.button("Run Script"):
 ### 8.2 Architectural Risks
 
 | Risk | Likelihood | Impact | Mitigation |
-|------|------------|--------|------------|
+| ------ | ------------ | -------- | ------------ |
 | **Memory exhaustion at 1.5M scale** | Medium | High | Implement chunked processing |
 | **Network drive latency** | Medium | Medium | Cache locally, batch I/O |
 | **Configuration complexity** | High | Medium | Unify config management |
@@ -1755,27 +1835,31 @@ if st.button("Run Script"):
 ### 8.3 Remediation Roadmap
 
 **Critical (Do First):**
+
 1. Fix 15 failing tests
 2. Unify configuration management
 3. Benchmark performance with 1.5M records
 4. Implement chunked CSV processing
 
 **High Priority (Q2 2026):**
-5. Set up dev/test/prod environments
-6. Build Streamlit prototype GUI
-7. Create shell script automation
-8. Implement CI/CD pipeline
+
+1. Set up dev/test/prod environments
+2. Build Streamlit prototype GUI
+3. Create shell script automation
+4. Implement CI/CD pipeline
 
 **Medium Priority (Q3 2026):**
-9. Build PyQt6 production GUI
-10. Containerize deployment
-11. Add monitoring/logging infrastructure
-12. Implement parallel processing
+
+1. Build PyQt6 production GUI
+2. Containerize deployment
+3. Add monitoring/logging infrastructure
+4. Implement parallel processing
 
 **Low Priority (Q4 2026):**
-13. Orchestration with Airflow/Prefect
-14. Performance optimization (Cython/Numba)
-15. Distributed processing architecture
+
+1. Orchestration with Airflow/Prefect
+2. Performance optimization (Cython/Numba)
+3. Distributed processing architecture
 
 ---
 
@@ -1802,25 +1886,25 @@ if st.button("Run Script"):
 
 ### 9.2 Short-Term (Q2 2026)
 
-4. ✅ **Implement chunked CSV processing**
+1. ✅ **Implement chunked CSV processing**
    - Goal: Handle 1.5M records without memory issues
    - Add `ChunkedProcessor` to `core.processing`
    - Update all validation scripts to use chunking
    - Test with full scale dataset
 
-5. ✅ **Set up environment separation**
+2. ✅ **Set up environment separation**
    - Goal: Enable safe testing and deployment
    - Create `config/environments/{dev,test,prod}/`
    - Implement environment-aware path resolution
    - Add `TXR_ENV` environment variable
 
-6. ✅ **Build Streamlit GUI prototype**
+3. ✅ **Build Streamlit GUI prototype**
    - Goal: Get user feedback on GUI approach
    - Create basic file selection + script execution
    - Add progress monitoring and log viewing
    - User testing with Oversight team
 
-7. ✅ **Automate workflow with shell scripts**
+4. ✅ **Automate workflow with shell scripts**
    - Goal: Reduce manual execution errors
    - Create `run_quarterly_accuracy_testing.sh`
    - Add error handling and logging
@@ -1828,25 +1912,25 @@ if st.button("Run Script"):
 
 ### 9.3 Medium-Term (Q3-Q4 2026)
 
-8. ✅ **Containerize with Docker**
+1. ✅ **Containerize with Docker**
    - Goal: Consistent deployment across machines
    - Create Dockerfile and docker-compose.yml
    - Test on Windows, macOS, Linux
    - Document deployment process
 
-9. ✅ **Build PyQt6 production GUI**
+2. ✅ **Build PyQt6 production GUI**
    - Goal: Replace CLI for analyst users
    - Implement file pickers, script selection, progress monitoring
    - Package as standalone executable
    - Deploy to Oversight team workstations
 
-10. ✅ **Implement CI/CD pipeline**
+3. ✅ **Implement CI/CD pipeline**
     - Goal: Automate testing and deployment
     - Set up GitHub Actions or GitLab CI
     - Run tests on every commit
     - Auto-deploy to test environment
 
-11. ✅ **Parallel processing for incidents**
+4. ✅ **Parallel processing for incidents**
     - Goal: Process 129 incidents efficiently
     - Implement multiprocessing for validation
     - Add progress reporting and error handling
@@ -1854,19 +1938,19 @@ if st.button("Run Script"):
 
 ### 9.4 Long-Term (2027+)
 
-12. ✅ **Orchestration with Airflow/Prefect**
+1. ✅ **Orchestration with Airflow/Prefect**
     - Goal: Enable daily automated processing
     - Set up orchestration platform
     - Define DAGs for all workflows
     - Implement scheduling and monitoring
 
-13. ✅ **Distributed architecture**
+2. ✅ **Distributed architecture**
     - Goal: Cloud-scale processing
     - Kubernetes deployment
     - Message queue for task distribution
     - Auto-scaling based on load
 
-14. ✅ **Web interface (optional)**
+3. ✅ **Web interface (optional)**
     - Goal: Enable remote access
     - FastAPI backend
     - React frontend
@@ -1920,6 +2004,7 @@ Create `documentation/architecture/decisions/` folder with ADRs:
 - `ADR-004-chunked-csv-processing.md`
 
 Template:
+
 ```markdown
 # ADR-XXX: Title
 
@@ -1952,7 +2037,8 @@ What other options were evaluated?
 
 ### Appendix B: Dependency Graph
 
-```
+```md
+
 core/
 ├── config/ ───────────┐
 ├── data/ ─────────────┤
@@ -1980,36 +2066,39 @@ core/
 **Solutions:**
 
 1. **Local caching:**
-```python
-from pathlib import Path
-import shutil
 
-def cache_network_file(network_path: Path, cache_dir: Path) -> Path:
-    """Copy network file to local cache."""
-    cache_path = cache_dir / network_path.name
-    if not cache_path.exists():
-        shutil.copy2(network_path, cache_path)
-    return cache_path
-```
+   ```python
+   from pathlib import Path
+   import shutil
+
+   def cache_network_file(network_path: Path, cache_dir: Path) -> Path:
+       """Copy network file to local cache."""
+       cache_path = cache_dir / network_path.name
+       if not cache_path.exists():
+           shutil.copy2(network_path, cache_path)
+       return cache_path
+   ```
 
 2. **Batch I/O:**
-```python
-# Instead of many small reads:
-for file in files:
-    df = pd.read_csv(network_path / file)  # ❌ Slow
 
-# Do one large read:
-df = pd.read_csv(network_path / "data.csv")  # ✅ Fast
-```
+   ```python
+   # Instead of many small reads:
+   for file in files:
+       df = pd.read_csv(network_path / file)  # ❌ Slow
+
+   # Do one large read:
+   df = pd.read_csv(network_path / "data.csv")  # ✅ Fast
+   ```
 
 3. **Compression:**
-```python
-# Use compressed CSV for network transfer
-import gzip
-with gzip.open(network_path / "data.csv.gz", "rt") as f:
-    df = pd.read_csv(f)  # Faster transfer, more CPU
-```
+
+   ```python
+   # Use compressed CSV for network transfer
+   import gzip
+   with gzip.open(network_path / "data.csv.gz", "rt") as f:
+       df = pd.read_csv(f)  # Faster transfer, more CPU
+   ```
 
 ---
 
-**End of Architectural Review**
+***End of Architectural Review***

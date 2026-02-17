@@ -20,13 +20,13 @@ from typing import Dict, List
 import pytest
 
 # Import processors
-from accuracy_testing.accuracy_template_generator import (
+from src.accuracy_testing.accuracy_template_generator import (
     AccuracyTemplateGenerator,
     TemplateFormat,
 )
-from accuracy_testing.scripts.buyer_id_validation import BuyerIDValidator
-from accuracy_testing.validators.data_push_processor import DataPushProcessor
-from accuracy_testing.models.data_push_record import (
+from src.accuracy_testing.scripts.buyer_id_validation import BuyerIDValidator
+from src.accuracy_testing.validators.data_push_processor import DataPushProcessor
+from src.accuracy_testing.models.data_push_record import (
     DataPushConfig,
     ColumnMapping,
 )
