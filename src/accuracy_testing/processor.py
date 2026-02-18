@@ -2378,6 +2378,7 @@ class IDValidationProcessor:
         # THIRD: Build proper correction output format: ID1|ID2:TYPE1|TYPE2
         # For JNT pairs, correction_output shows the FINAL STATE (corrected or original values)
         # correction_fields always uses the same structure: ID:IDT|ID:IDT
+        # IMPORTANT: Only set correction_output if at least one record has a correction
         
         # Extract ID and TYPE from individual correction (format is ID:TYPE)
         def extract_id_from_correction(correction):
@@ -2394,18 +2395,28 @@ class IDValidationProcessor:
             parts = correction.split(':', 1)
             return parts[1] if len(parts) > 1 else None
         
-        # Get final IDs and types (corrected if available, otherwise original)
-        final_id1 = extract_id_from_correction(rec1.correction_output) or orig_id1
-        final_id2 = extract_id_from_correction(rec2.correction_output) or orig_id2
-        final_type1 = extract_type_from_correction(rec1.correction_output) or orig_type1
-        final_type2 = extract_type_from_correction(rec2.correction_output) or orig_type2
+        # Check if either record has a correction (non-empty correction_output)
+        has_correction1 = bool(rec1.correction_output and rec1.correction_output.strip())
+        has_correction2 = bool(rec2.correction_output and rec2.correction_output.strip())
         
-        # Always build correction_output showing final state of both clients
-        rec1.correction_output = f"{final_id1}|{final_id2}:{final_type1}|{final_type2}"
-        
-        # correction_fields follows the same structure as correction_output
-        # Format: ID|ID:IDT|IDT (matching the ID1|ID2:TYPE1|TYPE2 structure)
-        rec1.correction_fields = "ID|ID:IDT|IDT"
+        if has_correction1 or has_correction2:
+            # At least one record has a correction - build aggregated correction_output
+            # Get final IDs and types (corrected if available, otherwise original)
+            final_id1 = extract_id_from_correction(rec1.correction_output) or orig_id1
+            final_id2 = extract_id_from_correction(rec2.correction_output) or orig_id2
+            final_type1 = extract_type_from_correction(rec1.correction_output) or orig_type1
+            final_type2 = extract_type_from_correction(rec2.correction_output) or orig_type2
+            
+            # Build correction_output showing final state of both clients
+            rec1.correction_output = f"{final_id1}|{final_id2}:{final_type1}|{final_type2}"
+            
+            # correction_fields follows the same structure as correction_output
+            # Format: ID|ID:IDT|IDT (matching the ID1|ID2:TYPE1|TYPE2 structure)
+            rec1.correction_fields = "ID|ID:IDT|IDT"
+        else:
+            # Both records passed validation - no correction needed
+            rec1.correction_output = ""
+            rec1.correction_fields = ""
         
         # Aggregate tracker status and actions
         rec1.tracker_status = combine_with_pipe(rec1.tracker_status, rec2.tracker_status)
