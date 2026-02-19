@@ -40,6 +40,7 @@ setup(
             "generate-accuracy-template=accuracy_testing.scripts.accuracy_template_generator:main",
             "collate-csv-extracts=accuracy_testing.scripts.collate_csv_extracts:main",
             "data-push=accuracy_testing.scripts.data_push:main",
+            "merge-inconsistent-ids=replay.merge_inconsistent_ids:main",
         ],
     },
     classifiers=[
