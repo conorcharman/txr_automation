@@ -1,0 +1,32 @@
+# Merge Inconsistent IDs Summary - Configuration Template
+# =========================================================
+#
+# Used by: merge-inconsistent-ids
+# Script:  src/replay/merge_inconsistent_ids.py
+#
+# Usage:
+#   merge-inconsistent-ids --config path/to/this_config.yaml
+#   merge-inconsistent-ids --input input.csv --output output.xlsx
+
+paths:
+  # Path to the Phase III Inconsistent IDs Summary CSV file (required)
+  input_file: "data/input/Replay_Phase3_Inconsistent_IDs_Summary.csv"
+
+  # Path for the merged Excel output file (required; must end in .xlsx)
+  output_file: "data/output/Replay_Phase3_Inconsistent_IDs_Merged.xlsx"
+
+merge:
+  # Column name to group/merge rows on.
+  # Rows with the same value in this column are merged into one output row.
+  group_column: "Reported Name & DOB"
+
+  # Separator used between stacked values within a merged cell (default: newline).
+  # Change to "|" if you prefer pipe-separated values in a single line.
+  separator: "\n"
+
+options:
+  dry_run: false
+  verbose: false
+
+processor:
+  log_level: "INFO"
