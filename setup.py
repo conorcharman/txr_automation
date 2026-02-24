@@ -35,6 +35,7 @@ setup(
             "validate-ftbdm=accuracy_testing.scripts.validate_ftbdm:main",
             "validate-ftsdm=accuracy_testing.scripts.validate_ftsdm:main",
             "validate-pricing=accuracy_testing.scripts.pricing_validation:main",
+            "validate-non-zero-net-qty=accuracy_testing.scripts.non_zero_net_quantity:main",
             "validate-all=accuracy_testing.scripts.run_all_validations:main",
             "generate-sql-extract=accuracy_testing.scripts.sql_extract_generator:main",
             "generate-accuracy-template=accuracy_testing.scripts.accuracy_template_generator:main",

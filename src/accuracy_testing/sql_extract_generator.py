@@ -22,6 +22,8 @@ from pathlib import Path
 from typing import List, Tuple, Optional
 from dataclasses import dataclass
 
+REF_LENGTH = 12
+
 
 @dataclass
 class ExtractBatch:
@@ -52,7 +54,11 @@ class SQLExtractGenerator:
         r'--<TRADE REFERENCES>--',
         r'--\{TRANSACTION_REFS\}--',
         r'--\[TRANSACTION REFERENCES\]--',
+        r'{VALUES}',
     ]
+
+    # Incidents that use a VALUES block instead of an IN-clause
+    VALUES_MODE_INCIDENTS = {'7_6'}
     
     def __init__(
         self,
@@ -60,7 +66,8 @@ class SQLExtractGenerator:
         batch_size: int = 900,
         placeholder: Optional[str] = None,
         output_format: str = 'both',
-        dtf_template_path: Optional[str] = None
+        dtf_template_path: Optional[str] = None,
+        values_mode: bool = False
     ):
         """
         Initialize SQL extract generator.
@@ -71,6 +78,9 @@ class SQLExtractGenerator:
             placeholder: Custom placeholder pattern (auto-detects if None)
             output_format: Output format - 'sql', 'dtf', or 'both' (default: 'both')
             dtf_template_path: Path to DTF template file (optional, uses default if None)
+            values_mode: If True, format refs as a DB2 VALUES block instead of an IN-clause.
+                         Each 12-character reference is split into its five component fields
+                         and references beginning with 'CA' are excluded.
             
         Raises:
             FileNotFoundError: If template file doesn't exist
@@ -78,6 +88,7 @@ class SQLExtractGenerator:
         """
         self.template_path = Path(template_path)
         self.batch_size = batch_size
+        self.values_mode = values_mode
         self.custom_placeholder = placeholder
         
         # Validate output format
@@ -181,7 +192,92 @@ class SQLExtractGenerator:
                 formatted.append(f"'{clean_ref}'")
         
         return ',\n'.join(formatted)
-    
+
+    @staticmethod
+    def split_transaction_ref(ref: str) -> Tuple[str, str, str, str, str]:
+        """
+        Split a 12-character transaction reference into its five DB2 component fields.
+
+        Field layout (1-based):
+            k_firm: chars 1–3   (firm code)
+            k_year: chars 4–5   (year)
+            k_accl: char  6     (account letter)
+            k_cont: chars 7–11  (contract number)
+            k_suff: char  12    (suffix)
+
+        Args:
+            ref: Exactly 12-character transaction reference (e.g. '44625CMGKHP1')
+
+        Returns:
+            Tuple of (k_firm, k_year, k_accl, k_cont, k_suff)
+
+        Raises:
+            ValueError: If ref is not exactly 12 characters
+
+        Example:
+            >>> SQLExtractGenerator.split_transaction_ref('44625CMGKHP1')
+            ('446', '25', 'C', 'MGKHP', '1')
+        """
+        if len(ref) != REF_LENGTH:
+            raise ValueError(
+                f"Transaction reference must be exactly {REF_LENGTH} characters: '{ref}' "
+                f"(got {len(ref)})"
+            )
+        return ref[0:3], ref[3:5], ref[5], ref[6:11], ref[11]
+
+    @staticmethod
+    def filter_ca_refs(refs: List[str]) -> Tuple[List[str], int]:
+        """
+        Filter out transaction references beginning with 'CA'.
+
+        References starting with 'CA' use a different field schema and are not
+        compatible with the CRSNET VALUES-block template.
+
+        Args:
+            refs: List of transaction reference strings
+
+        Returns:
+            Tuple of (filtered_refs, skipped_count) where filtered_refs excludes
+            any references whose first two characters are 'CA' (case-insensitive)
+            and skipped_count is the number of excluded references.
+        """
+        filtered = [r for r in refs if not r.strip().upper().startswith('CA')]
+        return filtered, len(refs) - len(filtered)
+
+    def format_values_block(self, refs: List[str]) -> str:
+        """
+        Format transaction references as a DB2 VALUES block for use in a CTE.
+
+        Each reference is split into its five component fields and rendered as a
+        tuple row.  References beginning with 'CA' are silently excluded.
+
+        Args:
+            refs: List of transaction reference strings
+
+        Returns:
+            Multi-line string of comma-separated tuple rows, e.g.::
+
+                        ('446','25','C','MGKHP','1'),
+                        ('446','25','C','MGKFD','1'),
+                        ('446','25','C','MGKF9','1')
+
+        Raises:
+            ValueError: If any (non-CA) reference is not exactly 12 characters
+        """
+        indent = '        '  # 8 spaces — matches the template indentation
+        rows = []
+        for ref in refs:
+            clean_ref = ref.strip()
+            if not clean_ref:
+                continue
+            if clean_ref.upper().startswith('CA'):
+                continue
+            k_firm, k_year, k_accl, k_cont, k_suff = self.split_transaction_ref(clean_ref)
+            rows.append(
+                f"{indent}('{k_firm}','{k_year}','{k_accl}','{k_cont}','{k_suff}')"
+            )
+        return ',\n'.join(rows)
+
     def generate_sql(self, batch: ExtractBatch) -> str:
         """
         Generate SQL for a single batch.
@@ -190,10 +286,15 @@ class SQLExtractGenerator:
             batch: ExtractBatch containing transaction references
             
         Returns:
-            Complete SQL string with refs inserted
+            Complete SQL string with refs inserted.
+            In values_mode, refs are formatted as a DB2 VALUES block and CA
+            references are excluded automatically.
         """
-        # Format transaction refs
-        refs_sql = self.format_transaction_refs(batch.transaction_refs)
+        if self.values_mode:
+            refs_sql = self.format_values_block(batch.transaction_refs)
+        else:
+            # Format transaction refs
+            refs_sql = self.format_transaction_refs(batch.transaction_refs)
         
         # Replace placeholder with formatted refs
         sql = self.template.replace(self.placeholder, refs_sql)
@@ -389,4 +490,5 @@ class SQLExtractGenerator:
             'num_batches': len(batches),
             'template': str(self.template_path),
             'placeholder': self.placeholder,
+            'values_mode': self.values_mode,
         }

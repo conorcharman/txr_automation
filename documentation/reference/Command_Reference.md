@@ -203,6 +203,7 @@ validate-all --verbose
 5. **ftbdm** - Field 27 Buyer Decision Maker Validation
 6. **ftsdm** - Field 28 Seller Decision Maker Validation
 7. **pricing** - Pricing Validation
+8. **non-zero-net-qty** - Non-Zero Net Quantity Validation (7_6)
 
 **Options:**
 
@@ -743,6 +744,84 @@ validate-pricing \
 **Incident Code:**
 
 - 35_3 - Price missing or invalid
+
+---
+
+### validate-non-zero-net-qty
+
+Validate that the sum of child transaction quantities matches the parent order
+quantity for each parent reference group (Incident Code 7_6).
+
+**Usage:**
+
+```bash
+# Using config file (recommended)
+validate-non-zero-net-qty --config config/local/accuracy_testing/non_zero_net_quantity.yaml
+
+# Using no arguments (loads default config automatically)
+validate-non-zero-net-qty
+
+# Using direct CLI arguments
+validate-non-zero-net-qty input.csv output.csv
+
+# Dry run to preview
+validate-non-zero-net-qty \
+  --config config/local/accuracy_testing/non_zero_net_quantity.yaml \
+  --dry-run
+
+# Verbose output
+validate-non-zero-net-qty \
+  --config config/local/accuracy_testing/non_zero_net_quantity.yaml \
+  --verbose --log-level DEBUG
+```
+
+**Options:**
+
+- `--config PATH` - Configuration YAML file
+  (optional, defaults to `config/local/accuracy_testing/non_zero_net_quantity.yaml`)
+- `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
+- `--verbose` - Enable verbose per-group debug logging
+- `--dry-run` - Preview without writing output file
+
+**Validation Logic:**
+
+1. Reads all rows from the NonZeroNetQuantity SQL extract CSV
+2. Groups rows by `parent_ref`
+3. Within each group, removes duplicate `child_ref` entries (first occurrence
+   by CSV row order is retained; duplicates are excluded from output and logged
+   as warnings)
+4. Sums `child_qty` across the deduplicated child rows
+5. Compares the net sum against `parent_qty` (exact integer comparison)
+6. Sets `error = N` (match) or `error = Y` (mismatch) on all records in the group
+
+**Input CSV Columns** (exact order from SQL extract):
+
+| Column | Description |
+|--------|-------------|
+| `child_ref` | Child transaction reference (12-character composite key) |
+| `child_qty` | Quantity on this child transaction report |
+| `parent_ref` | Parent order reference |
+| `parent_qty` | Parent order quantity |
+| `report_status` | Transaction report status |
+| `trade_date_time` | Trade date and time |
+
+**Output CSV Columns** (input columns + 3 appended):
+
+| Column | Description |
+|--------|-------------|
+| `net_qty` | Sum of `child_qty` for the parent group (after deduplication) |
+| `difference` | `net_qty - parent_qty` |
+| `error` | `N` = quantities match, `Y` = mismatch |
+
+Duplicate `child_ref` rows are **excluded** from the output entirely.
+
+**Configuration Template:**
+
+- `config/local/accuracy_testing/non_zero_net_quantity.yaml`
+
+**Incident Code:**
+
+- 7_6 - Non-Zero Net Quantity
 
 ---
 

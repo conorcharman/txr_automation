@@ -113,6 +113,12 @@ class ValidationOrchestrator:
             config_file="config/local/accuracy_testing/pricing_validation.yaml",
             description="Pricing Validation",
         ),
+        ValidationConfig(
+            name="non-zero-net-qty",
+            script_module="src.accuracy_testing.scripts.non_zero_net_quantity",
+            config_file="config/local/accuracy_testing/non_zero_net_quantity.yaml",
+            description="Non-Zero Net Quantity Validation (7_6)",
+        ),
     ]
     
     def __init__(

@@ -309,5 +309,152 @@ class TestExtractBatch:
         assert len(batch) == 2
 
 
+# ---------------------------------------------------------------------------
+# VALUES block mode (incident 7_6 — Non-Zero Net Quantity)
+# ---------------------------------------------------------------------------
+
+# Template that mimics NonZeroNetQuantity.sql's CTE structure
+VALUES_TEMPLATE = """\
+WITH target_keys (k_firm, k_year, k_accl, k_cont, k_suff) AS (
+    VALUES
+{VALUES}
+)
+SELECT * FROM target_keys
+"""
+
+# Well-known 7_6 sample references (12 chars each)
+SAMPLE_REFS_7_6 = [
+    '44625CMGKHP1',
+    '44625CMGKFD1',
+    '44625CMGKF91',
+]
+
+# A CA reference that must be excluded
+CA_REF = 'CA625CMGKHP1'
+
+
+class TestValuesMode:
+    """Tests for SQLExtractGenerator VALUES block mode (incident 7_6)."""
+
+    def setup_method(self):
+        """Set up test fixtures."""
+        self.temp_dir = Path(tempfile.mkdtemp())
+        self.template_path = self.temp_dir / "values_template.sql"
+        self.template_path.write_text(VALUES_TEMPLATE)
+        self.dtf_template_path = self.temp_dir / "AS400_DataTransfer_template.dtf"
+        self.dtf_template_path.write_text(SAMPLE_DTF_TEMPLATE)
+
+    def teardown_method(self):
+        """Clean up test fixtures."""
+        shutil.rmtree(self.temp_dir)
+
+    # --- split_transaction_ref ---
+
+    def test_split_ref_correct_fields(self):
+        """split_transaction_ref returns the five correct fields."""
+        result = SQLExtractGenerator.split_transaction_ref('44625CMGKHP1')
+        assert result == ('446', '25', 'C', 'MGKHP', '1')
+
+    def test_split_ref_all_positions(self):
+        """Verify each field occupies the correct character positions."""
+        ref = 'ABCDEFGHIJKL'  # 12 chars: ABC|DE|F|GHIJK|L
+        k_firm, k_year, k_accl, k_cont, k_suff = SQLExtractGenerator.split_transaction_ref(ref)
+        assert k_firm == 'ABC'
+        assert k_year == 'DE'
+        assert k_accl == 'F'
+        assert k_cont == 'GHIJK'
+        assert k_suff == 'L'
+
+    def test_split_ref_wrong_length_raises(self):
+        """split_transaction_ref raises ValueError for non-12-char input."""
+        with pytest.raises(ValueError, match="exactly 12 characters"):
+            SQLExtractGenerator.split_transaction_ref('SHORT')
+
+    # --- filter_ca_refs ---
+
+    def test_filter_ca_refs_removes_ca(self):
+        """filter_ca_refs excludes references starting with CA."""
+        refs = SAMPLE_REFS_7_6 + [CA_REF]
+        filtered, skipped = SQLExtractGenerator.filter_ca_refs(refs)
+        assert CA_REF not in filtered
+        assert skipped == 1
+        assert len(filtered) == len(SAMPLE_REFS_7_6)
+
+    def test_filter_ca_refs_case_insensitive(self):
+        """filter_ca_refs is case-insensitive."""
+        refs = ['ca625X123456', 'CA625X123456', '44625CMGKHP1']
+        filtered, skipped = SQLExtractGenerator.filter_ca_refs(refs)
+        assert skipped == 2
+        assert filtered == ['44625CMGKHP1']
+
+    def test_filter_ca_refs_no_exclusions(self):
+        """filter_ca_refs returns all refs when none start with CA."""
+        filtered, skipped = SQLExtractGenerator.filter_ca_refs(SAMPLE_REFS_7_6)
+        assert filtered == SAMPLE_REFS_7_6
+        assert skipped == 0
+
+    # --- format_values_block ---
+
+    def test_format_values_block_structure(self):
+        """format_values_block produces correctly formatted tuple rows."""
+        generator = SQLExtractGenerator(str(self.template_path), values_mode=True)
+        block = generator.format_values_block(SAMPLE_REFS_7_6)
+        rows = block.split(',\n')
+        assert len(rows) == 3
+        assert rows[0].strip() == "('446','25','C','MGKHP','1')"
+        assert rows[1].strip() == "('446','25','C','MGKFD','1')"
+        assert rows[2].strip() == "('446','25','C','MGKF9','1')"
+
+    def test_format_values_block_excludes_ca(self):
+        """format_values_block silently excludes CA references."""
+        generator = SQLExtractGenerator(str(self.template_path), values_mode=True)
+        refs = SAMPLE_REFS_7_6 + [CA_REF]
+        block = generator.format_values_block(refs)
+        rows = block.split(',\n')
+        assert len(rows) == 3  # CA ref excluded
+        assert CA_REF not in block
+
+    def test_format_values_block_indentation(self):
+        """format_values_block indents each row with 8 spaces."""
+        generator = SQLExtractGenerator(str(self.template_path), values_mode=True)
+        block = generator.format_values_block(['44625CMGKHP1'])
+        assert block.startswith('        (')
+
+    # --- generate_sql in values_mode ---
+
+    def test_generate_sql_values_mode(self):
+        """generate_sql in values_mode replaces {VALUES} placeholder correctly."""
+        generator = SQLExtractGenerator(str(self.template_path), values_mode=True)
+        batch = ExtractBatch(batch_number=1, transaction_refs=SAMPLE_REFS_7_6)
+        sql = generator.generate_sql(batch)
+        assert "('446','25','C','MGKHP','1')" in sql
+        assert '{VALUES}' not in sql
+
+    def test_generate_sql_values_mode_excludes_ca(self):
+        """generate_sql in values_mode removes CA references from output."""
+        generator = SQLExtractGenerator(str(self.template_path), values_mode=True)
+        refs = SAMPLE_REFS_7_6 + [CA_REF]
+        batch = ExtractBatch(batch_number=1, transaction_refs=refs)
+        sql = generator.generate_sql(batch)
+        assert CA_REF not in sql
+        assert "('446','25','C','MGKHP','1')" in sql
+
+    def test_get_summary_includes_values_mode(self):
+        """get_summary reports values_mode correctly."""
+        generator = SQLExtractGenerator(str(self.template_path), values_mode=True)
+        summary = generator.get_summary(SAMPLE_REFS_7_6)
+        assert summary['values_mode'] is True
+
+    def test_standard_mode_values_mode_false(self):
+        """Standard generator reports values_mode as False."""
+        std_template = self.temp_dir / "std.sql"
+        std_template.write_text(
+            "SELECT * FROM t WHERE ref IN (\n-- TRANSACTION REFERENCES --\n)"
+        )
+        generator = SQLExtractGenerator(str(std_template))
+        summary = generator.get_summary(['44625CMGKHP1'])
+        assert summary['values_mode'] is False
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

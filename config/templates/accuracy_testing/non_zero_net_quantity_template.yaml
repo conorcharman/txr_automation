@@ -1,0 +1,41 @@
+# Non-Zero Net Quantity Validation Configuration
+# ===============================================
+# Configuration for Incident Code 7_6 (NonZeroNetQuantity) validation.
+#
+# This script groups child transaction records by parent reference, removes
+# duplicate child references (first occurrence retained), sums the child
+# quantities, and flags any parent group where the sum does not match the
+# parent order quantity.
+#
+# Usage:
+#   validate-non-zero-net-qty --config config/local/accuracy_testing/non_zero_net_quantity.yaml
+#   python -m src.accuracy_testing.scripts.non_zero_net_quantity --config <this file>
+
+# =============================================================================
+# PATHS
+# =============================================================================
+
+paths:
+  # Input CSV produced by the NonZeroNetQuantity SQL extract
+  input_file: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\extracts\csv\7_6.csv'
+
+  # Output CSV — all input columns plus net_qty, difference, error
+  # Duplicate child_ref rows are excluded from the output
+  output_file: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\validated\7_6_validated.csv'
+
+  # Directory for log files (defaults to 'logs' if omitted)
+  log_output: 'logs'
+
+# =============================================================================
+# PROCESSOR SETTINGS
+# =============================================================================
+
+processor:
+  # Logging verbosity: DEBUG, INFO, WARNING, ERROR
+  log_level: "INFO"
+
+  # Enable verbose per-record debug logging
+  verbose: false
+
+  # Internal batch size (not currently used for this script)
+  batch_size: 1000

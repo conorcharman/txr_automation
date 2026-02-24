@@ -3,7 +3,7 @@
 #
 # Generates SQL extract files from accuracy testing template CSV files.
 # Script: sql_extract_generator.py
-# Supports ALL 11 automated incidents
+# Supports ALL 12 automated incidents
 #
 # Usage:
 #   python -m src.accuracy_testing.scripts.sql_extract_generator \
@@ -69,6 +69,7 @@ batch:
   
   # All automated incident codes (used when incidents: "all" is specified)
   all_incidents:
+    - "7_6"    # Non-Zero Net Quantity (INTC ISIN trade where quantity does not net to zero)
     - "7_35"   # Buyer ID: CONCAT
     - "7_37"   # Buyer ID: NIDN
     - "7_39"   # Buyer ID: CCPT
@@ -138,6 +139,9 @@ batch:
 # Automatic mapping of incident codes to SQL template files
 # The tool uses this to select the correct SQL template for each incident
 sql_template_mapping:
+  # Non-Zero Net Quantity incident (7_6) — uses VALUES block CTE, not an IN-clause
+  non_zero_net_qty: "NonZeroNetQuantity.sql"
+  
   # Standard Buyer ID incidents (7_35, 7_37, 7_39)
   buyer_standard: "BuyerID.sql"
   
@@ -207,6 +211,7 @@ processor:
 # Supported Incident Codes (ALL 11)
 # =============================================================================
 # This script generates SQL extracts for ALL automated incidents:
+#   - 7_6:   INTC ISIN trade where quantity does not net to zero
 #   - 7_35:  Incorrect CONCAT value within Buyer identification code field
 #   - 7_37:  Incorrect NIDN value within Buyer identification code field
 #   - 7_39:  Incorrect CCPT value within Buyer identification code field
@@ -218,6 +223,9 @@ processor:
 #   - 16_20: Inconsistent Seller Identification Codes
 #   - 21_17: Incorrect ID of Seller Decision Maker
 #   - 35_3:  Incorrect Value Compensation for Trading Positions (Pricing)
+#
+# Note: 7_6 uses a DB2 VALUES block CTE instead of a SQL IN-clause — references
+# are split into five component fields and any CA-prefixed references are excluded.
 #
 # Note: Unlike validation scripts, SQL generator supports ALL incidents in batch
 # mode because it only generates SQL queries (no validation logic).
