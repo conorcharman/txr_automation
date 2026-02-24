@@ -71,7 +71,8 @@ class SQLExtractGeneratorCLI:
         verbose: bool = False,
         output_format: str = 'both',
         incident_code: str = None,
-        dtf_template_path: str = None
+        dtf_template_path: str = None,
+        values_mode: bool = False
     ):
         """
         Initialize CLI.
@@ -88,6 +89,7 @@ class SQLExtractGeneratorCLI:
             output_format: Output format - 'sql', 'dtf', or 'both' (default: 'both')
             incident_code: Incident code for CSV naming in DTF files
             dtf_template_path: Path to DTF template (uses default if None)
+            values_mode: If True, format refs as a DB2 VALUES block (used for 7_6)
         """
         self.template_path = template_path
         self.input_csv = input_csv
@@ -100,6 +102,7 @@ class SQLExtractGeneratorCLI:
         self.output_format = output_format
         self.incident_code = incident_code
         self.dtf_template_path = dtf_template_path
+        self.values_mode = values_mode
     
     def read_transaction_refs(self) -> List[str]:
         """
@@ -182,8 +185,12 @@ class SQLExtractGeneratorCLI:
                 batch_size=self.batch_size,
                 placeholder=self.placeholder,
                 output_format=self.output_format,
-                dtf_template_path=self.dtf_template_path
+                dtf_template_path=self.dtf_template_path,
+                values_mode=self.values_mode
             )
+            
+            if self.verbose and self.values_mode:
+                print("  ✓ VALUES mode: enabled (CA references will be excluded)")
             
             if self.verbose:
                 print(f"  ✓ Template loaded: {generator.template_path.name}")
@@ -422,6 +429,9 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
     # Pricing incidents
     if incident_code == '35_3':
         template_path = sql_template_dir / "SCR_pricing_data_v1.0.sql"
+    # Non-zero net quantity — uses VALUES block CTE, not an IN-clause
+    elif incident_code == '7_6':
+        template_path = sql_template_dir / "NonZeroNetQuantity.sql"
     # Inconsistent buyer
     elif incident_code == '7_66':
         template_path = sql_template_dir / "InconsistentBuyerID.sql"
@@ -447,6 +457,26 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
         raise FileNotFoundError(f"SQL template not found: {template_path}")
     
     return template_path
+
+
+# Incidents that require a DB2 VALUES block instead of a SQL IN-clause.
+# The corresponding SQL templates use {VALUES} as their placeholder.
+VALUES_MODE_INCIDENTS: set = {'7_6'}
+
+
+def requires_values_mode(incident_code: str) -> bool:
+    """
+    Return True if the incident uses a DB2 VALUES block rather than a SQL IN-clause.
+
+    Args:
+        incident_code: Incident code string (e.g. '7_6')
+
+    Returns:
+        True when the SQL template for this incident uses {VALUES} formatting
+        (reference fields are split into component columns and CA references
+        are excluded).
+    """
+    return incident_code in VALUES_MODE_INCIDENTS
 
 
 def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool = False) -> int:
@@ -575,13 +605,20 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
             print(f"Transaction refs: {len(refs)}")
             
             # Generate SQL extracts
+            incident_values_mode = requires_values_mode(incident)
             generator = SQLExtractGenerator(
                 template_path=str(sql_template),
                 batch_size=batch_size,
-                placeholder=placeholder,
+                # Skip the global placeholder override for values-mode incidents so
+                # auto-detection picks up {VALUES} from the template instead.
+                placeholder=None if incident_values_mode else placeholder,
                 output_format=output_format,
-                dtf_template_path=dtf_template_path
+                dtf_template_path=dtf_template_path,
+                values_mode=incident_values_mode
             )
+
+            if incident_values_mode and verbose:
+                print("  VALUES mode: enabled (CA references will be excluded)")
             
             summary = generator.get_summary(refs)
             num_batches = summary['num_batches']
@@ -737,6 +774,9 @@ def main():
         print("ERROR: Output directory (--output or via --config) is required")
         return 1
     
+    # Auto-detect values_mode from incident code when provided
+    values_mode = requires_values_mode(incident_code) if incident_code else False
+
     cli = SQLExtractGeneratorCLI(
         template_path=template_path,
         input_csv=input_csv,
@@ -748,7 +788,8 @@ def main():
         verbose=verbose,
         output_format=output_format,
         incident_code=incident_code,
-        dtf_template_path=dtf_template_path
+        dtf_template_path=dtf_template_path,
+        values_mode=values_mode
     )
     
     return cli.run()
