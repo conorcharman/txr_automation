@@ -1572,7 +1572,12 @@ class IDValidationProcessor:
         
         # Normalize ID type
         id_type_upper = id_type.upper().strip()
-        
+
+        # Rest of World passports: no format patterns are defined for non-EEA countries,
+        # but a declared CCPT from a ROW client is assumed to be correct as-is.
+        if id_type_upper == "CCPT" and not country_manager.is_eea(country_code):
+            return (True, "")
+
         # Strip country code prefix if applicable
         # Only NIDN and CCPT have prefixes that need stripping (not CONCAT or LEI)
         # CONCAT format INCLUDES the prefix: ^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$

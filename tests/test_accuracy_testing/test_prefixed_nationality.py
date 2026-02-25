@@ -207,5 +207,62 @@ class TestPrefixStripping:
         # Validation result depends on LEI patterns, but shouldn't error on prefix
 
 
+class TestROWCCPTValidation:
+    """
+    Test that Rest of World passports are assumed correct.
+
+    ROW (non-EEA) countries have no CCPT format patterns defined, but a
+    declared CCPT from a ROW client should be treated as valid without
+    requiring format pattern matching.
+    """
+
+    def setup_method(self) -> None:
+        """Set up test processor."""
+        self.processor = IDValidationProcessor(
+            client_type="buyer",
+            verbose=True,
+        )
+
+    def test_row_ccpt_returns_valid(self) -> None:
+        """A CCPT from a non-EEA country should be treated as valid."""
+        is_valid, error = self.processor._validate_existing_id(
+            "US12345678",
+            "CCPT",
+            "US",
+        )
+        assert is_valid, f"ROW CCPT should be valid; got error: {error}"
+        assert error == "", f"No error expected for ROW CCPT; got: {error}"
+
+    def test_row_ccpt_no_ccpt_pattern_error(self) -> None:
+        """The 'No CCPT format patterns defined' error must not appear for ROW countries."""
+        is_valid, error = self.processor._validate_existing_id(
+            "AU87654321",
+            "CCPT",
+            "AU",
+        )
+        assert "No CCPT format patterns defined" not in error
+
+    def test_row_ccpt_varies_by_country(self) -> None:
+        """Multiple ROW countries should all return valid for CCPT."""
+        row_countries = ["US", "AU", "JP", "IN", "BR", "ZA"]
+        for country in row_countries:
+            is_valid, error = self.processor._validate_existing_id(
+                f"{country}12345678",
+                "CCPT",
+                country,
+            )
+            assert is_valid, f"ROW CCPT for {country} should be valid; got error: {error}"
+
+    def test_eea_ccpt_still_validated(self) -> None:
+        """EEA countries with defined CCPT patterns should still be format-validated."""
+        # NL has CCPT patterns defined; an invalid value must still fail
+        is_valid, error = self.processor._validate_existing_id(
+            "INVALIDPASSPORT!!",
+            "CCPT",
+            "NL",
+        )
+        assert not is_valid, "EEA CCPT with invalid format should still fail validation"
+
+
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])
