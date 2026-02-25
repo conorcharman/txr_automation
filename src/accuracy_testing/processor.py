@@ -733,7 +733,9 @@ class InconsistentIDProcessor:
         format_valid, format_error = id_processor._validate_existing_id(
             record.id_value,
             record.id_type,
-            country_code
+            country_code,
+            first_name=record.first_name,
+            surname=record.surname,
         )
         
         # Step 2: If format is valid, validate logic (DOB/gender/checksum)
@@ -1332,7 +1334,9 @@ class IDValidationProcessor:
             is_valid, format_error = self._validate_existing_id(
                 record.id_value,
                 record.id_type,
-                country_code
+                country_code,
+                first_name=record.first_name,
+                surname=record.surname,
             )
             
             if self.verbose:
@@ -1553,23 +1557,40 @@ class IDValidationProcessor:
         return None
     
     def _validate_existing_id(
-        self, 
-        id_value: str, 
-        id_type: str, 
-        country_code: str
+        self,
+        id_value: str,
+        id_type: str,
+        country_code: str,
+        first_name: str = "",
+        surname: str = "",
     ) -> Tuple[bool, str]:
         """
         Validate an ID against its declared type and country-specific patterns.
         Strips country code prefix from NIDN/CCPT codes (stored in DB)
         before validation against patterns.
         CONCAT IDs keep their prefix as it's part of the format.
-        
+
+        For CONCAT IDs: after the structural regex passes, an additional semantic
+        cross-check compares the embedded first-name and surname segments against
+        the supplied ``first_name`` / ``surname`` values (using the same
+        ``_clean_name_for_concat()`` logic as ``_generate_concat()``).
+        The check is skipped (and the structural result accepted) when either name
+        field is absent, preserving backward-compatibility for callers that do not
+        supply name arguments.
+
+        Args:
+            id_value: The ID string to validate.
+            id_type: The declared ID type (e.g. "CONCAT", "NIDN").
+            country_code: ISO-2 country code.
+            first_name: Optional first name from the client record.
+            surname: Optional surname from the client record.
+
         Returns:
             Tuple of (is_valid, error_message)
         """
         if not id_value or not id_type:
             return (False, "Missing ID value or type")
-        
+
         # Normalize ID type
         id_type_upper = id_type.upper().strip()
 
@@ -1582,7 +1603,7 @@ class IDValidationProcessor:
         # Only NIDN and CCPT have prefixes that need stripping (not CONCAT or LEI)
         # CONCAT format INCLUDES the prefix: ^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$
         id_to_validate = id_value
-        
+
         if id_type_upper in ['NIDN', 'CCPT']:
             # Check if first 2 chars are a valid country code
             prefix = extract_id_prefix(id_value, id_type_upper)
@@ -1591,17 +1612,85 @@ class IDValidationProcessor:
                 id_to_validate = id_value[2:] if len(id_value) > 2 else id_value
             # else: No valid prefix or too short - validate full ID
         # else: CONCAT, LEI or other type - validate full ID including prefix
-        
+
         # Validate using Phase 1 library
         result = validate_id(country_code, id_type_upper, id_to_validate)
-        
+
         # Extract detailed error message if validation failed
         error_message = ""
         if not result.is_valid and result.errors:
             error_message = result.errors[0]  # Use first error message
-        
-        return (result.is_valid, error_message)
-    
+
+        if not result.is_valid:
+            return (False, error_message)
+
+        # For CONCAT IDs: perform a semantic cross-check of the embedded name segments
+        # against the record's first_name / surname to catch prefix-in-segment errors
+        # (e.g. surname "VAN SMITH" generating segment "VANSM" instead of "SMITH").
+        if id_type_upper == "CONCAT":
+            seg_valid, seg_error = self._validate_concat_name_segments(
+                id_value, first_name, surname
+            )
+            if not seg_valid:
+                return (False, seg_error)
+
+        return (True, "")
+
+    def _validate_concat_name_segments(
+        self,
+        id_value: str,
+        first_name: str,
+        surname: str,
+    ) -> Tuple[bool, str]:
+        """
+        Cross-check the first-name and surname segments embedded in a CONCAT ID
+        against the cleaned forms derived from the supplied name fields.
+
+        The CONCAT format is: CC(2) + YYYYMMDD(8) + FirstName(5) + Surname(5)
+        So positions [10:15] hold the first-name segment and [15:20] the surname.
+
+        The expected segments are computed via ``_clean_name_for_concat()``, which
+        strips name prefixes (VON, VAN, DE, …) and pads/truncates to 5 characters —
+        the same logic used when generating a CONCAT.
+
+        If either ``first_name`` or ``surname`` is empty the check is skipped and
+        ``(True, "")`` is returned, as there is nothing to compare against.
+
+        Args:
+            id_value: The 20-character CONCAT ID string (already regex-validated).
+            first_name: First name from the client record.
+            surname: Surname from the client record.
+
+        Returns:
+            Tuple of (is_valid, error_message).  ``is_valid`` is False when a
+            mismatch is detected; the error message describes which segment differs.
+        """
+        # Skip check if name data is unavailable
+        if not first_name or not surname:
+            return (True, "")
+
+        actual_firstname_seg = id_value[10:15]
+        actual_surname_seg = id_value[15:20]
+
+        expected_firstname = self._clean_name_for_concat(first_name, is_surname=False)
+        expected_surname = self._clean_name_for_concat(surname, is_surname=True)
+
+        if actual_firstname_seg != expected_firstname:
+            return (
+                False,
+                f"CONCAT first-name segment '{actual_firstname_seg}' does not match "
+                f"expected '{expected_firstname}' (first_name='{first_name}')",
+            )
+
+        if actual_surname_seg != expected_surname:
+            return (
+                False,
+                f"CONCAT surname segment '{actual_surname_seg}' does not match "
+                f"expected '{expected_surname}' (surname='{surname}')",
+            )
+
+        return (True, "")
+
     @staticmethod
     def supports_concat(country_code: str) -> bool:
         """
