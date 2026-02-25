@@ -3,7 +3,7 @@
 #
 # Pushes validated data to Kaizen master tracking files.
 # Script: data_push.py
-# Supports ALL 11 automated incidents
+# Supports ALL 12 automated incidents
 #
 # Usage:
 #   python -m src.accuracy_testing.scripts.data_push \
@@ -102,6 +102,7 @@ batch:
     - "16_20"  # Inconsistent Seller ID
     - "21_17"  # Seller Decision Maker
     - "35_3"   # Pricing Validation
+    - "7_6"    # Non-Zero Net Quantity
   
   paths:
     # Directory containing source files (validated data)
@@ -199,6 +200,52 @@ batch:
     - source: "Tracker Status"
       target: "Tracker Status"
 
+    # -------------------------------------------------------------------------
+    # 7_6 (Non-Zero Net Quantity) columns
+    # These columns are only present in 7_6 source files and will be skipped
+    # for all other incidents (no matching column in target → silently ignored).
+    #
+    # Note: child_ref IS the transaction reference for 7_6 records. It maps to
+    # "Transaction Reference" in the target template so the data push processor
+    # can match rows correctly using the standard match_column logic.
+    # -------------------------------------------------------------------------
+
+    # child_ref is the transaction reference for 7_6 records
+    - source: "child_ref"
+      target: "Transaction Reference"
+      description: "Child transaction reference — acts as the match key for 7_6"
+
+    # parent_ref — full sub-parent order reference (e.g. "44625CPNJMN1G01")
+    - source: "parent_ref"
+      target: "parent_ref"
+      description: "Full parent order reference"
+
+    # Bulk reference — first 11 characters of parent_ref, identifies the
+    # contract group (e.g. "44625CPNJMN" for refs 1G01/1G02/1G03)
+    - source: "bulk_ref"
+      target: "bulk_ref"
+      description: "Contract group prefix derived from parent_ref (11 chars)"
+
+    # Bulk quantity — sum of one parent_qty per unique parent_ref in the group
+    - source: "bulk_qty"
+      target: "bulk_qty"
+      description: "Total contract quantity (sum of unique sub-parent quantities)"
+
+    # Net quantity — sum of child_qty for all unique child refs in the group
+    - source: "net_qty"
+      target: "net_qty"
+      description: "Sum of child transaction quantities after deduplication"
+
+    # Difference — net_qty minus bulk_qty (0 = match, non-zero = mismatch)
+    - source: "difference"
+      target: "difference"
+      description: "net_qty - bulk_qty"
+
+    # Error flag — N (quantities match) or Y (mismatch)
+    - source: "error"
+      target: "error"
+      description: "N = net quantity matches bulk quantity; Y = mismatch"
+
 # =============================================================================
 # Push Logic
 # =============================================================================
@@ -273,6 +320,7 @@ processor:
 #   - 16_20: Inconsistent Seller Identification Codes
 #   - 21_17: Incorrect ID of Seller Decision Maker
 #   - 35_3:  Incorrect Value Compensation for Trading Positions (Pricing)
+#   - 7_6:   Non-Zero Net Quantity
 #
 # Note: Data push supports ALL incidents in batch mode because it uses a generic
 # push algorithm (match by transaction reference, push based on error flag).
