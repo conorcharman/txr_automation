@@ -15,6 +15,7 @@ Template formats:
 - Buyer validation: 7_35, 7_37, 7_39, 7_66
 - Seller validation: 16_19, 16_21, 16_23, 16_20
 - Pricing validation: 35_3
+- Net quantity validation: 7_6
 - Default format: All other incident codes
 
 Usage:
@@ -54,6 +55,9 @@ class TemplateFormat:
     
     # Pricing validation incidents
     PRICING_INCIDENTS = {'35_3'}
+    
+    # Net quantity validation incidents
+    NET_QUANTITY_INCIDENTS = {'7_6'}
     
     # Buyer validation template columns (empty columns to be filled by validation script)
     BUYER_VALIDATION_COLS = [
@@ -111,6 +115,22 @@ class TemplateFormat:
         "Correction Field"
     ]
     
+    # Net quantity validation template columns (Incident 7_6: NonZeroNetQuantity)
+    # Transaction Reference maps from child_ref in the validation output.
+    # parent_ref and bulk_ref replace Account ID / Person Code as the identity
+    # columns — 7_6 records are keyed on contract/order references, not client
+    # identity fields.
+    NET_QUANTITY_VALIDATION_COLS = [
+        "Transaction Reference",  # maps from child_ref in validation output
+        "parent_ref",
+        "bulk_ref",
+        "parent_qty",
+        "bulk_qty",
+        "net_qty",
+        "difference",
+        "error"
+    ]
+    
     # Default template columns
     DEFAULT_VALIDATION_COLS = [
         "Transaction Reference",
@@ -137,6 +157,8 @@ class TemplateFormat:
             return "seller"
         elif incident_code in cls.PRICING_INCIDENTS:
             return "pricing"
+        elif incident_code in cls.NET_QUANTITY_INCIDENTS:
+            return "net_quantity"
         else:
             return "default"
     
@@ -149,6 +171,8 @@ class TemplateFormat:
             return cls.SELLER_VALIDATION_COLS.copy()
         elif template_type == "pricing":
             return cls.PRICING_VALIDATION_COLS.copy()
+        elif template_type == "net_quantity":
+            return cls.NET_QUANTITY_VALIDATION_COLS.copy()
         else:
             return cls.DEFAULT_VALIDATION_COLS.copy()
 
