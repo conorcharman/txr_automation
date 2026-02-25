@@ -111,11 +111,17 @@ class TestConcatSurnameHandling:
         result = processor._clean_name_for_concat("WILLIAMSON", is_surname=True)
         assert result == "WILLI", f"Expected 'WILLI' for 'WILLIAMSON', got '{result}'"
     
-    def test_surname_with_comma(self, processor):
-        """Test that comma-separated surnames take first part only"""
-        # Test case: SMITH, JR -> SMITH
+    def test_surname_with_comma_suffix(self, processor):
+        """Comma followed by a suffix (non-prefix word) keeps both parts joined"""
+        # SMITH, JR → parts ["SMITH","JR"] → no prefix words filtered → "SMITHJR" → "SMITH"
         result = processor._clean_name_for_concat("SMITH, JR", is_surname=True)
         assert result == "SMITH", f"Expected 'SMITH' for 'SMITH, JR', got '{result}'"
+
+    def test_surname_with_comma_embedded_prefix(self, processor):
+        """Comma-separated surname with embedded prefix word keeps non-prefix parts"""
+        # MAHN,DE,AZETU → parts ["MAHN","DE","AZETU"] → "DE" filtered → "MAHNAZETU" → "MAHNA"
+        result = processor._clean_name_for_concat("MAHN,DE,AZETU", is_surname=True)
+        assert result == "MAHNA", f"Expected 'MAHNA' for 'MAHN,DE,AZETU', got '{result}'"
     
     def test_empty_name(self, processor):
         """Test empty name returns all hashes"""

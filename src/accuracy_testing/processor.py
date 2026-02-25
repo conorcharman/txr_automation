@@ -1980,13 +1980,25 @@ class IDValidationProcessor:
         """
         if not name_value or not name_value.strip():
             return "#####"
-        
+
         cleaned_name = name_value.strip().upper()
-        
-        # Handle comma delimiters (take first part only)
+
+        # Known prefix/particle words that should be stripped when they appear
+        # as standalone comma-delimited parts (e.g. "MAHN,DE,AZETU" → "MAHNAZETU").
+        # These are the same particles removed by _remove_name_prefixes(), expressed
+        # as individual words so they can be identified wherever commas occur.
+        _PREFIX_WORDS = frozenset(
+            {"VON", "VAN", "DE", "DA", "DI", "MC", "MAC", "O", "DER", "LA"}
+        )
+
+        # Handle comma delimiters: treat commas as part separators, not suffix
+        # markers.  Known prefix/particle words are removed from the part list so
+        # that a name like "MAHN,DE,AZETU" yields "MAHN AZETU" (not just "MAHN").
         if "," in cleaned_name:
-            cleaned_name = cleaned_name.split(",")[0].strip()
-        
+            parts = [p.strip() for p in cleaned_name.split(",") if p.strip()]
+            parts = [p for p in parts if p not in _PREFIX_WORDS]
+            cleaned_name = " ".join(parts)
+
         if is_surname:
             # Remove common surname prefixes (VON, VAN, DE, etc.)
             # IMPORTANT: After prefix removal, ALL remaining parts of the surname 
