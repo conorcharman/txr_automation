@@ -100,12 +100,34 @@ class DataPushProcessor:
         
         with open(source_path, "r", encoding="utf-8") as f:
             reader = csv.DictReader(f)
+            fieldnames = reader.fieldnames or []
+            
+            # Resolve the source column to use as the transaction reference.
+            # Normally this is transaction_ref_column ("Transaction Reference")
+            # directly in the source.  For incidents like 7_6 the source has a
+            # differently-named column (e.g. "child_ref") that is mapped *to*
+            # "Transaction Reference" in column_mappings.  When the standard
+            # name is absent, fall back to the first mapping whose target_col
+            # matches transaction_ref_column so the match key is still correct.
+            ref_col = self.config.transaction_ref_column
+            if ref_col not in fieldnames:
+                for mapping in self.config.column_mappings:
+                    if (
+                        mapping.target_col == ref_col
+                        and mapping.source_col in fieldnames
+                    ):
+                        ref_col = mapping.source_col
+                        self.logger.info(
+                            f"Transaction reference column '{self.config.transaction_ref_column}' "
+                            f"not found in source — using mapped column '{ref_col}' instead"
+                        )
+                        break
             
             for row_idx, row in enumerate(reader, start=2):
                 record = DataPushRecord.from_dict(
                     data=row,
                     error_column=self.config.error_column,
-                    transaction_ref_column=self.config.transaction_ref_column,
+                    transaction_ref_column=ref_col,
                     row_index=row_idx,
                 )
                 

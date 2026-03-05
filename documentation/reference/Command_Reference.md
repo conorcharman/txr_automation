@@ -825,6 +825,84 @@ Duplicate `child_ref` rows are **excluded** from the output entirely.
 
 ---
 
+### validate-non-zero-net-val
+
+Validate that the sum of child transaction net amounts matches the parent order
+net amount for each parent reference group (Incident Code 7_42).
+
+**Usage:**
+
+```bash
+# Using config file (recommended)
+validate-non-zero-net-val --config config/local/accuracy_testing/non_zero_net_value.yaml
+
+# Using no arguments (loads default config automatically)
+validate-non-zero-net-val
+
+# Using direct CLI arguments
+validate-non-zero-net-val input.csv output.csv
+
+# Dry run to preview
+validate-non-zero-net-val \
+  --config config/local/accuracy_testing/non_zero_net_value.yaml \
+  --dry-run
+
+# Verbose output
+validate-non-zero-net-val \
+  --config config/local/accuracy_testing/non_zero_net_value.yaml \
+  --verbose --log-level DEBUG
+```
+
+**Options:**
+
+- `--config PATH` - Configuration YAML file
+  (optional, defaults to `config/local/accuracy_testing/non_zero_net_value.yaml`)
+- `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
+- `--verbose` - Enable verbose per-group debug logging
+- `--dry-run` - Preview without writing output file
+
+**Validation Logic:**
+
+1. Reads all rows from the NonZeroNetValue SQL extract CSV
+2. Groups rows by `bulk_ref` (first 11 characters of `parent_ref`)
+3. Within each group, removes duplicate `child_ref` entries (first occurrence
+   by CSV row order is retained; duplicates are excluded from output and logged
+   as warnings)
+4. Sums `child_netamt` across the deduplicated child rows
+5. Compares the net sum against `bulk_netamt` (exact decimal comparison)
+6. Sets `error = N` (match) or `error = Y` (mismatch) on all records in the group
+
+**Input CSV Columns** (exact order from SQL extract):
+
+| Column | Description |
+|--------|-------------|
+| `child_ref` | Child transaction reference (12-character composite key) |
+| `child_netamt` | Net amount on this child transaction report |
+| `parent_ref` | Parent order reference |
+| `parent_netamt` | Parent order net amount |
+| `report_status` | Transaction report status |
+| `trade_date_time` | Trade date and time |
+
+**Output CSV Columns** (input columns + 3 appended):
+
+| Column | Description |
+|--------|-------------|
+| `net_amt` | Sum of `child_netamt` for the parent group (after deduplication) |
+| `difference` | `net_amt - bulk_netamt` |
+| `error` | `N` = amounts match, `Y` = mismatch |
+
+Duplicate `child_ref` rows are **excluded** from the output entirely.
+
+**Configuration Template:**
+
+- `config/local/accuracy_testing/non_zero_net_value.yaml`
+
+**Incident Code:**
+
+- 7_42 - INTC ISIN trade where net amount does not net to zero
+
+---
+
 ### validate-ftbdm
 
 Validate buyer decision maker identification codes (incident 12_17).
