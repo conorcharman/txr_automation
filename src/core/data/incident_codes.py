@@ -61,6 +61,9 @@ INCIDENT_CODE_MATRIX: Dict[str, IncidentMetadata] = {
 
     # Non-Zero Net Quantity
     '7_6': {'sides': {'buyer', 'seller'}, 'validation_type': 'non_zero_net_qty', 'description': 'INTC ISIN trade where quantity does not net to zero'},
+
+    # Non-Zero Net Value
+    '7_42': {'sides': {'buyer', 'seller'}, 'validation_type': 'non_zero_net_val', 'description': 'INTC ISIN trade where net amount does not net to zero'},
 }
 
 
@@ -296,6 +299,42 @@ def is_non_zero_net_qty_incident(incident_code: str) -> bool:
     """
     if code_data := INCIDENT_CODE_MATRIX.get(incident_code):
         return code_data['validation_type'] == 'non_zero_net_qty'
+    return False
+
+
+def get_non_zero_net_val_incident_codes() -> Set[str]:
+    """
+    Get incident codes requiring non-zero net value validation.
+
+    Returns:
+        Set of incident codes with validation_type='non_zero_net_val'.
+
+    Example:
+        >>> get_non_zero_net_val_incident_codes()
+        {'7_42'}
+    """
+    return {code for code, data in INCIDENT_CODE_MATRIX.items()
+            if data['validation_type'] == 'non_zero_net_val'}
+
+
+def is_non_zero_net_val_incident(incident_code: str) -> bool:
+    """
+    Check if an incident code requires non-zero net value validation.
+
+    Args:
+        incident_code: Incident code string (e.g., '7_42')
+
+    Returns:
+        True if incident uses non_zero_net_val validation type.
+
+    Example:
+        >>> is_non_zero_net_val_incident('7_42')
+        True
+        >>> is_non_zero_net_val_incident('7_37')
+        False
+    """
+    if code_data := INCIDENT_CODE_MATRIX.get(incident_code):
+        return code_data['validation_type'] == 'non_zero_net_val'
     return False
 
 

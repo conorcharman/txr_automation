@@ -432,6 +432,9 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
     # Non-zero net quantity — uses VALUES block CTE, not an IN-clause
     elif incident_code == '7_6':
         template_path = sql_template_dir / "NonZeroNetQuantity.sql"
+    # Non-zero net value — uses VALUES block CTE, not an IN-clause
+    elif incident_code == '7_42':
+        template_path = sql_template_dir / "NonZeroNetValue.sql"
     # Inconsistent buyer
     elif incident_code == '7_66':
         template_path = sql_template_dir / "InconsistentBuyerID.sql"
@@ -461,7 +464,7 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
 
 # Incidents that require a DB2 VALUES block instead of a SQL IN-clause.
 # The corresponding SQL templates use {VALUES} as their placeholder.
-VALUES_MODE_INCIDENTS: set = {'7_6'}
+VALUES_MODE_INCIDENTS: set = {'7_6', '7_42'}
 
 
 def requires_values_mode(incident_code: str) -> bool:

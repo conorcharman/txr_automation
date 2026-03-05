@@ -58,7 +58,7 @@ class SQLExtractGenerator:
     ]
 
     # Incidents that use a VALUES block instead of an IN-clause
-    VALUES_MODE_INCIDENTS = {'7_6'}
+    VALUES_MODE_INCIDENTS = {'7_6', '7_42'}
     
     def __init__(
         self,

@@ -30,8 +30,8 @@ class TestIncidentCodeMatrix:
     def test_matrix_not_empty(self):
         """Incident matrix should contain codes"""
         assert len(INCIDENT_CODE_MATRIX) > 0
-        # Currently 11 implemented codes
-        assert len(INCIDENT_CODE_MATRIX) == 11
+        # Currently 13 implemented codes
+        assert len(INCIDENT_CODE_MATRIX) == 13
     
     def test_buyer_only_incidents(self):
         """Test buyer-only incident codes"""
@@ -90,7 +90,7 @@ class TestIncidentCodeMatrix:
     def test_get_all_codes(self):
         """Test getting all incident codes"""
         all_codes = get_all_incident_codes()
-        assert len(all_codes) == 11
+        assert len(all_codes) == 13
         # Buyer codes
         assert '7_35' in all_codes
         assert '7_37' in all_codes
@@ -105,27 +105,34 @@ class TestIncidentCodeMatrix:
         assert '21_17' in all_codes
         # Pricing
         assert '35_3' in all_codes
+        # Non-Zero Net incidents (buyer+seller)
+        assert '7_6' in all_codes
+        assert '7_42' in all_codes
     
     def test_get_buyer_codes(self):
         """Test getting buyer incident codes"""
         buyer_codes = get_buyer_incident_codes()
-        assert len(buyer_codes) == 5
+        assert len(buyer_codes) == 7
         assert '7_35' in buyer_codes
         assert '7_37' in buyer_codes
         assert '7_39' in buyer_codes
         assert '7_66' in buyer_codes
         assert '12_17' in buyer_codes
+        assert '7_6' in buyer_codes
+        assert '7_42' in buyer_codes
     
     def test_get_seller_codes(self):
         """Test getting seller incident codes"""
         seller_codes = get_seller_incident_codes()
-        assert len(seller_codes) == 6
+        assert len(seller_codes) == 8
         assert '16_19' in seller_codes
         assert '16_21' in seller_codes
         assert '16_23' in seller_codes
         assert '16_20' in seller_codes
         assert '21_17' in seller_codes
         assert '35_3' in seller_codes
+        assert '7_6' in seller_codes
+        assert '7_42' in seller_codes
     
     def test_matrix_structure(self):
         """Test the structure of the incident matrix"""

@@ -7,6 +7,7 @@ Dataclasses representing records for various validation workflows.
 
 from .pricing_record import PricingRecord
 from .net_quantity_record import NetQuantityRecord
+from .net_value_record import NetValueRecord
 from .decision_maker_record import (
     DecisionMakerRecord,
     Product,
@@ -25,6 +26,7 @@ from .data_push_record import (
 __all__ = [
     'PricingRecord',
     'NetQuantityRecord',
+    'NetValueRecord',
     'DecisionMakerRecord',
     'Product',
     'ServiceLevel',

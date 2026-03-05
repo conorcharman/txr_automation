@@ -176,10 +176,13 @@ class FieldMapper:
 # ============================================================================
 
 class UnaVistaIndex:
-    """Optimized UnaVista file with pre-built indexes for fast lookups"""
+    """Optimized UnaVista index built from one or more UnaVista files."""
     
-    def __init__(self, file_path: str, logger: logging.Logger):
-        self.file_path = file_path
+    def __init__(self, file_paths: List[str], logger: logging.Logger):
+        # Accept a single path string for backwards compatibility
+        if isinstance(file_paths, str):
+            file_paths = [file_paths]
+        self.file_paths = file_paths
         self.logger = logger
         self.transactions = []  # List of UnaVistaTransaction objects
         
@@ -195,48 +198,55 @@ class UnaVistaIndex:
         self.buyer_dm_name_index = defaultdict(list)
         self.seller_dm_name_index = defaultdict(list)
         
+        self.header: List[str] = []
         self.load_and_index()
     
     def load_and_index(self):
-        """Load UnaVista file and build all indexes"""
-        try:
-            f, encoding = safe_open_csv(self.file_path, 'r', newline='')
-            with f:
-                reader = csv.reader(f)
-                rows = list(reader)
-            
-            if len(rows) < 2:
-                self.logger.warning(f"UnaVista file is empty or has no data rows")
-                return
-            
-            self.header = rows[0]
-            data_rows = rows[1:]
-            
-            self.logger.info(f"Loading {len(data_rows)} UnaVista transactions...")
-            
-            for i, row in enumerate(data_rows):
-                if len(row) < 32:
+        """Load all UnaVista files and build combined indexes."""
+        global_idx = 0
+        for file_path in self.file_paths:
+            try:
+                f, encoding = safe_open_csv(file_path, 'r', newline='')
+                with f:
+                    reader = csv.reader(f)
+                    rows = list(reader)
+                
+                if len(rows) < 2:
+                    self.logger.warning(f"UnaVista file is empty or has no data rows: {os.path.basename(file_path)}")
                     continue
                 
-                transaction_ref = row[1].strip() if len(row) > 1 else ""
-                transaction = UnaVistaTransaction(
-                    transaction_ref=transaction_ref,
-                    row_data=row,
-                    row_index=i
-                )
-                self.transactions.append(transaction)
+                # Use the first file's header; validate subsequent files match
+                if not self.header:
+                    self.header = rows[0]
                 
-                # Index buyer data
-                self._index_buyer(row, i)
-                # Index seller data
-                self._index_seller(row, i)
-                # Index decision makers
-                self._index_decision_makers(row, i)
-            
-            self.logger.info(f"Indexed {len(self.transactions)} UnaVista transactions")
-            
-        except Exception as e:
-            self.logger.error(f"Error loading UnaVista file: {e}")
+                data_rows = rows[1:]
+                self.logger.info(f"Loading {len(data_rows)} UnaVista transactions from {os.path.basename(file_path)}...")
+                
+                for row in data_rows:
+                    if len(row) < 32:
+                        global_idx += 1
+                        continue
+                    
+                    transaction_ref = row[1].strip() if len(row) > 1 else ""
+                    transaction = UnaVistaTransaction(
+                        transaction_ref=transaction_ref,
+                        row_data=row,
+                        row_index=global_idx
+                    )
+                    self.transactions.append(transaction)
+                    
+                    # Index buyer data
+                    self._index_buyer(row, global_idx)
+                    # Index seller data
+                    self._index_seller(row, global_idx)
+                    # Index decision makers
+                    self._index_decision_makers(row, global_idx)
+                    global_idx += 1
+                
+            except Exception as e:
+                self.logger.error(f"Error loading UnaVista file {os.path.basename(file_path)}: {e}")
+        
+        self.logger.info(f"Indexed {len(self.transactions)} UnaVista transactions total")
     
     def _index_buyer(self, row: List[str], idx: int):
         """Index buyer fields"""
@@ -358,8 +368,23 @@ class UnaVistaIndex:
 class ReplayRecordIndex:
     """Index of client correction records from Replay files"""
     
-    def __init__(self, logger: logging.Logger):
+    # Fallback hardcoded indices used when a column name cannot be found in the header.
+    # These match the positions written by the Phase 3 Processor.
+    _FALLBACK_INDICES = {
+        'incident_codes':    4,
+        'correction':        6,
+        'correction_field':  7,
+    }
+    # Optional columns — resolved by name only, no positional fallback.
+    _OPTIONAL_COLUMNS = (
+        'agree_with_correction',
+        'suggested_correction',
+        'suggested_correction_field',
+    )
+    
+    def __init__(self, logger: logging.Logger, incident_columns: Optional[Dict[str, str]] = None):
         self.logger = logger
+        self.incident_columns = incident_columns or {}
         self.records = []  # List of ReplayRecord objects
         self.client_records = defaultdict(list)  # ClientKey -> List[ReplayRecord]
         # Use incident matrix from core library
@@ -384,6 +409,8 @@ class ReplayRecordIndex:
                 self.logger.warning(f"Replay file {file_type} is empty")
                 return
             
+            header = rows[0]
+            col_map = self._build_col_map(header, os.path.basename(file_path))
             data_rows = rows[1:]
             self.logger.info(f"Processing {len(data_rows)} records from {file_type} file...")
             
@@ -394,9 +421,9 @@ class ReplayRecordIndex:
                 
                 # Parse record based on file type
                 if file_type == 'IDs':
-                    record = self._parse_ids_record(row, i, file_type)
+                    record = self._parse_ids_record(row, i, file_type, col_map)
                 else:
-                    record = self._parse_names_record(row, i, file_type)
+                    record = self._parse_names_record(row, i, file_type, col_map)
                 
                 if record:  # Add all records (including 'No change')
                     self.records.append(record)
@@ -415,7 +442,62 @@ class ReplayRecordIndex:
         except Exception as e:
             self.logger.error(f"Error loading replay file {file_type}: {e}")
     
-    def _parse_ids_record(self, row: List[str], row_index: int, file_type: str) -> Optional[ReplayRecord]:
+    def _build_col_map(self, header: List[str], filename: str) -> Dict[str, int]:
+        """
+        Build a mapping from logical column names to their indices in the file header.
+
+        For each key in _FALLBACK_INDICES the method first looks for the column name
+        specified in the incident_columns config, then falls back to the hardcoded
+        default index with a warning.
+
+        Args:
+            header: List of column name strings from the CSV header row.
+            filename: File name used in log messages.
+
+        Returns:
+            Dict mapping logical name (e.g. 'correction') to column index.
+        """
+        col_map: Dict[str, Optional[int]] = {}
+        for logical_name, fallback_idx in self._FALLBACK_INDICES.items():
+            col_name = self.incident_columns.get(logical_name)
+            if col_name and col_name in header:
+                col_map[logical_name] = header.index(col_name)
+                self.logger.debug(
+                    f"{filename}: '{logical_name}' mapped to column "
+                    f"'{col_name}' (index {col_map[logical_name]})"
+                )
+            else:
+                col_map[logical_name] = fallback_idx
+                if col_name:
+                    self.logger.warning(
+                        f"{filename}: column '{col_name}' for '{logical_name}' not found "
+                        f"in header — falling back to index {fallback_idx}. "
+                        f"Available columns: {header}"
+                    )
+                else:
+                    self.logger.debug(
+                        f"{filename}: no config entry for '{logical_name}' "
+                        f"— using default index {fallback_idx}"
+                    )
+        # Optional columns: resolve by name only; set to None if absent
+        for logical_name in self._OPTIONAL_COLUMNS:
+            col_name = self.incident_columns.get(logical_name)
+            if col_name and col_name in header:
+                col_map[logical_name] = header.index(col_name)
+                self.logger.debug(
+                    f"{filename}: '{logical_name}' mapped to column "
+                    f"'{col_name}' (index {col_map[logical_name]})"
+                )
+            else:
+                col_map[logical_name] = None
+                if col_name:
+                    self.logger.debug(
+                        f"{filename}: optional column '{col_name}' for '{logical_name}' "
+                        f"not found in header — will not be used"
+                    )
+        return col_map
+
+    def _parse_ids_record(self, row: List[str], row_index: int, file_type: str, col_map: Dict[str, Optional[int]]) -> Optional[ReplayRecord]:
         """Parse Inconsistent_IDs format record"""
         try:
             # Index 0: Reported Name & DOB (FN~SN~CCYY-MM-DD)
@@ -438,15 +520,32 @@ class ReplayRecordIndex:
                     client_id = parts[1].strip()
                     break
             
-            # Index 4: Incident Codes
-            incident_codes_str = row[4].strip()
+            # Incident Codes — column resolved from config or fallback index 4
+            incident_codes_idx = col_map['incident_codes']
+            incident_codes_str = row[incident_codes_idx].strip() if len(row) > incident_codes_idx else ""
             incident_codes = [code.strip() for code in incident_codes_str.split('|') if code.strip()]
             
-            # Index 6: Client Confirmed Correction
-            # Index 7: Client Confirmed Correction Fields
-            corrections = self._parse_corrections(row[6], row[7])
+            # Correction value, field, and agreement columns — resolved from config
+            correction_idx       = col_map['correction']
+            correction_field_idx = col_map['correction_field']
+            agree_idx            = col_map.get('agree_with_correction')
+            suggested_idx        = col_map.get('suggested_correction')
+            suggested_field_idx  = col_map.get('suggested_correction_field')
+
+            correction_str       = row[correction_idx].strip()       if len(row) > correction_idx else ""
+            field_str            = row[correction_field_idx].strip()  if len(row) > correction_field_idx else ""
+            agree_str            = row[agree_idx].strip()             if agree_idx is not None and len(row) > agree_idx else ""
+            suggested_str        = row[suggested_idx].strip()         if suggested_idx is not None and len(row) > suggested_idx else ""
+            suggested_field_str  = row[suggested_field_idx].strip()   if suggested_field_idx is not None and len(row) > suggested_field_idx else ""
+
+            corrections = self._parse_corrections(
+                correction_str, field_str,
+                agree_str, suggested_str, suggested_field_str,
+            )
             
-            # Skip if all corrections are "No change"
+            # Skip rows where both correction_str and field_str are empty/unparseable.
+            # "No Change" rows are NOT skipped — _parse_corrections returns a sentinel
+            # entry for them so they are annotated in the output.
             if not corrections:
                 return None
             
@@ -466,7 +565,7 @@ class ReplayRecordIndex:
             self.logger.error(f"Error parsing IDs record at row {row_index + 1}: {e}")
             return None
     
-    def _parse_names_record(self, row: List[str], row_index: int, file_type: str) -> Optional[ReplayRecord]:
+    def _parse_names_record(self, row: List[str], row_index: int, file_type: str, col_map: Dict[str, Optional[int]]) -> Optional[ReplayRecord]:
         """Parse Inconsistent_Names format record"""
         try:
             # Index 0: Reported ID
@@ -487,18 +586,35 @@ class ReplayRecordIndex:
             else:
                 first_name = surname = parsed_dob = ""
             
-            # Index 4: Incident Codes
-            incident_codes_str = row[4].strip()
+            # Incident Codes — column resolved from config or fallback index 4
+            incident_codes_idx = col_map['incident_codes']
+            incident_codes_str = row[incident_codes_idx].strip() if len(row) > incident_codes_idx else ""
             incident_codes = [code.strip() for code in incident_codes_str.split('|') if code.strip()]
             
-            # Index 6: Client Confirmed Correction
-            # Index 7: Client Confirmed Correction Fields
-            corrections = self._parse_corrections(row[6], row[7])
-            
-            # Skip if all corrections are "No change"
+            # Correction value, field, and agreement columns — resolved from config
+            correction_idx       = col_map['correction']
+            correction_field_idx = col_map['correction_field']
+            agree_idx            = col_map.get('agree_with_correction')
+            suggested_idx        = col_map.get('suggested_correction')
+            suggested_field_idx  = col_map.get('suggested_correction_field')
+
+            correction_str       = row[correction_idx].strip()       if len(row) > correction_idx else ""
+            field_str            = row[correction_field_idx].strip()  if len(row) > correction_field_idx else ""
+            agree_str            = row[agree_idx].strip()             if agree_idx is not None and len(row) > agree_idx else ""
+            suggested_str        = row[suggested_idx].strip()         if suggested_idx is not None and len(row) > suggested_idx else ""
+            suggested_field_str  = row[suggested_field_idx].strip()   if suggested_field_idx is not None and len(row) > suggested_field_idx else ""
+
+            corrections = self._parse_corrections(
+                correction_str, field_str,
+                agree_str, suggested_str, suggested_field_str,
+            )
+
+            # Skip rows where both correction_str and field_str are empty/unparseable.
+            # "No Change" rows are NOT skipped — _parse_corrections returns a sentinel
+            # entry for them so they are annotated in the output.
             if not corrections:
                 return None
-            
+
             return ReplayRecord(
                 client_id=client_id,
                 first_name=first_name,
@@ -510,35 +626,70 @@ class ReplayRecordIndex:
                 original_row=row,
                 row_index=row_index
             )
-            
+
         except Exception as e:
             self.logger.error(f"Error parsing Names record at row {row_index + 1}: {e}")
             return None
-    
-    def _parse_corrections(self, correction_str: str, field_str: str) -> Dict[str, str]:
+
+    def _parse_corrections(
+        self,
+        correction_str: str,
+        field_str: str,
+        agree_str: str = "",
+        suggested_str: str = "",
+        suggested_field_str: str = "",
+    ) -> Dict[str, str]:
         """
-        Parse corrections and fields with support for ampersand-combined fields
-        
+        Parse corrections and fields with support for ampersand-combined fields.
+
+        Applies the agree/suggested correction decision logic before parsing:
+        - If Agree With Correction is N/No/F, Suggested Correction overrides Correction
+          (if a Suggested Correction is present); otherwise the record is treated as No Change.
+        - If Correction is "No Change" (or empty after overrides), returns the sentinel
+          {"No Change": "No Change"} so the record reaches generate_output and is annotated
+          rather than being silently dropped.
+
         Args:
-            correction_str: e.g., "Val1:Val2:Val3:Val4" 
-            field_str: e.g., "Field1:Field2:Field3 & Field4:Field5"
+            correction_str: e.g., "Val1:Val2:Val3:Val4" or "No Change"
+            field_str: e.g., "Field1:Field2:Field3 & Field4:Field5" or "" for No Change
                        Note: Field3 & Field4 share the same value (Val3)
-        
+            agree_str: Contents of the Agree With Correction column (Y/N/P/F/empty)
+            suggested_str: Contents of the Suggested Correction column
+            suggested_field_str: Contents of the Suggested Correction Field column
+
         Returns:
             Dictionary of field -> expected_value
-        
+
         Note: When a colon-separated field item contains ' & ', it means that item
               represents multiple fields that all receive the same correction value.
         """
-        corrections = {}
-        
-        if not correction_str or not field_str:
+        # Apply agree/suggested override before anything else
+        agree_normalised = agree_str.strip().upper()
+        if agree_normalised in ('N', 'NO', 'F'):
+            if suggested_str.strip():
+                correction_str = suggested_str.strip()
+                field_str = suggested_field_str.strip()
+            else:
+                return {"No Change": "No Change"}
+
+        corrections: Dict[str, str] = {}
+
+        if not correction_str:
             return corrections
-        
+
+        # Phase 3 processor writes "No Change" with an empty field string.
+        # Preserve as a sentinel so the record reaches process_client and is
+        # annotated as "No change" in the output rather than being dropped.
+        if correction_str.strip().lower() == "no change":
+            return {"No Change": "No Change"}
+
+        if not field_str:
+            return corrections
+
         # First split on colons
         correction_parts = [p.strip() for p in correction_str.split(':')]
         field_parts = [p.strip() for p in field_str.split(':')]
-        
+
         # Pair them up
         for field, value in zip(field_parts, correction_parts):
             # Check if this field item contains ' & ' (multiple fields with same value)
@@ -549,9 +700,9 @@ class ReplayRecordIndex:
                     corrections[sub_field] = value
             else:
                 corrections[field] = value
-        
+
         return corrections
-    
+
     def get_client_types(self, incident_codes: List[str]) -> Set[str]:
         """
         Determine if client is buyer, seller, or both based on incident codes
@@ -562,8 +713,7 @@ class ReplayRecordIndex:
         types = set()
         for code in incident_codes:
             if code in self.incident_matrix:
-                # incident_matrix[code] is now a set of client types
-                types.update(self.incident_matrix[code])
+                types.update(self.incident_matrix[code]['sides'])
             else:
                 # Log unknown incident codes for debugging
                 self.logger.debug(f"Unknown incident code: {code}")
@@ -607,7 +757,7 @@ class Phase3FinalLookup:
         # Note: incident_matrix no longer loaded from file - in core library
         
         # Actual file paths (will be set by find_files)
-        self.unavista_path = None
+        self.unavista_paths: List[str] = []
         self.replay_ids_path = None
         self.replay_names_path = None
         
@@ -641,27 +791,36 @@ class Phase3FinalLookup:
         """Find required files using glob patterns"""
         self.logger.info("Discovering input files...")
         
-        # Helper function to find file with custom search path
+        # Helper function to find a single file (most recent if multiple)
         def find_file(search_path, pattern, description):
             matches = glob.glob(os.path.join(search_path, pattern))
             if matches:
-                # Use the most recent file if multiple matches
                 file_path = max(matches, key=os.path.getmtime)
                 self.logger.info(f"Found {description}: {os.path.basename(file_path)}")
                 return file_path
-            
             self.logger.error(f"Could not find {description} matching pattern: {pattern}")
             return None
         
-        # Find files in their respective directories
-        self.unavista_path = find_file(self.data_reference_path, self.unavista_pattern, "UnaVista file")
+        # Helper function to find all matching files (sorted oldest → newest)
+        def find_all_files(search_path, pattern, description):
+            matches = sorted(glob.glob(os.path.join(search_path, pattern)), key=os.path.getmtime)
+            if matches:
+                self.logger.info(f"Found {len(matches)} {description} file(s):")
+                for m in matches:
+                    self.logger.info(f"  {os.path.basename(m)}")
+            else:
+                self.logger.error(f"Could not find any {description} files matching pattern: {pattern}")
+            return matches
+        
+        # UnaVista: load ALL matching files
+        self.unavista_paths = find_all_files(self.data_reference_path, self.unavista_pattern, "UnaVista")
         self.replay_ids_path = find_file(self.replay_input_path, self.replay_ids_pattern, "Replay IDs file")
         self.replay_names_path = find_file(self.replay_input_path, self.replay_names_pattern, "Replay Names file")
         
         # Note: Incident matrix no longer loaded from CSV - now in core library
         
         # Verify all files found
-        if not all([self.unavista_path, self.replay_ids_path, self.replay_names_path]):
+        if not all([self.unavista_paths, self.replay_ids_path, self.replay_names_path]):
             raise FileNotFoundError("Required input files not found. Please check file paths and patterns.")
         
         self.logger.info("All required files discovered successfully")
@@ -671,16 +830,17 @@ class Phase3FinalLookup:
         self.logger.info("Loading indexes...")
         
         # Verify all paths are set (should be guaranteed by find_files)
-        if not all([self.replay_ids_path, self.replay_names_path, self.unavista_path]):
+        if not all([self.replay_ids_path, self.replay_names_path, self.unavista_paths]):
             raise ValueError("File paths not properly initialized. Call find_files() first.")
         
         # Type assertions for type checker (paths verified above)
         assert self.replay_ids_path is not None
         assert self.replay_names_path is not None
-        assert self.unavista_path is not None
+        assert self.unavista_paths
         
         # Load replay records (incident matrix loaded from core library)
-        self.replay_index = ReplayRecordIndex(self.logger)
+        incident_columns = self.config.get('incident_columns', {})
+        self.replay_index = ReplayRecordIndex(self.logger, incident_columns)
         
         # Load both replay files
         self.replay_index.load_replay_file(self.replay_ids_path, 'IDs')
@@ -688,8 +848,8 @@ class Phase3FinalLookup:
         
         self.stats.custom_stats['total_replay_records'] = len(self.replay_index.records)
         
-        # Load UnaVista file
-        self.unavista_index = UnaVistaIndex(self.unavista_path, self.logger)
+        # Load all UnaVista files into a single combined index
+        self.unavista_index = UnaVistaIndex(self.unavista_paths, self.logger)
         
         self.logger.info("All indexes loaded successfully")
     
@@ -997,8 +1157,8 @@ class Phase3FinalLookup:
         """Generate output UnaVista file with test results"""
         self.logger.info("Generating output file...")
         
-        if not self.unavista_path:
-            raise ValueError("UnaVista path not set")
+        if not self.unavista_paths:
+            raise ValueError("UnaVista paths not set")
         if not self.replay_index:
             raise ValueError("Replay index not loaded")
         
@@ -1006,7 +1166,6 @@ class Phase3FinalLookup:
         transaction_test_results = {}  # transaction_index -> test_result_string
         
         processed_clients = set()
-        clients_not_found = []  # Track clients with no matches
         
         for client_key, records in self.replay_index.client_records.items():
             if client_key in processed_clients:
@@ -1017,39 +1176,41 @@ class Phase3FinalLookup:
             results = self.process_client(client_key, records)
             if results:
                 transaction_test_results.update(results)
-            else:
-                # Check if this was a "not found" case
-                merged_corrections, _ = self.merge_duplicate_records(records)
-                all_no_change = all(v.lower() == "no change" for v in merged_corrections.values())
-                if not all_no_change:
-                    clients_not_found.append((client_key, records))
-        
-        # Log clients with no matches
-        if clients_not_found:
-            self.logger.info(f"{len(clients_not_found)} clients could not be matched to UnaVista transactions")
-            for client_key, records in clients_not_found[:10]:  # Log first 10
-                self.logger.debug(f"No match: ID={client_key.id}, Name={client_key.first_name} {client_key.surname}")
         
         # Write output file
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         output_filename = f"output_UnaVista_final_lookup_{timestamp}.csv"
         output_filepath = os.path.join(self.output_path, output_filename)
         
-        with open(self.unavista_path, 'r', encoding='utf-8', newline='') as f_in:
-            reader = csv.reader(f_in)
-            rows = list(reader)
+        # Read and concatenate all UnaVista files in the same order they were indexed
+        all_data_rows: List[List[str]] = []
+        header: List[str] = []
+        for path in self.unavista_paths:
+            with open(path, 'r', encoding='utf-8', newline='') as f_in:
+                file_rows = list(csv.reader(f_in))
+            if not header and len(file_rows) >= 1:
+                header = file_rows[0]
+            all_data_rows.extend(file_rows[1:])
         
         # Insert test_result column after Transaction Reference Number (index 1)
-        header = rows[0]
         header.insert(2, 'test_result')
         
         output_rows = [header]
         
-        for i, row in enumerate(rows[1:]):
-            # Get test result for this transaction
-            test_result = transaction_test_results.get(i, "")
+        client_not_found_count = 0
+        for i, row in enumerate(all_data_rows):
+            # UnaVista rows with no matching replay record are annotated as "Client not found"
+            test_result = transaction_test_results.get(i, "Client not found")
+            if test_result == "Client not found":
+                client_not_found_count += 1
             row.insert(2, test_result)
             output_rows.append(row)
+        
+        if client_not_found_count:
+            self.logger.info(
+                f"{client_not_found_count} UnaVista transactions had no matching replay record "
+                f"and were annotated as 'Client not found'"
+            )
         
         # Write output
         with open(output_filepath, 'w', encoding='utf-8', newline='') as f_out:

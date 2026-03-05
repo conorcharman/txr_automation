@@ -1,0 +1,41 @@
+# Non-Zero Net Value Validation Configuration Template
+# =======================================================
+# Configuration for Incident Code 7_42 (NonZeroNetValue) validation.
+#
+# This script groups child transaction records by parent reference, removes
+# duplicate child references (first occurrence retained), sums the child
+# net amounts, and flags any parent group where the sum does not match the
+# parent order net amount.
+#
+# Usage:
+#   validate-non-zero-net-val --config config/local/accuracy_testing/non_zero_net_value.yaml
+#   python -m src.accuracy_testing.scripts.non_zero_net_value --config <this file>
+
+# =============================================================================
+# PATHS
+# =============================================================================
+
+paths:
+  # Input CSV produced by the NonZeroNetValue SQL extract
+  input_file: ''
+
+  # Output CSV — all input columns plus net_amt, difference, error
+  # Duplicate child_ref rows are excluded from the output
+  output_file: ''
+
+  # Directory for log files (defaults to 'logs' if omitted)
+  log_output: 'logs'
+
+# =============================================================================
+# PROCESSOR SETTINGS
+# =============================================================================
+
+processor:
+  # Logging verbosity: DEBUG, INFO, WARNING, ERROR
+  log_level: "INFO"
+
+  # Enable verbose per-record debug logging
+  verbose: false
+
+  # Internal batch size (not currently used for this script)
+  batch_size: 1000

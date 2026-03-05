@@ -4,12 +4,12 @@
 # Conversion mode selection
 # Mode 1: Recursive parent directory mode (xlsx → csv in same structure)
 # Mode 2: Single directory mode (input dir → output dir)
-mode: 2
+mode: 1
 
 # Mode 1 paths - Recursive parent directory mode
 # Use this when you have a structured hierarchy with xlsx/csv folders
 mode1_paths:
-  parent_dir: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation
+  parent_dir: 'C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii_final_lookup\FY25\Q4'
   log_output: C:/Users/YOUR_USERNAME/Desktop/Data/txr_replay_automation/logs
 
 # Mode 2 paths - Single directory mode (original behavior)
