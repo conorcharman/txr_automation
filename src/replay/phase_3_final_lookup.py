@@ -631,6 +631,27 @@ class ReplayRecordIndex:
             self.logger.error(f"Error parsing Names record at row {row_index + 1}: {e}")
             return None
 
+    @staticmethod
+    def _split_correction_parts(raw: str) -> List[str]:
+        """
+        Split a correction value or field string on the appropriate delimiter.
+
+        Supports two delimiters:
+        - ``¬`` (negation sign) — takes precedence when present
+        - ``:`` (colon) — used when ``¬`` is absent
+
+        Leading/trailing whitespace is stripped from each part.
+
+        Args:
+            raw: The raw correction or field string to split.
+
+        Returns:
+            List of stripped string parts.
+        """
+        if '\u00ac' in raw:  # ¬
+            return [p.strip() for p in raw.split('\u00ac')]
+        return [p.strip() for p in raw.split(':')]
+
     def _parse_corrections(
         self,
         correction_str: str,
@@ -649,10 +670,16 @@ class ReplayRecordIndex:
           {"No Change": "No Change"} so the record reaches generate_output and is annotated
           rather than being silently dropped.
 
+        Two delimiters are accepted for both the correction and field strings:
+        - ``:`` (colon) — the standard delimiter inherited from the original VBA macros
+        - ``¬`` (negation sign) — an alternative delimiter that may appear in exported CSVs;
+          takes precedence over ``:`` when present in the correction string
+
         Args:
-            correction_str: e.g., "Val1:Val2:Val3:Val4" or "No Change"
-            field_str: e.g., "Field1:Field2:Field3 & Field4:Field5" or "" for No Change
-                       Note: Field3 & Field4 share the same value (Val3)
+            correction_str: e.g., ``"Val1:Val2:Val3:Val4"`` or ``"Val1¬Val2¬Val3"`` or
+                ``"No Change"``
+            field_str: e.g., ``"Field1:Field2:Field3 & Field4"`` or
+                ``"Field1¬Field2¬Field3 & Field4"``; empty string for No Change
             agree_str: Contents of the Agree With Correction column (Y/N/P/F/empty)
             suggested_str: Contents of the Suggested Correction column
             suggested_field_str: Contents of the Suggested Correction Field column
@@ -660,7 +687,7 @@ class ReplayRecordIndex:
         Returns:
             Dictionary of field -> expected_value
 
-        Note: When a colon-separated field item contains ' & ', it means that item
+        Note: When a delimiter-separated field item contains ' & ', it means that item
               represents multiple fields that all receive the same correction value.
         """
         # Apply agree/suggested override before anything else
@@ -686,9 +713,13 @@ class ReplayRecordIndex:
         if not field_str:
             return corrections
 
-        # First split on colons
-        correction_parts = [p.strip() for p in correction_str.split(':')]
-        field_parts = [p.strip() for p in field_str.split(':')]
+        # Split using whichever delimiter is present (¬ takes precedence over :)
+        if '\u00ac' in correction_str:
+            self.logger.debug(
+                "\u00ac delimiter detected in correction field, normalising to parts"
+            )
+        correction_parts = self._split_correction_parts(correction_str)
+        field_parts = self._split_correction_parts(field_str)
 
         # Pair them up
         for field, value in zip(field_parts, correction_parts):

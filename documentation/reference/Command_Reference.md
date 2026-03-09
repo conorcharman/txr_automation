@@ -825,7 +825,7 @@ Duplicate `child_ref` rows are **excluded** from the output entirely.
 
 ---
 
-### validate-non-zero-net-val
+### validate-non-zero-net-amt
 
 Validate that the sum of child transaction net amounts matches the parent order
 net amount for each parent reference group (Incident Code 7_42).
@@ -834,36 +834,36 @@ net amount for each parent reference group (Incident Code 7_42).
 
 ```bash
 # Using config file (recommended)
-validate-non-zero-net-val --config config/local/accuracy_testing/non_zero_net_value.yaml
+validate-non-zero-net-amt --config config/local/accuracy_testing/non_zero_net_amount.yaml
 
 # Using no arguments (loads default config automatically)
-validate-non-zero-net-val
+validate-non-zero-net-amt
 
 # Using direct CLI arguments
-validate-non-zero-net-val input.csv output.csv
+validate-non-zero-net-amt input.csv output.csv
 
 # Dry run to preview
-validate-non-zero-net-val \
-  --config config/local/accuracy_testing/non_zero_net_value.yaml \
+validate-non-zero-net-amt \
+  --config config/local/accuracy_testing/non_zero_net_amount.yaml \
   --dry-run
 
 # Verbose output
-validate-non-zero-net-val \
-  --config config/local/accuracy_testing/non_zero_net_value.yaml \
+validate-non-zero-net-amt \
+  --config config/local/accuracy_testing/non_zero_net_amount.yaml \
   --verbose --log-level DEBUG
 ```
 
 **Options:**
 
 - `--config PATH` - Configuration YAML file
-  (optional, defaults to `config/local/accuracy_testing/non_zero_net_value.yaml`)
+  (optional, defaults to `config/local/accuracy_testing/non_zero_net_amount.yaml`)
 - `--log-level LEVEL` - Logging level (DEBUG, INFO, WARNING, ERROR)
 - `--verbose` - Enable verbose per-group debug logging
 - `--dry-run` - Preview without writing output file
 
 **Validation Logic:**
 
-1. Reads all rows from the NonZeroNetValue SQL extract CSV
+1. Reads all rows from the NonZeroNetAmount SQL extract CSV
 2. Groups rows by `bulk_ref` (first 11 characters of `parent_ref`)
 3. Within each group, removes duplicate `child_ref` entries (first occurrence
    by CSV row order is retained; duplicates are excluded from output and logged
@@ -895,7 +895,7 @@ Duplicate `child_ref` rows are **excluded** from the output entirely.
 
 **Configuration Template:**
 
-- `config/local/accuracy_testing/non_zero_net_value.yaml`
+- `config/local/accuracy_testing/non_zero_net_amount.yaml`
 
 **Incident Code:**
 

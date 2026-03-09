@@ -59,8 +59,8 @@ class TemplateFormat:
     # Net quantity validation incidents
     NET_QUANTITY_INCIDENTS = {'7_6'}
 
-    # Net value validation incidents
-    NET_VALUE_INCIDENTS = {'7_42'}
+    # Net amount validation incidents
+    NET_AMOUNT_INCIDENTS = {'7_42'}
     
     # Buyer validation template columns (empty columns to be filled by validation script)
     BUYER_VALIDATION_COLS = [
@@ -134,10 +134,10 @@ class TemplateFormat:
         "error"
     ]
 
-    # Net value validation template columns (Incident 7_42: NonZeroNetValue)
+    # Net amount validation template columns (Incident 7_42: NonZeroNetAmount)
     # child_ref and parent_ref are included; child_netamt / parent_netamt are
     # sourced from TXNREP / TXNREPESMA NETAMT fields in the SQL output.
-    NET_VALUE_VALIDATION_COLS = [
+    NET_AMOUNT_VALIDATION_COLS = [
         "Transaction Reference",  # maps from child_ref in validation output
         "parent_ref",
         "child_netamt",
@@ -175,8 +175,8 @@ class TemplateFormat:
             return "pricing"
         elif incident_code in cls.NET_QUANTITY_INCIDENTS:
             return "net_quantity"
-        elif incident_code in cls.NET_VALUE_INCIDENTS:
-            return "net_value"
+        elif incident_code in cls.NET_AMOUNT_INCIDENTS:
+            return "net_amount"
         else:
             return "default"
     
@@ -191,8 +191,8 @@ class TemplateFormat:
             return cls.PRICING_VALIDATION_COLS.copy()
         elif template_type == "net_quantity":
             return cls.NET_QUANTITY_VALIDATION_COLS.copy()
-        elif template_type == "net_value":
-            return cls.NET_VALUE_VALIDATION_COLS.copy()
+        elif template_type == "net_amount":
+            return cls.NET_AMOUNT_VALIDATION_COLS.copy()
         else:
             return cls.DEFAULT_VALIDATION_COLS.copy()
 
