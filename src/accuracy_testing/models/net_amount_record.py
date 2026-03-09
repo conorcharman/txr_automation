@@ -1,8 +1,8 @@
 """
-Non-Zero Net Value Record Model
+Non-Zero Net Amount Record Model
 =================================
 
-Data structure for non-zero net value validation (Incident Code 7_42).
+Data structure for non-zero net amount validation (Incident Code 7_42).
 
 Validates that the sum of all child transaction net amounts matches the
 parent order net amount.
@@ -18,9 +18,9 @@ BULK_REF_LENGTH: int = 11
 
 
 @dataclass
-class NetValueRecord:
+class NetAmountRecord:
     """
-    Net value validation record representing a single child transaction.
+    Net amount validation record representing a single child transaction.
 
     Each record corresponds to one child transaction row from the SQL extract.
     Records are grouped by bulk_ref (the first 11 characters of parent_ref)
@@ -72,9 +72,9 @@ class NetValueRecord:
         self.bulk_ref = self.parent_ref[:BULK_REF_LENGTH]
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'NetValueRecord':
+    def from_dict(cls, data: Dict[str, Any]) -> 'NetAmountRecord':
         """
-        Create a NetValueRecord from a dictionary (e.g. a CSV row dict).
+        Create a NetAmountRecord from a dictionary (e.g. a CSV row dict).
 
         Supports both SQL column names (uppercase) and Python field names.
 
@@ -88,7 +88,7 @@ class NetValueRecord:
                 - trade_date_time / TRADE_DATE_TIME
 
         Returns:
-            NetValueRecord instance
+            NetAmountRecord instance
 
         Example:
             >>> row = {
@@ -99,7 +99,7 @@ class NetValueRecord:
             ...     'report_status': 'ACCEPTED',
             ...     'trade_date_time': '2024-01-15 09:30:00',
             ... }
-            >>> record = NetValueRecord.from_dict(row)
+            >>> record = NetAmountRecord.from_dict(row)
         """
         def _decimal(value: Any) -> Decimal:
             if value is None or str(value).strip() == '':
@@ -119,9 +119,9 @@ class NetValueRecord:
         )
 
     @classmethod
-    def from_row(cls, row: list, row_index: int = 0) -> 'NetValueRecord':
+    def from_row(cls, row: list, row_index: int = 0) -> 'NetAmountRecord':
         """
-        Create a NetValueRecord from a positional CSV row.
+        Create a NetAmountRecord from a positional CSV row.
 
         Expected column order (matches SQL extract output):
             0: child_ref
@@ -136,7 +136,7 @@ class NetValueRecord:
             row_index: 1-based row number for error reporting
 
         Returns:
-            NetValueRecord instance
+            NetAmountRecord instance
 
         Raises:
             ValueError: If the row has fewer than 6 columns

@@ -72,7 +72,7 @@ batch:
   # All automated incident codes (used when incidents: "all" is specified)
   all_incidents:
     - "7_6"    # Non-Zero Net Quantity (INTC ISIN trade where quantity does not net to zero)
-    - "7_42"   # Non-Zero Net Value (INTC ISIN trade where net amount does not net to zero)
+    - "7_42"   # Non-Zero Net Amount (INTC ISIN trade where net amount does not net to zero)
     - "7_35"   # Buyer ID: CONCAT
     - "7_37"   # Buyer ID: NIDN
     - "7_39"   # Buyer ID: CCPT
@@ -145,8 +145,8 @@ sql_template_mapping:
   # Non-Zero Net Quantity incident (7_6) — uses VALUES block CTE, not an IN-clause
   non_zero_net_qty: "NonZeroNetQuantity.sql"
 
-  # Non-Zero Net Value incident (7_42) — uses VALUES block CTE, not an IN-clause
-  non_zero_net_val: "NonZeroNetValue.sql"
+  # Non-Zero Net Amount incident (7_42) — uses VALUES block CTE, not an IN-clause
+  non_zero_net_amt: "NonZeroNetAmount.sql"
 
   # Standard Buyer ID incidents (7_35, 7_37, 7_39)
   buyer_standard: "BuyerID.sql"

@@ -39,7 +39,7 @@ class TestSQLTemplateMapping:
             "FTBDM.sql",
             "FTSDM.sql",
             "NonZeroNetQuantity.sql",
-            "NonZeroNetValue.sql",
+            "NonZeroNetAmount.sql",
         ]
         
         for template in templates:
@@ -119,16 +119,16 @@ class TestSQLTemplateMapping:
         result = get_sql_template_for_incident('7_6', self.sql_dir)
         assert result.name == "NonZeroNetQuantity.sql"
 
-    def test_non_zero_net_value_mapping(self):
-        """Should map incident 7_42 to NonZeroNetValue.sql."""
+    def test_non_zero_net_amount_mapping(self):
+        """Should map incident 7_42 to NonZeroNetAmount.sql."""
         result = get_sql_template_for_incident('7_42', self.sql_dir)
-        assert result.name == "NonZeroNetValue.sql"
+        assert result.name == "NonZeroNetAmount.sql"
 
     def test_requires_values_mode_net_quantity(self):
         """Incident 7_6 should require VALUES block mode."""
         assert requires_values_mode('7_6') is True
 
-    def test_requires_values_mode_net_value(self):
+    def test_requires_values_mode_net_amount(self):
         """Incident 7_42 should require VALUES block mode."""
         assert requires_values_mode('7_42') is True
 

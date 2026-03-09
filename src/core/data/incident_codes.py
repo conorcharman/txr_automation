@@ -62,8 +62,8 @@ INCIDENT_CODE_MATRIX: Dict[str, IncidentMetadata] = {
     # Non-Zero Net Quantity
     '7_6': {'sides': {'buyer', 'seller'}, 'validation_type': 'non_zero_net_qty', 'description': 'INTC ISIN trade where quantity does not net to zero'},
 
-    # Non-Zero Net Value
-    '7_42': {'sides': {'buyer', 'seller'}, 'validation_type': 'non_zero_net_val', 'description': 'INTC ISIN trade where net amount does not net to zero'},
+    # Non-Zero Net Amount
+    '7_42': {'sides': {'buyer', 'seller'}, 'validation_type': 'non_zero_net_amt', 'description': 'INTC ISIN trade where net amount does not net to zero'},
 }
 
 
@@ -302,39 +302,39 @@ def is_non_zero_net_qty_incident(incident_code: str) -> bool:
     return False
 
 
-def get_non_zero_net_val_incident_codes() -> Set[str]:
+def get_non_zero_net_amt_incident_codes() -> Set[str]:
     """
-    Get incident codes requiring non-zero net value validation.
+    Get incident codes requiring non-zero net amount validation.
 
     Returns:
-        Set of incident codes with validation_type='non_zero_net_val'.
+        Set of incident codes with validation_type='non_zero_net_amt'.
 
     Example:
-        >>> get_non_zero_net_val_incident_codes()
+        >>> get_non_zero_net_amt_incident_codes()
         {'7_42'}
     """
     return {code for code, data in INCIDENT_CODE_MATRIX.items()
-            if data['validation_type'] == 'non_zero_net_val'}
+            if data['validation_type'] == 'non_zero_net_amt'}
 
 
-def is_non_zero_net_val_incident(incident_code: str) -> bool:
+def is_non_zero_net_amt_incident(incident_code: str) -> bool:
     """
-    Check if an incident code requires non-zero net value validation.
+    Check if an incident code requires non-zero net amount validation.
 
     Args:
         incident_code: Incident code string (e.g., '7_42')
 
     Returns:
-        True if incident uses non_zero_net_val validation type.
+        True if incident uses non_zero_net_amt validation type.
 
     Example:
-        >>> is_non_zero_net_val_incident('7_42')
+        >>> is_non_zero_net_amt_incident('7_42')
         True
-        >>> is_non_zero_net_val_incident('7_37')
+        >>> is_non_zero_net_amt_incident('7_37')
         False
     """
     if code_data := INCIDENT_CODE_MATRIX.get(incident_code):
-        return code_data['validation_type'] == 'non_zero_net_val'
+        return code_data['validation_type'] == 'non_zero_net_amt'
     return False
 
 

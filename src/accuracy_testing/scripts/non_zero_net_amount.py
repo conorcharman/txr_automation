@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 """
-Non-Zero Net Value Validation Script
+Non-Zero Net Amount Validation Script
 =======================================
 
 Validates child transaction net amounts against parent order net amounts
-for Incident Code 7_42 (NonZeroNetValue).
+for Incident Code 7_42 (NonZeroNetAmount).
 
 This script:
-1. Reads the CSV extract from the NonZeroNetValue SQL query
+1. Reads the CSV extract from the NonZeroNetAmount SQL query
 2. Groups child records by parent_ref
 3. Removes duplicate child_ref entries within each group (first occurrence kept)
 4. Sums child_netamt for each parent group
@@ -18,11 +18,11 @@ Only deduplicated records are written to the output (duplicate rows are excluded
 
 Usage:
     # With YAML configuration file
-    python -m src.accuracy_testing.scripts.non_zero_net_value \\
-        --config config/local/accuracy_testing/non_zero_net_value.yaml
+    python -m src.accuracy_testing.scripts.non_zero_net_amount \\
+        --config config/local/accuracy_testing/non_zero_net_amount.yaml
 
     # With direct CLI arguments
-    python -m src.accuracy_testing.scripts.non_zero_net_value \\
+    python -m src.accuracy_testing.scripts.non_zero_net_amount \\
         input.csv output.csv --log-level DEBUG
 
 Input CSV columns (exact order from SQL extract):
@@ -58,8 +58,8 @@ from typing import List, Optional
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.accuracy_testing.models.net_value_record import NetValueRecord
-from src.accuracy_testing.validators.net_value_validator import NetValueValidator
+from src.accuracy_testing.models.net_amount_record import NetAmountRecord
+from src.accuracy_testing.validators.net_amount_validator import NetAmountValidator
 from src.accuracy_testing.processor import (
     AccuracyConfigManager,
     AccuracyPathConfig,
@@ -86,8 +86,8 @@ except ImportError:
         return open(file_path, mode, encoding='utf-8', newline=newline), 'utf-8'
 
 
-class NetValueStats:
-    """Statistics for a non-zero net value validation run."""
+class NetAmountStats:
+    """Statistics for a non-zero net amount validation run."""
 
     def __init__(self) -> None:
         self.total_input_records: int = 0
@@ -130,8 +130,8 @@ class NetValueStats:
                 print(line)
 
 
-class NonZeroNetValueScript:
-    """Main application class for non-zero net value validation."""
+class NonZeroNetAmountScript:
+    """Main application class for non-zero net amount validation."""
 
     # Expected column headers in the input CSV
     INPUT_COLUMNS = [
@@ -189,15 +189,15 @@ class NonZeroNetValueScript:
         self.proc_config: AccuracyProcessorConfig = AccuracyConfigManager.get_processor_config(self.config)
 
         self.logger = create_logger(
-            name="non_zero_net_value",
+            name="non_zero_net_amount",
             log_dir=self.path_config.log_output,
             log_level=self.proc_config.log_level,
         )
 
-        self.validator = NetValueValidator(verbose=self.proc_config.verbose)
+        self.validator = NetAmountValidator(verbose=self.proc_config.verbose)
         self.input_file = Path(self.path_config.input_file)
         self.output_file = Path(self.path_config.output_file)
-        self.stats = NetValueStats()
+        self.stats = NetAmountStats()
 
     def _log_header(self, title: str) -> None:
         """Emit a section header, using log_header() if available (StructuredLogger)
@@ -217,15 +217,15 @@ class NonZeroNetValueScript:
     # I/O
     # ------------------------------------------------------------------
 
-    def read_input_csv(self) -> List[NetValueRecord]:
+    def read_input_csv(self) -> List[NetAmountRecord]:
         """
-        Read and parse the input CSV file into NetValueRecord objects.
+        Read and parse the input CSV file into NetAmountRecord objects.
 
         Row order is preserved; this is critical because deduplication keeps
         the first occurrence by row order.
 
         Returns:
-            List of NetValueRecord objects in CSV row order
+            List of NetAmountRecord objects in CSV row order
 
         Raises:
             FileNotFoundError: If the input file does not exist
@@ -235,7 +235,7 @@ class NonZeroNetValueScript:
         if not self.input_file.exists():
             raise FileNotFoundError(f"Input file not found: {self.input_file}")
 
-        records: List[NetValueRecord] = []
+        records: List[NetAmountRecord] = []
         f, encoding = safe_open_csv(self.input_file, 'r', newline='')
         self.logger.info(f"Detected encoding: {encoding}")
 
@@ -250,7 +250,7 @@ class NonZeroNetValueScript:
                         continue  # skip blank rows
 
                     try:
-                        record = NetValueRecord.from_row(row, row_index=row_idx)
+                        record = NetAmountRecord.from_row(row, row_index=row_idx)
                         records.append(record)
                     except ValueError as e:
                         self.logger.error(f"Row {row_idx}: {e} — skipping")
@@ -266,7 +266,7 @@ class NonZeroNetValueScript:
         self.logger.info(f"Read {len(records)} records successfully")
         return records
 
-    def write_output_csv(self, records: List[NetValueRecord]) -> None:
+    def write_output_csv(self, records: List[NetAmountRecord]) -> None:
         """
         Write validated records to the output CSV.
 
@@ -275,7 +275,7 @@ class NonZeroNetValueScript:
         and error.
 
         Args:
-            records: Deduplicated list of validated NetValueRecord objects
+            records: Deduplicated list of validated NetAmountRecord objects
         """
         self.logger.info(f"Writing output file: {self.output_file}")
         self.output_file.parent.mkdir(parents=True, exist_ok=True)
@@ -314,7 +314,7 @@ class NonZeroNetValueScript:
         """Execute the full validation workflow."""
         start_time = datetime.now()
 
-        self._log_header("NON-ZERO NET VALUE VALIDATION (7_42)")
+        self._log_header("NON-ZERO NET AMOUNT VALIDATION (7_42)")
         self.logger.info(f"Input file:  {self.input_file}")
         self.logger.info(f"Output file: {self.output_file}")
         if self.dry_run:
@@ -343,7 +343,7 @@ class NonZeroNetValueScript:
         # validate_all already mutated all records with correct error/net_amt/difference,
         # so we just need to collect the first-seen child_ref per parent.
         seen_child_refs: set = set()
-        output_records: List[NetValueRecord] = []
+        output_records: List[NetAmountRecord] = []
         for record in all_records:
             if record.child_ref not in seen_child_refs:
                 seen_child_refs.add(record.child_ref)
@@ -384,21 +384,21 @@ class NonZeroNetValueScript:
 def parse_args() -> argparse.Namespace:
     """Create and parse the argument parser."""
     parser = argparse.ArgumentParser(
-        description="Non-Zero Net Value Validation (Incident Code 7_42)",
+        description="Non-Zero Net Amount Validation (Incident Code 7_42)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # With YAML configuration file (recommended)
-  python -m src.accuracy_testing.scripts.non_zero_net_value \\
-      --config config/local/accuracy_testing/non_zero_net_value.yaml
+  python -m src.accuracy_testing.scripts.non_zero_net_amount \\
+      --config config/local/accuracy_testing/non_zero_net_amount.yaml
 
   # With direct CLI arguments
-  python -m src.accuracy_testing.scripts.non_zero_net_value \\
+  python -m src.accuracy_testing.scripts.non_zero_net_amount \\
       input.csv output.csv
 
   # Dry run to preview
-  python -m src.accuracy_testing.scripts.non_zero_net_value \\
-      --config config/local/accuracy_testing/non_zero_net_value.yaml --dry-run
+  python -m src.accuracy_testing.scripts.non_zero_net_amount \\
+      --config config/local/accuracy_testing/non_zero_net_amount.yaml --dry-run
         """,
     )
 
@@ -440,7 +440,7 @@ Examples:
 
 
 def main() -> int:
-    """Entry point for the non-zero net value validation script."""
+    """Entry point for the non-zero net amount validation script."""
     args = parse_args()
 
     try:
@@ -465,7 +465,7 @@ def main() -> int:
                 / "config"
                 / "local"
                 / "accuracy_testing"
-                / "non_zero_net_value.yaml"
+                / "non_zero_net_amount.yaml"
             )
             if default_config.exists():
                 config = AccuracyConfigManager.load_from_yaml(str(default_config))
@@ -482,7 +482,7 @@ def main() -> int:
         if args.verbose:
             config.setdefault('processor', {})['verbose'] = True
 
-        script = NonZeroNetValueScript(
+        script = NonZeroNetAmountScript(
             config_dict=config,
             dry_run=args.dry_run,
         )

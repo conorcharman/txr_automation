@@ -1,6 +1,6 @@
-# Non-Zero Net Value Validation Configuration Template
+# Non-Zero Net Amount Validation Configuration Template
 # =======================================================
-# Configuration for Incident Code 7_42 (NonZeroNetValue) validation.
+# Configuration for Incident Code 7_42 (NonZeroNetAmount) validation.
 #
 # This script groups child transaction records by parent reference, removes
 # duplicate child references (first occurrence retained), sums the child
@@ -8,15 +8,15 @@
 # parent order net amount.
 #
 # Usage:
-#   validate-non-zero-net-val --config config/local/accuracy_testing/non_zero_net_value.yaml
-#   python -m src.accuracy_testing.scripts.non_zero_net_value --config <this file>
+#   validate-non-zero-net-amt --config config/local/accuracy_testing/non_zero_net_amount.yaml
+#   python -m src.accuracy_testing.scripts.non_zero_net_amount --config <this file>
 
 # =============================================================================
 # PATHS
 # =============================================================================
 
 paths:
-  # Input CSV produced by the NonZeroNetValue SQL extract
+  # Input CSV produced by the NonZeroNetAmount SQL extract
   input_file: ''
 
   # Output CSV — all input columns plus net_amt, difference, error

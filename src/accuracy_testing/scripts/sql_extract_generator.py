@@ -432,9 +432,9 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
     # Non-zero net quantity — uses VALUES block CTE, not an IN-clause
     elif incident_code == '7_6':
         template_path = sql_template_dir / "NonZeroNetQuantity.sql"
-    # Non-zero net value — uses VALUES block CTE, not an IN-clause
+    # Non-zero net amount — uses VALUES block CTE, not an IN-clause
     elif incident_code == '7_42':
-        template_path = sql_template_dir / "NonZeroNetValue.sql"
+        template_path = sql_template_dir / "NonZeroNetAmount.sql"
     # Inconsistent buyer
     elif incident_code == '7_66':
         template_path = sql_template_dir / "InconsistentBuyerID.sql"

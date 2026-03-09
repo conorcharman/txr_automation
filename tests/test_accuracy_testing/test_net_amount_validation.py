@@ -1,8 +1,8 @@
 """
-Tests for Non-Zero Net Value Validation
+Tests for Non-Zero Net Amount Validation
 ==========================================
 
-Unit tests for the NetValueRecord model and NetValueValidator
+Unit tests for the NetAmountRecord model and NetAmountValidator
 for Incident Code 7_42.
 """
 
@@ -15,8 +15,8 @@ import sys
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.accuracy_testing.models.net_value_record import NetValueRecord
-from src.accuracy_testing.validators.net_value_validator import NetValueValidator
+from src.accuracy_testing.models.net_amount_record import NetAmountRecord
+from src.accuracy_testing.validators.net_amount_validator import NetAmountValidator
 
 
 # ---------------------------------------------------------------------------
@@ -30,9 +30,9 @@ def _make_record(
     parent_netamt: str = "3000.00",
     report_status: str = "ACCEPTED",
     trade_date_time: str = "2024-01-15 09:30:00",
-) -> NetValueRecord:
-    """Construct a NetValueRecord with sensible defaults."""
-    return NetValueRecord(
+) -> NetAmountRecord:
+    """Construct a NetAmountRecord with sensible defaults."""
+    return NetAmountRecord(
         child_ref=child_ref,
         child_netamt=Decimal(child_netamt),
         parent_ref=parent_ref,
@@ -43,11 +43,11 @@ def _make_record(
 
 
 # ---------------------------------------------------------------------------
-# NetValueRecord model tests
+# NetAmountRecord model tests
 # ---------------------------------------------------------------------------
 
-class TestNetValueRecord:
-    """Unit tests for the NetValueRecord dataclass."""
+class TestNetAmountRecord:
+    """Unit tests for the NetAmountRecord dataclass."""
 
     def test_create_record_with_defaults(self):
         """Test that output fields default to zero and 'N'."""
@@ -71,7 +71,7 @@ class TestNetValueRecord:
             "report_status": "SUBMITTED",
             "trade_date_time": "2024-03-01 14:00:00",
         }
-        record = NetValueRecord.from_dict(data)
+        record = NetAmountRecord.from_dict(data)
 
         assert record.child_ref == "BB2024000002"
         assert record.child_netamt == Decimal("500.00")
@@ -89,7 +89,7 @@ class TestNetValueRecord:
             "REPORT_STATUS": "ACCEPTED",
             "TRADE_DATE_TIME": "2024-06-10 08:00:00",
         }
-        record = NetValueRecord.from_dict(data)
+        record = NetAmountRecord.from_dict(data)
 
         assert record.child_ref == "CC2024000003"
         assert record.child_netamt == Decimal("2000.00")
@@ -97,7 +97,7 @@ class TestNetValueRecord:
     def test_from_row_positional(self):
         """Test from_row() using positional CSV values."""
         row = ["DD2024000004", "750.50", "PARENT004", "1500.00", "DRAFT", "2024-09-20 10:00:00"]
-        record = NetValueRecord.from_row(row, row_index=2)
+        record = NetAmountRecord.from_row(row, row_index=2)
 
         assert record.child_ref == "DD2024000004"
         assert record.child_netamt == Decimal("750.50")
@@ -107,7 +107,7 @@ class TestNetValueRecord:
     def test_from_row_raises_on_too_few_columns(self):
         """Test that from_row() raises ValueError when columns are missing."""
         with pytest.raises(ValueError, match="expected at least 6"):
-            NetValueRecord.from_row(["REF", "100.00", "PARENT"], row_index=3)
+            NetAmountRecord.from_row(["REF", "100.00", "PARENT"], row_index=3)
 
     def test_from_dict_null_netamt_defaults_to_zero(self):
         """Test that null/empty net amount values default to Decimal('0')."""
@@ -119,7 +119,7 @@ class TestNetValueRecord:
             "report_status": "",
             "trade_date_time": "",
         }
-        record = NetValueRecord.from_dict(data)
+        record = NetAmountRecord.from_dict(data)
 
         assert record.child_netamt == Decimal("0")
         assert record.parent_netamt == Decimal("0")
@@ -153,14 +153,14 @@ class TestNetValueRecord:
 
 
 # ---------------------------------------------------------------------------
-# NetValueValidator deduplication tests
+# NetAmountValidator deduplication tests
 # ---------------------------------------------------------------------------
 
-class TestNetValueValidatorDeduplication:
+class TestNetAmountValidatorDeduplication:
     """Tests for deduplicate_group()."""
 
     def setup_method(self):
-        self.validator = NetValueValidator()
+        self.validator = NetAmountValidator()
 
     def test_no_duplicates_returns_all_records(self):
         """All unique child_refs — nothing removed."""
@@ -215,14 +215,14 @@ class TestNetValueValidatorDeduplication:
 
 
 # ---------------------------------------------------------------------------
-# NetValueValidator validation tests
+# NetAmountValidator validation tests
 # ---------------------------------------------------------------------------
 
-class TestNetValueValidatorValidation:
+class TestNetAmountValidatorValidation:
     """Tests for validate_group() and validate_all()."""
 
     def setup_method(self):
-        self.validator = NetValueValidator()
+        self.validator = NetAmountValidator()
 
     def test_matching_amounts_sets_error_n(self):
         """Sum of child_netamt equals parent_netamt -> error = 'N'."""
@@ -346,7 +346,7 @@ class TestNetValueValidatorValidation:
     def test_null_netamt_handling(self):
         """Records with missing/null net amount values default to Decimal('0')."""
         records = [
-            NetValueRecord(
+            NetAmountRecord(
                 child_ref="CHILD001",
                 child_netamt=Decimal("0"),   # default from null
                 parent_ref="PARENT001",
@@ -394,7 +394,7 @@ class TestBulkRefGrouping:
     """Tests that validate_all groups by bulk_ref (first 11 chars of parent_ref)."""
 
     def setup_method(self):
-        self.validator = NetValueValidator()
+        self.validator = NetAmountValidator()
 
     def test_sub_parents_grouped_together(self):
         """Records with different parent_ref but same bulk prefix are summed together."""

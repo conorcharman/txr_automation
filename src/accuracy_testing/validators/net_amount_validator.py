@@ -1,8 +1,8 @@
 """
-Non-Zero Net Value Validator
+Non-Zero Net Amount Validator
 ==============================
 
-Core validation logic for non-zero net value checking (Incident Code 7_42).
+Core validation logic for non-zero net amount checking (Incident Code 7_42).
 
 For each parent order reference, all associated child transaction net amounts
 are summed (after deduplication by child reference) and compared against the
@@ -14,12 +14,12 @@ from collections import defaultdict
 from decimal import Decimal
 from typing import Dict, List, Tuple
 
-from ..models.net_value_record import NetValueRecord
+from ..models.net_amount_record import NetAmountRecord
 
 logger = logging.getLogger(__name__)
 
 
-class NetValueValidator:
+class NetAmountValidator:
     """
     Validates that the sum of child transaction net amounts matches the parent
     order net amount for each parent reference group.
@@ -34,7 +34,7 @@ class NetValueValidator:
         5. Populate net_amt and difference on all records.
 
     Usage:
-        validator = NetValueValidator(verbose=True)
+        validator = NetAmountValidator(verbose=True)
         stats = validator.validate_all(records)
     """
 
@@ -48,7 +48,7 @@ class NetValueValidator:
         self.verbose = verbose
 
         if self.verbose:
-            logger.info("NetValueValidator initialised")
+            logger.info("NetAmountValidator initialised")
 
     # ------------------------------------------------------------------
     # Deduplication
@@ -56,8 +56,8 @@ class NetValueValidator:
 
     def deduplicate_group(
         self,
-        records: List[NetValueRecord],
-    ) -> Tuple[List[NetValueRecord], Dict[str, int]]:
+        records: List[NetAmountRecord],
+    ) -> Tuple[List[NetAmountRecord], Dict[str, int]]:
         """
         Remove duplicate child_ref entries within a parent group.
 
@@ -78,7 +78,7 @@ class NetValueValidator:
             >>> # dupes == {'ABC123': 2} means 'ABC123' appeared 3 times, 2 removed
         """
         seen: set = set()
-        deduplicated: List[NetValueRecord] = []
+        deduplicated: List[NetAmountRecord] = []
         duplicates: Dict[str, int] = defaultdict(int)
 
         for record in records:
@@ -94,7 +94,7 @@ class NetValueValidator:
     # Group validation
     # ------------------------------------------------------------------
 
-    def validate_group(self, records: List[NetValueRecord]) -> int:
+    def validate_group(self, records: List[NetAmountRecord]) -> int:
         """Validate all records belonging to a single bulk_ref group.
 
         Steps:
@@ -171,7 +171,7 @@ class NetValueValidator:
     # Batch validation
     # ------------------------------------------------------------------
 
-    def validate_all(self, records: List[NetValueRecord]) -> Dict[str, int]:
+    def validate_all(self, records: List[NetAmountRecord]) -> Dict[str, int]:
         """
         Validate a full batch of records, grouping by bulk_ref.
 
@@ -180,7 +180,7 @@ class NetValueValidator:
         and "44625CPNJMN1G03" are all treated as part of the same contract.
 
         Args:
-            records: All NetValueRecord objects from the CSV extract
+            records: All NetAmountRecord objects from the CSV extract
 
         Returns:
             Dictionary of processing statistics:
@@ -195,7 +195,7 @@ class NetValueValidator:
             >>> print(f"{stats['error_groups']} group(s) with net amount mismatch")
         """
         # Group records by bulk_ref, preserving original row order
-        groups: Dict[str, List[NetValueRecord]] = defaultdict(list)
+        groups: Dict[str, List[NetAmountRecord]] = defaultdict(list)
         for record in records:
             groups[record.bulk_ref].append(record)
 
