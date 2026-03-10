@@ -6,7 +6,10 @@ Core validation logic for non-zero net amount checking (Incident Code 7_42).
 
 For each parent order reference, all associated child transaction net amounts
 are summed (after deduplication by child reference) and compared against the
-parent order net amount. A mismatch is flagged as an error.
+parent order net amount. The effective tolerance per group is
+max(tolerance, tolerance_per_record × record_count), so large bulks
+automatically receive a wider allowance to account for accumulated decimal
+rounding across many records.
 """
 
 import logging
@@ -25,30 +28,57 @@ class NetAmountValidator:
     order net amount for each parent reference group.
 
     Processing steps per group:
-        1. Deduplicate by child_ref, keeping the first occurrence by row order.
-        2. Sum child_netamt across the deduplicated records.
-        3. Compare the net sum against parent_netamt (exact Decimal comparison).
-        4. Set error = "N" (match) or "Y" (mismatch) on every record in the
+        1. Read parent_netamt from the first record as bulk_netamt. The SQL
+           fetches parent_netamt via a truncated join key (SUBSTR of parent_ref,
+           12 chars), so every sub-parent in the bulk group carries the same
+           bulk-level total. Summing per unique parent_ref would double-count.
+        2. Deduplicate by child_ref, keeping the first occurrence by row order.
+        3. Sum child_netamt across the deduplicated records.
+        4. Compute effective_tolerance = max(tolerance, tolerance_per_record ×
+           deduplicated_count). Differences with abs(difference) <=
+           effective_tolerance are treated as matches (error = "N"); larger
+           differences are flagged (error = "Y").
+        5. Set error = "N" (match) or "Y" (mismatch) on every record in the
            original group (including duplicates, so all rows for that parent
            carry the same outcome).
-        5. Populate net_amt and difference on all records.
+        6. Populate net_amt and difference on all records.
 
     Usage:
         validator = NetAmountValidator(verbose=True)
         stats = validator.validate_all(records)
     """
 
-    def __init__(self, verbose: bool = False):
+    def __init__(
+        self,
+        verbose: bool = False,
+        tolerance: Decimal = Decimal('1.0'),
+        tolerance_per_record: Decimal = Decimal('0.005'),
+    ):
         """
         Initialise the validator.
 
         Args:
             verbose: Enable verbose debug logging (default False)
+            tolerance: Fixed floor for the acceptable absolute difference.
+                Acts as the minimum effective tolerance regardless of group size.
+                Defaults to Decimal('1.0').
+            tolerance_per_record: Additional tolerance contributed by each
+                deduplicated record, reflecting the maximum rounding error a
+                single net amount value can introduce (±0.005 for 2 d.p. values).
+                The effective tolerance for a group is:
+                    max(tolerance, tolerance_per_record × record_count)
+                Defaults to Decimal('0.005').
         """
         self.verbose = verbose
+        self.tolerance = tolerance
+        self.tolerance_per_record = tolerance_per_record
 
         if self.verbose:
-            logger.info("NetAmountValidator initialised")
+            logger.info(
+                f"NetAmountValidator initialised | "
+                f"tolerance=±{self.tolerance} | "
+                f"tolerance_per_record=±{self.tolerance_per_record}"
+            )
 
     # ------------------------------------------------------------------
     # Deduplication
@@ -98,11 +128,19 @@ class NetAmountValidator:
         """Validate all records belonging to a single bulk_ref group.
 
         Steps:
-            1. Sum one parent_netamt per unique parent_ref to produce bulk_netamt.
+            1. Take parent_netamt from the first record as bulk_netamt. All
+               records in the group carry the same bulk-level total because the
+               SQL joins on SUBSTR(parent_ref, 1, 12), stripping the G-suffix.
+               Unlike 7_6 (Net Quantity), sub-parents do NOT carry individual
+               portions — summing would double-count.
             2. Deduplicate by child_ref (first occurrence wins).
             3. Log a warning for each removed duplicate.
             4. Sum child_netamt across the deduplicated records to produce net_amt.
-            5. Calculate difference (net_amt - bulk_netamt) and error flag.
+            5. Compute effective_tolerance = max(self.tolerance,
+               self.tolerance_per_record × len(deduplicated)). Calculate
+               difference (net_amt - bulk_netamt). If abs(difference) <=
+               effective_tolerance the group is a match (error "N"), otherwise
+               an error (error "Y").
             6. Apply bulk_netamt, net_amt, difference, and error to *all* records
                in the original group (including any duplicate rows).
 
@@ -120,16 +158,15 @@ class NetAmountValidator:
 
         bulk_ref = records[0].bulk_ref
 
-        # Step 1 — sum one parent_netamt per unique parent_ref within the bulk group.
-        # Handles contracts split across multiple sub-parent references, e.g.
-        # "44625CPNJMN1G01", "44625CPNJMN1G02", "44625CPNJMN1G03" each carrying
-        # their own portion of the total contract net amount.
-        seen_parent_refs: set = set()
-        bulk_netamt = Decimal('0')
-        for record in records:
-            if record.parent_ref not in seen_parent_refs:
-                seen_parent_refs.add(record.parent_ref)
-                bulk_netamt += record.parent_netamt
+        # Step 1 — read bulk_netamt directly from the first record.
+        # The SQL for 7_42 fetches parent_netamt via SUBSTR(parent_ref, 1, 12),
+        # stripping the G-suffix. Every sub-parent in the bulk group (1G01, 1G02,
+        # …) therefore carries the same bulk-level total — NOT an individual
+        # portion. Summing across unique parent_refs would multiply the value by
+        # the number of sub-parents (double-counting). This contrasts with 7_6
+        # (Net Quantity), where the SQL joins on the full suffix so each
+        # sub-parent genuinely carries its own portion.
+        bulk_netamt = records[0].parent_netamt
 
         # Step 2 & 3 — deduplicate and warn
         deduplicated, duplicates = self.deduplicate_group(records)
@@ -145,17 +182,25 @@ class NetAmountValidator:
             start=Decimal('0'),
         )
 
-        # Step 5 — compare net child amount against total bulk amount
+        # Step 5 — compute effective tolerance and compare.
+        # effective_tolerance is the larger of the fixed floor (self.tolerance)
+        # and a per-record scaling (self.tolerance_per_record × record count).
+        # This means large bulks automatically receive a wider allowance to
+        # account for accumulated decimal rounding across many records.
+        effective_tolerance = max(
+            self.tolerance,
+            self.tolerance_per_record * len(deduplicated),
+        )
         difference = net_amt - bulk_netamt
-        error = "N" if difference == Decimal('0') else "Y"
+        error = "N" if abs(difference) <= effective_tolerance else "Y"
 
         if self.verbose:
             logger.debug(
                 f"bulk_ref='{bulk_ref}' | "
-                f"parent_refs={len(seen_parent_refs)} | "
                 f"children={len(deduplicated)} (deduped from {len(records)}) | "
                 f"bulk_netamt={bulk_netamt} | net_amt={net_amt} | "
-                f"difference={difference} | error={error}"
+                f"difference={difference} | "
+                f"effective_tolerance=±{effective_tolerance} | error={error}"
             )
 
         # Step 6 — write results back to all original records

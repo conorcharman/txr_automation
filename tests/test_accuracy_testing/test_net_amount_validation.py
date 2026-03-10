@@ -397,15 +397,15 @@ class TestBulkRefGrouping:
         self.validator = NetAmountValidator()
 
     def test_sub_parents_grouped_together(self):
-        """Records with different parent_ref but same bulk prefix are summed together."""
+        """Records with different parent_ref but same bulk prefix are grouped together."""
         # Three sub-parents all belonging to bulk ref "44625CPNJMN".
-        # Each carries its own parent_netamt (its portion of the contract).
-        # bulk_netamt = 1000+1500+1000 = 3500
-        # net_amt     = 1000+1500+1000 = 3500 -> N
+        # All carry the same bulk-level parent_netamt (the SQL SUBSTR join returns
+        # the same total for every sub-parent). bulk_netamt = 3500.
+        # net_amt = 1000+1500+1000 = 3500 -> N
         records = [
-            _make_record("CHILD001", "1000.00", parent_ref="44625CPNJMN1G01", parent_netamt="1000.00"),
-            _make_record("CHILD002", "1500.00", parent_ref="44625CPNJMN1G02", parent_netamt="1500.00"),
-            _make_record("CHILD003", "1000.00", parent_ref="44625CPNJMN1G03", parent_netamt="1000.00"),
+            _make_record("CHILD001", "1000.00", parent_ref="44625CPNJMN1G01", parent_netamt="3500.00"),
+            _make_record("CHILD002", "1500.00", parent_ref="44625CPNJMN1G02", parent_netamt="3500.00"),
+            _make_record("CHILD003", "1000.00", parent_ref="44625CPNJMN1G03", parent_netamt="3500.00"),
         ]
         stats = self.validator.validate_all(records)
 
@@ -420,8 +420,8 @@ class TestBulkRefGrouping:
 
     def test_sub_parents_mismatch(self):
         """Mismatch is flagged when net child amount != total bulk amount."""
-        # Two sub-parents, each with parent_netamt=2000 -> bulk_netamt=4000.
-        # Children sum to 2500 -> difference=-1500 -> error Y.
+        # Two sub-parents, both carrying the shared bulk-level parent_netamt=2000.
+        # Children sum to 2500 -> difference=500 -> error Y.
         records = [
             _make_record("CHILD001", "1000.00", parent_ref="44625CPNJMN1G01", parent_netamt="2000.00"),
             _make_record("CHILD002", "1500.00", parent_ref="44625CPNJMN1G02", parent_netamt="2000.00"),
@@ -431,8 +431,8 @@ class TestBulkRefGrouping:
         for rec in records:
             assert rec.error == "Y"
             assert rec.net_amt == Decimal("2500.00")
-            assert rec.bulk_netamt == Decimal("4000.00")
-            assert rec.difference == Decimal("-1500.00")
+            assert rec.bulk_netamt == Decimal("2000.00")
+            assert rec.difference == Decimal("500.00")
 
     def test_distinct_bulk_refs_processed_independently(self):
         """Two different bulk refs produce independent results."""
@@ -446,25 +446,24 @@ class TestBulkRefGrouping:
         assert records[0].error == "N"   # 2000 == 2000
         assert records[1].error == "Y"   # 1000 != 3000
 
-    def test_bulk_netamt_sums_unique_parent_amounts(self):
+    def test_sub_parents_carry_same_netamt_no_double_count(self):
         """
-        Regression test: bulk_netamt is the SUM of unique parent net amounts.
+        Regression test: bulk_netamt is taken directly from the first record,
+        not summed across sub-parents.
 
-        Mirrors the equivalent test in test_net_quantity_validation.py — ensures
-        contracts split across multiple sub-parents are totalled correctly before
-        comparison with the child net amounts.
+        The SQL for 7_42 joins on SUBSTR(parent_ref, 1, 12), so every sub-parent
+        in the group carries the same bulk-level parent_netamt. The old (buggy)
+        code summed one value per unique parent_ref, inflating bulk_netamt by N
+        (the number of distinct sub-parent suffixes). This test verifies the fix.
         """
-        # Contract "44625CPNJMN" split across three sub-parents:
-        #   1G01 -> parent_netamt=5000,  children sum = 5000
-        #   1G02 -> parent_netamt=3000,  children sum = 3000
-        #   1G03 -> parent_netamt=2000,  children sum = 2000
-        # bulk_netamt = 5000+3000+2000 = 10000; net_amt = 10000 -> match
+        # Contract "44625CPNJMN" split across two sub-parents.
+        # Both carry the same bulk-level parent_netamt=1000 (the SQL returns
+        # the same total for 1G01 and 1G02 via the SUBSTR join).
+        # bulk_netamt = 1000 (NOT 2000 as the old summing code would produce).
+        # Children: A0000000001(600) + B0000000001(400) = 1000 -> match.
         records = [
-            _make_record("A0000000001", "3000.00", parent_ref="44625CPNJMN1G01", parent_netamt="5000.00"),
-            _make_record("A0000000002", "2000.00", parent_ref="44625CPNJMN1G01", parent_netamt="5000.00"),
-            _make_record("B0000000001", "3000.00", parent_ref="44625CPNJMN1G02", parent_netamt="3000.00"),
-            _make_record("C0000000001", "1000.00", parent_ref="44625CPNJMN1G03", parent_netamt="2000.00"),
-            _make_record("C0000000002", "1000.00", parent_ref="44625CPNJMN1G03", parent_netamt="2000.00"),
+            _make_record("A0000000001", "600.00", parent_ref="44625CPNJMN1G01", parent_netamt="1000.00"),
+            _make_record("B0000000001", "400.00", parent_ref="44625CPNJMN1G02", parent_netamt="1000.00"),
         ]
         stats = self.validator.validate_all(records)
 
@@ -472,7 +471,153 @@ class TestBulkRefGrouping:
         assert stats["match_groups"] == 1
         assert stats["error_groups"] == 0
         for rec in records:
-            assert rec.bulk_netamt == Decimal("10000.00")
-            assert rec.net_amt == Decimal("10000.00")
+            assert rec.bulk_netamt == Decimal("1000.00")  # not 2000 (no double-count)
+            assert rec.net_amt == Decimal("1000.00")
             assert rec.difference == Decimal("0")
             assert rec.error == "N"
+
+
+# ---------------------------------------------------------------------------
+# Tolerance threshold tests
+# ---------------------------------------------------------------------------
+
+class TestNetAmountTolerance:
+    """Tests for the ±1.0 difference tolerance applied to 7_42 only."""
+
+    def setup_method(self):
+        # Disable per-record scaling so these tests exercise the fixed floor only.
+        self.validator = NetAmountValidator(tolerance=Decimal('1.0'), tolerance_per_record=Decimal('0'))
+
+    def test_exact_zero_still_matches(self):
+        """Zero difference is within tolerance -> error N."""
+        records = [_make_record("CHILD001", "1000.00", parent_netamt="1000.00")]
+        self.validator.validate_group(records)
+        assert records[0].error == "N"
+
+    def test_positive_within_tolerance(self):
+        """Difference of +0.50 is within ±1.0 -> error N."""
+        records = [_make_record("CHILD001", "1000.50", parent_netamt="1000.00")]
+        self.validator.validate_group(records)
+        assert records[0].error == "N"
+        assert records[0].difference == Decimal("0.50")
+
+    def test_negative_within_tolerance(self):
+        """Difference of -0.99 is within ±1.0 -> error N."""
+        records = [_make_record("CHILD001", "999.01", parent_netamt="1000.00")]
+        self.validator.validate_group(records)
+        assert records[0].error == "N"
+        assert records[0].difference == Decimal("-0.99")
+
+    def test_positive_at_boundary(self):
+        """Difference of exactly +1.0 is at the boundary -> error N (inclusive)."""
+        records = [_make_record("CHILD001", "1001.00", parent_netamt="1000.00")]
+        self.validator.validate_group(records)
+        assert records[0].error == "N"
+        assert records[0].difference == Decimal("1.00")
+
+    def test_negative_at_boundary(self):
+        """Difference of exactly -1.0 is at the boundary -> error N (inclusive)."""
+        records = [_make_record("CHILD001", "999.00", parent_netamt="1000.00")]
+        self.validator.validate_group(records)
+        assert records[0].error == "N"
+        assert records[0].difference == Decimal("-1.00")
+
+    def test_positive_just_outside_tolerance(self):
+        """Difference of +1.01 exceeds ±1.0 -> error Y."""
+        records = [_make_record("CHILD001", "1001.01", parent_netamt="1000.00")]
+        self.validator.validate_group(records)
+        assert records[0].error == "Y"
+        assert records[0].difference == Decimal("1.01")
+
+    def test_negative_just_outside_tolerance(self):
+        """Difference of -1.01 exceeds ±1.0 -> error Y."""
+        records = [_make_record("CHILD001", "998.99", parent_netamt="1000.00")]
+        self.validator.validate_group(records)
+        assert records[0].error == "Y"
+        assert records[0].difference == Decimal("-1.01")
+
+    def test_custom_tolerance_zero_is_strict(self):
+        """tolerance=0 reverts to exact match behaviour."""
+        validator = NetAmountValidator(tolerance=Decimal('0'))
+        records = [_make_record("CHILD001", "1000.50", parent_netamt="1000.00")]
+        validator.validate_group(records)
+        assert records[0].error == "Y"
+
+    def test_tolerance_applies_across_all_records_in_group(self):
+        """All records in a within-tolerance group receive error N."""
+        records = [
+            _make_record("CHILD001", "500.50", parent_netamt="1000.00"),
+            _make_record("CHILD002", "500.00", parent_netamt="1000.00"),
+        ]
+        self.validator.validate_group(records)
+        # net_amt=1000.50, difference=+0.50, within ±1.0
+        assert all(r.error == "N" for r in records)
+        assert records[0].difference == Decimal("0.50")
+
+
+# ---------------------------------------------------------------------------
+# Per-record scaling tolerance tests
+# ---------------------------------------------------------------------------
+
+class TestNetAmountPerRecordTolerance:
+    """Tests for the per-record scaling component of effective tolerance."""
+
+    def test_small_group_uses_fixed_floor(self):
+        """For a 2-record group: max(1.0, 0.005×2)=1.0 — floor wins."""
+        validator = NetAmountValidator()  # defaults: tolerance=1.0, tolerance_per_record=0.005
+        records = [
+            _make_record("CHILD001", "500.50", parent_netamt="1000.00"),
+            _make_record("CHILD002", "500.00", parent_netamt="1000.00"),
+        ]
+        validator.validate_group(records)
+        # difference=0.50, effective_tolerance=max(1.0, 0.01)=1.0 -> N
+        assert records[0].error == "N"
+
+    def test_638_records_difference_1_28_passes(self):
+        """638 records: max(1.0, 0.005×638)=3.19 — £1.28 difference passes."""
+        validator = NetAmountValidator()
+        # 637 records contributing 1.00 each, 1 record contributing 2.28
+        # net_amt = 637 + 2.28 = 639.28; parent_netamt = 638.00; difference = +1.28
+        records = (
+            [_make_record(f"C{i:06}", "1.00", parent_netamt="638.00") for i in range(637)]
+            + [_make_record("C000638", "2.28", parent_netamt="638.00")]
+        )
+        validator.validate_group(records)
+        assert records[0].difference == Decimal("1.28")
+        assert records[0].error == "N"  # 1.28 <= 3.19
+
+    def test_638_records_difference_4_00_still_errors(self):
+        """638 records: difference of 4.00 exceeds scaled tolerance of 3.19 -> Y."""
+        validator = NetAmountValidator()
+        # net_amt = 637 + 5.00 = 642.00; difference = +4.00
+        records = (
+            [_make_record(f"C{i:06}", "1.00", parent_netamt="638.00") for i in range(637)]
+            + [_make_record("C000638", "5.00", parent_netamt="638.00")]
+        )
+        validator.validate_group(records)
+        assert records[0].difference == Decimal("4.00")
+        assert records[0].error == "Y"  # 4.00 > 3.19
+
+    def test_per_record_zero_disables_scaling(self):
+        """tolerance_per_record=0 means effective_tolerance is always self.tolerance."""
+        validator = NetAmountValidator(tolerance=Decimal('1.0'), tolerance_per_record=Decimal('0'))
+        records = (
+            [_make_record(f"C{i:06}", "1.00", parent_netamt="638.00") for i in range(637)]
+            + [_make_record("C000638", "2.28", parent_netamt="638.00")]
+        )
+        # difference=1.28, effective_tolerance=max(1.0, 0)=1.0 -> 1.28 > 1.0 -> Y
+        validator.validate_group(records)
+        assert records[0].error == "Y"
+
+    def test_scaling_boundary_exactly_at_effective_tolerance(self):
+        """Difference equal to the scaled tolerance is accepted (inclusive)."""
+        validator = NetAmountValidator()
+        # 200 records: effective_tolerance = max(1.0, 0.005×200) = max(1.0, 1.0) = 1.0
+        # difference = exactly 1.0 -> N
+        records = (
+            [_make_record(f"C{i:06}", "1.00", parent_netamt="200.00") for i in range(199)]
+            + [_make_record("C000200", "2.00", parent_netamt="200.00")]
+        )
+        validator.validate_group(records)
+        assert records[0].difference == Decimal("1.00")
+        assert records[0].error == "N"
