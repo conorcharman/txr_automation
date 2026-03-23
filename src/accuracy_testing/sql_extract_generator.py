@@ -123,7 +123,8 @@ class SQLExtractGenerator:
             if not self.dtf_template_path.exists():
                 raise FileNotFoundError(f"DTF template file not found: {self.dtf_template_path}")
             
-            with open(self.dtf_template_path, 'r', encoding='utf-8') as f:
+            # DTF files from AS/400 use Windows-1252 (CP1252) encoding
+            with open(self.dtf_template_path, 'r', encoding='cp1252') as f:
                 self.dtf_template = f.read()
     
     def _detect_placeholder(self) -> Optional[str]:

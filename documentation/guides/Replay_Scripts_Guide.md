@@ -13,7 +13,7 @@ output CSVs (or Excel files) to a configured output directory.
 | `phase_2_processor.py` | `phase2-processor` | Phase II replay — match by transaction reference |
 | `phase_3_processor.py` | `phase3-processor` | Phase III replay — match by client ID or name/DOB |
 | `phase_3_final_lookup.py` | `phase3-final-lookup` | Phase III final validation against UnaVista data |
-| `merge_inconsistent_ids.py` | `merge-inconsistent-ids` | Merge duplicate rows in Inconsistent IDs Summary |
+| `merge_inconsistent_ids.py` | `merge-inconsistent-summaries` | Merge duplicate rows in Inconsistent IDs and Names Summaries |
 
 ---
 
@@ -301,20 +301,23 @@ in the output CSV. Possible values are:
 
 ---
 
-## Merge Inconsistent IDs
+## Merge Inconsistent Summaries
 
 **Script:** `src/replay/merge_inconsistent_ids.py`  
-**Config template:** `config/templates/replay/merge_inconsistent_ids_template.yaml`
+**Config template:** `config/templates/replay/merge_inconsistent_ids_template.yaml`  
+**Console command:** `merge-inconsistent-summaries`
 
 ### What it does
 
-The Phase III Inconsistent IDs Summary CSV often contains multiple rows per client (one row
-per incident code). This utility:
+The Phase III output directory typically contains two summary CSVs — one for Inconsistent IDs
+and one for Inconsistent Names — each with multiple rows per client (one row per incident code).
+This utility:
 
-1. Reads the CSV and groups rows by a configurable key column (default: `"Reported Name & DOB"`).
-2. Within each group, merges cell values: single unique values are kept as-is; multiple
+1. Auto-discovers both files in `paths.input_dir` using configurable glob patterns.
+2. Groups rows in each file by a configurable key column (separate settings for IDs and Names).
+3. Within each group, merges cell values: single unique values are kept as-is; multiple
    different values are stacked with a separator (default: newline).
-3. Exports the merged data to an Excel (`.xlsx`) file with:
+4. Exports each merged dataset to an Excel (`.xlsx`) file written alongside the input CSV:
    - Bold, colour-highlighted header row
    - Text wrapping on all data cells
    - Auto-sized column widths (capped at 40 characters)
@@ -324,19 +327,16 @@ per incident code). This utility:
 
 ```bash
 # Using a YAML config file
-merge-inconsistent-ids --config config/local/replay/merge_inconsistent_ids.yaml
+merge-inconsistent-summaries --config config/local/replay/merge_inconsistent_ids.yaml
 
-# Specifying paths directly
-merge-inconsistent-ids --input path/to/summary.csv --output path/to/merged.xlsx
+# Specifying the input directory directly
+merge-inconsistent-summaries --input-dir path/to/phase_iii/output
 
-# Custom group column
-merge-inconsistent-ids --input summary.csv --output merged.xlsx --group-column "Client Name"
-
-# Dry run — no file written
-merge-inconsistent-ids --input summary.csv --output merged.xlsx --dry-run
+# Dry run — no files written
+merge-inconsistent-summaries --input-dir path/to/phase_iii/output --dry-run
 
 # Verbose output
-merge-inconsistent-ids --config config/local/replay/merge_inconsistent_ids.yaml --verbose
+merge-inconsistent-summaries --config config/local/replay/merge_inconsistent_ids.yaml --verbose
 ```
 
 If no `--config` flag is given, the script falls back to
@@ -345,16 +345,22 @@ If no `--config` flag is given, the script falls back to
 ### Configuration
 
 Copy `config/templates/replay/merge_inconsistent_ids_template.yaml` to
-`config/local/replay/merge_inconsistent_ids.yaml` and fill in your paths.
+`config/local/replay/merge_inconsistent_ids.yaml` and set `paths.input_dir`.
 
 ```yaml
 paths:
-  input_file:  "data/input/Replay_Phase3_Inconsistent_IDs_Summary.csv"
-  output_file: "data/output/Replay_Phase3_Inconsistent_IDs_Merged.xlsx"
+  # Directory containing both Phase III Summary CSV files.
+  # Output .xlsx files are written to this same directory.
+  input_dir: "C:/path/to/phase_iii/output"
+
+files:
+  ids_pattern:   "Replay_*_Inconsistent_IDs_Summary_*.csv"
+  names_pattern: "Replay_*_Inconsistent_Names_Summary_*.csv"
 
 merge:
-  group_column: "Reported Name & DOB"   # Column to group rows by
-  separator: "\n"                        # Use "|" for pipe-separated stacking
+  ids_group_column:   "Reported IDs"          # Column to group IDs Summary rows by
+  names_group_column: "Reported Name & DOB"   # Column to group Names Summary rows by
+  separator: "\n"                              # Use "|" for pipe-separated stacking
 
 options:
   dry_run: false
@@ -368,9 +374,13 @@ processor:
 
 | Setting | Description |
 |---|---|
-| `group_column` | Column whose value identifies rows belonging to the same client |
+| `paths.input_dir` | Directory containing both Phase III Summary CSV files |
+| `files.ids_pattern` | Glob pattern used to find the Inconsistent IDs Summary CSV |
+| `files.names_pattern` | Glob pattern used to find the Inconsistent Names Summary CSV |
+| `merge.ids_group_column` | Column used to group rows in the IDs Summary |
+| `merge.names_group_column` | Column used to group rows in the Names Summary |
 | `separator` | String placed between stacked values; `"\n"` for multi-line cells in Excel |
-| `dry_run` | When `true`, processes the data but writes no output file |
+| `dry_run` | When `true`, processes the data but writes no output files |
 
 ---
 
@@ -387,7 +397,8 @@ phase_2_processor         → output/phase_ii/  (corrected replay CSVs)
 Phase III replay files
         │
         ▼
-merge_inconsistent_ids    → merged Inconsistent IDs Summary (.xlsx)
+merge-inconsistent-summaries → merged Inconsistent IDs Summary (.xlsx)
+                               merged Inconsistent Names Summary (.xlsx)
         │
         ▼
 phase_3_processor         → output/phase_iii/ (corrected replay CSVs)

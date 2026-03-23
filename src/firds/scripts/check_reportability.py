@@ -26,7 +26,13 @@ import logging
 import sys
 from datetime import date
 from pathlib import Path
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
+
+try:
+    import yaml
+    _YAML_AVAILABLE = True
+except ImportError:
+    _YAML_AVAILABLE = False
 
 _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT / "src") not in sys.path:
@@ -82,9 +88,18 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--db",
         type=Path,
-        default=_REPO_ROOT / "data" / "firds_cache.db",
+        default=None,
         metavar="PATH",
-        help="Path to the SQLite cache database (default: data/firds_cache.db).",
+        help="Path to the SQLite cache database. Defaults to the path in "
+             "config/local/firds_config.yaml, or data/firds_cache.db if no config is found.",
+    )
+    parser.add_argument(
+        "--config",
+        type=Path,
+        default=None,
+        metavar="PATH",
+        help="Path to a YAML config file. Defaults to config/local/firds_config.yaml "
+             "if that file exists.",
     )
     parser.add_argument(
         "--log-level",
@@ -93,6 +108,23 @@ def _parse_args() -> argparse.Namespace:
         help="Logging verbosity (default: WARNING).",
     )
     return parser.parse_args()
+
+
+def _load_yaml_config(config_path: Path) -> Dict[str, Any]:
+    """Load a YAML config file and return its contents as a dict.
+
+    Args:
+        config_path: Path to the YAML file.
+
+    Returns:
+        Parsed configuration dictionary, or an empty dict if loading fails.
+    """
+    if not _YAML_AVAILABLE:
+        return {}
+    if not config_path.exists():
+        return {}
+    with config_path.open(encoding="utf-8") as fh:
+        return yaml.safe_load(fh) or {}
 
 
 def main() -> None:
@@ -105,15 +137,26 @@ def main() -> None:
         datefmt="%Y-%m-%dT%H:%M:%S",
     )
 
-    if not args.db.exists():
+    # --- Resolve DB path: explicit flag > config file > hardcoded default ---
+    _DEFAULT_CONFIG = _REPO_ROOT / "config" / "local" / "firds_config.yaml"
+    config_path: Optional[Path] = args.config or (_DEFAULT_CONFIG if _DEFAULT_CONFIG.exists() else None)
+    cfg: Dict[str, Any] = _load_yaml_config(config_path) if config_path else {}
+
+    db_path: Path = args.db or _REPO_ROOT / "data" / "firds_cache.db"
+    if args.db is None and cfg.get("database", {}).get("path"):
+        db_path = Path(cfg["database"]["path"])
+        if not db_path.is_absolute():
+            db_path = _REPO_ROOT / db_path
+
+    if not db_path.exists():
         print(
-            f"Error: FIRDS cache database not found at '{args.db}'.\n"
+            f"Error: FIRDS cache database not found at '{db_path}'.\n"
             "Run 'firds-refresh --type full' to build the cache first.",
             file=sys.stderr,
         )
         sys.exit(1)
 
-    cache = FirdsCacheManager(db_path=args.db)
+    cache = FirdsCacheManager(db_path=db_path)
     cache.initialise_db()
     checker = FirdsReportabilityChecker(cache=cache)
 
@@ -236,7 +279,15 @@ def _print_result(result: ReportabilityResult) -> None:
     Args:
         result: :class:`~firds.reportability.ReportabilityResult` to display.
     """
-    status = "REPORTABLE" if result.is_reportable else "NOT REPORTABLE"
+    from firds.reportability import ReportabilityReason
+
+    if result.reason == ReportabilityReason.ACTIVE_OTHER_VENUE:
+        alternatives = ", ".join(result.matched_mics)
+        status = f"REPORTABLE \u2014 {result.mic} not active, try: {alternatives}"
+    elif result.is_reportable:
+        status = "REPORTABLE"
+    else:
+        status = "NOT REPORTABLE"
     print(f"\nResult:       {status}")
     print(f"ISIN:         {result.isin}")
     print(f"Trade date:   {result.trade_date}")

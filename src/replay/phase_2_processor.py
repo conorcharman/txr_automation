@@ -1,12 +1,17 @@
 #!/usr/bin/env python3
 """
-Phase 2 Processor v4.1
+Phase 2 Processor v4.2
 Refactored processor for Phase II replay files using shared txr_replay_core library.
 Leverages ConfigManager, StructuredLogger, and shared data structures for maintainability.
 
 Author: GitHub Copilot
 Date: December 23, 2025
-Version: 4.1 - Updated correction decision logic
+Version: 4.2 - Added xlsx support for replay input files
+
+CHANGES IN v4.2:
+- Added xlsx support for replay input files (March 2026)
+- Replay files can now be .csv or .xlsx; output is always written as .csv
+- xlsx output filename uses the same replace_pattern logic as csv
 
 CHANGES IN v4.1:
 - Implemented new correction decision logic (February 2026)
@@ -32,6 +37,9 @@ import argparse
 from datetime import datetime
 from typing import Dict, List, Tuple, Optional, Any, Set
 from pathlib import Path
+import re
+
+import openpyxl
 
 # Import from core library
 from core import (
@@ -44,6 +52,31 @@ from core import (
     safe_open_csv,
 )
 from core.data import Phase2SingleColumns, Phase2CombinedColumns, ClientErrorColumns
+
+
+def _read_rows_from_file(filepath: str, logger=None) -> List[List[str]]:
+    """Read all rows from a CSV or xlsx file, returning them as lists of strings.
+
+    Args:
+        filepath: Path to a .csv or .xlsx file.
+        logger: Optional logger for warnings.
+
+    Returns:
+        List of rows (including header as row 0), each row being a list of strings.
+    """
+    ext = Path(filepath).suffix.lower()
+    if ext == '.xlsx':
+        wb = openpyxl.load_workbook(filepath, read_only=True, data_only=True)
+        ws = wb.active
+        rows = []
+        for excel_row in ws.iter_rows(values_only=True):
+            rows.append(["" if cell is None else str(cell).strip() for cell in excel_row])
+        wb.close()
+        return rows
+    else:
+        f, _ = safe_open_csv(Path(filepath), 'r', newline='')
+        with f:
+            return list(csv.reader(f))
 
 
 class IncidentColumnMapper:
@@ -312,20 +345,20 @@ class Phase2Processor:
         
         # Collect all incident codes from replay files
         incident_codes = set()
-        
-        replay_files = [f for f in os.listdir(self.path_config.replay_input) if f.endswith('.csv')]
-        
+
+        replay_files = [
+            f for f in os.listdir(self.path_config.replay_input)
+            if f.lower().endswith('.csv') or f.lower().endswith('.xlsx')
+        ]
+
         for replay_filename in replay_files:
             replay_filepath = os.path.join(self.path_config.replay_input, replay_filename)
             file_type = self.detect_file_type(replay_filename)
             col_map = self.get_column_mapping(file_type)
-            
+
             try:
-                f, encoding = safe_open_csv(Path(replay_filepath), 'r', newline='')
-                with f:
-                    reader = csv.reader(f)
-                    rows = list(reader)
-                
+                rows = _read_rows_from_file(replay_filepath, self.logger)
+
                 for row in rows[1:]:  # Skip header
                     if len(row) > col_map['incident_code']:
                         incident_codes_str = row[col_map['incident_code']].strip()
@@ -435,6 +468,12 @@ class Phase2Processor:
                 else:
                     self.logger.debug(f"No correction to apply")
             
+            # Corrections referring to RE Account(s) are not client data changes.
+            if re.search(r'\bre\s+accounts?\b', correction, re.IGNORECASE):
+                self.logger.debug("RE Account correction detected, treating as No Change")
+                correction = "No Change"
+                correction_field = "No Change"
+
             return LookupResult(
                 found=True,
                 correction=correction,
@@ -469,6 +508,15 @@ class Phase2Processor:
             self.stats.increment('not_found')
             return "N", "Client not found", "Client not found"
         
+        # Normalise RE Account corrections to No Change (catches any that slipped
+        # past _create_lookup_result due to encoding or whitespace variations).
+        _re_account_pat = re.compile(r'\bre\s+accounts?\b', re.IGNORECASE)
+        normalised = [
+            ("No Change", "No Change") if _re_account_pat.search(v.strip()) else (v, f)
+            for v, f in zip(all_corrections, all_correction_fields)
+        ]
+        all_corrections, all_correction_fields = zip(*normalised)
+
         # Handle multiple corrections - check for consistency
         unique_corrections = list(set(all_corrections))
         unique_fields = list(set(all_correction_fields))
@@ -490,9 +538,11 @@ class Phase2Processor:
     def process_replay_file(self, filename: str):
         """Process a single replay file"""
         input_filepath = os.path.join(self.path_config.replay_input, filename)
-        
-        # Generate output filename: replace pattern from config
+
+        # Generate output filename: replace pattern from config, always output as .csv
         output_filename = filename.replace(self.replace_from, self.replace_to)
+        if Path(output_filename).suffix.lower() == '.xlsx':
+            output_filename = Path(output_filename).stem + '.csv'
         output_filepath = os.path.join(self.path_config.replay_output, output_filename)
         
         file_type = self.detect_file_type(filename)
@@ -506,11 +556,8 @@ class Phase2Processor:
             self.stats.increment('combined_incident_files')
         
         try:
-            # Read input file
-            f, encoding = safe_open_csv(Path(input_filepath), 'r', newline='')
-            with f:
-                reader = csv.reader(f)
-                rows = list(reader)
+            # Read input file (supports csv and xlsx)
+            rows = _read_rows_from_file(input_filepath, self.logger)
             
             if len(rows) < 2:
                 self.logger.warning(f"No data rows in {filename}")
@@ -574,7 +621,7 @@ class Phase2Processor:
         """Main execution method"""
         start_time = datetime.now()
         
-        self.logger.log_header("PHASE 2 PROCESSOR v4.0")
+        self.logger.log_header("PHASE 2 PROCESSOR v4.2")
         self.logger.info(f"Replay input path: {self.path_config.replay_input}")
         self.logger.info(f"Incident files path: {self.path_config.incident_files}")
         self.logger.info(f"Output path: {self.path_config.replay_output}")
@@ -586,11 +633,14 @@ class Phase2Processor:
         # Preload and index all incident files
         self.preload_and_index_incident_files()
         
-        # Get all CSV files in replay directory
-        replay_files = [f for f in os.listdir(self.path_config.replay_input) if f.endswith('.csv')]
-        
+        # Get all CSV/xlsx files in replay directory
+        replay_files = [
+            f for f in os.listdir(self.path_config.replay_input)
+            if f.lower().endswith('.csv') or f.lower().endswith('.xlsx')
+        ]
+
         if not replay_files:
-            self.logger.error("No CSV replay files found in input directory")
+            self.logger.error("No CSV or xlsx replay files found in input directory")
             return
         
         self.logger.log_header(f"PROCESSING {len(replay_files)} REPLAY FILES")
@@ -613,12 +663,12 @@ class Phase2Processor:
         self.logger.info(f"Incident files indexed: {len(self.incident_indexes)}")
         self.logger.info(f"Total transaction references indexed: {total_indexed}")
         
-        self.logger.info("Phase 2 Processor v4.0 completed successfully")
+        self.logger.info("Phase 2 Processor v4.2 completed successfully")
 
 def parse_args():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description="Phase 2 Processor v4.0 - Transaction Reference Lookup Processor",
+        description="Phase 2 Processor v4.2 - Transaction Reference Lookup Processor",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:

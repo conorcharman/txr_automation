@@ -53,10 +53,12 @@ def safe_open_csv(file_path: Path, mode: str = 'r', **kwargs) -> Tuple[TextIO, s
     for encoding in encodings:
         try:
             f = open(file_path, mode, encoding=encoding, **kwargs)
-            # Try reading first line to validate encoding
+            # Read entire file content to validate encoding — reading only the
+            # first line is insufficient because non-ASCII characters may appear
+            # anywhere in the data rows, not just in the header.
             pos = f.tell()
-            f.readline()
-            f.seek(pos)  # Reset to original position
+            f.read()
+            f.seek(pos)  # Reset to start for the caller
             return f, encoding
         except (UnicodeDecodeError, UnicodeError) as e:
             if 'f' in locals() and not f.closed:

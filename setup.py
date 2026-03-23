@@ -42,7 +42,7 @@ setup(
             "generate-accuracy-template=accuracy_testing.scripts.accuracy_template_generator:main",
             "collate-csv-extracts=accuracy_testing.scripts.collate_csv_extracts:main",
             "data-push=accuracy_testing.scripts.data_push:main",
-            "merge-inconsistent-ids=replay.merge_inconsistent_ids:main",
+            "merge-inconsistent-summaries=replay.merge_inconsistent_ids:main",
             "firds-refresh=firds.scripts.refresh_cache:main",
             "firds-check=firds.scripts.check_reportability:main",
             "firds-backfill=firds.scripts.backfill:main",

@@ -1,24 +1,29 @@
-# Merge Inconsistent IDs Summary - Configuration Template
-# =========================================================
+# Merge Inconsistent Summaries - Configuration Template
+# =======================================================
 #
-# Used by: merge-inconsistent-ids
+# Used by: merge-inconsistent-summaries
 # Script:  src/replay/merge_inconsistent_ids.py
 #
 # Usage:
-#   merge-inconsistent-ids --config path/to/this_config.yaml
-#   merge-inconsistent-ids --input input.csv --output output.xlsx
+#   merge-inconsistent-summaries --config path/to/this_config.yaml
+#   merge-inconsistent-summaries --input-dir path/to/phase_iii/output
 
 paths:
-  # Path to the Phase III Inconsistent IDs Summary CSV file (required)
-  input_file: "data/input/Replay_Phase3_Inconsistent_IDs_Summary.csv"
+  # Directory containing the Phase III Inconsistent IDs and Names Summary CSV files.
+  # Output .xlsx files are written to this same directory.
+  input_dir: "C:/path/to/phase_iii/output"
 
-  # Path for the merged Excel output file (required; must end in .xlsx)
-  output_file: "data/output/Replay_Phase3_Inconsistent_IDs_Merged.xlsx"
+files:
+  # Glob patterns used to locate the two summary CSV files within input_dir.
+  # Adjust if your filenames use a different convention.
+  ids_pattern:   "Replay_*_Inconsistent_IDs_Summary_*.csv"
+  names_pattern: "Replay_*_Inconsistent_Names_Summary_*.csv"
 
 merge:
-  # Column name to group/merge rows on.
+  # Column name to group/merge rows on for each file.
   # Rows with the same value in this column are merged into one output row.
-  group_column: "Reported Name & DOB"
+  ids_group_column:   "Reported IDs"
+  names_group_column: "Reported Name & DOB"
 
   # Separator used between stacked values within a merged cell (default: newline).
   # Change to "|" if you prefer pipe-separated values in a single line.
