@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 """
-Merge Inconsistent IDs Summary
+Merge Inconsistent Summaries
 ================================
 
-Reads a Phase III Inconsistent IDs Summary CSV, groups rows by a key column
-(default: "Reported Name & DOB"), and merges each group into a single row.
+Reads Phase III Inconsistent IDs and Inconsistent Names Summary CSVs from a
+directory, groups rows by a configurable key column per file, and merges each
+group into a single row.
 
 Merge behaviour:
 - Where all rows in a group share the same value for a column, the merged cell
@@ -13,21 +14,31 @@ Merge behaviour:
   (duplicate values are suppressed; order of first appearance is preserved).
 - Empty / NaN values are always suppressed when stacking.
 
-Output is an Excel (.xlsx) file with text wrapping applied to every data cell
-so that multi-line merged values display cleanly.
+Output is one Excel (.xlsx) file per processed CSV, written alongside the
+input file and formatted with text wrapping, bold headers, and auto-sized
+column widths.
 
 Version 1.0 Changes:
 - Initial implementation
 
+Version 2.0 Changes:
+- Extended to handle both Inconsistent IDs Summary and Inconsistent Names
+  Summary files.
+- Input changed from a single file path to an input directory; files are
+  auto-discovered via configurable glob patterns.
+- Output files written to the same directory as the inputs, with the .csv
+  extension replaced by .xlsx.
+- Console command renamed to merge-inconsistent-summaries.
+
 Usage:
     # Using a YAML config file
-    merge-inconsistent-ids --config config/local/merge_inconsistent_ids.yaml
+    merge-inconsistent-summaries --config config/local/replay/merge_inconsistent_ids.yaml
 
     # Using CLI arguments directly
-    merge-inconsistent-ids --input path/to/summary.csv --output path/to/merged.xlsx
+    merge-inconsistent-summaries --input-dir path/to/phase_iii/output
 
-    # Dry run (no file written)
-    merge-inconsistent-ids --input summary.csv --output merged.xlsx --dry-run
+    # Dry run (no files written)
+    merge-inconsistent-summaries --input-dir path/to/phase_iii/output --dry-run
 """
 
 import argparse
@@ -53,9 +64,11 @@ from core import create_logger
 class MergeConfig:
     """Configuration for the merge operation."""
 
-    input_file: Path
-    output_file: Path
-    group_column: str = "Reported Name & DOB"
+    input_dir: Path
+    ids_pattern: str = "Replay_*_Inconsistent_IDs_Summary_*.csv"
+    names_pattern: str = "Replay_*_Inconsistent_Names_Summary_*.csv"
+    ids_group_column: str = "Reported IDs"
+    names_group_column: str = "Reported Name & DOB"
     separator: str = "\n"
     dry_run: bool = False
     verbose: bool = False
@@ -80,16 +93,16 @@ class MergeStats:
 class MergeConfigManager:
     """Loads MergeConfig from a YAML file, with optional CLI overrides."""
 
-    DEFAULT_GROUP_COLUMN: str = "Reported Name & DOB"
+    DEFAULT_IDS_PATTERN: str = "Replay_*_Inconsistent_IDs_Summary_*.csv"
+    DEFAULT_NAMES_PATTERN: str = "Replay_*_Inconsistent_Names_Summary_*.csv"
+    DEFAULT_IDS_GROUP_COLUMN: str = "Reported IDs"
+    DEFAULT_NAMES_GROUP_COLUMN: str = "Reported Name & DOB"
     DEFAULT_SEPARATOR: str = "\n"
 
     def load(
         self,
         config_file: Optional[str],
-        cli_input: Optional[str],
-        cli_output: Optional[str],
-        cli_group_column: Optional[str],
-        cli_separator: Optional[str],
+        cli_input_dir: Optional[str],
         cli_dry_run: bool,
         cli_verbose: bool,
         cli_log_level: Optional[str],
@@ -101,10 +114,7 @@ class MergeConfigManager:
 
         Args:
             config_file: Path to YAML config file, or None.
-            cli_input: --input CLI value.
-            cli_output: --output CLI value.
-            cli_group_column: --group-column CLI value.
-            cli_separator: --separator CLI value.
+            cli_input_dir: --input-dir CLI value.
             cli_dry_run: --dry-run flag.
             cli_verbose: --verbose flag.
             cli_log_level: --log-level CLI value.
@@ -126,34 +136,26 @@ class MergeConfigManager:
                 yaml_data = yaml.safe_load(fh) or {}
 
         paths = yaml_data.get("paths", {})
+        files = yaml_data.get("files", {})
         merge = yaml_data.get("merge", {})
         options = yaml_data.get("options", {})
         processor = yaml_data.get("processor", {})
 
         # Resolve each value: CLI > YAML > default
-        input_raw = cli_input or paths.get("input_file")
-        output_raw = cli_output or paths.get("output_file")
+        input_dir_raw = cli_input_dir or paths.get("input_dir")
 
-        if not input_raw:
+        if not input_dir_raw:
             raise ValueError(
-                "input_file is required. Provide --input or set paths.input_file in config."
-            )
-        if not output_raw:
-            raise ValueError(
-                "output_file is required. Provide --output or set paths.output_file in config."
-            )
-
-        output_path = Path(output_raw)
-        if output_path.suffix.lower() not in {".xlsx", ".xlsm"}:
-            raise ValueError(
-                f"output_file must be an Excel file (.xlsx): got '{output_raw}'"
+                "input_dir is required. Provide --input-dir or set paths.input_dir in config."
             )
 
         return MergeConfig(
-            input_file=Path(input_raw),
-            output_file=output_path,
-            group_column=cli_group_column or merge.get("group_column", self.DEFAULT_GROUP_COLUMN),
-            separator=cli_separator or merge.get("separator", self.DEFAULT_SEPARATOR),
+            input_dir=Path(input_dir_raw),
+            ids_pattern=files.get("ids_pattern", self.DEFAULT_IDS_PATTERN),
+            names_pattern=files.get("names_pattern", self.DEFAULT_NAMES_PATTERN),
+            ids_group_column=merge.get("ids_group_column", self.DEFAULT_IDS_GROUP_COLUMN),
+            names_group_column=merge.get("names_group_column", self.DEFAULT_NAMES_GROUP_COLUMN),
+            separator=merge.get("separator", self.DEFAULT_SEPARATOR),
             dry_run=cli_dry_run or options.get("dry_run", False),
             verbose=cli_verbose or options.get("verbose", False),
             log_level=cli_log_level or processor.get("log_level", "INFO"),
@@ -382,27 +384,31 @@ class ExcelExporter:
 
 def create_argument_parser() -> argparse.ArgumentParser:
     """
-    Create the argument parser for merge-inconsistent-ids.
+    Create the argument parser for merge-inconsistent-summaries.
 
     Returns:
         Configured ArgumentParser instance.
     """
     parser = argparse.ArgumentParser(
-        description="Merge Phase III Inconsistent IDs Summary rows by name and DOB.",
+        description=(
+            "Merge Phase III Inconsistent IDs and Inconsistent Names Summary rows. "
+            "Auto-discovers both CSV files from the input directory and writes one "
+            "merged Excel file per CSV alongside the input."
+        ),
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   # Using a YAML config file
-  merge-inconsistent-ids --config config/local/merge_inconsistent_ids.yaml
+  merge-inconsistent-summaries --config config/local/replay/merge_inconsistent_ids.yaml
 
-  # Specifying paths directly
-  merge-inconsistent-ids --input summary.csv --output merged.xlsx
+  # Specifying the input directory directly
+  merge-inconsistent-summaries --input-dir path/to/phase_iii/output
 
-  # Using a custom group column
-  merge-inconsistent-ids --input summary.csv --output merged.xlsx --group-column "Client Name"
+  # Dry run — no files written
+  merge-inconsistent-summaries --input-dir path/to/phase_iii/output --dry-run
 
-  # Dry run (shows what would be done, writes no file)
-  merge-inconsistent-ids --input summary.csv --output merged.xlsx --dry-run
+  # Verbose output
+  merge-inconsistent-summaries --config config/local/replay/merge_inconsistent_ids.yaml --verbose
         """,
     )
 
@@ -413,30 +419,11 @@ Examples:
         help="Path to YAML configuration file (default: config/local/replay/merge_inconsistent_ids.yaml).",
     )
     parser.add_argument(
-        "--input",
+        "--input-dir",
         type=str,
         metavar="PATH",
-        help="Path to the input CSV file.",
-    )
-    parser.add_argument(
-        "--output",
-        type=str,
-        metavar="PATH",
-        help="Path for the merged Excel output file (.xlsx).",
-    )
-    parser.add_argument(
-        "--group-column",
-        type=str,
-        metavar="COLUMN",
-        default=None,
-        help='Column to group/merge rows on (default: "Reported Name & DOB").',
-    )
-    parser.add_argument(
-        "--separator",
-        type=str,
-        metavar="SEP",
-        default=None,
-        help="Separator for stacked values within a cell (default: newline).",
+        dest="input_dir",
+        help="Directory containing the Phase III Inconsistent IDs and Names Summary CSV files.",
     )
     parser.add_argument(
         "--log-level",
@@ -447,7 +434,7 @@ Examples:
     parser.add_argument(
         "--dry-run",
         action="store_true",
-        help="Parse and merge but do not write the output file.",
+        help="Parse and merge but do not write the output files.",
     )
     parser.add_argument(
         "--verbose",
@@ -464,7 +451,7 @@ Examples:
 
 def main() -> None:
     """
-    Main entry point for the merge-inconsistent-ids console script.
+    Main entry point for the merge-inconsistent-summaries console script.
 
     Raises:
         SystemExit: On configuration error or fatal processing failure.
@@ -494,10 +481,7 @@ def main() -> None:
     try:
         config = config_manager.load(
             config_file=config_file,
-            cli_input=args.input,
-            cli_output=args.output,
-            cli_group_column=args.group_column,
-            cli_separator=args.separator,
+            cli_input_dir=args.input_dir,
             cli_dry_run=args.dry_run,
             cli_verbose=args.verbose,
             cli_log_level=args.log_level,
@@ -511,83 +495,141 @@ def main() -> None:
     log_level = getattr(logging, config.log_level.upper(), logging.INFO)
     logging.getLogger().setLevel(log_level)
 
-    logger.info("merge-inconsistent-ids starting")
-    logger.info(f"Input:        {config.input_file}")
-    logger.info(f"Output:       {config.output_file}")
-    logger.info(f"Group column: {config.group_column}")
+    logger.info("merge-inconsistent-summaries starting")
+    logger.info(f"Input directory: {config.input_dir}")
 
     if config.dry_run:
-        logger.info("Dry run mode — no output file will be written.")
+        logger.info("Dry run mode — no output files will be written.")
 
-    # ---- Read input CSV ----
-    if not config.input_file.exists():
-        logger.error(f"Input file not found: {config.input_file}")
+    # ---- Validate input directory ----
+    if not config.input_dir.exists():
+        logger.error(f"Input directory not found: {config.input_dir}")
         sys.exit(1)
 
-    logger.info(f"Reading CSV: {config.input_file}")
-    try:
-        df = pd.read_csv(
-            config.input_file,
-            encoding="utf-8",
-            dtype=str,          # Keep all values as strings; avoid type coercion
-            keep_default_na=False,  # Treat empty cells as "" not NaN
+    # ---- Discover input files ----
+    ids_matches = sorted(config.input_dir.glob(config.ids_pattern))
+    names_matches = sorted(config.input_dir.glob(config.names_pattern))
+
+    if not ids_matches and not names_matches:
+        logger.error(
+            f"No matching files found in {config.input_dir}.\n"
+            f"  IDs pattern:   {config.ids_pattern}\n"
+            f"  Names pattern: {config.names_pattern}"
         )
-    except Exception as exc:  # noqa: BLE001
-        logger.error(f"Failed to read input CSV: {exc}")
         sys.exit(1)
 
-    # Replace pandas NaN that might have crept in with empty string
-    df = df.where(pd.notna(df), other="")
+    tasks: List[tuple[Path, str, str]] = []
 
-    logger.info(f"Read {len(df):,} rows, {len(df.columns)} columns.")
-
-    # ---- Merge ----
-    merger = RowMerger(group_column=config.group_column, separator=config.separator)
-    try:
-        merged_df, stats = merger.process(df)
-    except KeyError as exc:
-        logger.error(str(exc))
-        sys.exit(1)
-
-    if config.verbose:
-        logger.debug(
-            f"Merge details: "
-            f"{stats.groups_merged} groups merged (multiple rows), "
-            f"{stats.groups_single} groups had a single row."
+    if ids_matches:
+        if len(ids_matches) > 1:
+            logger.warning(
+                f"Multiple files match the IDs pattern '{config.ids_pattern}' — skipping:\n"
+                + "\n".join(f"  {p}" for p in ids_matches)
+            )
+        else:
+            tasks.append((ids_matches[0], config.ids_group_column, "IDs"))
+    else:
+        logger.warning(
+            f"No file found matching IDs pattern '{config.ids_pattern}' in {config.input_dir} — skipping."
         )
 
-    # ---- Dry run: just report and exit ----
-    if config.dry_run:
-        logger.info("Dry run complete. No file written.")
-        _print_summary(stats, config, written=False)
-        return
+    if names_matches:
+        if len(names_matches) > 1:
+            logger.warning(
+                f"Multiple files match the Names pattern '{config.names_pattern}' — skipping:\n"
+                + "\n".join(f"  {p}" for p in names_matches)
+            )
+        else:
+            tasks.append((names_matches[0], config.names_group_column, "Names"))
+    else:
+        logger.warning(
+            f"No file found matching Names pattern '{config.names_pattern}' in {config.input_dir} — skipping."
+        )
 
-    # ---- Export ----
-    logger.info(f"Writing Excel output: {config.output_file}")
+    if not tasks:
+        logger.error("No files could be processed.")
+        sys.exit(1)
+
     exporter = ExcelExporter(separator=config.separator)
-    try:
-        exporter.export(merged_df, config.output_file)
-    except Exception as exc:  # noqa: BLE001
-        logger.error(f"Failed to write Excel file: {exc}")
-        sys.exit(1)
 
-    _print_summary(stats, config, written=True)
+    for input_file, group_column, label in tasks:
+        output_file = input_file.with_suffix(".xlsx")
+        logger.info(f"[{label}] Input:        {input_file}")
+        logger.info(f"[{label}] Output:       {output_file}")
+        logger.info(f"[{label}] Group column: {group_column}")
+
+        # ---- Read input CSV ----
+        try:
+            df = pd.read_csv(
+                input_file,
+                encoding="utf-8",
+                dtype=str,              # Keep all values as strings; avoid type coercion
+                keep_default_na=False,  # Treat empty cells as "" not NaN
+            )
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"[{label}] Failed to read input CSV: {exc}")
+            continue
+
+        # Replace pandas NaN that might have crept in with empty string
+        df = df.where(pd.notna(df), other="")
+
+        logger.info(f"[{label}] Read {len(df):,} rows, {len(df.columns)} columns.")
+
+        # ---- Merge ----
+        merger = RowMerger(group_column=group_column, separator=config.separator)
+        try:
+            merged_df, stats = merger.process(df)
+        except KeyError as exc:
+            logger.error(f"[{label}] {exc}")
+            continue
+
+        if config.verbose:
+            logger.debug(
+                f"[{label}] Merge details: "
+                f"{stats.groups_merged} groups merged (multiple rows), "
+                f"{stats.groups_single} groups had a single row."
+            )
+
+        # ---- Dry run: just report ----
+        if config.dry_run:
+            logger.info(f"[{label}] Dry run — no file written.")
+            _print_summary(stats, label, output_file, config, written=False)
+            continue
+
+        # ---- Export ----
+        try:
+            exporter.export(merged_df, output_file)
+        except Exception as exc:  # noqa: BLE001
+            logger.error(f"[{label}] Failed to write Excel file: {exc}")
+            continue
+
+        _print_summary(stats, label, output_file, config, written=True)
+
     logger.info("Done.")
 
 
-def _print_summary(stats: MergeStats, config: MergeConfig, *, written: bool) -> None:
+def _print_summary(
+    stats: MergeStats,
+    label: str,
+    output_file: Path,
+    config: MergeConfig,
+    *,
+    written: bool,
+) -> None:
     """
-    Log a human-readable summary of the merge operation.
+    Log a human-readable summary of the merge operation for one file.
 
     Args:
         stats: Statistics from the merge run.
+        label: Short identifier for the file type (e.g. "IDs" or "Names").
+        output_file: Path where the output was (or would have been) written.
         config: Resolved configuration.
         written: Whether the output file was actually written.
     """
     logger = create_logger(__name__, log_dir="logs", log_level=config.log_level)
     logger.info(
         f"\n"
-        f"  Merge Summary\n"
+        f"  [{label}] Merge Summary\n"
         f"  {'─' * 40}\n"
         f"  Input rows:          {stats.input_rows:>8,}\n"
         f"  Output rows:         {stats.output_rows:>8,}\n"
@@ -595,7 +637,7 @@ def _print_summary(stats: MergeStats, config: MergeConfig, *, written: bool) -> 
         f"  Groups merged (>1):  {stats.groups_merged:>8,}\n"
         f"  Single-row groups:   {stats.groups_single:>8,}\n"
         f"  Stacked cell values: {stats.columns_stacked:>8,}\n"
-        f"  Output file:         {'(not written — dry run)' if not written else str(config.output_file)}"
+        f"  Output file:         {'(not written — dry run)' if not written else str(output_file)}"
     )
 
 

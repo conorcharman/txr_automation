@@ -16,8 +16,12 @@ An instrument is considered **reportable** if, at the trade date:
 4.  It has not been cancelled (``is_cancelled = 0``).
 
 When a ``mic`` (Market Identifier Code) is supplied the check is scoped to
-that specific trading venue.  When no ``mic`` is supplied the instrument is
-considered reportable if it meets the criteria on **any** venue in the cache.
+that specific trading venue first.  If the instrument is **not** active on
+that venue but IS active on at least one other venue in the cache, the
+result is still considered reportable (``is_reportable=True``) with reason
+``ACTIVE_OTHER_VENUE`` and the alternative active venues returned in
+``matched_mics``.  When no ``mic`` is supplied the instrument is considered
+reportable if it meets the criteria on **any** venue in the cache.
 
 Usage:
     from pathlib import Path
@@ -62,6 +66,11 @@ class ReportabilityReason:
 
     CANCELLED = "CANCELLED"
     """The instrument has been cancelled."""
+
+    ACTIVE_OTHER_VENUE = "ACTIVE_OTHER_VENUE"
+    """The instrument is not active on the requested MIC but is active on at
+    least one other trading venue in the FIRDS cache.  ``matched_mics`` on
+    the result lists those alternative venues."""
 
 
 @dataclass
@@ -182,6 +191,12 @@ class FirdsReportabilityChecker:
     ) -> ReportabilityResult:
         """Check reportability for a specific (ISIN, MIC) pair.
 
+        If the instrument is not active on the requested MIC, the checker
+        falls back to scanning all venues.  If any other venue is active at
+        the trade date, the result is returned as reportable with reason
+        :attr:`~ReportabilityReason.ACTIVE_OTHER_VENUE` and the alternative
+        MICs populated in ``matched_mics``.
+
         Args:
             isin: Instrument ISIN.
             trade_date: Trade execution date.
@@ -193,15 +208,33 @@ class FirdsReportabilityChecker:
         row = self._cache.get_by_isin_mic(isin, mic)
 
         if row is None:
-            return ReportabilityResult(
+            single_result = ReportabilityResult(
                 is_reportable=False,
                 reason=ReportabilityReason.NOT_IN_FIRDS,
                 isin=isin,
                 trade_date=trade_date,
                 mic=mic,
             )
+        else:
+            single_result = self._evaluate_row(row, isin, trade_date, mic)
 
-        return self._evaluate_row(row, isin, trade_date, mic)
+        if single_result.is_reportable:
+            return single_result
+
+        # Instrument is not reportable on the requested MIC – check whether
+        # it is active on any other venue before returning a negative result.
+        any_venue = self._check_any_venue(isin, trade_date)
+        if any_venue.is_reportable:
+            return ReportabilityResult(
+                is_reportable=True,
+                reason=ReportabilityReason.ACTIVE_OTHER_VENUE,
+                isin=isin,
+                trade_date=trade_date,
+                mic=mic,
+                matched_mics=any_venue.matched_mics,
+            )
+
+        return single_result
 
     def _check_any_venue(self, isin: str, trade_date: date) -> ReportabilityResult:
         """Check reportability across all venues for an ISIN.

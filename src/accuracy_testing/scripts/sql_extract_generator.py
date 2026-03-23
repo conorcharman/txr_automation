@@ -122,7 +122,7 @@ class SQLExtractGeneratorCLI:
         
         refs = []
         
-        with open(input_path, 'r', encoding='utf-8') as f:
+        with open(input_path, 'r', encoding='cp1252') as f:
             reader = csv.reader(f)
             header = next(reader)  # Skip header
             
@@ -587,7 +587,7 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
             
             # Read transaction refs from template CSV
             refs = []
-            with open(template_path, 'r', encoding='utf-8') as f:
+            with open(template_path, 'r', encoding='cp1252') as f:
                 reader = csv.DictReader(f)
                 if transaction_column not in reader.fieldnames:
                     print(f"⚠️  Column '{transaction_column}' not found in {template_filename}")
@@ -731,16 +731,19 @@ def main():
     
     # Get from config if available and not provided via CLI
     if config:
-        paths = config.get('paths', {})
+        # Single mode paths are nested under 'single.paths' in the config YAML,
+        # mirroring how batch mode uses 'batch.paths'
+        single_config = config.get('single', {})
+        paths = single_config.get('paths', config.get('paths', {}))
         processing = config.get('processing', {})
-        output_options = config.get('output_options', {})
+        options = config.get('options', config.get('output_options', {}))
         
         if not template_path:
-            template_path = paths.get('template_file')
+            template_path = paths.get('sql_template_file')
         if not input_csv:
-            input_csv = paths.get('input_file')
+            input_csv = paths.get('template_file')
         if not output_dir:
-            output_dir = paths.get('output_directory')
+            output_dir = paths.get('output_dir', paths.get('output_directory'))
         if not placeholder:
             placeholder = processing.get('placeholder_pattern')
         if not transaction_column:
@@ -748,9 +751,9 @@ def main():
         if args.batch_size == 900:  # default value
             batch_size = processing.get('batch_size', 900)
         if args.output_format == 'both':  # default value
-            output_format = output_options.get('format', 'both')
+            output_format = processing.get('output_format', 'both')
         if not incident_code:
-            incident_code = output_options.get('incident_code')
+            incident_code = single_config.get('incident_code')
         if not dtf_template_path:
             dtf_template_path = paths.get('dtf_template_file')
     
@@ -780,12 +783,16 @@ def main():
     # Auto-detect values_mode from incident code when provided
     values_mode = requires_values_mode(incident_code) if incident_code else False
 
+    # Skip the global placeholder override for values-mode incidents so
+    # auto-detection picks up {VALUES} from the template instead (mirrors batch mode).
+    effective_placeholder = None if values_mode else placeholder
+
     cli = SQLExtractGeneratorCLI(
         template_path=template_path,
         input_csv=input_csv,
         output_dir=output_dir,
         batch_size=batch_size,
-        placeholder=placeholder,
+        placeholder=effective_placeholder,
         transaction_column=transaction_column,
         dry_run=dry_run,
         verbose=verbose,

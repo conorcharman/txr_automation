@@ -1,12 +1,28 @@
 #!/usr/bin/env python3
 """
-Phase 3 Processor v5.1
+Phase 3 Processor v5.2
 Refactored version using shared txr_replay_core library.
 Leverages ConfigManager, StructuredLogger, DateParser, and shared data structures.
 
 Author: GitHub Copilot
-Date: February 13, 2026
-Version: 5.1 - Name disambiguation fix for duplicate IDs
+Date: March 13, 2026
+Version: 5.2 - Prefer correction-bearing rows when multiple transactions share same ID/name
+
+CHANGES IN v5.2:
+- **BUG FIX**: Lookup methods previously returned the *first* matching transaction row.
+  In high-volume incident files (e.g. 7_66: 2,780 rows / 635 unique IDs ≈ 4.4 tx/person;
+  7_68: 6,818 rows / 638 unique IDs ≈ 10.7 tx/person), corrections are only present on a
+  subset of rows.  Taking the first row caused ~95% of records to return "No Change" even
+  when a correction existed in a later row for the same person.
+- Added _find_best_row_idx() helper that scans all candidate rows and returns the first one
+  with a non-empty Correction or Suggested Correction; falls back to the first row if none
+  have corrections (no behaviour change for files that are uniformly uncorrected).
+- Updated lookup_by_id(): name-disambiguation loop now *collects* all name-matching rows
+  and then calls _find_best_row_idx() on them, rather than early-returning on the first hit.
+  Fall-through (no name match) also uses _find_best_row_idx() instead of row_indices[0].
+- Updated lookup_by_name(): all eight index lookups now use _find_best_row_idx() instead
+  of taking index [0] directly.
+- All four index types (buyer, seller, buyer DM, seller DM) are covered in both methods.
 
 CHANGES IN v5.1:
 - **BUG FIX**: Fixed ID lookup to disambiguate when multiple records share the same ID
@@ -176,41 +192,48 @@ class IncidentFileIndex:
                 continue
                 
             # Index buyer data
+            # Joint account rows in incident files store pipe-delimited IDs (e.g.
+            # "GB001|GB002"). Each individual ID is indexed so that replay records
+            # carrying a single member ID are still matched.
             buyer_id_col = col.get('buyer_id')
             if buyer_id_col is not None and len(row) > buyer_id_col:
-                buyer_id = row[buyer_id_col].strip().lower()
-                if buyer_id:
-                    if buyer_id not in self.buyer_id_index:
-                        self.buyer_id_index[buyer_id] = []
-                    self.buyer_id_index[buyer_id].append(i)
+                for buyer_id in row[buyer_id_col].split('|'):
+                    buyer_id = buyer_id.strip().lower()
+                    if buyer_id:
+                        if buyer_id not in self.buyer_id_index:
+                            self.buyer_id_index[buyer_id] = []
+                        self.buyer_id_index[buyer_id].append(i)
             
             # Index seller data
             seller_id_col = col.get('seller_id')
             if seller_id_col is not None and len(row) > seller_id_col:
-                seller_id = row[seller_id_col].strip().lower()
-                if seller_id:
-                    if seller_id not in self.seller_id_index:
-                        self.seller_id_index[seller_id] = []
-                    self.seller_id_index[seller_id].append(i)
+                for seller_id in row[seller_id_col].split('|'):
+                    seller_id = seller_id.strip().lower()
+                    if seller_id:
+                        if seller_id not in self.seller_id_index:
+                            self.seller_id_index[seller_id] = []
+                        self.seller_id_index[seller_id].append(i)
             
             # Index buyer names
+            # Joint account rows also pipe-delimit name/DOB fields, so zip the
+            # split parts and index each member individually.
             buyer_first_col = col.get('buyer_first_name')
             buyer_last_col = col.get('buyer_last_name')
             buyer_dob_col = col.get('buyer_dob')
             
             if (buyer_first_col is not None and buyer_last_col is not None and 
                 len(row) > max(buyer_first_col, buyer_last_col)):
-                buyer_first = row[buyer_first_col].strip().lower()
-                buyer_last = row[buyer_last_col].strip().lower()
-                buyer_dob = ""
-                if buyer_dob_col is not None and len(row) > buyer_dob_col:
-                    buyer_dob = DateParser.parse_date(row[buyer_dob_col]) or ""
+                buyer_first_parts = [p.strip().lower() for p in row[buyer_first_col].split('|')]
+                buyer_last_parts = [p.strip().lower() for p in row[buyer_last_col].split('|')]
+                buyer_dob_raw = row[buyer_dob_col] if buyer_dob_col is not None and len(row) > buyer_dob_col else ""
+                buyer_dob_parts = [DateParser.parse_date(p.strip()) or "" for p in buyer_dob_raw.split('|')] if buyer_dob_raw else [""]
                 
-                if buyer_first and buyer_last:
-                    name_key = (buyer_first, buyer_last, buyer_dob)
-                    if name_key not in self.buyer_name_index:
-                        self.buyer_name_index[name_key] = []
-                    self.buyer_name_index[name_key].append(i)
+                for buyer_first, buyer_last, buyer_dob in zip(buyer_first_parts, buyer_last_parts, buyer_dob_parts):
+                    if buyer_first and buyer_last:
+                        name_key = (buyer_first, buyer_last, buyer_dob)
+                        if name_key not in self.buyer_name_index:
+                            self.buyer_name_index[name_key] = []
+                        self.buyer_name_index[name_key].append(i)
             
             # Index seller names
             seller_first_col = col.get('seller_first_name')
@@ -219,26 +242,27 @@ class IncidentFileIndex:
             
             if (seller_first_col is not None and seller_last_col is not None and
                 len(row) > max(seller_first_col, seller_last_col)):
-                seller_first = row[seller_first_col].strip().lower()
-                seller_last = row[seller_last_col].strip().lower()
-                seller_dob = ""
-                if seller_dob_col is not None and len(row) > seller_dob_col:
-                    seller_dob = DateParser.parse_date(row[seller_dob_col]) or ""
+                seller_first_parts = [p.strip().lower() for p in row[seller_first_col].split('|')]
+                seller_last_parts = [p.strip().lower() for p in row[seller_last_col].split('|')]
+                seller_dob_raw = row[seller_dob_col] if seller_dob_col is not None and len(row) > seller_dob_col else ""
+                seller_dob_parts = [DateParser.parse_date(p.strip()) or "" for p in seller_dob_raw.split('|')] if seller_dob_raw else [""]
                 
-                if seller_first and seller_last:
-                    name_key = (seller_first, seller_last, seller_dob)
-                    if name_key not in self.seller_name_index:
-                        self.seller_name_index[name_key] = []
-                    self.seller_name_index[name_key].append(i)
+                for seller_first, seller_last, seller_dob in zip(seller_first_parts, seller_last_parts, seller_dob_parts):
+                    if seller_first and seller_last:
+                        name_key = (seller_first, seller_last, seller_dob)
+                        if name_key not in self.seller_name_index:
+                            self.seller_name_index[name_key] = []
+                        self.seller_name_index[name_key].append(i)
             
             # Index buyer decision maker data
             buyer_dm_id_col = col.get('buyer_dm_id')
             if buyer_dm_id_col is not None and len(row) > buyer_dm_id_col:
-                buyer_dm_id = row[buyer_dm_id_col].strip().lower()
-                if buyer_dm_id:
-                    if buyer_dm_id not in self.buyer_dm_id_index:
-                        self.buyer_dm_id_index[buyer_dm_id] = []
-                    self.buyer_dm_id_index[buyer_dm_id].append(i)
+                for buyer_dm_id in row[buyer_dm_id_col].split('|'):
+                    buyer_dm_id = buyer_dm_id.strip().lower()
+                    if buyer_dm_id:
+                        if buyer_dm_id not in self.buyer_dm_id_index:
+                            self.buyer_dm_id_index[buyer_dm_id] = []
+                        self.buyer_dm_id_index[buyer_dm_id].append(i)
             
             buyer_dm_first_col = col.get('buyer_dm_first_name')
             buyer_dm_last_col = col.get('buyer_dm_last_name')
@@ -246,26 +270,27 @@ class IncidentFileIndex:
             
             if (buyer_dm_first_col is not None and buyer_dm_last_col is not None and
                 len(row) > max(buyer_dm_first_col, buyer_dm_last_col)):
-                buyer_dm_first = row[buyer_dm_first_col].strip().lower()
-                buyer_dm_last = row[buyer_dm_last_col].strip().lower()
-                buyer_dm_dob = ""
-                if buyer_dm_dob_col is not None and len(row) > buyer_dm_dob_col:
-                    buyer_dm_dob = DateParser.parse_date(row[buyer_dm_dob_col]) or ""
+                buyer_dm_first_parts = [p.strip().lower() for p in row[buyer_dm_first_col].split('|')]
+                buyer_dm_last_parts = [p.strip().lower() for p in row[buyer_dm_last_col].split('|')]
+                buyer_dm_dob_raw = row[buyer_dm_dob_col] if buyer_dm_dob_col is not None and len(row) > buyer_dm_dob_col else ""
+                buyer_dm_dob_parts = [DateParser.parse_date(p.strip()) or "" for p in buyer_dm_dob_raw.split('|')] if buyer_dm_dob_raw else [""]
                 
-                if buyer_dm_first and buyer_dm_last:
-                    name_key = (buyer_dm_first, buyer_dm_last, buyer_dm_dob)
-                    if name_key not in self.buyer_dm_name_index:
-                        self.buyer_dm_name_index[name_key] = []
-                    self.buyer_dm_name_index[name_key].append(i)
+                for buyer_dm_first, buyer_dm_last, buyer_dm_dob in zip(buyer_dm_first_parts, buyer_dm_last_parts, buyer_dm_dob_parts):
+                    if buyer_dm_first and buyer_dm_last:
+                        name_key = (buyer_dm_first, buyer_dm_last, buyer_dm_dob)
+                        if name_key not in self.buyer_dm_name_index:
+                            self.buyer_dm_name_index[name_key] = []
+                        self.buyer_dm_name_index[name_key].append(i)
             
             # Index seller decision maker data
             seller_dm_id_col = col.get('seller_dm_id')
             if seller_dm_id_col is not None and len(row) > seller_dm_id_col:
-                seller_dm_id = row[seller_dm_id_col].strip().lower()
-                if seller_dm_id:
-                    if seller_dm_id not in self.seller_dm_id_index:
-                        self.seller_dm_id_index[seller_dm_id] = []
-                    self.seller_dm_id_index[seller_dm_id].append(i)
+                for seller_dm_id in row[seller_dm_id_col].split('|'):
+                    seller_dm_id = seller_dm_id.strip().lower()
+                    if seller_dm_id:
+                        if seller_dm_id not in self.seller_dm_id_index:
+                            self.seller_dm_id_index[seller_dm_id] = []
+                        self.seller_dm_id_index[seller_dm_id].append(i)
             
             seller_dm_first_col = col.get('seller_dm_first_name')
             seller_dm_last_col = col.get('seller_dm_last_name')
@@ -273,22 +298,60 @@ class IncidentFileIndex:
             
             if (seller_dm_first_col is not None and seller_dm_last_col is not None and
                 len(row) > max(seller_dm_first_col, seller_dm_last_col)):
-                seller_dm_first = row[seller_dm_first_col].strip().lower()
-                seller_dm_last = row[seller_dm_last_col].strip().lower()
-                seller_dm_dob = ""
-                if seller_dm_dob_col is not None and len(row) > seller_dm_dob_col:
-                    seller_dm_dob = DateParser.parse_date(row[seller_dm_dob_col]) or ""
+                seller_dm_first_parts = [p.strip().lower() for p in row[seller_dm_first_col].split('|')]
+                seller_dm_last_parts = [p.strip().lower() for p in row[seller_dm_last_col].split('|')]
+                seller_dm_dob_raw = row[seller_dm_dob_col] if seller_dm_dob_col is not None and len(row) > seller_dm_dob_col else ""
+                seller_dm_dob_parts = [DateParser.parse_date(p.strip()) or "" for p in seller_dm_dob_raw.split('|')] if seller_dm_dob_raw else [""]
                 
-                if seller_dm_first and seller_dm_last:
-                    name_key = (seller_dm_first, seller_dm_last, seller_dm_dob)
-                    if name_key not in self.seller_dm_name_index:
-                        self.seller_dm_name_index[name_key] = []
-                    self.seller_dm_name_index[name_key].append(i)
+                for seller_dm_first, seller_dm_last, seller_dm_dob in zip(seller_dm_first_parts, seller_dm_last_parts, seller_dm_dob_parts):
+                    if seller_dm_first and seller_dm_last:
+                        name_key = (seller_dm_first, seller_dm_last, seller_dm_dob)
+                        if name_key not in self.seller_dm_name_index:
+                            self.seller_dm_name_index[name_key] = []
+                        self.seller_dm_name_index[name_key].append(i)
     
+    def _find_best_row_idx(self, row_indices: List[int]) -> int:
+        """Return the row index with the most useful correction data.
+
+        Scans all candidates and returns the first one that has a non-empty
+        Correction or Suggested Correction value.  Falls back to the first
+        candidate if none have corrections, preserving the previous behaviour.
+
+        Args:
+            row_indices: Non-empty list of candidate row indices.
+
+        Returns:
+            The index of the best candidate row.
+        """
+        correction_col = self.column_mapper.get('correction') if self.column_mapper else None
+        suggested_col = self.column_mapper.get('suggested_correction') if self.column_mapper else None
+
+        if correction_col is None and suggested_col is None:
+            return row_indices[0]
+
+        for row_idx in row_indices:
+            row = self.data_rows[row_idx]
+            has_correction = (
+                correction_col is not None
+                and len(row) > correction_col
+                and row[correction_col].strip()
+            )
+            has_suggested = (
+                suggested_col is not None
+                and len(row) > suggested_col
+                and row[suggested_col].strip()
+            )
+            if has_correction or has_suggested:
+                return row_idx
+
+        return row_indices[0]
+
     def lookup_by_id(self, client_ids: List[str], client_first: str = "", client_surname: str = "") -> Optional[Tuple[int, str]]:
         """Fast O(1) ID lookup using indexes
         
-        When multiple records share the same ID, prefers the one matching the client name.
+        When multiple records share the same ID, prefers the row that already
+        has a correction (Correction or Suggested Correction) and uses the
+        client name to disambiguate when rows are tied on that criterion.
         
         Args:
             client_ids: List of client IDs to search for
@@ -314,21 +377,24 @@ class IncidentFileIndex:
                     buyer_last_col = col.get('buyer_last_name')
                     
                     if buyer_first_col is not None and buyer_last_col is not None:
-                        # Check each row for name match
+                        # Collect ALL rows that match by name, then pick the one
+                        # with the best correction data among them.
+                        name_matched = []
                         for row_idx in row_indices:
                             row = self.data_rows[row_idx]
                             if len(row) > max(buyer_first_col, buyer_last_col):
                                 first = row[buyer_first_col].strip().lower()
                                 last = row[buyer_last_col].strip().lower()
-                                
-                                # Exact name match
                                 if first == client_first.lower() and last == client_surname.lower():
-                                    if self.logger:
-                                        self.logger.debug(f"Found ID '{client_id}' with name match in buyer_id_index (row {row_idx})")
-                                    return (row_idx, "id_buyer")
+                                    name_matched.append(row_idx)
+                        if name_matched:
+                            row_idx = self._find_best_row_idx(name_matched)
+                            if self.logger:
+                                self.logger.debug(f"Found ID '{client_id}' with name match in buyer_id_index (row {row_idx})")
+                            return (row_idx, "id_buyer")
                 
-                # No name match or no disambiguation needed - take first match
-                row_idx = row_indices[0]
+                # No name match or no disambiguation needed - prefer row with corrections
+                row_idx = self._find_best_row_idx(row_indices)
                 if self.logger:
                     self.logger.debug(f"Found ID '{client_id}' in buyer_id_index (row {row_idx}, {len(row_indices)} total matches)")
                 return (row_idx, "id_buyer")
@@ -344,34 +410,81 @@ class IncidentFileIndex:
                     seller_last_col = col.get('seller_last_name')
                     
                     if seller_first_col is not None and seller_last_col is not None:
+                        name_matched = []
                         for row_idx in row_indices:
                             row = self.data_rows[row_idx]
                             if len(row) > max(seller_first_col, seller_last_col):
                                 first = row[seller_first_col].strip().lower()
                                 last = row[seller_last_col].strip().lower()
-                                
                                 if first == client_first.lower() and last == client_surname.lower():
-                                    if self.logger:
-                                        self.logger.debug(f"Found ID '{client_id}' with name match in seller_id_index (row {row_idx})")
-                                    return (row_idx, "id_seller")
+                                    name_matched.append(row_idx)
+                        if name_matched:
+                            row_idx = self._find_best_row_idx(name_matched)
+                            if self.logger:
+                                self.logger.debug(f"Found ID '{client_id}' with name match in seller_id_index (row {row_idx})")
+                            return (row_idx, "id_seller")
                 
-                row_idx = row_indices[0]
+                row_idx = self._find_best_row_idx(row_indices)
                 if self.logger:
                     self.logger.debug(f"Found ID '{client_id}' in seller_id_index (row {row_idx}, {len(row_indices)} total matches)")
                 return (row_idx, "id_seller")
             
             # Check buyer decision maker index (fallback)
             if client_id_lower in self.buyer_dm_id_index:
-                row_idx = self.buyer_dm_id_index[client_id_lower][0]
+                row_indices = self.buyer_dm_id_index[client_id_lower]
+
+                if len(row_indices) > 1 and client_first and client_surname:
+                    col = self.column_mapper
+                    buyer_dm_first_col = col.get('buyer_dm_first_name')
+                    buyer_dm_last_col = col.get('buyer_dm_last_name')
+
+                    if buyer_dm_first_col is not None and buyer_dm_last_col is not None:
+                        name_matched = []
+                        for row_idx in row_indices:
+                            row = self.data_rows[row_idx]
+                            if len(row) > max(buyer_dm_first_col, buyer_dm_last_col):
+                                first = row[buyer_dm_first_col].strip().lower()
+                                last = row[buyer_dm_last_col].strip().lower()
+                                if first == client_first.lower() and last == client_surname.lower():
+                                    name_matched.append(row_idx)
+                        if name_matched:
+                            row_idx = self._find_best_row_idx(name_matched)
+                            if self.logger:
+                                self.logger.debug(f"Found ID '{client_id}' with name match in buyer_dm_id_index (row {row_idx})")
+                            return (row_idx, "id_buyer_dm")
+
+                row_idx = self._find_best_row_idx(row_indices)
                 if self.logger:
-                    self.logger.debug(f"Found ID '{client_id}' in buyer_dm_id_index")
+                    self.logger.debug(f"Found ID '{client_id}' in buyer_dm_id_index (row {row_idx}, {len(row_indices)} total matches)")
                 return (row_idx, "id_buyer_dm")
-            
+
             # Check seller decision maker index (fallback)
             if client_id_lower in self.seller_dm_id_index:
-                row_idx = self.seller_dm_id_index[client_id_lower][0]
+                row_indices = self.seller_dm_id_index[client_id_lower]
+
+                if len(row_indices) > 1 and client_first and client_surname:
+                    col = self.column_mapper
+                    seller_dm_first_col = col.get('seller_dm_first_name')
+                    seller_dm_last_col = col.get('seller_dm_last_name')
+
+                    if seller_dm_first_col is not None and seller_dm_last_col is not None:
+                        name_matched = []
+                        for row_idx in row_indices:
+                            row = self.data_rows[row_idx]
+                            if len(row) > max(seller_dm_first_col, seller_dm_last_col):
+                                first = row[seller_dm_first_col].strip().lower()
+                                last = row[seller_dm_last_col].strip().lower()
+                                if first == client_first.lower() and last == client_surname.lower():
+                                    name_matched.append(row_idx)
+                        if name_matched:
+                            row_idx = self._find_best_row_idx(name_matched)
+                            if self.logger:
+                                self.logger.debug(f"Found ID '{client_id}' with name match in seller_dm_id_index (row {row_idx})")
+                            return (row_idx, "id_seller_dm")
+
+                row_idx = self._find_best_row_idx(row_indices)
                 if self.logger:
-                    self.logger.debug(f"Found ID '{client_id}' in seller_dm_id_index")
+                    self.logger.debug(f"Found ID '{client_id}' in seller_dm_id_index (row {row_idx}, {len(row_indices)} total matches)")
                 return (row_idx, "id_seller_dm")
         
         if self.logger:
@@ -390,14 +503,14 @@ class IncidentFileIndex:
         
         # Check buyer index
         if name_key in self.buyer_name_index:
-            row_idx = self.buyer_name_index[name_key][0]  # Take first match
+            row_idx = self._find_best_row_idx(self.buyer_name_index[name_key])
             if self.logger:
                 self.logger.debug(f"Found name in buyer_name_index")
             return (row_idx, "name_buyer")
         
         # Check seller index  
         if name_key in self.seller_name_index:
-            row_idx = self.seller_name_index[name_key][0]  # Take first match
+            row_idx = self._find_best_row_idx(self.seller_name_index[name_key])
             if self.logger:
                 self.logger.debug(f"Found name in seller_name_index")
             return (row_idx, "name_seller")
@@ -407,21 +520,21 @@ class IncidentFileIndex:
             name_key_no_dob = (first_lower, surname_lower, "")
             
             if name_key_no_dob in self.buyer_name_index:
-                row_idx = self.buyer_name_index[name_key_no_dob][0]
+                row_idx = self._find_best_row_idx(self.buyer_name_index[name_key_no_dob])
                 return (row_idx, "name_buyer")
             
             if name_key_no_dob in self.seller_name_index:
-                row_idx = self.seller_name_index[name_key_no_dob][0]
+                row_idx = self._find_best_row_idx(self.seller_name_index[name_key_no_dob])
                 return (row_idx, "name_seller")
         
         # Check buyer decision maker index (fallback)
         if name_key in self.buyer_dm_name_index:
-            row_idx = self.buyer_dm_name_index[name_key][0]
+            row_idx = self._find_best_row_idx(self.buyer_dm_name_index[name_key])
             return (row_idx, "name_buyer_dm")
         
         # Check seller decision maker index (fallback)
         if name_key in self.seller_dm_name_index:
-            row_idx = self.seller_dm_name_index[name_key][0]
+            row_idx = self._find_best_row_idx(self.seller_dm_name_index[name_key])
             return (row_idx, "name_seller_dm")
         
         # Try decision makers without DOB
@@ -429,11 +542,11 @@ class IncidentFileIndex:
             name_key_no_dob = (first_lower, surname_lower, "")
             
             if name_key_no_dob in self.buyer_dm_name_index:
-                row_idx = self.buyer_dm_name_index[name_key_no_dob][0]
+                row_idx = self._find_best_row_idx(self.buyer_dm_name_index[name_key_no_dob])
                 return (row_idx, "name_buyer_dm")
             
             if name_key_no_dob in self.seller_dm_name_index:
-                row_idx = self.seller_dm_name_index[name_key_no_dob][0]
+                row_idx = self._find_best_row_idx(self.seller_dm_name_index[name_key_no_dob])
                 return (row_idx, "name_seller_dm")
         
         if self.logger:
@@ -764,6 +877,13 @@ class Phase3Processor:
                     if self.logger:
                         self.logger.debug(f"No correction to apply (match={match_type})")
             
+            # Corrections referring to RE Account(s) are not client data changes.
+            if re.search(r'\bre\s+accounts?\b', correction, re.IGNORECASE):
+                if self.logger:
+                    self.logger.debug(f"RE Account correction detected, treating as No Change (match={match_type})")
+                correction = "No Change"
+                correction_field = ""
+
             return LookupResult(
                 found=True,
                 correction=correction,
@@ -795,11 +915,22 @@ class Phase3Processor:
             if result.found:
                 all_correction_values.append(result.correction)
                 all_correction_fields.append(result.correction_field)
+                if '_dm' in result.match_type:
+                    self.stats.increment('dm_matches')
         
         if not all_correction_values:
             self.stats.increment('not_found')
             return "Client not found", ""
         
+        # Normalise RE Account corrections to No Change (catches any that slipped
+        # past _create_lookup_result due to encoding or whitespace variations).
+        _re_account_pat = re.compile(r'\bre\s+accounts?\b', re.IGNORECASE)
+        normalised = [
+            ("No Change", "") if _re_account_pat.search(v.strip()) else (v, f)
+            for v, f in zip(all_correction_values, all_correction_fields)
+        ]
+        all_correction_values, all_correction_fields = zip(*normalised)
+
         # Handle multiple corrections from different incident codes
         unique_corrections = list(set(zip(all_correction_values, all_correction_fields)))
         
@@ -916,6 +1047,7 @@ class Phase3Processor:
             f"  No corrections needed: {self.stats['no_corrections']}",
             f"  Inconsistent corrections: {self.stats['inconsistent_corrections']}",
             f"  Processing errors: {self.stats['errors']}",
+            f"  Decision maker fallback matches: {self.stats.custom_stats.get('dm_matches', 0)}",
             "",
             "OPTIMIZATION INFO:",
             f"  Incident files indexed: {len(self.incident_indexes)}",

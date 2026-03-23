@@ -5,9 +5,6 @@ paths:
   # Input replay files (CSV format)
   replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii"
   
-  # Incident code reference files (CSV format)
-  incident_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files"
-  
   # UnaVista reference files (CSV format)
   unavista_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii_final_lookup"
   

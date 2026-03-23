@@ -17,6 +17,7 @@ from typing import Dict, List, Tuple, Optional, Any, Set
 from dataclasses import dataclass, field
 from collections import defaultdict
 import argparse
+import re
 from pathlib import Path
 
 # Import from core library
@@ -197,7 +198,10 @@ class UnaVistaIndex:
         self.seller_dm_id_index = defaultdict(list)
         self.buyer_dm_name_index = defaultdict(list)
         self.seller_dm_name_index = defaultdict(list)
-        
+
+        # Counter incremented each time a decision maker index provides the match
+        self.dm_match_count: int = 0
+
         self.header: List[str] = []
         self.load_and_index()
     
@@ -250,59 +254,83 @@ class UnaVistaIndex:
     
     def _index_buyer(self, row: List[str], idx: int):
         """Index buyer fields"""
-        buyer_id = row[8].strip().lower() if len(row) > 8 else ""
-        if buyer_id:
-            self.buyer_id_index[buyer_id].append(idx)
+        # Joint account rows may carry pipe- or semicolon-delimited IDs/names.
+        # Each individual member is indexed separately so replay records with a
+        # single ID match.
+        buyer_id_raw = row[8].strip() if len(row) > 8 else ""
+        for buyer_id in buyer_id_raw.replace(';', '|').split('|'):
+            buyer_id = buyer_id.strip().lower()
+            if buyer_id:
+                self.buyer_id_index[buyer_id].append(idx)
         
-        buyer_first = row[10].strip().lower() if len(row) > 10 else ""
-        buyer_last = row[11].strip().lower() if len(row) > 11 else ""
-        buyer_dob = DateParser.parse_date(row[12]) if len(row) > 12 else ""
-        
-        if buyer_first and buyer_last:
-            name_key = (buyer_first, buyer_last, buyer_dob or "")
-            self.buyer_name_index[name_key].append(idx)
+        buyer_first_raw = row[10].strip() if len(row) > 10 else ""
+        buyer_last_raw = row[11].strip() if len(row) > 11 else ""
+        buyer_dob_raw = row[12].strip() if len(row) > 12 else ""
+        first_parts = [p.strip().lower() for p in buyer_first_raw.split('|')] if buyer_first_raw else []
+        last_parts = [p.strip().lower() for p in buyer_last_raw.split('|')] if buyer_last_raw else []
+        dob_parts = [DateParser.parse_date(p.strip()) or "" for p in buyer_dob_raw.split('|')] if buyer_dob_raw else []
+        for buyer_first, buyer_last, buyer_dob in zip(first_parts, last_parts, dob_parts):
+            if buyer_first and buyer_last:
+                name_key = (buyer_first, buyer_last, buyer_dob)
+                self.buyer_name_index[name_key].append(idx)
     
     def _index_seller(self, row: List[str], idx: int):
         """Index seller fields"""
-        seller_id = row[21].strip().lower() if len(row) > 21 else ""
-        if seller_id:
-            self.seller_id_index[seller_id].append(idx)
+        # Seller IDs may be pipe- or semicolon-delimited for joint accounts.
+        seller_id_raw = row[21].strip() if len(row) > 21 else ""
+        for seller_id in seller_id_raw.replace(';', '|').split('|'):
+            seller_id = seller_id.strip().lower()
+            if seller_id:
+                self.seller_id_index[seller_id].append(idx)
         
-        seller_first = row[23].strip().lower() if len(row) > 23 else ""
-        seller_last = row[24].strip().lower() if len(row) > 24 else ""
-        seller_dob = DateParser.parse_date(row[25]) if len(row) > 25 else ""
-        
-        if seller_first and seller_last:
-            name_key = (seller_first, seller_last, seller_dob or "")
-            self.seller_name_index[name_key].append(idx)
+        seller_first_raw = row[23].strip() if len(row) > 23 else ""
+        seller_last_raw = row[24].strip() if len(row) > 24 else ""
+        seller_dob_raw = row[25].strip() if len(row) > 25 else ""
+        first_parts = [p.strip().lower() for p in seller_first_raw.split('|')] if seller_first_raw else []
+        last_parts = [p.strip().lower() for p in seller_last_raw.split('|')] if seller_last_raw else []
+        dob_parts = [DateParser.parse_date(p.strip()) or "" for p in seller_dob_raw.split('|')] if seller_dob_raw else []
+        for seller_first, seller_last, seller_dob in zip(first_parts, last_parts, dob_parts):
+            if seller_first and seller_last:
+                name_key = (seller_first, seller_last, seller_dob)
+                self.seller_name_index[name_key].append(idx)
     
     def _index_decision_makers(self, row: List[str], idx: int):
         """Index decision maker fields"""
         # Buyer decision maker
-        buyer_dm_id = row[15].strip().lower() if len(row) > 15 else ""
-        if buyer_dm_id:
-            self.buyer_dm_id_index[buyer_dm_id].append(idx)
+        buyer_dm_id_raw = row[15].strip() if len(row) > 15 else ""
+        for buyer_dm_id in buyer_dm_id_raw.split('|'):
+            buyer_dm_id = buyer_dm_id.strip().lower()
+            if buyer_dm_id:
+                self.buyer_dm_id_index[buyer_dm_id].append(idx)
         
-        buyer_dm_first = row[16].strip().lower() if len(row) > 16 else ""
-        buyer_dm_last = row[17].strip().lower() if len(row) > 17 else ""
-        buyer_dm_dob = DateParser.parse_date(row[18]) if len(row) > 18 else ""
-        
-        if buyer_dm_first and buyer_dm_last:
-            name_key = (buyer_dm_first, buyer_dm_last, buyer_dm_dob or "")
-            self.buyer_dm_name_index[name_key].append(idx)
+        buyer_dm_first_raw = row[16].strip() if len(row) > 16 else ""
+        buyer_dm_last_raw = row[17].strip() if len(row) > 17 else ""
+        buyer_dm_dob_raw = row[18].strip() if len(row) > 18 else ""
+        dm_first_parts = [p.strip().lower() for p in buyer_dm_first_raw.split('|')] if buyer_dm_first_raw else []
+        dm_last_parts = [p.strip().lower() for p in buyer_dm_last_raw.split('|')] if buyer_dm_last_raw else []
+        dm_dob_parts = [DateParser.parse_date(p.strip()) or "" for p in buyer_dm_dob_raw.split('|')] if buyer_dm_dob_raw else []
+        for buyer_dm_first, buyer_dm_last, buyer_dm_dob in zip(dm_first_parts, dm_last_parts, dm_dob_parts):
+            if buyer_dm_first and buyer_dm_last:
+                name_key = (buyer_dm_first, buyer_dm_last, buyer_dm_dob)
+                self.buyer_dm_name_index[name_key].append(idx)
         
         # Seller decision maker
-        seller_dm_id = row[28].strip().lower() if len(row) > 28 else ""
-        if seller_dm_id:
-            self.seller_dm_id_index[seller_dm_id].append(idx)
+        seller_dm_id_raw = row[28].strip() if len(row) > 28 else ""
+        for seller_dm_id in seller_dm_id_raw.split('|'):
+            seller_dm_id = seller_dm_id.strip().lower()
+            if seller_dm_id:
+                self.seller_dm_id_index[seller_dm_id].append(idx)
         
-        seller_dm_first = row[29].strip().lower() if len(row) > 29 else ""
-        seller_dm_last = row[30].strip().lower() if len(row) > 30 else ""
-        seller_dm_dob = DateParser.parse_date(row[31]) if len(row) > 31 else ""
-        
-        if seller_dm_first and seller_dm_last:
-            name_key = (seller_dm_first, seller_dm_last, seller_dm_dob or "")
-            self.seller_dm_name_index[name_key].append(idx)
+        seller_dm_first_raw = row[29].strip() if len(row) > 29 else ""
+        seller_dm_last_raw = row[30].strip() if len(row) > 30 else ""
+        seller_dm_dob_raw = row[31].strip() if len(row) > 31 else ""
+        dm_first_parts = [p.strip().lower() for p in seller_dm_first_raw.split('|')] if seller_dm_first_raw else []
+        dm_last_parts = [p.strip().lower() for p in seller_dm_last_raw.split('|')] if seller_dm_last_raw else []
+        dm_dob_parts = [DateParser.parse_date(p.strip()) or "" for p in seller_dm_dob_raw.split('|')] if seller_dm_dob_raw else []
+        for seller_dm_first, seller_dm_last, seller_dm_dob in zip(dm_first_parts, dm_last_parts, dm_dob_parts):
+            if seller_dm_first and seller_dm_last:
+                name_key = (seller_dm_first, seller_dm_last, seller_dm_dob)
+                self.seller_dm_name_index[name_key].append(idx)
     
     def lookup_by_id(self, client_id: str, client_type: str) -> List[UnaVistaTransaction]:
         """
@@ -324,8 +352,21 @@ class UnaVistaIndex:
             indices = self.buyer_id_index.get(client_id_lower, [])
         else:
             indices = self.seller_id_index.get(client_id_lower, [])
-        
-        return [self.transactions[i] for i in indices]
+
+        if indices:
+            return [self.transactions[i] for i in indices]
+
+        # Fallback: check decision maker indexes when no match in buyer/seller fields
+        if client_type == 'buyer':
+            dm_indices = self.buyer_dm_id_index.get(client_id_lower, [])
+        else:
+            dm_indices = self.seller_dm_id_index.get(client_id_lower, [])
+
+        if dm_indices:
+            self.dm_match_count += 1
+            return [self.transactions[i] for i in dm_indices]
+
+        return []
     
     def lookup_by_name(self, first_name: str, surname: str, dob: str, client_type: str) -> List[UnaVistaTransaction]:
         """
@@ -358,8 +399,28 @@ class UnaVistaIndex:
                 indices = self.buyer_name_index.get(name_key_no_dob, [])
             else:
                 indices = self.seller_name_index.get(name_key_no_dob, [])
-        
-        return [self.transactions[i] for i in indices]
+
+        if indices:
+            return [self.transactions[i] for i in indices]
+
+        # Fallback: check decision maker name indexes when no match in buyer/seller fields
+        if client_type == 'buyer':
+            dm_indices = self.buyer_dm_name_index.get(name_key, [])
+        else:
+            dm_indices = self.seller_dm_name_index.get(name_key, [])
+
+        if not dm_indices and dob_parsed:
+            name_key_no_dob = (first_lower, surname_lower, "")
+            if client_type == 'buyer':
+                dm_indices = self.buyer_dm_name_index.get(name_key_no_dob, [])
+            else:
+                dm_indices = self.seller_dm_name_index.get(name_key_no_dob, [])
+
+        if dm_indices:
+            self.dm_match_count += 1
+            return [self.transactions[i] for i in dm_indices]
+
+        return []
 
 # ============================================================================
 # Replay Record Index
@@ -663,12 +724,14 @@ class ReplayRecordIndex:
         """
         Parse corrections and fields with support for ampersand-combined fields.
 
-        Applies the agree/suggested correction decision logic before parsing:
-        - If Agree With Correction is N/No/F, Suggested Correction overrides Correction
-          (if a Suggested Correction is present); otherwise the record is treated as No Change.
-        - If Correction is "No Change" (or empty after overrides), returns the sentinel
-          {"No Change": "No Change"} so the record reaches generate_output and is annotated
-          rather than being silently dropped.
+        Applies correction fallback logic before parsing:
+        - If Correction is empty, falls back to Suggested Correction if present; otherwise
+          treats the record as No Change so it still reaches generate_output and is annotated.
+        - If Agree With Correction is N/No/F (only relevant when that column exists in the
+          source file), Suggested Correction overrides Correction if present; otherwise the
+          record is treated as No Change.
+        - If Correction is "No Change" (or resolves to No Change after fallback), returns the
+          sentinel {"No Change": "No Change"} so the record is annotated rather than dropped.
 
         Two delimiters are accepted for both the correction and field strings:
         - ``:`` (colon) — the standard delimiter inherited from the original VBA macros
@@ -702,12 +765,23 @@ class ReplayRecordIndex:
         corrections: Dict[str, str] = {}
 
         if not correction_str:
-            return corrections
+            # No client correction — fall back to suggested correction if available,
+            # otherwise treat as No Change so the record is still annotated.
+            if suggested_str.strip():
+                correction_str = suggested_str.strip()
+                field_str = suggested_field_str.strip()
+            else:
+                return {"No Change": "No Change"}
 
         # Phase 3 processor writes "No Change" with an empty field string.
         # Preserve as a sentinel so the record reaches process_client and is
         # annotated as "No change" in the output rather than being dropped.
         if correction_str.strip().lower() == "no change":
+            return {"No Change": "No Change"}
+
+        # Corrections referring to RE Account(s) are not client data changes.
+        if re.search(r'\bre\s+accounts?\b', correction_str, re.IGNORECASE):
+            self.logger.debug("RE Account correction detected, treating as No Change")
             return {"No Change": "No Change"}
 
         if not field_str:
@@ -775,8 +849,7 @@ class Phase3FinalLookup:
         
         # Get paths from config using standardized names
         self.replay_input_path = self.config.get('paths', {}).get('replay_input', '')
-        self.data_reference_path = self.config.get('paths', {}).get('unavista_files', 
-                                   self.config.get('paths', {}).get('incident_files', ''))
+        self.data_reference_path = self.config.get('paths', {}).get('unavista_files', '')
         self.output_path = self.config.get('paths', {}).get('replay_output', '')
         self.log_output_path = self.config.get('paths', {}).get('log_output', self.output_path)
         
@@ -1279,6 +1352,7 @@ class Phase3FinalLookup:
             f"  Seller transactions tested: {self.seller_stats['tested']}",
             f"    - Pass: {self.seller_stats['pass']}",
             f"    - Fail: {self.seller_stats['fail']}",
+            f"  Decision maker fallback matches: {self.unavista_index.dm_match_count if self.unavista_index else 0}",
             "",
             "FIELD-LEVEL STATISTICS:",
         ]
