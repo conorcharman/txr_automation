@@ -1,0 +1,50 @@
+# GLEIF LEI Reference Data Configuration Template
+# ================================================
+#
+# Copy this file to config/local/gleif_config.yaml and adjust paths for your
+# environment.  All relative paths are resolved from the repository root.
+#
+# The gleif-refresh, gleif-check, and gleif-backfill scripts auto-discover
+# this file at config/local/gleif_config.yaml when no --config flag is given.
+
+# ---------------------------------------------------------------------------
+# Database
+# ---------------------------------------------------------------------------
+database:
+  # Path to the local SQLite cache database.
+  # The cache is built/refreshed by `gleif-refresh --type full`.
+  path: data/gleif_cache.db
+
+# ---------------------------------------------------------------------------
+# GLEIF settings
+# ---------------------------------------------------------------------------
+gleif:
+  # Override the Golden Copy download URL.
+  # Leave commented to use the default leidata.gleif.org endpoint.
+  # Uncomment and supply a manually obtained URL if the default returns 403.
+  # golden_copy_url: "https://leidata.gleif.org/api/v2/concatenated-files/lei2"
+
+  # Directory for temporary ZIP/CSV files during a refresh.
+  # Defaults to a system temp directory that is removed after each run.
+  # staging_dir: data/gleif_staging
+
+  # HTTP request timeout in seconds for the Golden Copy download (large file).
+  # download_timeout: 300
+
+# ---------------------------------------------------------------------------
+# Batch check settings (gleif-check)
+# ---------------------------------------------------------------------------
+batch:
+  # One or more specific input CSV files.
+  # inputs:
+  #   - data/trades/trades_2025-06-15.csv
+  #   - data/trades/trades_2025-06-16.csv
+
+  # OR: scan an entire directory for matching files.
+  # input_dir: data/trades/
+  # pattern: "*.csv"
+
+  # Optional merged output file collecting all per-file results.
+  # Each per-file result is also written alongside the original file
+  # as e.g. trades_2025-06-15_lei_check.csv regardless of this setting.
+  # output: data/output/merged_lei_check.csv

@@ -418,6 +418,12 @@ Examples:
         help="List available validations and exit",
     )
     
+    parser.add_argument(
+        "--gui-mode",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+    
     return parser
 
 

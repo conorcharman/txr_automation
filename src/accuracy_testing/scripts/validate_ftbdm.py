@@ -376,6 +376,11 @@ Examples:
         action="store_true",
         help="Enable verbose output",
     )
+    parser.add_argument(
+        "--gui-mode",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
 
     return parser
 
@@ -387,7 +392,7 @@ def main() -> int:
 
     # Determine config source
     config_path = args.config
-    if not config_path and not args.input_file:
+    if not config_path and not args.input_file and not getattr(args, 'gui_mode', False):
         # Default configuration path (same pattern as other validation scripts)
         from pathlib import Path
         default_config = Path(__file__).parent.parent.parent.parent / "config" / "local" / "accuracy_testing" / "ftbdm_validation.yaml"

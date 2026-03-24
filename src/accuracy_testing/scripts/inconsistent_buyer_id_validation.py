@@ -659,6 +659,12 @@ Examples:
         help='Display progress bar for large files'
     )
     
+    parser.add_argument(
+        '--gui-mode',
+        action='store_true',
+        help=argparse.SUPPRESS,
+    )
+    
     return parser.parse_args()
 
 
@@ -691,7 +697,7 @@ def main():
                     'batch_size': 1000
                 }
             }
-        else:
+        elif not getattr(args, 'gui_mode', False):
             # Default configuration path
             default_config = (
                 Path(__file__).parent.parent.parent.parent / 
