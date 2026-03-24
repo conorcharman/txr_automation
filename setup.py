@@ -19,6 +19,7 @@ setup(
     python_requires=">=3.10",
     install_requires=[
         "pyyaml>=6.0",
+        "pyside6>=6.6",
     ],
     entry_points={
         "console_scripts": [
@@ -46,6 +47,12 @@ setup(
             "firds-refresh=firds.scripts.refresh_cache:main",
             "firds-check=firds.scripts.check_reportability:main",
             "firds-backfill=firds.scripts.backfill:main",
+            "gleif-refresh=gleif.scripts.refresh_cache:main",
+            "gleif-check=gleif.scripts.check_lei:main",
+            "gleif-backfill=gleif.scripts.backfill:main",
+        ],
+        "gui_scripts": [
+            "txr-gui=gui.app:main",
         ],
     },
     classifiers=[

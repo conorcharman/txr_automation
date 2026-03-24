@@ -8,7 +8,7 @@
 # ---------------------------------------------------------------------------
 database:
   # Path to the SQLite cache file (relative to repo root, or absolute)
-  path: C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\firds\firds_cache.db
+  path: 'c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\firds\firds_cache.db'
 
 # ---------------------------------------------------------------------------
 # Staging
@@ -54,3 +54,28 @@ api:
 processor:
   log_level: INFO   # DEBUG | INFO | WARNING | ERROR
   log_output: logs
+
+# ---------------------------------------------------------------------------
+# Batch reportability check (firds-check script)
+# ---------------------------------------------------------------------------
+# Configure default inputs and output for the firds-check batch mode.
+# All paths are relative to the repo root unless absolute.
+# CLI flags (--input, --input-dir, --pattern, --output) take precedence.
+batch:
+  # Individual CSV files to process (optional; list one path per entry).
+  # The trade date is read from a 'trade_date' column when present, or
+  # extracted from the filename using the DD-MM-YYYY pattern as a fallback.
+  inputs:
+    # - data/trades/trades_15-03-2026.csv
+    # - data/trades/trades_16-03-2026.csv
+
+  # Directory to scan instead of (or in addition to) explicit inputs.
+  input_dir: C:\Users\ccharm\Downloads\DJ-firds  # e.g. data/trades/
+
+  # Glob pattern applied to input_dir (default: *.csv).
+  pattern: "*.csv"
+
+  # Optional merged output collecting rows from all input files.
+  # Each input file also produces its own '<stem>_reportability.csv' alongside
+  # the original automatically, regardless of this setting.
+  output: C:\Users\ccharm\Downloads\DJ-firds\merged_reportability.csv  # e.g. data/output/merged_reportability.csv
