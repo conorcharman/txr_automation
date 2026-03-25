@@ -442,6 +442,12 @@ Examples:
         help="Print per-group details during processing.",
     )
 
+    parser.add_argument(
+        "--gui-mode",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
+
     return parser
 
 
@@ -461,7 +467,7 @@ def main() -> None:
 
     # ---- Resolve config path (fall back to default local config if not specified) ----
     config_file = args.config
-    if not config_file:
+    if not config_file and not getattr(args, 'gui_mode', False):
         default_config = (
             Path(__file__).parent.parent.parent
             / "config" / "local" / "replay" / "merge_inconsistent_ids.yaml"
