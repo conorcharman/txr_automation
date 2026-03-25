@@ -32,29 +32,29 @@ STATUS_SUCCESS = "Success"
 STATUS_FAILED = "Failed — exit code {}"
 # Accuracy testing incidents (name, description)
 ACCURACY_INCIDENTS = [
-    ("buyer", "Buyer ID Validation (7_5, 7_6)"),
-    ("seller", "Seller ID Validation (7_7, 7_8)"),
-    ("inconsistent-buyer", "Inconsistent Buyer ID (7_37, 7_38)"),
-    ("inconsistent-seller", "Inconsistent Seller ID (7_39, 7_40)"),
-    ("ftbdm", "Field 27 Buyer Decision Maker"),
-    ("ftsdm", "Field 28 Seller Decision Maker"),
-    ("pricing", "Pricing Validation"),
-    ("non-zero-qty", "Non-Zero Net Quantity"),
-    ("non-zero-amt", "Non-Zero Net Amount"),
+    ("buyer", "Buyer ID Validation (7_35, 7_37, 7_39)"),
+    ("seller", "Seller ID Validation (16_19, 16_21, 16_23)"),
+    ("inconsistent-buyer", "Inconsistent Buyer ID (7_66)"),
+    ("inconsistent-seller", "Inconsistent Seller ID (16_20)"),
+    ("ftbdm", "Field 27 Buyer Decision Maker (12_17)"),
+    ("ftsdm", "Field 28 Seller Decision Maker (21_17)"),
+    ("pricing", "Pricing Validation (35_3)"),
+    ("non-zero-qty", "Non-Zero Net Quantity (7_6)"),
+    ("non-zero-amt", "Non-Zero Net Amount (7_42)"),
 ]
 
 # Mapping of incident names to their known incident code patterns
 # Used for autodiscovery of files in batch directories
 INCIDENT_CODE_PATTERNS = {
-    "buyer": ["7_5", "7_6"],
-    "seller": ["7_7", "7_8"],
-    "inconsistent-buyer": ["7_37", "7_38"],
-    "inconsistent-seller": ["7_39", "7_40"],
-    "ftbdm": ["7_27"],
-    "ftsdm": ["7_28"],
-    "pricing": ["7_33"],
-    "non-zero-qty": ["7_6_qty"],
-    "non-zero-amt": ["7_6_amt"],
+    "buyer": ["7_35", "7_37", "7_39"],
+    "seller": ["16_19", "16_21", "16_23"],
+    "inconsistent-buyer": ["7_66"],
+    "inconsistent-seller": ["16_20"],
+    "ftbdm": ["12_17"],
+    "ftsdm": ["21_17"],
+    "pricing": ["35_3"],
+    "non-zero-qty": ["7_6"],
+    "non-zero-amt": ["7_42"],
 }
 
 # Mapping of incident names to their script module paths
@@ -68,4 +68,22 @@ INCIDENT_SCRIPT_MODULES = {
     "pricing": "accuracy_testing.scripts.pricing_validation",
     "non-zero-qty": "accuracy_testing.scripts.non_zero_net_quantity",
     "non-zero-amt": "accuracy_testing.scripts.non_zero_net_amount",
+}
+
+# Testing period choices
+FISCAL_YEARS = ["FY24", "FY25", "FY26", "FY27"]
+QUARTERS = ["Q1", "Q2", "Q3", "Q4"]
+
+# Mapping of incident selector names to their per-panel QSettings prefix.
+# Used by Run All to read cached field values from individual tiles.
+INCIDENT_SETTINGS_PREFIX = {
+    "buyer": "accuracy.buyer_id",
+    "seller": "accuracy.seller_id",
+    "inconsistent-buyer": "accuracy.inconsistent_buyer",
+    "inconsistent-seller": "accuracy.inconsistent_seller",
+    "ftbdm": "accuracy.ftbdm",
+    "ftsdm": "accuracy.ftsdm",
+    "pricing": "accuracy.pricing",
+    "non-zero-qty": "accuracy.non_zero_qty",
+    "non-zero-amt": "accuracy.non_zero_amt",
 }

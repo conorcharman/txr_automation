@@ -1458,6 +1458,12 @@ Examples:
         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
         help='Override log level from configuration'
     )
+
+    parser.add_argument(
+        '--gui-mode',
+        action='store_true',
+        help=argparse.SUPPRESS,
+    )
     
     return parser.parse_args()
 
@@ -1474,7 +1480,7 @@ def main():
         elif args.config:
             print(f"Loading configuration from {args.config}...")
             config = ConfigManager.load_from_yaml(args.config)
-        else:
+        elif not getattr(args, 'gui_mode', False):
             # Default configuration path (use local config)
             default_config = Path(__file__).parent.parent.parent / "config" / "local" / "replay" / "phase3_final.yaml"
             if default_config.exists():

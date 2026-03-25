@@ -16,11 +16,13 @@ Panels persist field values across sessions via QSettings caching.
 
 import importlib
 import os
+import tempfile
 from datetime import datetime
 from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, List, Optional
 
+import yaml
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
@@ -40,9 +42,12 @@ from PySide6.QtWidgets import (
 from gui.constants import (
     ACCURACY_INCIDENTS,
     CSV_FILTER,
+    FISCAL_YEARS,
     INCIDENT_CODE_PATTERNS,
     INCIDENT_SCRIPT_MODULES,
+    INCIDENT_SETTINGS_PREFIX,
     LOG_LEVELS,
+    QUARTERS,
     SQL_FILTER,
     YAML_FILTER,
 )
@@ -112,11 +117,16 @@ def _restore_last_run(label: QLabel, settings_key: str) -> None:
 # ---------------------------------------------------------------------------
 
 class BaseValidationPanel(QWidget):
-    """Base class for ID validation script panels.
+    """Base class for validation script panels.
 
-    Provides the common form layout shared by all validation scripts:
-    config loader, input/output file pickers, log level, dry-run,
-    progress checkboxes, run controls, and log viewer.
+    Supports single-file mode for all scripts and optional batch-directory
+    mode for scripts that handle multiple incidents (e.g. buyer, seller).
+
+    Constructor keyword arguments control which sections appear:
+        incidents       – list of incident codes this panel handles.
+                          If len > 1, a Single/Batch mode toggle is shown.
+        needs_template  – show a Kaizen template file picker.
+        needs_tracker   – show Italian/main tracker pickers in Advanced.
     """
 
     def __init__(
@@ -125,12 +135,20 @@ class BaseValidationPanel(QWidget):
         title: str,
         subtitle: str = "",
         settings_prefix: str = "",
+        incidents: Optional[List[str]] = None,
+        needs_template: bool = False,
+        needs_tracker: bool = False,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
         self._module_path = script_module_path
         self._worker: Optional[ScriptRunnerWorker] = None
+        self._temp_config_path: Optional[str] = None
         self._settings_prefix = settings_prefix or title.lower().replace(" ", "_")
+        self._incidents = incidents or []
+        self._needs_template = needs_template
+        self._needs_tracker = needs_tracker
+        self._has_batch = len(self._incidents) > 1
         pfx = f"accuracy.{self._settings_prefix}"
 
         inner = QWidget()
@@ -143,29 +161,155 @@ class BaseValidationPanel(QWidget):
         _restore_last_run(self._last_run, pfx)
         layout.addWidget(self._last_run)
 
-        # Config loader
+        # Config loader (YAML file)
         self.config_loader = ConfigLoaderWidget()
         self.config_loader.config_loaded.connect(self.populate_from_config)
         layout.addWidget(self.config_loader)
 
-        # File fields
+        # --- Testing period (shown when incidents or template are relevant) ---
+        if self._incidents or needs_template:
+            period_group = QGroupBox("Testing Period")
+            period_layout = QHBoxLayout(period_group)
+
+            self.fiscal_year = FormFieldWidget(
+                "Fiscal Year:", field_type="dropdown",
+                choices=[""] + FISCAL_YEARS,
+                tooltip="Reporting fiscal year, e.g. FY26",
+                settings_key=f"{pfx}.fiscal_year",
+            )
+            period_layout.addWidget(self.fiscal_year)
+
+            self.quarter = FormFieldWidget(
+                "Quarter:", field_type="dropdown",
+                choices=[""] + QUARTERS,
+                tooltip="Reporting quarter, e.g. Q1",
+                settings_key=f"{pfx}.quarter",
+            )
+            period_layout.addWidget(self.quarter)
+            layout.addWidget(period_group)
+
+        # --- Mode toggle (multi-incident scripts only) ---
+        if self._has_batch:
+            mode_row = QHBoxLayout()
+            mode_row.addWidget(QLabel("Mode:"))
+            self._single_radio = QRadioButton("Single Incident")
+            self._batch_radio = QRadioButton("Batch (All Incidents)")
+            self._single_radio.setChecked(True)
+            self._single_radio.toggled.connect(self._on_mode_changed)
+            mode_row.addWidget(self._single_radio)
+            mode_row.addWidget(self._batch_radio)
+            mode_row.addStretch()
+            layout.addLayout(mode_row)
+
+        # --- Single-file section ---
+        self._single_group = QGroupBox("Input / Output")
+        single_layout = QVBoxLayout(self._single_group)
+
+        if self._has_batch:
+            self.incident_code = FormFieldWidget(
+                "Incident Code:", field_type="dropdown",
+                choices=self._incidents,
+                tooltip="Select which incident to validate.",
+                settings_key=f"{pfx}.incident_code",
+            )
+            single_layout.addWidget(self.incident_code)
+
         self.input_file = FilePickerWidget(
             "Input transactions CSV:",
             mode="file",
-            tooltip="The raw transactions CSV file to validate.\nExample: 7_5_buyer_transactions.csv",
+            tooltip=(
+                "The raw transactions CSV file to validate.\n"
+                "Example: 7_35_FY26_Q1.csv"
+            ),
             settings_key=f"{pfx}.input_file",
         )
-        layout.addWidget(self.input_file)
+        single_layout.addWidget(self.input_file)
 
-        self.output_file = FilePickerWidget(
-            "Output results CSV:",
-            mode="save",
-            tooltip="Where to write the validation results CSV.\nExample: 7_5_buyer_results.csv",
-            settings_key=f"{pfx}.output_file",
+        if needs_template:
+            self.template_file = FilePickerWidget(
+                "Kaizen template CSV:",
+                mode="file",
+                tooltip=(
+                    "Kaizen expected values template file.\n"
+                    "Example: FY26 Q1 7_35.csv"
+                ),
+                settings_key=f"{pfx}.template_file",
+            )
+            single_layout.addWidget(self.template_file)
+
+        self.output_dir = FilePickerWidget(
+            "Output directory:",
+            mode="directory",
+            tooltip=(
+                "Directory where the output CSV will be created.\n"
+                "The filename is generated automatically from the\n"
+                "incident code and testing period."
+            ),
+            settings_key=f"{pfx}.output_dir",
         )
-        layout.addWidget(self.output_file)
+        single_layout.addWidget(self.output_dir)
 
-        # Options
+        # Auto-generated filename preview
+        self._output_preview = QLabel("")
+        self._output_preview.setStyleSheet(
+            "color: grey; font-size: 11px; margin-left: 4px;"
+        )
+        self._output_preview.setWordWrap(True)
+        single_layout.addWidget(self._output_preview)
+
+        # Connect signals that affect the preview
+        self.output_dir.path_changed.connect(lambda _: self._refresh_output_preview())
+        if self._has_batch and hasattr(self, "incident_code"):
+            self.incident_code.value_changed.connect(lambda _: self._refresh_output_preview())
+        if hasattr(self, "fiscal_year"):
+            self.fiscal_year.value_changed.connect(lambda _: self._refresh_output_preview())
+        if hasattr(self, "quarter"):
+            self.quarter.value_changed.connect(lambda _: self._refresh_output_preview())
+        self._refresh_output_preview()
+
+        layout.addWidget(self._single_group)
+
+        # --- Batch-directory section (multi-incident scripts only) ---
+        if self._has_batch:
+            self._batch_group = QGroupBox("Batch Directories")
+            batch_layout = QVBoxLayout(self._batch_group)
+            batch_layout.addWidget(QLabel(
+                "Set base directories — files are discovered by incident code pattern."
+            ))
+
+            self.extract_dir = FilePickerWidget(
+                "Extract directory:",
+                mode="directory",
+                tooltip="Directory containing per-incident extract CSVs.",
+                settings_key=f"{pfx}.extract_dir",
+            )
+            batch_layout.addWidget(self.extract_dir)
+
+            if needs_template:
+                self.template_dir = FilePickerWidget(
+                    "Template directory:",
+                    mode="directory",
+                    tooltip="Directory containing Kaizen template CSVs.",
+                    settings_key=f"{pfx}.template_dir",
+                )
+                batch_layout.addWidget(self.template_dir)
+
+            self.batch_output_dir = FilePickerWidget(
+                "Output directory:",
+                mode="directory",
+                tooltip="Directory for validated output CSVs.",
+                settings_key=f"{pfx}.batch_output_dir",
+            )
+            batch_layout.addWidget(self.batch_output_dir)
+
+            self._batch_group.setVisible(False)
+            layout.addWidget(self._batch_group)
+
+        # --- Hook: extra fields from subclasses ---
+        self._extra_fields_layout = QVBoxLayout()
+        layout.addLayout(self._extra_fields_layout)
+
+        # --- Options ---
         self.log_level = FormFieldWidget(
             "Log Level:", field_type="dropdown",
             choices=LOG_LEVELS, default="INFO",
@@ -188,6 +332,52 @@ class BaseValidationPanel(QWidget):
         )
         layout.addWidget(self.progress)
 
+        self.verbose = FormFieldWidget(
+            "Verbose", field_type="checkbox",
+            tooltip="Enable verbose output for debugging.",
+            settings_key=f"{pfx}.verbose",
+        )
+        layout.addWidget(self.verbose)
+
+        # --- Advanced section (tracker files) ---
+        if needs_tracker:
+            self._advanced_btn = QPushButton("\u25b6 Advanced")
+            self._advanced_btn.setFlat(True)
+            self._advanced_btn.setStyleSheet(
+                "text-align: left; padding: 2px;"
+            )
+            self._advanced_btn.clicked.connect(self._toggle_advanced)
+            layout.addWidget(self._advanced_btn)
+
+            self._advanced_widget = QWidget()
+            adv_layout = QVBoxLayout(self._advanced_widget)
+            adv_layout.setContentsMargins(10, 0, 0, 0)
+
+            self.italian_tracker = FilePickerWidget(
+                "Italian tracker CSV:",
+                mode="file",
+                tooltip=(
+                    "Italian fiscal code tracker file (optional).\n"
+                    "Used for Italian ID cross-referencing."
+                ),
+                settings_key=f"{pfx}.italian_tracker",
+            )
+            adv_layout.addWidget(self.italian_tracker)
+
+            self.main_tracker = FilePickerWidget(
+                "Main tracker CSV:",
+                mode="file",
+                tooltip=(
+                    "Main tracker file (optional).\n"
+                    "Used for cross-referencing known IDs."
+                ),
+                settings_key=f"{pfx}.main_tracker",
+            )
+            adv_layout.addWidget(self.main_tracker)
+
+            self._advanced_widget.setVisible(False)
+            layout.addWidget(self._advanced_widget)
+
         # Run controls
         self.run_controls = RunControlsWidget()
         self.run_controls.run_clicked.connect(self._on_run)
@@ -204,20 +394,198 @@ class BaseValidationPanel(QWidget):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(_scrollable(inner))
 
+    # ---- UI toggles ----
+
+    def _on_mode_changed(self, single_checked: bool) -> None:
+        """Toggle between single-file and batch-directory sections."""
+        self._single_group.setVisible(single_checked)
+        self._batch_group.setVisible(not single_checked)
+
+    def _toggle_advanced(self) -> None:
+        visible = not self._advanced_widget.isVisible()
+        self._advanced_widget.setVisible(visible)
+        self._advanced_btn.setText(
+            "\u25bc Advanced" if visible else "\u25b6 Advanced"
+        )
+
+    # ---- Output path resolution ----
+
+    def _resolve_output_filename(self) -> str:
+        """Generate the output filename from incident code + testing period."""
+        parts: List[str] = ["validated"]
+        if hasattr(self, "fiscal_year"):
+            fy = self.fiscal_year.get_value()
+            if fy:
+                parts.append(fy)
+        if hasattr(self, "quarter"):
+            qtr = self.quarter.get_value()
+            if qtr:
+                parts.append(qtr)
+        if self._has_batch and hasattr(self, "incident_code"):
+            code = self.incident_code.get_value()
+            if code:
+                parts.append(code)
+        elif self._incidents:
+            parts.append(self._incidents[0])
+        return "_".join(parts) + ".csv"
+
+    def _resolve_output_path(self) -> str:
+        """Return the full output filepath (directory + auto-generated name)."""
+        out_dir = self.output_dir.get_path()
+        if not out_dir:
+            return ""
+        return os.path.join(out_dir, self._resolve_output_filename())
+
+    def _refresh_output_preview(self) -> None:
+        """Update the output filename preview label."""
+        path = self._resolve_output_path()
+        if path:
+            self._output_preview.setText(f"\u2192 {path}")
+        else:
+            self._output_preview.setText("")
+
+    # ---- Config generation ----
+
+    def _uses_config_mode(self) -> bool:
+        """True when GUI fields require a temp YAML config."""
+        if self._has_batch and self._batch_radio.isChecked():
+            return True
+        if self._needs_template and hasattr(self, "template_file") and self.template_file.get_path():
+            return True
+        if hasattr(self, "fiscal_year") and self.fiscal_year.get_value():
+            return True
+        if self._needs_tracker:
+            if hasattr(self, "italian_tracker") and self.italian_tracker.get_path():
+                return True
+            if hasattr(self, "main_tracker") and self.main_tracker.get_path():
+                return True
+        return False
+
+    def _build_config_dict(self) -> Dict[str, Any]:
+        """Build a config dict mirroring the YAML structure the script expects."""
+        config: Dict[str, Any] = {}
+
+        # Testing period
+        if hasattr(self, "fiscal_year"):
+            fy = self.fiscal_year.get_value()
+            qtr = self.quarter.get_value() if hasattr(self, "quarter") else ""
+            if fy or qtr:
+                config["testing_period"] = {}
+                if fy:
+                    config["testing_period"]["fiscal_year"] = fy
+                if qtr:
+                    config["testing_period"]["quarter"] = qtr
+
+        # Mode & paths
+        if self._has_batch and self._batch_radio.isChecked():
+            config["mode"] = "batch"
+            batch_paths: Dict[str, str] = {}
+            if hasattr(self, "extract_dir"):
+                val = self.extract_dir.get_path()
+                if val:
+                    batch_paths["extract_dir"] = val
+            if hasattr(self, "template_dir"):
+                val = self.template_dir.get_path()
+                if val:
+                    batch_paths["template_dir"] = val
+            if hasattr(self, "batch_output_dir"):
+                val = self.batch_output_dir.get_path()
+                if val:
+                    batch_paths["output_dir"] = val
+            config["batch"] = {"incidents": "auto", "paths": batch_paths}
+        else:
+            config["mode"] = "single"
+            paths: Dict[str, str] = {}
+            input_path = self.input_file.get_path()
+            if input_path:
+                paths["input_file"] = input_path
+            output_path = self._resolve_output_path()
+            if output_path:
+                paths["output_file"] = output_path
+            if self._needs_template and hasattr(self, "template_file"):
+                tmpl = self.template_file.get_path()
+                if tmpl:
+                    paths["template_file"] = tmpl
+            if self._needs_tracker:
+                if hasattr(self, "italian_tracker"):
+                    val = self.italian_tracker.get_path()
+                    if val:
+                        paths["italian_tracker"] = val
+                if hasattr(self, "main_tracker"):
+                    val = self.main_tracker.get_path()
+                    if val:
+                        paths["main_tracker"] = val
+
+            single: Dict[str, Any] = {"paths": paths}
+            if self._has_batch and hasattr(self, "incident_code"):
+                single["incident_code"] = self.incident_code.get_value()
+            elif self._incidents:
+                single["incident_code"] = self._incidents[0]
+            config["single"] = single
+
+        # Processor / options
+        config["processor"] = {
+            "log_level": self.log_level.get_value() or "INFO",
+        }
+        if self.verbose.get_value():
+            config["processor"]["verbose"] = True
+        config["options"] = {
+            "dry_run": bool(self.dry_run.get_value()),
+            "show_progress": bool(self.progress.get_value()),
+        }
+
+        # Subclass hook
+        self._extend_config_dict(config)
+        return config
+
+    def _extend_config_dict(self, config: Dict[str, Any]) -> None:
+        """Hook for subclasses to inject extra config entries."""
+
+    @staticmethod
+    def _write_temp_config(config: Dict[str, Any]) -> str:
+        """Write config dict to a temporary YAML file, return the path."""
+        fd, path = tempfile.mkstemp(suffix=".yaml", prefix="gui_config_")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            yaml.safe_dump(config, fh, default_flow_style=False)
+        return path
+
+    def _cleanup_temp_config(self) -> None:
+        if self._temp_config_path:
+            try:
+                os.unlink(self._temp_config_path)
+            except OSError:
+                pass
+            self._temp_config_path = None
+
+    # ---- argv construction ----
+
+    def _build_simple_argv(self) -> List[str]:
+        """Fallback: positional input/output args (no YAML config)."""
+        argv: List[str] = ["--gui-mode"]
+        input_path = self.input_file.get_path()
+        output_path = self._resolve_output_path()
+        if input_path:
+            argv.append(input_path)
+        if output_path:
+            argv.append(output_path)
+        return argv
+
     def build_argv(self) -> List[str]:
         """Build sys.argv from current form state."""
-        argv: List[str] = ["--gui-mode"]
+        # Priority 1: user-loaded YAML config
         config_path = self.config_loader.get_last_path()
         if config_path:
-            argv.extend(["--config", config_path])
+            argv = ["--gui-mode", "--config", config_path]
+        # Priority 2: generate temp config when advanced fields are used
+        elif self._uses_config_mode():
+            config = self._build_config_dict()
+            self._temp_config_path = self._write_temp_config(config)
+            argv = ["--gui-mode", "--config", self._temp_config_path]
+        # Priority 3: simple positional args
         else:
-            input_path = self.input_file.get_path()
-            output_path = self.output_file.get_path()
-            if input_path:
-                argv.append(input_path)
-            if output_path:
-                argv.append(output_path)
+            argv = self._build_simple_argv()
 
+        # Common CLI flags (override values in config)
         log_level = self.log_level.get_value()
         if log_level:
             argv.extend(["--log-level", log_level])
@@ -227,13 +595,64 @@ class BaseValidationPanel(QWidget):
             argv.append("--progress")
         return argv
 
+    # ---- Config loader callback ----
+
     def populate_from_config(self, config: Dict[str, Any]) -> None:
-        """Fill form fields from parsed YAML config dict."""
-        paths = config.get("paths", {})
+        """Fill form fields from a parsed YAML config dict."""
+        # Testing period
+        period = config.get("testing_period", {})
+        if hasattr(self, "fiscal_year") and period.get("fiscal_year"):
+            self.fiscal_year.set_value(period["fiscal_year"])
+        if hasattr(self, "quarter") and period.get("quarter"):
+            self.quarter.set_value(period["quarter"])
+
+        mode = config.get("mode", "single")
+
+        if mode == "batch" and self._has_batch:
+            self._batch_radio.setChecked(True)
+            bp = config.get("batch", {}).get("paths", {})
+            if hasattr(self, "extract_dir"):
+                self.extract_dir.set_path(bp.get("extract_dir", ""))
+            if hasattr(self, "template_dir"):
+                self.template_dir.set_path(bp.get("template_dir", ""))
+            if hasattr(self, "batch_output_dir"):
+                self.batch_output_dir.set_path(bp.get("output_dir", ""))
+        else:
+            if self._has_batch:
+                self._single_radio.setChecked(True)
+            # Support both single.paths and flat paths structures
+            paths = config.get("single", {}).get("paths", {})
+            if not paths:
+                paths = config.get("paths", {})
+            self.input_file.set_path(paths.get("input_file", ""))
+            # Extract directory from output_file if it's a full path
+            output = paths.get("output_file", "")
+            if output and not os.path.isdir(output):
+                self.output_dir.set_path(str(Path(output).parent))
+            else:
+                self.output_dir.set_path(output)
+            if self._needs_template and hasattr(self, "template_file"):
+                self.template_file.set_path(paths.get("template_file", ""))
+            if self._needs_tracker:
+                if hasattr(self, "italian_tracker"):
+                    self.italian_tracker.set_path(
+                        paths.get("italian_tracker", "")
+                    )
+                if hasattr(self, "main_tracker"):
+                    self.main_tracker.set_path(
+                        paths.get("main_tracker", "")
+                    )
+            incident = config.get("single", {}).get("incident_code", "")
+            if incident and self._has_batch and hasattr(self, "incident_code"):
+                self.incident_code.set_value(incident)
+
+        # Processor settings
         processor = config.get("processor", {})
-        self.input_file.set_path(paths.get("input_file", ""))
-        self.output_file.set_path(paths.get("output_file", ""))
         self.log_level.set_value(processor.get("log_level", "INFO"))
+        if processor.get("verbose"):
+            self.verbose.set_value("true")
+
+    # ---- Execution ----
 
     def _on_run(self) -> None:
         self._execute(dry_run=False)
@@ -283,6 +702,7 @@ class BaseValidationPanel(QWidget):
             )
             _update_last_run(self._last_run, pfx, False)
         self._worker = None
+        self._cleanup_temp_config()
 
 
 # ---------------------------------------------------------------------------
@@ -298,81 +718,166 @@ class DecisionMakerPanel(BaseValidationPanel):
         title: str,
         subtitle: str = "",
         settings_prefix: str = "",
+        incidents: Optional[List[str]] = None,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(
             script_module_path, title,
             subtitle=subtitle,
             settings_prefix=settings_prefix,
+            incidents=incidents,
+            needs_template=True,
+            needs_tracker=False,
             parent=parent,
         )
         pfx = f"accuracy.{self._settings_prefix}"
 
-        # Find the inner layout (inside the scroll area)
-        scroll_area = self.findChild(QScrollArea)
-        assert scroll_area is not None
-        inner = scroll_area.widget()
-        assert inner is not None
-        layout: QVBoxLayout = inner.layout()  # type: ignore[assignment]
-
-        # Insert extra fields before log level
-        idx = layout.indexOf(self.log_level)
-
+        # Insert LEI data and ID formats into the extra-fields hook area
         self.lei_data_file = FilePickerWidget(
             "LEI reference data CSV:",
             mode="file", file_filter=CSV_FILTER,
-            tooltip="LEI reference data for decision maker lookups.\nExample: lei_data_2025.csv",
+            tooltip=(
+                "Branch Code \u2192 LEI mapping file for decision maker lookups.\n"
+                "Example: lei_data_2025.csv"
+            ),
             settings_key=f"{pfx}.lei_data_file",
         )
-        layout.insertWidget(idx, self.lei_data_file)
+        self._extra_fields_layout.addWidget(self.lei_data_file)
 
         self.id_formats_file = FilePickerWidget(
             "ID format definitions CSV:",
             mode="file", file_filter=CSV_FILTER,
-            tooltip="CSV defining valid ID formats per country.\nExample: id_formats.csv",
+            tooltip="CSV defining valid ID formats per country (optional).\nExample: id_formats.csv",
             settings_key=f"{pfx}.id_formats_file",
         )
-        layout.insertWidget(idx + 1, self.id_formats_file)
+        self._extra_fields_layout.addWidget(self.id_formats_file)
 
-        # Add verbose checkbox after dry_run
-        self.verbose = FormFieldWidget(
-            "Verbose", field_type="checkbox",
-            tooltip="Enable verbose output for debugging.",
-            settings_key=f"{pfx}.verbose",
-        )
-        dry_run_idx = layout.indexOf(self.dry_run)
-        layout.insertWidget(dry_run_idx + 1, self.verbose)
+    def _extend_config_dict(self, config: Dict[str, Any]) -> None:
+        """Add LEI data and ID formats to the generated config."""
+        paths = config.setdefault("single", {}).setdefault("paths", {})
+        lei = self.lei_data_file.get_path()
+        if lei:
+            paths["lei_data_file"] = lei
+        id_fmt = self.id_formats_file.get_path()
+        if id_fmt:
+            paths["id_formats_file"] = id_fmt
 
-    def build_argv(self) -> List[str]:
-        """Build argv with extra decision-maker fields."""
+    def _build_simple_argv(self) -> List[str]:
+        """FTBDM/FTSDM use named args (--input / --lei-data), not positional."""
         argv: List[str] = ["--gui-mode"]
-        config_path = self.config_loader.get_last_path()
-        if config_path:
-            argv.extend(["--config", config_path])
-        else:
-            input_path = self.input_file.get_path()
-            output_path = self.output_file.get_path()
-            if input_path:
-                argv.extend(["--input", input_path])
-            if output_path:
-                argv.extend(["--output", output_path])
-
+        input_path = self.input_file.get_path()
+        output_path = self._resolve_output_path()
         lei_path = self.lei_data_file.get_path()
+        id_fmt_path = self.id_formats_file.get_path()
+
+        if input_path:
+            argv.extend(["--input", input_path])
+        if output_path:
+            argv.extend(["--output", output_path])
         if lei_path:
             argv.extend(["--lei-data", lei_path])
-
-        id_fmt_path = self.id_formats_file.get_path()
         if id_fmt_path:
             argv.extend(["--id-formats", id_fmt_path])
-
-        log_level = self.log_level.get_value()
-        if log_level:
-            argv.extend(["--log-level", log_level])
-        if self.dry_run.get_value():
-            argv.append("--dry-run")
         if self.verbose.get_value():
             argv.append("--verbose")
         return argv
+
+    def populate_from_config(self, config: Dict[str, Any]) -> None:
+        """Extend base populate to fill LEI / ID-formats fields."""
+        super().populate_from_config(config)
+        paths = config.get("single", {}).get("paths", {})
+        if not paths:
+            paths = config.get("paths", {})
+        self.lei_data_file.set_path(paths.get("lei_data_file", ""))
+        self.id_formats_file.set_path(paths.get("id_formats_file", ""))
+
+
+# ---------------------------------------------------------------------------
+# Helper: build a per-script config dict from QSettings cache
+# ---------------------------------------------------------------------------
+
+def _build_cached_config(
+    incident_name: str,
+    input_path: str,
+    output_path: str,
+    log_level: str = "INFO",
+) -> Dict[str, Any]:
+    """Build a YAML-compatible config dict by reading the QSettings cache
+    that was persisted by the individual panel for *incident_name*.
+
+    This lets Run All reuse template paths, tracker files, LEI data, etc.
+    that the user configured in each tile at any point in the past.
+    """
+    pfx = INCIDENT_SETTINGS_PREFIX.get(incident_name, "")
+    if not pfx:
+        # Fallback: bare input / output only
+        return {
+            "mode": "single",
+            "single": {"paths": {"input_file": input_path, "output_file": output_path}},
+            "processor": {"log_level": log_level},
+        }
+
+    config: Dict[str, Any] = {"mode": "single"}
+
+    # Testing period
+    fy = settings.load(f"{pfx}.fiscal_year", "")
+    qtr = settings.load(f"{pfx}.quarter", "")
+    if fy or qtr:
+        config["testing_period"] = {}
+        if fy:
+            config["testing_period"]["fiscal_year"] = fy
+        if qtr:
+            config["testing_period"]["quarter"] = qtr
+
+    # Single-mode paths (override input/output with discovered files)
+    paths: Dict[str, str] = {
+        "input_file": input_path,
+        "output_file": output_path,
+    }
+
+    # Template file (buyer, seller, inconsistent, decision-maker panels)
+    tmpl = settings.load(f"{pfx}.template_file", "")
+    if tmpl:
+        paths["template_file"] = tmpl
+
+    # Tracker files (buyer, seller, inconsistent panels)
+    it = settings.load(f"{pfx}.italian_tracker", "")
+    if it:
+        paths["italian_tracker"] = it
+    mt = settings.load(f"{pfx}.main_tracker", "")
+    if mt:
+        paths["main_tracker"] = mt
+
+    # LEI data (FTBDM / FTSDM panels)
+    lei = settings.load(f"{pfx}.lei_data_file", "")
+    if lei:
+        paths["lei_data_file"] = lei
+    id_fmt = settings.load(f"{pfx}.id_formats_file", "")
+    if id_fmt:
+        paths["id_formats_file"] = id_fmt
+
+    # Incident code
+    incident_code = settings.load(f"{pfx}.incident_code", "")
+    single: Dict[str, Any] = {"paths": paths}
+    if incident_code:
+        single["incident_code"] = incident_code
+    config["single"] = single
+
+    # Processor
+    cached_level = settings.load(f"{pfx}.log_level", "")
+    config["processor"] = {
+        "log_level": log_level or cached_level or "INFO",
+    }
+    if settings.load(f"{pfx}.verbose", ""):
+        config["processor"]["verbose"] = True
+
+    # Options
+    config["options"] = {
+        "dry_run": False,
+        "show_progress": bool(settings.load(f"{pfx}.progress", "")),
+    }
+
+    return config
 
 
 # ---------------------------------------------------------------------------
@@ -392,6 +897,7 @@ class RunAllPanel(QWidget):
         super().__init__(parent)
         self._worker: Optional[ScriptRunnerWorker] = None
         self._run_queue: List[Dict[str, str]] = []
+        self._temp_config_files: List[str] = []
         pfx = "accuracy.run_all"
 
         inner = QWidget()
@@ -635,11 +1141,19 @@ class RunAllPanel(QWidget):
         return argv
 
     def _execute_batch(self, dry_run: bool = False) -> None:
-        """Run each discovered script one at a time in sequence."""
+        """Run each discovered script one at a time in sequence.
+
+        For each incident, reads the per-tile QSettings cache to build a
+        full YAML config (including template, tracker, LEI data, etc.)
+        so the script gets the same parameters as if run from its own tile.
+        """
         base_out = self.base_output_dir.get_path()
         selected = self.incident_selector.get_selected()
+        log_level = self.log_level.get_value() or "INFO"
 
         self._run_queue = []
+        self._cleanup_temp_configs()
+
         for name in selected:
             input_path = self._discovered_files.get(name)
             if not input_path:
@@ -649,11 +1163,28 @@ class RunAllPanel(QWidget):
                 continue
             output_name = f"{Path(input_path).stem}_results.csv"
             output_path = os.path.join(base_out, output_name)
+
+            # Build a config from the tile's cached settings
+            config = _build_cached_config(
+                name, input_path, output_path, log_level
+            )
+            if dry_run:
+                config.setdefault("options", {})["dry_run"] = True
+            if self.progress.get_value():
+                config.setdefault("options", {})["show_progress"] = True
+
+            # Write to a temp YAML file
+            fd, config_path = tempfile.mkstemp(
+                suffix=".yaml", prefix=f"gui_runall_{name}_"
+            )
+            with os.fdopen(fd, "w", encoding="utf-8") as fh:
+                yaml.safe_dump(config, fh, default_flow_style=False)
+            self._temp_config_files.append(config_path)
+
             self._run_queue.append({
                 "name": name,
                 "module": module_path,
-                "input": input_path,
-                "output": output_path,
+                "config": config_path,
                 "dry_run": str(dry_run),
             })
 
@@ -665,7 +1196,8 @@ class RunAllPanel(QWidget):
 
         self.log_viewer.clear()
         self.log_viewer.append_line(
-            f"[GUI] Batch mode: running {len(self._run_queue)} validation(s) sequentially"
+            f"[GUI] Batch mode: running {len(self._run_queue)} validation(s) "
+            f"sequentially (using per-tile cached settings)"
         )
         self.run_controls.set_running(True)
         self._run_next_in_queue()
@@ -677,6 +1209,7 @@ class RunAllPanel(QWidget):
             self.log_viewer.append_line("[GUI] Batch complete.")
             pfx = "accuracy.run_all"
             _update_last_run(self._last_run, pfx, True)
+            self._cleanup_temp_configs()
             return
 
         job = self._run_queue.pop(0)
@@ -689,7 +1222,7 @@ class RunAllPanel(QWidget):
             self._run_next_in_queue()
             return
 
-        argv = ["--gui-mode", job["input"], job["output"]]
+        argv = ["--gui-mode", "--config", job["config"]]
         log_level = self.log_level.get_value()
         if log_level:
             argv.extend(["--log-level", log_level])
@@ -725,9 +1258,19 @@ class RunAllPanel(QWidget):
                 )
                 pfx = "accuracy.run_all"
                 _update_last_run(self._last_run, pfx, False)
+                self._cleanup_temp_configs()
                 return
         self._worker = None
         self._run_next_in_queue()
+
+    def _cleanup_temp_configs(self) -> None:
+        """Remove any temp YAML config files created during this batch."""
+        for path in self._temp_config_files:
+            try:
+                os.unlink(path)
+            except OSError:
+                pass
+        self._temp_config_files.clear()
 
     def _on_cancel(self) -> None:
         self._run_queue.clear()
@@ -735,6 +1278,7 @@ class RunAllPanel(QWidget):
             self._worker.cancel()
             self.log_viewer.append_error("[GUI] Cancelled by user")
         self.run_controls.set_running(False)
+        self._cleanup_temp_configs()
 
     def _on_finished(self, exit_code: int) -> None:
         """Handle completion for config mode."""
@@ -1919,47 +2463,62 @@ class AccuracyTab(QWidget):
         ("Buyer ID", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.buyer_id_validation",
           "title": "Buyer ID Validation",
-          "subtitle": "Validates buyer identification data (incidents 7_5, 7_6)",
-          "settings_prefix": "buyer_id"}),
+          "subtitle": "Validates buyer identification data (incidents 7_35, 7_37, 7_39)",
+          "settings_prefix": "buyer_id",
+          "incidents": ["7_35", "7_37", "7_39"],
+          "needs_template": True,
+          "needs_tracker": True}),
         ("Seller ID", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.seller_id_validation",
           "title": "Seller ID Validation",
-          "subtitle": "Validates seller identification data (incidents 7_7, 7_8)",
-          "settings_prefix": "seller_id"}),
+          "subtitle": "Validates seller identification data (incidents 16_19, 16_21, 16_23)",
+          "settings_prefix": "seller_id",
+          "incidents": ["16_19", "16_21", "16_23"],
+          "needs_template": True,
+          "needs_tracker": True}),
         ("Inconsistent Buyer", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.inconsistent_buyer_id_validation",
           "title": "Inconsistent Buyer ID Validation",
-          "subtitle": "Detects inconsistent buyer IDs across transactions (incidents 7_37, 7_38)",
-          "settings_prefix": "inconsistent_buyer"}),
+          "subtitle": "Detects inconsistent buyer IDs across transactions (incident 7_66)",
+          "settings_prefix": "inconsistent_buyer",
+          "incidents": ["7_66"],
+          "needs_template": True,
+          "needs_tracker": True}),
         ("Inconsistent Seller", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.inconsistent_seller_id_validation",
           "title": "Inconsistent Seller ID Validation",
-          "subtitle": "Detects inconsistent seller IDs across transactions (incidents 7_39, 7_40)",
-          "settings_prefix": "inconsistent_seller"}),
+          "subtitle": "Detects inconsistent seller IDs across transactions (incident 16_20)",
+          "settings_prefix": "inconsistent_seller",
+          "incidents": ["16_20"],
+          "needs_template": True,
+          "needs_tracker": True}),
         ("FTBDM", DecisionMakerPanel,
          {"script_module_path": "accuracy_testing.scripts.validate_ftbdm",
           "title": "FTBDM Validation",
-          "subtitle": "Field 27 Buyer Decision Maker validation",
-          "settings_prefix": "ftbdm"}),
+          "subtitle": "Field 27 Buyer Decision Maker validation (incident 12_17)",
+          "settings_prefix": "ftbdm",
+          "incidents": ["12_17"]}),
         ("FTSDM", DecisionMakerPanel,
          {"script_module_path": "accuracy_testing.scripts.validate_ftsdm",
           "title": "FTSDM Validation",
-          "subtitle": "Field 28 Seller Decision Maker validation",
-          "settings_prefix": "ftsdm"}),
+          "subtitle": "Field 28 Seller Decision Maker validation (incident 21_17)",
+          "settings_prefix": "ftsdm",
+          "incidents": ["21_17"]}),
         ("Pricing", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.pricing_validation",
           "title": "Pricing Validation",
-          "subtitle": "Validates transaction pricing fields",
-          "settings_prefix": "pricing"}),
+          "subtitle": "Validates transaction pricing fields (incident 35_3)",
+          "settings_prefix": "pricing",
+          "incidents": ["35_3"]}),
         ("Non-Zero Qty", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.non_zero_net_quantity",
           "title": "Non-Zero Net Quantity Validation",
-          "subtitle": "Checks that net quantity is non-zero where required",
+          "subtitle": "Checks that net quantity is non-zero where required (incident 7_6)",
           "settings_prefix": "non_zero_qty"}),
         ("Non-Zero Amt", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.non_zero_net_amount",
           "title": "Non-Zero Net Amount Validation",
-          "subtitle": "Checks that net amount is non-zero where required",
+          "subtitle": "Checks that net amount is non-zero where required (incident 7_42)",
           "settings_prefix": "non_zero_amt"}),
         ("Run All", RunAllPanel, {}),
         (None, None, {}),  # Section separator

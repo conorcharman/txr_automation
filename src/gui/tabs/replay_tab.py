@@ -10,22 +10,31 @@ Four replay processing script panels:
 - Merge Inconsistent Summaries
 
 Uses a sidebar list + stacked widget layout with per-panel log viewers.
+Panels persist field values across sessions via QSettings caching.
 """
 
 import importlib
+import os
+import tempfile
+from datetime import datetime
+from pathlib import Path
 from types import ModuleType
 from typing import Any, Dict, List, Optional
 
+import yaml
 from PySide6.QtWidgets import (
+    QGroupBox,
     QHBoxLayout,
     QLabel,
     QListWidget,
+    QScrollArea,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
 
-from gui.constants import LOG_LEVELS
+from gui.constants import FISCAL_YEARS, LOG_LEVELS, QUARTERS
+from gui.utils.settings import settings
 from gui.widgets import (
     ConfigLoaderWidget,
     FilePickerWidget,
@@ -44,6 +53,47 @@ def _import_script(module_path: str) -> Optional[ModuleType]:
         return None
 
 
+def _subtitle(text: str) -> QLabel:
+    """Create a grey italic subtitle label."""
+    lbl = QLabel(text)
+    lbl.setStyleSheet("color: grey; font-style: italic; margin-bottom: 4px;")
+    return lbl
+
+
+def _last_run_label() -> QLabel:
+    """Create the last-run status indicator label."""
+    lbl = QLabel("")
+    lbl.setStyleSheet("color: grey; font-size: 11px;")
+    return lbl
+
+
+def _update_last_run(label: QLabel, settings_key: str, success: bool) -> None:
+    """Update a last-run label with current timestamp and persist it."""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    icon = "\u2713" if success else "\u2717"
+    label.setText(f"Last run: {now} {icon}")
+    settings.save(f"{settings_key}.last_run_time", now)
+    settings.save(f"{settings_key}.last_run_ok", success)
+
+
+def _restore_last_run(label: QLabel, settings_key: str) -> None:
+    """Restore last-run indicator from QSettings."""
+    ts = settings.load(f"{settings_key}.last_run_time")
+    ok = settings.load(f"{settings_key}.last_run_ok")
+    if ts:
+        icon = "\u2713" if str(ok).lower() == "true" else "\u2717"
+        label.setText(f"Last run: {ts} {icon}")
+
+
+def _scrollable(inner: QWidget) -> QScrollArea:
+    """Wrap *inner* in a QScrollArea that resizes with its contents."""
+    scroll = QScrollArea()
+    scroll.setWidget(inner)
+    scroll.setWidgetResizable(True)
+    scroll.setFrameShape(scroll.Shape.NoFrame)
+    return scroll
+
+
 # ---------------------------------------------------------------------------
 # Base replay panel (Phase 2 / Phase 3 style)
 # ---------------------------------------------------------------------------
@@ -51,14 +101,16 @@ def _import_script(module_path: str) -> Optional[ModuleType]:
 class BaseReplayPanel(QWidget):
     """Base panel for replay processor scripts.
 
-    Provides config file, use-env checkbox, log level, and optional
-    path override fields.
+    Provides testing period, path fields, options, and optional
+    YAML config loading.  Direct fields take priority over loaded YAML;
+    a temp config is generated at run time and passed to the script.
     """
 
     def __init__(
         self,
         script_module_path: str,
         title: str,
+        subtitle: str = "",
         extra_paths: Optional[List[Dict[str, str]]] = None,
         settings_prefix: str = "",
         parent: Optional[QWidget] = None,
@@ -66,21 +118,76 @@ class BaseReplayPanel(QWidget):
         super().__init__(parent)
         self._module_path = script_module_path
         self._worker: Optional[ScriptRunnerWorker] = None
+        self._temp_config_path: Optional[str] = None
+        self._loaded_config: Optional[Dict[str, Any]] = None
         pfx = f"replay.{settings_prefix}" if settings_prefix else "replay"
+        self._pfx = pfx
 
-        layout = QVBoxLayout(self)
+        inner = QWidget()
+        layout = QVBoxLayout(inner)
+
+        # --- Header ---
         layout.addWidget(QLabel(f"<b>{title}</b>"))
+        if subtitle:
+            layout.addWidget(_subtitle(subtitle))
 
+        self._last_run = _last_run_label()
+        _restore_last_run(self._last_run, pfx)
+        layout.addWidget(self._last_run)
+
+        # --- Configuration File (secondary) ---
+        config_group = QGroupBox("Configuration File")
+        config_layout = QVBoxLayout(config_group)
         self.config_loader = ConfigLoaderWidget()
         self.config_loader.config_loaded.connect(self.populate_from_config)
-        layout.addWidget(self.config_loader)
+        config_layout.addWidget(self.config_loader)
+        layout.addWidget(config_group)
 
-        self.use_env = FormFieldWidget(
-            "Use Environment Vars", field_type="checkbox",
-            tooltip="Load configuration from environment variables instead of YAML.",
-            settings_key=f"{pfx}.use_env",
+        # --- Testing Period ---
+        period_group = QGroupBox("Testing Period")
+        period_layout = QHBoxLayout(period_group)
+
+        self.fiscal_year = FormFieldWidget(
+            "Fiscal Year:", field_type="dropdown",
+            choices=[""] + FISCAL_YEARS,
+            tooltip="Reporting fiscal year, e.g. FY26",
+            settings_key=f"{pfx}.fiscal_year",
         )
-        layout.addWidget(self.use_env)
+        period_layout.addWidget(self.fiscal_year)
+
+        self.quarter = FormFieldWidget(
+            "Quarter:", field_type="dropdown",
+            choices=[""] + QUARTERS,
+            tooltip="Reporting quarter, e.g. Q1",
+            settings_key=f"{pfx}.quarter",
+        )
+        period_layout.addWidget(self.quarter)
+        layout.addWidget(period_group)
+
+        # Connect testing period changes to path hint refresh
+        self.fiscal_year.value_changed.connect(lambda _: self._refresh_path_hints())
+        self.quarter.value_changed.connect(lambda _: self._refresh_path_hints())
+
+        # --- Paths ---
+        paths_group = QGroupBox("Paths")
+        paths_layout = QVBoxLayout(paths_group)
+
+        self._path_pickers: Dict[str, FilePickerWidget] = {}
+        if extra_paths:
+            for path_def in extra_paths:
+                picker = FilePickerWidget(
+                    path_def["label"], mode="directory",
+                    tooltip=path_def.get("tooltip", ""),
+                    settings_key=f"{pfx}.{path_def['key']}",
+                )
+                paths_layout.addWidget(picker)
+                self._path_pickers[path_def["key"]] = picker
+
+        layout.addWidget(paths_group)
+
+        # --- Options ---
+        options_group = QGroupBox("Options")
+        options_layout = QVBoxLayout(options_group)
 
         self.log_level = FormFieldWidget(
             "Log Level:", field_type="dropdown",
@@ -88,21 +195,10 @@ class BaseReplayPanel(QWidget):
             tooltip="Logging verbosity level.",
             settings_key=f"{pfx}.log_level",
         )
-        layout.addWidget(self.log_level)
+        options_layout.addWidget(self.log_level)
+        layout.addWidget(options_group)
 
-        # Optional path overrides
-        self._path_pickers: Dict[str, FilePickerWidget] = {}
-        if extra_paths:
-            layout.addWidget(QLabel("Path Overrides (optional):"))
-            for path_def in extra_paths:
-                picker = FilePickerWidget(
-                    path_def["label"], mode="directory",
-                    tooltip=path_def.get("tooltip", ""),
-                    settings_key=f"{pfx}.{path_def['key']}",
-                )
-                layout.addWidget(picker)
-                self._path_pickers[path_def["key"]] = picker
-
+        # --- Run controls + Log viewer ---
         self.run_controls = RunControlsWidget()
         self.run_controls.run_clicked.connect(self._on_run)
         self.run_controls.cancel_clicked.connect(self._on_cancel)
@@ -113,26 +209,130 @@ class BaseReplayPanel(QWidget):
         self.log_viewer = LogViewerWidget()
         layout.addWidget(self.log_viewer, stretch=1)
 
+        # Wrap in scroll area
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(_scrollable(inner))
+
+        # Refresh hints with initial values
+        self._refresh_path_hints()
+
+    # -- Path hint refresh ------------------------------------------------
+
+    def _refresh_path_hints(self) -> None:
+        """Update path picker tooltips with FY/Q context hints."""
+        fy = self.fiscal_year.get_value() or "FY__"
+        qtr = self.quarter.get_value() or "Q_"
+        hint = f"\u2026/{fy}/{qtr}"
+        for key, picker in self._path_pickers.items():
+            base = picker.get_path()
+            if base:
+                continue  # don't overwrite a user-entered path tooltip
+            picker.setToolTip(f"Expected path pattern: {hint}/{key}")
+
+    # -- Config building --------------------------------------------------
+
+    def _build_config_dict(self) -> Dict[str, Any]:
+        """Generate a YAML-compatible config dict from direct fields.
+
+        If the user loaded a YAML via the config loader, that YAML is
+        used as a base and direct-field values are overlaid on top.
+        """
+        config: Dict[str, Any] = dict(self._loaded_config) if self._loaded_config else {}
+
+        # Testing period metadata
+        fy = self.fiscal_year.get_value()
+        qtr = self.quarter.get_value()
+        if fy or qtr:
+            tp = config.setdefault("testing_period", {})
+            if fy:
+                tp["fiscal_year"] = fy
+            if qtr:
+                tp["quarter"] = qtr
+
+        # Paths — overlay direct-field values on existing config paths
+        paths = config.setdefault("paths", {})
+        for key, picker in self._path_pickers.items():
+            val = picker.get_path()
+            if val:
+                paths[key] = val
+
+        # Processor options
+        proc = config.setdefault("processor", {})
+        log_level = self.log_level.get_value()
+        if log_level:
+            proc["log_level"] = log_level
+
+        return config
+
+    def _write_temp_config(self) -> str:
+        """Write the merged config dict to a temp YAML file.
+
+        Returns the path to the temp file.  The caller is responsible
+        for cleanup (handled in _on_finished).
+        """
+        config = self._build_config_dict()
+        fd, path = tempfile.mkstemp(suffix=".yaml", prefix="gui_replay_")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            yaml.safe_dump(config, fh, default_flow_style=False)
+        self._temp_config_path = path
+        return path
+
+    def _cleanup_temp_config(self) -> None:
+        """Remove the temp config file if it exists."""
+        if self._temp_config_path and os.path.isfile(self._temp_config_path):
+            try:
+                os.remove(self._temp_config_path)
+            except OSError:
+                pass
+            self._temp_config_path = None
+
+    # -- Argv building ----------------------------------------------------
+
     def build_argv(self) -> List[str]:
-        """Build argv for the replay processor."""
-        argv: List[str] = []
-        config_path = self.config_loader.get_last_path()
-        if config_path:
-            argv.extend(["--config", config_path])
-        if self.use_env.get_value():
-            argv.append("--use-env")
+        """Build argv for the replay processor.
+
+        Generates a temp config from direct fields (overlaid on any
+        loaded YAML) and passes --config <tmp> --gui-mode.
+        """
+        argv: List[str] = ["--gui-mode"]
+
+        # Generate temp config from direct fields (overlaid on loaded YAML)
+        config_path = self._write_temp_config()
+        argv.extend(["--config", config_path])
+
         log_level = self.log_level.get_value()
         if log_level:
             argv.extend(["--log-level", log_level])
+
         return argv
 
+    # -- Config population ------------------------------------------------
+
     def populate_from_config(self, config: Dict[str, Any]) -> None:
-        """Fill path overrides from YAML config."""
+        """Fill direct fields from loaded YAML config."""
+        self._loaded_config = config
+
+        # Testing period
+        tp = config.get("testing_period", {})
+        if tp.get("fiscal_year") and hasattr(self, "fiscal_year"):
+            self.fiscal_year.set_value(tp["fiscal_year"])
+        if tp.get("quarter") and hasattr(self, "quarter"):
+            self.quarter.set_value(tp["quarter"])
+
+        # Paths
         paths = config.get("paths", {})
         for key, picker in self._path_pickers.items():
             val = paths.get(key, "")
             if val:
                 picker.set_path(str(val))
+
+        # Processor
+        proc = config.get("processor", {})
+        if proc.get("log_level"):
+            self.log_level.set_value(proc["log_level"])
+
+    # -- Run / Cancel / Finished ------------------------------------------
 
     def _on_run(self) -> None:
         module = _import_script(self._module_path)
@@ -160,12 +360,15 @@ class BaseReplayPanel(QWidget):
 
     def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if exit_code == 0:
+        success = exit_code == 0
+        if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
             self.log_viewer.append_error(
                 f"[GUI] Finished with exit code {exit_code}"
             )
+        _update_last_run(self._last_run, self._pfx, success)
+        self._cleanup_temp_config()
         self._worker = None
 
 
@@ -179,20 +382,71 @@ class MergeInconsistentPanel(QWidget):
     def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
         self._worker: Optional[ScriptRunnerWorker] = None
+        self._temp_config_path: Optional[str] = None
+        self._loaded_config: Optional[Dict[str, Any]] = None
         pfx = "replay.merge_inconsistent"
+        self._pfx = pfx
 
-        layout = QVBoxLayout(self)
+        inner = QWidget()
+        layout = QVBoxLayout(inner)
+
+        # --- Header ---
         layout.addWidget(QLabel("<b>Merge Inconsistent Summaries</b>"))
+        layout.addWidget(_subtitle(
+            "Merge Phase III inconsistent ID and name summary files"
+        ))
 
+        self._last_run = _last_run_label()
+        _restore_last_run(self._last_run, pfx)
+        layout.addWidget(self._last_run)
+
+        # --- Configuration File (secondary) ---
+        config_group = QGroupBox("Configuration File")
+        config_layout = QVBoxLayout(config_group)
         self.config_loader = ConfigLoaderWidget()
-        layout.addWidget(self.config_loader)
+        self.config_loader.config_loaded.connect(self.populate_from_config)
+        config_layout.addWidget(self.config_loader)
+        layout.addWidget(config_group)
+
+        # --- Testing Period ---
+        period_group = QGroupBox("Testing Period")
+        period_layout = QHBoxLayout(period_group)
+
+        self.fiscal_year = FormFieldWidget(
+            "Fiscal Year:", field_type="dropdown",
+            choices=[""] + FISCAL_YEARS,
+            tooltip="Reporting fiscal year, e.g. FY26",
+            settings_key=f"{pfx}.fiscal_year",
+        )
+        period_layout.addWidget(self.fiscal_year)
+
+        self.quarter = FormFieldWidget(
+            "Quarter:", field_type="dropdown",
+            choices=[""] + QUARTERS,
+            tooltip="Reporting quarter, e.g. Q1",
+            settings_key=f"{pfx}.quarter",
+        )
+        period_layout.addWidget(self.quarter)
+        layout.addWidget(period_group)
+
+        # --- Paths ---
+        paths_group = QGroupBox("Paths")
+        paths_layout = QVBoxLayout(paths_group)
 
         self.input_dir = FilePickerWidget(
             "Input Directory:", mode="directory",
-            tooltip="Directory containing inconsistent ID summary files.",
+            tooltip=(
+                "Directory containing Phase III inconsistent ID\n"
+                "and name summary CSV files."
+            ),
             settings_key=f"{pfx}.input_dir",
         )
-        layout.addWidget(self.input_dir)
+        paths_layout.addWidget(self.input_dir)
+        layout.addWidget(paths_group)
+
+        # --- Options ---
+        options_group = QGroupBox("Options")
+        options_layout = QVBoxLayout(options_group)
 
         self.log_level = FormFieldWidget(
             "Log Level:", field_type="dropdown",
@@ -200,22 +454,24 @@ class MergeInconsistentPanel(QWidget):
             tooltip="Logging verbosity level.",
             settings_key=f"{pfx}.log_level",
         )
-        layout.addWidget(self.log_level)
+        options_layout.addWidget(self.log_level)
 
         self.dry_run = FormFieldWidget(
             "Dry Run", field_type="checkbox",
             tooltip="Simulate the run without writing output files.",
             settings_key=f"{pfx}.dry_run",
         )
-        layout.addWidget(self.dry_run)
+        options_layout.addWidget(self.dry_run)
 
         self.verbose = FormFieldWidget(
             "Verbose", field_type="checkbox",
             tooltip="Enable verbose output.",
             settings_key=f"{pfx}.verbose",
         )
-        layout.addWidget(self.verbose)
+        options_layout.addWidget(self.verbose)
+        layout.addWidget(options_group)
 
+        # --- Run controls + Log viewer ---
         self.run_controls = RunControlsWidget()
         self.run_controls.run_clicked.connect(self._on_run)
         self.run_controls.dry_run_clicked.connect(self._on_dry_run)
@@ -225,11 +481,77 @@ class MergeInconsistentPanel(QWidget):
         self.log_viewer = LogViewerWidget()
         layout.addWidget(self.log_viewer, stretch=1)
 
+        # Wrap in scroll area
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(_scrollable(inner))
+
+    # -- Config building --------------------------------------------------
+
+    def _build_config_dict(self) -> Dict[str, Any]:
+        """Generate a YAML-compatible config dict from direct fields."""
+        config: Dict[str, Any] = dict(self._loaded_config) if self._loaded_config else {}
+
+        # Testing period metadata
+        fy = self.fiscal_year.get_value()
+        qtr = self.quarter.get_value()
+        if fy or qtr:
+            tp = config.setdefault("testing_period", {})
+            if fy:
+                tp["fiscal_year"] = fy
+            if qtr:
+                tp["quarter"] = qtr
+
+        # Paths
+        paths = config.setdefault("paths", {})
+        input_dir = self.input_dir.get_path()
+        if input_dir:
+            paths["input_dir"] = input_dir
+
+        # Processor
+        proc = config.setdefault("processor", {})
+        log_level = self.log_level.get_value()
+        if log_level:
+            proc["log_level"] = log_level
+
+        # Options
+        opts = config.setdefault("options", {})
+        if self.dry_run.get_value():
+            opts["dry_run"] = True
+        if self.verbose.get_value():
+            opts["verbose"] = True
+
+        return config
+
+    def _write_temp_config(self) -> str:
+        """Write the merged config dict to a temp YAML file."""
+        config = self._build_config_dict()
+        fd, path = tempfile.mkstemp(suffix=".yaml", prefix="gui_merge_")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            yaml.safe_dump(config, fh, default_flow_style=False)
+        self._temp_config_path = path
+        return path
+
+    def _cleanup_temp_config(self) -> None:
+        """Remove the temp config file if it exists."""
+        if self._temp_config_path and os.path.isfile(self._temp_config_path):
+            try:
+                os.remove(self._temp_config_path)
+            except OSError:
+                pass
+            self._temp_config_path = None
+
+    # -- Argv building ----------------------------------------------------
+
     def build_argv(self) -> List[str]:
-        argv: List[str] = []
-        config_path = self.config_loader.get_last_path()
-        if config_path:
-            argv.extend(["--config", config_path])
+        """Build argv for the merge script."""
+        argv: List[str] = ["--gui-mode"]
+
+        # Generate temp config from direct fields
+        config_path = self._write_temp_config()
+        argv.extend(["--config", config_path])
+
+        # Direct CLI overrides (the script also reads these independently)
         input_dir = self.input_dir.get_path()
         if input_dir:
             argv.extend(["--input-dir", input_dir])
@@ -241,6 +563,38 @@ class MergeInconsistentPanel(QWidget):
         if self.verbose.get_value():
             argv.append("--verbose")
         return argv
+
+    # -- Config population ------------------------------------------------
+
+    def populate_from_config(self, config: Dict[str, Any]) -> None:
+        """Fill direct fields from loaded YAML config."""
+        self._loaded_config = config
+
+        # Testing period
+        tp = config.get("testing_period", {})
+        if tp.get("fiscal_year"):
+            self.fiscal_year.set_value(tp["fiscal_year"])
+        if tp.get("quarter"):
+            self.quarter.set_value(tp["quarter"])
+
+        # Paths
+        paths = config.get("paths", {})
+        if paths.get("input_dir"):
+            self.input_dir.set_path(str(paths["input_dir"]))
+
+        # Processor
+        proc = config.get("processor", {})
+        if proc.get("log_level"):
+            self.log_level.set_value(proc["log_level"])
+
+        # Options
+        opts = config.get("options", {})
+        if opts.get("dry_run"):
+            self.dry_run.set_value(True)
+        if opts.get("verbose"):
+            self.verbose.set_value(True)
+
+    # -- Run / Cancel / Finished ------------------------------------------
 
     def _on_run(self) -> None:
         self._execute(dry_run=False)
@@ -276,12 +630,15 @@ class MergeInconsistentPanel(QWidget):
 
     def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if exit_code == 0:
+        success = exit_code == 0
+        if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
             self.log_viewer.append_error(
                 f"[GUI] Finished with exit code {exit_code}"
             )
+        _update_last_run(self._last_run, self._pfx, success)
+        self._cleanup_temp_config()
         self._worker = None
 
 
@@ -311,35 +668,49 @@ class ReplayTab(QWidget):
             ("Phase 2 Processor", BaseReplayPanel(
                 "replay.phase_2_processor",
                 "Phase 2 Processor",
+                subtitle="Transaction reference lookup and correction matching",
                 settings_prefix="phase2",
                 extra_paths=[
-                    {"label": "Replay Input:", "key": "replay_input"},
-                    {"label": "Incident Files:", "key": "incident_files"},
-                    {"label": "Replay Output:", "key": "replay_output"},
-                    {"label": "Log Output:", "key": "log_output"},
+                    {"label": "Input directory:", "key": "replay_input",
+                     "tooltip": "Directory containing replay CSV/XLSX files."},
+                    {"label": "Incident files directory:", "key": "incident_files",
+                     "tooltip": "Directory containing incident code analysis CSVs."},
+                    {"label": "Output directory:", "key": "replay_output",
+                     "tooltip": "Directory for processed output files."},
+                    {"label": "Log directory:", "key": "log_output",
+                     "tooltip": "Directory for processing log files."},
                 ],
             )),
             ("Phase 3 Processor", BaseReplayPanel(
                 "replay.phase_3_processor",
                 "Phase 3 Processor",
+                subtitle="Inconsistent ID and name matching processor",
                 settings_prefix="phase3",
                 extra_paths=[
-                    {"label": "Replay Input:", "key": "replay_input"},
-                    {"label": "Incident Files:", "key": "incident_files"},
-                    {"label": "Replay Output:", "key": "replay_output"},
-                    {"label": "Log Output:", "key": "log_output"},
+                    {"label": "Input directory:", "key": "replay_input",
+                     "tooltip": "Directory containing Phase III replay files."},
+                    {"label": "Incident files directory:", "key": "incident_files",
+                     "tooltip": "Directory containing incident code analysis CSVs."},
+                    {"label": "Output directory:", "key": "replay_output",
+                     "tooltip": "Directory for processed output files."},
+                    {"label": "Log directory:", "key": "log_output",
+                     "tooltip": "Directory for processing log files."},
                 ],
             )),
             ("Phase 3 Final", BaseReplayPanel(
                 "replay.phase_3_final_lookup",
                 "Phase 3 Final Lookup",
+                subtitle="UnaVista manual corrections final lookup",
                 settings_prefix="phase3_final",
                 extra_paths=[
-                    {"label": "Replay Input:", "key": "replay_input"},
-                    {"label": "Incident Files:", "key": "incident_files"},
-                    {"label": "Replay Output:", "key": "replay_output"},
-                    {"label": "UnaVista Files:", "key": "unavista_files"},
-                    {"label": "Log Output:", "key": "log_output"},
+                    {"label": "Input directory:", "key": "replay_input",
+                     "tooltip": "Directory containing Phase III output files."},
+                    {"label": "UnaVista files directory:", "key": "unavista_files",
+                     "tooltip": "Directory containing UnaVista manual corrections CSVs."},
+                    {"label": "Output directory:", "key": "replay_output",
+                     "tooltip": "Directory for final lookup output files."},
+                    {"label": "Log directory:", "key": "log_output",
+                     "tooltip": "Directory for processing log files."},
                 ],
             )),
             ("Merge Summaries", MergeInconsistentPanel()),
