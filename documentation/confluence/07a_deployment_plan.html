@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Deployment &amp; Roadmap — TXR Automation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
+        h1, h2, h3, h4 { color: #172B4D; }
+        table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
+        th { background-color: #F4F5F7; font-weight: 600; }
+        a { color: #0052CC; text-decoration: none; }
+        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF991F; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
+        .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
+        code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Roadmap &amp; Operations &rsaquo; Deployment &amp; Roadmap</p>
+<p class="last-updated">Last updated: 25 March 2026</p>
+
+<h1>Deployment Plan &amp; Roadmap</h1>
+
+<div class="info-panel">
+    <strong>Current status:</strong> Phases 0&ndash;5 complete. Phase 6 (Integration &amp; Testing) in progress. Phase 7 (Deployment &amp; Transition) and Phase 8 (Unified CLI) not yet started.
+</div>
+
+<h2>Table of Contents</h2>
+<ul>
+    <li><a href="#phase6">Phase 6: Integration &amp; Testing (Current)</a></li>
+    <li><a href="#phase7">Phase 7: Deployment &amp; Transition</a></li>
+    <li><a href="#phase8">Phase 8: Unified CLI Tool</a></li>
+    <li><a href="#gui">GUI Application Roadmap</a></li>
+    <li><a href="#env">Environment &amp; Installation</a></li>
+    <li><a href="#risks">Risks &amp; Mitigations</a></li>
+</ul>
+
+<h2 id="phase6">Phase 6: Integration &amp; Testing (Current)</h2>
+
+<h3>Status</h3>
+
+<table>
+    <thead>
+        <tr><th>Task</th><th>Status</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Test suite maintenance (466 tests passing)</td><td>&#10003; Complete</td><td>100% pass rate</td></tr>
+        <tr><td>Performance benchmarking</td><td>&#10003; Complete</td><td>See <a href="07b_performance_benchmarks.html">Performance Benchmarks</a></td></tr>
+        <tr><td>Configuration v2.0 migration</td><td>&#10003; Complete</td><td>Batch/single modes, YAML + env var cascade</td></tr>
+        <tr><td>Documentation overhaul</td><td>&#10003; Complete</td><td>This documentation suite</td></tr>
+        <tr><td>Update <code>test_batch_validation.py</code> to v2.0 config format</td><td>&#9744; Remaining</td><td>1&ndash;2 days estimated</td></tr>
+    </tbody>
+</table>
+
+<h2 id="phase7">Phase 7: Deployment &amp; Transition</h2>
+
+<h3>Objective</h3>
+<p>Deploy the Python toolset to production with a parallel-running period and managed VBA retirement.</p>
+
+<h3>Deployment Steps</h3>
+
+<table>
+    <thead>
+        <tr><th>Step</th><th>Description</th><th>Duration</th><th>Owner</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><strong>7.1</strong> Environment provisioning</td>
+            <td>Install Conda environment on production workstations; verify <code>pip install -e .</code>; confirm all 22 console scripts are accessible</td>
+            <td>1&ndash;2 days</td>
+            <td>Developer</td>
+        </tr>
+        <tr>
+            <td><strong>7.2</strong> Parallel running setup</td>
+            <td>Run both VBA macros and Python scripts on the same quarterly datasets for one full quarter; capture outputs side-by-side</td>
+            <td>1 quarter</td>
+            <td>Developer + Analysts</td>
+        </tr>
+        <tr>
+            <td><strong>7.3</strong> Output comparison</td>
+            <td>Diff VBA and Python outputs column-by-column; document any discrepancies; resolve differences</td>
+            <td>1&ndash;2 weeks</td>
+            <td>Developer</td>
+        </tr>
+        <tr>
+            <td><strong>7.4</strong> User training</td>
+            <td>Conduct training sessions covering CLI usage, configuration, troubleshooting; distribute user guides</td>
+            <td>1 week</td>
+            <td>Developer + Team Lead</td>
+        </tr>
+        <tr>
+            <td><strong>7.5</strong> VBA retirement</td>
+            <td>Archive VBA macros (already in <code>legacy/vba/</code>); remove VBA dependencies from analyst workbooks; update team procedures</td>
+            <td>1&ndash;2 days</td>
+            <td>Developer</td>
+        </tr>
+        <tr>
+            <td><strong>7.6</strong> Production cutover</td>
+            <td>Designate Python as the primary toolset; VBA retained as read-only reference only</td>
+            <td>1 day</td>
+            <td>Team Lead</td>
+        </tr>
+    </tbody>
+</table>
+
+<h3>Acceptance Criteria</h3>
+
+<ul>
+    <li>Python outputs match VBA outputs for one full quarterly dataset (zero unexplained discrepancies)</li>
+    <li>All analysts can independently run the validation workflow end-to-end</li>
+    <li>All 466 tests pass in the production environment</li>
+    <li>Performance benchmarks meet or exceed targets (see <a href="07b_performance_benchmarks.html">Performance Benchmarks</a>)</li>
+</ul>
+
+<h2 id="phase8">Phase 8: Unified CLI Tool</h2>
+
+<p>Detailed plan at <code>documentation/planning/Phase_8_CLI_Tool_Plan.md</code>.</p>
+
+<h3>Concept</h3>
+<p>Consolidate all 22 console scripts into a single interactive CLI entry point (<code>txr-automation</code>) with text-based menus:</p>
+
+<pre>
+$ txr-automation
+
+╔══════════════════════════════════════════════════╗
+║     Transaction Reporting Automation Tool         ║
+╚══════════════════════════════════════════════════╝
+
+What would you like to do?
+
+  [1] Extract Generation
+  [2] Accuracy Testing
+  [3] Replay Processing
+  [4] View Recent Logs
+  [5] Configuration
+  [Q] Quit
+</pre>
+
+<h3>Key Design Decisions</h3>
+
+<ul>
+    <li><strong>Single entry point:</strong> <code>txr-automation</code> replaces memorising 22 separate commands</li>
+    <li><strong>Guided workflow:</strong> Interactive prompts for incident code selection and configuration</li>
+    <li><strong>Business logic separation:</strong> CLI layer calls existing <code>main()</code> functions; no duplication</li>
+    <li><strong>GUI foundation:</strong> Architecture designed to support the PySide6 GUI as an equivalent front-end</li>
+</ul>
+
+<h3>Estimated Effort</h3>
+<p>3&ndash;4 weeks development + 1 week testing. Depends on Phase 7 completion.</p>
+
+<h2 id="gui">GUI Application Roadmap</h2>
+
+<p>Detailed plan at <code>documentation/planning/GUI_Plan.md</code>.</p>
+
+<h3>Architecture</h3>
+
+<table>
+    <thead>
+        <tr><th>Component</th><th>Technology</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Framework</td><td>PySide6 (Qt for Python)</td><td>Cross-platform desktop GUI</td></tr>
+        <tr><td>Execution</td><td><code>QThread</code> workers</td><td>Background script execution with live log streaming</td></tr>
+        <tr><td>Distribution</td><td>PyInstaller</td><td>Standalone <code>.exe</code> folder for Windows deployment</td></tr>
+        <tr><td>Entry point</td><td><code>txr-gui</code></td><td>Registered as <code>gui_scripts</code> in setup.py</td></tr>
+    </tbody>
+</table>
+
+<h3>Tab Structure</h3>
+
+<table>
+    <thead>
+        <tr><th>Tab</th><th>Scripts</th><th>Status</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Accuracy Testing</td><td>10 validation + 4 orchestration scripts</td><td>Phase 1 scope</td></tr>
+        <tr><td>Replay Processing</td><td>Phase 2, Phase 3, Phase 3 Final, merge summaries</td><td>Phase 1 scope</td></tr>
+        <tr><td>FIRDS Reference Data</td><td>cache refresh, reportability check, backfill</td><td>Phase 1 scope</td></tr>
+        <tr><td>Utilities</td><td>XLSX-to-CSV converter</td><td>Phase 1 scope</td></tr>
+        <tr><td>GLEIF Reference Data</td><td>cache refresh, LEI check, backfill</td><td>Deferred to Phase 2</td></tr>
+    </tbody>
+</table>
+
+<h2 id="env">Environment &amp; Installation</h2>
+
+<h3>Prerequisites</h3>
+
+<table>
+    <thead>
+        <tr><th>Requirement</th><th>Version</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Python</td><td>3.10+</td><td>Runtime</td></tr>
+        <tr><td>Conda (Miniconda or Anaconda)</td><td>Latest</td><td>Environment management</td></tr>
+        <tr><td>Git</td><td>Latest</td><td>Source control</td></tr>
+    </tbody>
+</table>
+
+<h3>Installation</h3>
+
+<pre>
+# Clone repository
+git clone &lt;repository-url&gt; txr_automation
+cd txr_automation
+
+# Create and activate Conda environment
+conda env create -f environment.yml
+conda activate txr_automation
+
+# Install in editable mode
+pip install -e .
+
+# Verify installation
+validate-all --help
+pytest tests/ -v
+</pre>
+
+<h3>Configuration</h3>
+
+<pre>
+# Copy configuration templates
+cp config/templates/*.yaml config/local/
+
+# Edit local configuration
+# (adjust paths in config/local/ files to match local environment)
+</pre>
+
+<h2 id="risks">Risks &amp; Mitigations</h2>
+
+<table>
+    <thead>
+        <tr><th>Risk</th><th>Impact</th><th>Likelihood</th><th>Mitigation</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>VBA/Python output discrepancies during parallel running</td>
+            <td>High</td>
+            <td>Low</td>
+            <td>466 tests provide high confidence; column-by-column diff tooling prepared</td>
+        </tr>
+        <tr>
+            <td>Analysts unable to adopt CLI workflow</td>
+            <td>Medium</td>
+            <td>Medium</td>
+            <td>GUI application provides non-CLI alternative; training sessions planned</td>
+        </tr>
+        <tr>
+            <td>Conda environment conflicts on production machines</td>
+            <td>Medium</td>
+            <td>Low</td>
+            <td><code>environment.yml</code> pins all dependencies; isolated Conda environment</td>
+        </tr>
+        <tr>
+            <td>Performance degradation with very large datasets</td>
+            <td>Low</td>
+            <td>Low</td>
+            <td>Benchmarked to 1.5M records (11K records/second); typical workloads are &lt;50K records</td>
+        </tr>
+        <tr>
+            <td>FIRDS/GLEIF API availability</td>
+            <td>Medium</td>
+            <td>Low</td>
+            <td>Local SQLite caches provide offline operation after initial download</td>
+        </tr>
+    </tbody>
+</table>
+
+<hr>
+<p><a href="06b_test_coverage_report.html">&laquo; Previous: Test Coverage Report</a> | <a href="00_index.html">Documentation Index</a> | <a href="07b_performance_benchmarks.html">Next: Performance Benchmarks &raquo;</a></p>
+
+</body>
+</html>

@@ -9,14 +9,17 @@ This project is migrating VBA macros for transaction reporting automation to Pyt
 - [Python_Migration_Plan.md](../documentation/planning/Python_Migration_Plan.md) - Master migration plan with phases, timelines, and technical approach
 - [Phase_8_CLI_Tool_Plan.md](../documentation/planning/Phase_8_CLI_Tool_Plan.md) - Future CLI unification plan
 
-**Current Status (28 January 2026):**
+**Current Status (25 March 2026):**
 
 - Phase 0 (Refactoring): ✅ Complete
 - Phase 1 (Foundation): ✅ Complete
 - Phase 2 (Simple Scripts): ✅ Complete
-- Phase 3 (Decision Maker Validation): 🔲 Not started
+- Phase 3 (Decision Maker Validation): ✅ Complete
 - Phase 4 (Inconsistent ID): ✅ Complete
-- Phase 5 (Data Operations): 🔲 Not started
+- Phase 5 (Data Operations): ✅ Complete
+- Phase 6 (Integration & Testing): 🔄 In progress
+- Phase 7 (Deployment & Transition): 🔲 Not started
+- Phase 8 (Unified CLI Tool): 🔲 Planning
 
 ---
 
@@ -40,9 +43,11 @@ txr_automation/
 │   ├── accuracy_testing/          # VBA-migrated accuracy testing scripts
 │   │   ├── core/                  # Accuracy testing core library
 │   │   ├── models/                # Data models (dataclasses)
-│   │   ├── scripts/               # CLI scripts (buyer_id_validation.py, etc.)
+│   │   ├── scripts/               # CLI scripts (15 entry points)
 │   │   ├── validators/            # Validation logic classes
-│   │   └── processor.py           # Main processing logic
+│   │   ├── sql_templates/         # 11 SQL templates + 1 DTF template
+│   │   ├── processor.py           # Main ID validation processor
+│   │   └── id_logic_validator.py  # Embedded ID logic validation
 │   ├── core/                      # Shared core library (txr_core)
 │   │   ├── config/                # Configuration management
 │   │   ├── data/                  # Reference data, constants, data structures
@@ -50,18 +55,25 @@ txr_automation/
 │   │   ├── utils/                 # Utilities (date parsing, CSV, file discovery)
 │   │   └── validation/            # Core validation functions
 │   ├── replay/                    # Replay processing scripts
+│   ├── firds/                     # FCA FIRDS reportability (API + SQLite cache)
+│   ├── gleif/                     # GLEIF LEI lookup (API + SQLite cache)
+│   ├── gui/                       # PySide6 desktop application
 │   └── utils/                     # Shared utilities
-├── legacy/vba/                    # Original VBA macros (source for migration)
+├── legacy/vba/                    # Original 12 VBA macros (read-only reference)
 ├── config/                        # YAML configuration files
-│   ├── local/                     # Local environment configs
-│   └── templates/                 # Configuration templates
-├── tests/                         # Test suite
+│   ├── local/                     # Local environment configs (gitignored)
+│   └── templates/                 # Configuration templates (version-controlled)
+├── tests/                         # Test suite (466 tests)
 │   ├── test_accuracy_testing/     # Accuracy testing tests
 │   ├── test_core/                 # Core library tests
+│   ├── test_firds/                # FIRDS module tests
+│   ├── test_gleif/                # GLEIF module tests
 │   └── integration/               # Integration tests
 └── documentation/                 # Project documentation
+    ├── confluence/                 # HTML documentation suite for Confluence
     ├── guides/                    # User guides
     ├── planning/                  # Migration planning docs
+    ├── reference/                 # Architecture reviews, command references
     └── reference_data/            # CSV reference data files
 ```
 

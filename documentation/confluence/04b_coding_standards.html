@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Coding Standards — TXR Automation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
+        h1, h2, h3, h4 { color: #172B4D; }
+        table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
+        th { background-color: #F4F5F7; font-weight: 600; }
+        a { color: #0052CC; text-decoration: none; }
+        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF8B00; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
+        .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
+        code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; }
+        ol li, ul li { margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Developer Guides &rsaquo; Coding Standards</p>
+<p class="last-updated">Last updated: 25 March 2026</p>
+
+<h1>Coding Standards</h1>
+
+<h2>Table of Contents</h2>
+<ul>
+    <li><a href="#python">Python Conventions</a></li>
+    <li><a href="#imports">Import Order</a></li>
+    <li><a href="#type-hints">Type Hints</a></li>
+    <li><a href="#docstrings">Docstrings</a></li>
+    <li><a href="#dataclasses">Dataclasses</a></li>
+    <li><a href="#error-handling">Error Handling</a></li>
+    <li><a href="#logging">Logging</a></li>
+    <li><a href="#performance">Performance Patterns</a></li>
+    <li><a href="#vba-patterns">VBA-to-Python Conversion Patterns</a></li>
+    <li><a href="#documentation">Documentation Standards</a></li>
+    <li><a href="#git">Git Workflow</a></li>
+    <li><a href="#pitfalls">Common Pitfalls</a></li>
+</ul>
+
+<h2 id="python">Python Conventions</h2>
+
+<table>
+    <thead>
+        <tr><th>Rule</th><th>Standard</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Python version</td><td>&ge; 3.10 (required for <code>match</code> and <code>X | Y</code> union syntax)</td></tr>
+        <tr><td>Style</td><td>PEP 8 compliant</td></tr>
+        <tr><td>Line length</td><td>100 characters (soft), 120 (hard)</td></tr>
+        <tr><td>Type hints</td><td>Required on all functions and methods</td></tr>
+        <tr><td>Docstrings</td><td>Google-style, required on all public functions, classes, and modules</td></tr>
+        <tr><td>Formatter</td><td><code>black</code> (v23+)</td></tr>
+        <tr><td>Linter</td><td><code>flake8</code> (v6+)</td></tr>
+        <tr><td>Type checker</td><td><code>mypy</code> (v1.4+)</td></tr>
+        <tr><td>I/O format</td><td>CSV only &mdash; no Excel libraries for data I/O</td></tr>
+        <tr><td>Language</td><td>British English in documentation (colour, organisation, behaviour)</td></tr>
+    </tbody>
+</table>
+
+<h3>Module Header Template</h3>
+
+<pre>
+#!/usr/bin/env python3
+"""
+Module Name
+===========
+
+Brief description of module purpose.
+
+Version X.Y Changes:
+- List significant changes
+
+Usage:
+    Example usage if applicable
+"""
+</pre>
+
+<h2 id="imports">Import Order</h2>
+
+<p>Imports follow a four-group convention, separated by blank lines:</p>
+
+<pre>
+# 1. Standard library
+import os
+import sys
+from pathlib import Path
+from typing import List, Optional, Dict
+
+# 2. Third-party packages
+import pandas as pd
+import click
+
+# 3. Core library imports
+from core import (
+    StructuredLogger,
+    create_logger,
+    country_manager,
+    id_format_manager,
+)
+
+# 4. Local package imports
+from .processor import ClientRecord, IDValidationProcessor
+</pre>
+
+<div class="info-panel">
+    <strong>Rule:</strong> Never use wildcard imports (<code>from module import *</code>). Always import specific names.
+</div>
+
+<h2 id="type-hints">Type Hints</h2>
+
+<p>Required on all function signatures. Use <code>typing</code> module for complex types:</p>
+
+<pre>
+from typing import Optional, Dict, List, Tuple
+
+def validate_records(
+    records: List[ClientRecord],
+    country: str,
+    strict: bool = False,
+) -> Tuple[List[ClientRecord], ProcessingStats]:
+    """Validate a list of client records."""
+    ...
+
+def find_by_person_code(
+    person_code: str,
+    records: Dict[str, List[ClientRecord]],
+) -> Optional[ClientRecord]:
+    """Find the most recent record for a person code."""
+    ...
+</pre>
+
+<h3>Return Type Conventions</h3>
+
+<table>
+    <thead>
+        <tr><th>Pattern</th><th>Return Type</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>May return nothing</td><td><code>Optional[T]</code></td></tr>
+        <tr><td>Boolean check</td><td><code>bool</code></td></tr>
+        <tr><td>Side-effect only</td><td><code>None</code></td></tr>
+        <tr><td>Multiple values</td><td><code>Tuple[T1, T2]</code> or a dataclass</td></tr>
+        <tr><td>Collection</td><td><code>List[T]</code> or <code>Dict[K, V]</code></td></tr>
+    </tbody>
+</table>
+
+<h2 id="docstrings">Docstrings (Google Style)</h2>
+
+<pre>
+def validate_id_format(
+    country: str,
+    id_type: str,
+    id_value: str,
+) -> bool:
+    """
+    Validate an ID value against the expected format for a country/type pair.
+
+    Checks the ID value against compiled regex patterns from the ESMA CID
+    guidance. Returns True if the value matches the expected format.
+
+    Args:
+        country: ISO 3166-1 alpha-2 country code (e.g., "GB", "DE")
+        id_type: ID type code (e.g., "NIDN", "CCPT", "CONCAT")
+        id_value: The ID value to validate
+
+    Returns:
+        True if the ID value matches the expected format, False otherwise
+
+    Raises:
+        ValueError: If country or id_type is not recognised
+
+    Example:
+        >>> validate_id_format("GB", "NIDN", "AB123456C")
+        True
+        >>> validate_id_format("GB", "NIDN", "INVALID")
+        False
+    """
+</pre>
+
+<p><strong>Required on:</strong> all public functions, classes, class methods, and module-level docstrings. Private methods (<code>_name</code>) should have at least a one-line docstring.</p>
+
+<h2 id="dataclasses">Dataclasses</h2>
+
+<p>All data transfer objects (DTOs) use Python <code>@dataclass</code>:</p>
+
+<pre>
+from dataclasses import dataclass, field
+from typing import Optional, List
+
+@dataclass
+class ClientRecord:
+    """Represents a client record for ID validation."""
+
+    transaction_ref: str
+    account_id: str
+    person_code: str
+    id_value: str = ""
+    id_type: str = ""
+    correction: str = ""
+    error_flag: str = "N"
+    error_details: List[str] = field(default_factory=list)
+
+    @classmethod
+    def from_dict(cls, data: dict) -> "ClientRecord":
+        """Create a ClientRecord from a dictionary (e.g., CSV row)."""
+        return cls(
+            transaction_ref=data.get("Transaction_Ref", ""),
+            account_id=data.get("Account_ID", ""),
+            person_code=data.get("Person_Code", ""),
+        )
+</pre>
+
+<h3>Conventions</h3>
+<ul>
+    <li>Use <code>@dataclass</code> (not <code>NamedTuple</code>) for mutable records</li>
+    <li>Always provide a <code>from_dict()</code> or <code>from_row()</code> factory classmethod for CSV/dict construction</li>
+    <li>Use <code>field(default_factory=list)</code> for mutable defaults</li>
+    <li>Keep field names consistent with CSV column names where possible</li>
+</ul>
+
+<h2 id="error-handling">Error Handling</h2>
+
+<pre>
+try:
+    result = process_record(record)
+except ValueError as e:
+    logger.warning(
+        f"Validation failed for {record.transaction_ref}: {e}"
+    )
+    record.error_flag = "Y"
+except Exception as e:
+    logger.error(
+        f"Unexpected error processing {record.transaction_ref}: {e}"
+    )
+    raise
+</pre>
+
+<h3>Rules</h3>
+<ul>
+    <li><strong>Catch specific exceptions</strong> &mdash; never bare <code>except:</code></li>
+    <li><strong>Log before re-raising</strong> &mdash; ensures context is captured in structured logs</li>
+    <li><strong>Validation errors are warnings</strong> &mdash; they set <code>error_flag = "Y"</code> but do not stop processing</li>
+    <li><strong>System errors are fatal</strong> &mdash; file I/O failures, config errors, etc. should raise and halt</li>
+</ul>
+
+<h2 id="logging">Logging</h2>
+
+<p>Use the structured logging framework from <code>core</code>:</p>
+
+<pre>
+from core import create_logger
+
+logger = create_logger(__name__)
+
+# Informational
+logger.info("Processing batch", extra={
+    "batch_size": len(records),
+    "incident_code": "7_39",
+})
+
+# Warning (validation failure)
+logger.warning("Invalid ID format", extra={
+    "person_code": record.person_code,
+    "expected": "AB123456C",
+    "actual": record.id_value,
+})
+
+# Error (system failure)
+logger.error("Failed to read input file", extra={
+    "path": str(input_path),
+    "error": str(e),
+})
+</pre>
+
+<div class="warning-panel">
+    <strong>Never log sensitive data.</strong> Do not log full ID values, names, or account numbers in production. Use truncated or hashed values for debugging.
+</div>
+
+<h2 id="performance">Performance Patterns</h2>
+
+<table>
+    <thead>
+        <tr><th>Pattern</th><th>Example</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Pre-compile regex patterns</td>
+            <td><pre>import re
+PATTERNS = {
+    "uk_nino": re.compile(r"^[A-Z]{2}\d{6}[A-Z]$"),
+}</pre></td>
+        </tr>
+        <tr>
+            <td>Index for O(1) lookups</td>
+            <td><pre>from collections import defaultdict
+records_by_person = defaultdict(list)
+for record in records:
+    records_by_person[record.person_code].append(record)</pre></td>
+        </tr>
+        <tr>
+            <td>Lazy load reference data</td>
+            <td>Singleton managers (<code>country_manager</code>, <code>id_format_manager</code>) load data once at first access</td>
+        </tr>
+        <tr>
+            <td>Batch processing</td>
+            <td>SQL generation batches 900 references per IN clause to avoid query length limits</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="vba-patterns">VBA-to-Python Conversion Patterns</h2>
+
+<p>When migrating VBA functions to Python, use these standard mappings:</p>
+
+<table>
+    <thead>
+        <tr><th>VBA Pattern</th><th>Python Equivalent</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>Dim x As String</code></td><td><code>x: str = ""</code></td></tr>
+        <tr><td><code>For i = 1 To n</code></td><td><code>for i in range(1, n + 1):</code></td></tr>
+        <tr><td><code>Left(str, n)</code></td><td><code>str[:n]</code></td></tr>
+        <tr><td><code>Right(str, n)</code></td><td><code>str[-n:]</code></td></tr>
+        <tr><td><code>Mid(str, start, len)</code></td><td><code>str[start-1:start-1+len]</code></td></tr>
+        <tr><td><code>Len(str)</code></td><td><code>len(str)</code></td></tr>
+        <tr><td><code>UCase(str)</code> / <code>LCase(str)</code></td><td><code>str.upper()</code> / <code>str.lower()</code></td></tr>
+        <tr><td><code>Trim(str)</code></td><td><code>str.strip()</code></td></tr>
+        <tr><td><code>IsNumeric(x)</code></td><td><code>str(x).isdigit()</code> or regex</td></tr>
+        <tr><td><code>InStr(str, sub)</code></td><td><code>sub in str</code> or <code>str.find(sub)</code></td></tr>
+        <tr><td><code>Split(str, delim)</code></td><td><code>str.split(delim)</code></td></tr>
+        <tr><td><code>Join(arr, delim)</code></td><td><code>delim.join(arr)</code></td></tr>
+        <tr><td><code>Range("A1").Value</code></td><td>pandas DataFrame or CSV reader</td></tr>
+        <tr><td><code>Cells(row, col).Value</code></td><td><code>df.iloc[row, col]</code></td></tr>
+    </tbody>
+</table>
+
+<h3>Migration Checklist</h3>
+<ol>
+    <li>Read and understand the VBA source completely</li>
+    <li>Document VBA-to-Python function mapping</li>
+    <li>Create test fixtures from VBA expected outputs</li>
+    <li>Write unit tests for validation logic</li>
+    <li>Implement core validation using existing utilities</li>
+    <li>Create CLI script following established patterns</li>
+    <li>Add integration tests</li>
+    <li>Verify output matches VBA exactly</li>
+    <li>Update documentation and exports</li>
+</ol>
+
+<h2 id="documentation">Documentation Standards</h2>
+
+<h3>Language</h3>
+<ul>
+    <li><strong>British English</strong> throughout (colour, organisation, behaviour, licence/license)</li>
+    <li>Use &ldquo;whilst&rdquo; appropriately, but &ldquo;while&rdquo; is also acceptable</li>
+</ul>
+
+<h3>Markdown (markdownlint Compliant)</h3>
+<ul>
+    <li>ATX-style headings (<code>#</code>, <code>##</code>) with blank lines before and after</li>
+    <li>Unordered lists use <code>-</code> consistently</li>
+    <li>Fenced code blocks with language identifiers (<code>python</code>, <code>bash</code>, <code>yaml</code>)</li>
+    <li>100-character line length target</li>
+    <li>Single trailing newline at end of file</li>
+</ul>
+
+<h2 id="git">Git Workflow</h2>
+
+<table>
+    <thead>
+        <tr><th>Convention</th><th>Standard</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Branch</td><td><code>vba-migration</code> for all VBA migration work</td></tr>
+        <tr><td>Commit format</td><td><code>type(scope): description</code></td></tr>
+        <tr><td>Types</td><td><code>feat</code>, <code>fix</code>, <code>docs</code>, <code>refactor</code>, <code>test</code>, <code>chore</code></td></tr>
+        <tr><td>Example</td><td><code>feat(accuracy): add seller ID validation script</code></td></tr>
+    </tbody>
+</table>
+
+<h2 id="pitfalls">Common Pitfalls to Avoid</h2>
+
+<ol>
+    <li><strong>Don&rsquo;t reinvent utilities</strong> &mdash; check <code>src/core/</code> and <code>src/accuracy_testing/core/</code> before writing new helper functions</li>
+    <li><strong>Don&rsquo;t use Excel libraries</strong> &mdash; all I/O is CSV-based. Use <code>pandas</code> or <code>csv</code> module</li>
+    <li><strong>Don&rsquo;t hardcode paths</strong> &mdash; all paths come from YAML configuration or environment variables</li>
+    <li><strong>Don&rsquo;t skip type hints</strong> &mdash; required on every function and method</li>
+    <li><strong>Don&rsquo;t use American English</strong> in documentation</li>
+    <li><strong>Don&rsquo;t skip tests</strong> &mdash; every function needs unit tests before merging</li>
+    <li><strong>Don&rsquo;t modify VBA files</strong> in <code>legacy/vba/</code> &mdash; they are read-only reference</li>
+    <li><strong>Don&rsquo;t create duplicate reference data</strong> &mdash; use existing CSVs in <code>documentation/reference_data/</code></li>
+</ol>
+
+<hr>
+<p><a href="04a_getting_started.html">&laquo; Previous: Getting Started</a> | <a href="00_index.html">Documentation Index</a> | <a href="04c_configuration_system.html">Next: Configuration System &raquo;</a></p>
+
+</body>
+</html>

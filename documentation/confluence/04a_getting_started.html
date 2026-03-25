@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Getting Started — TXR Automation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
+        h1, h2, h3, h4 { color: #172B4D; }
+        table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
+        th { background-color: #F4F5F7; font-weight: 600; }
+        a { color: #0052CC; text-decoration: none; }
+        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF8B00; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
+        .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
+        code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; }
+        ol li, ul li { margin-bottom: 6px; }
+    </style>
+</head>
+<body>
+
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Developer Guides &rsaquo; Getting Started</p>
+<p class="last-updated">Last updated: 25 March 2026</p>
+
+<h1>Getting Started</h1>
+
+<div class="info-panel">
+    <strong>Time to setup:</strong> ~10 minutes. This guide covers environment setup, project installation, and running your first validation script.
+</div>
+
+<h2>Table of Contents</h2>
+<ul>
+    <li><a href="#prerequisites">Prerequisites</a></li>
+    <li><a href="#setup">Environment Setup</a></li>
+    <li><a href="#structure">Project Walkthrough</a></li>
+    <li><a href="#first-run">Running Your First Script</a></li>
+    <li><a href="#config">Configuration</a></li>
+    <li><a href="#tests">Running Tests</a></li>
+    <li><a href="#gui">Launching the GUI</a></li>
+    <li><a href="#next-steps">Next Steps</a></li>
+</ul>
+
+<h2 id="prerequisites">Prerequisites</h2>
+
+<table>
+    <thead>
+        <tr><th>Requirement</th><th>Version</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Python</td><td>&ge; 3.10</td><td>Required for <code>match</code> statements and type union syntax</td></tr>
+        <tr><td>Conda (recommended)</td><td>Any recent</td><td>Miniconda or Anaconda. Alternatively use <code>pip</code> + <code>venv</code></td></tr>
+        <tr><td>Git</td><td>Any recent</td><td>For cloning the repository</td></tr>
+        <tr><td>macOS / Windows / Linux</td><td>&mdash;</td><td>All platforms supported. macOS is the primary development platform</td></tr>
+    </tbody>
+</table>
+
+<h2 id="setup">Environment Setup</h2>
+
+<h3>Option A: Conda (Recommended)</h3>
+
+<pre>
+# 1. Clone the repository
+git clone &lt;repository-url&gt; txr_automation
+cd txr_automation
+
+# 2. Create the Conda environment from environment.yml
+conda env create -f environment.yml
+
+# 3. Activate the environment
+conda activate txr_automation
+
+# 4. Install the package in editable mode
+pip install -e .
+</pre>
+
+<p>The <code>environment.yml</code> installs all dependencies:</p>
+
+<pre>
+name: txr_automation
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.10
+  - pyyaml>=6.0
+  - pandas>=2.0.0
+  - openpyxl>=3.1.0
+  - pyside6>=6.6
+  - pytest>=7.4.0
+  - pytest-cov>=4.1.0
+  - pip
+</pre>
+
+<h3>Option B: pip + venv</h3>
+
+<pre>
+# 1. Clone and enter the repository
+git clone &lt;repository-url&gt; txr_automation
+cd txr_automation
+
+# 2. Create a virtual environment
+python3 -m venv .venv
+source .venv/bin/activate  # macOS/Linux
+# .venv\Scripts\activate   # Windows
+
+# 3. Install dependencies
+pip install -r requirements.txt
+
+# 4. Install the package in editable mode
+pip install -e .
+</pre>
+
+<h3>Verify Installation</h3>
+
+<pre>
+# Check the package is installed
+python -c "import accuracy_testing; print('accuracy_testing OK')"
+python -c "import core; print('core OK')"
+
+# Check console scripts are available
+buyer-id-validation --help
+replay-phase2 --help
+txr-gui --help
+</pre>
+
+<div class="success-panel">
+    If all three commands produce output without errors, you are ready to go.
+</div>
+
+<h2 id="structure">Project Walkthrough</h2>
+
+<table>
+    <thead>
+        <tr><th>Directory</th><th>Purpose</th><th>Key Contents</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>src/core/</code></td>
+            <td>Shared foundation library</td>
+            <td>Configuration, logging, country data, ID format validation, date parsing, file discovery</td>
+        </tr>
+        <tr>
+            <td><code>src/accuracy_testing/</code></td>
+            <td>Main accuracy testing suite</td>
+            <td>15 CLI scripts, 5 validators, processor classes, 11 SQL templates, data models</td>
+        </tr>
+        <tr>
+            <td><code>src/replay/</code></td>
+            <td>Replay processing</td>
+            <td>Phase 2 (transaction matching), Phase 3 (client matching), Phase 3 final lookup</td>
+        </tr>
+        <tr>
+            <td><code>src/firds/</code></td>
+            <td>FCA FIRDS reportability</td>
+            <td>SQLite cache, REST API client, refresh and check scripts</td>
+        </tr>
+        <tr>
+            <td><code>src/gleif/</code></td>
+            <td>GLEIF LEI lookup</td>
+            <td>SQLite + FTS5 cache, golden copy downloads, entity search</td>
+        </tr>
+        <tr>
+            <td><code>src/gui/</code></td>
+            <td>Desktop application</td>
+            <td>PySide6 <code>QMainWindow</code> with 5 tabs (Accuracy, Replay, FIRDS, GLEIF, Settings)</td>
+        </tr>
+        <tr>
+            <td><code>config/templates/</code></td>
+            <td>Configuration templates</td>
+            <td>Copy to <code>config/local/</code> and customise for your environment. Templates are version-controlled; local files are gitignored.</td>
+        </tr>
+        <tr>
+            <td><code>legacy/vba/</code></td>
+            <td>Original VBA macros</td>
+            <td>12 VBA files. <strong>Read-only reference</strong> &mdash; do not modify.</td>
+        </tr>
+        <tr>
+            <td><code>tests/</code></td>
+            <td>Test suite</td>
+            <td>466 tests across 4 test packages. Run with <code>pytest</code>.</td>
+        </tr>
+        <tr>
+            <td><code>documentation/</code></td>
+            <td>Project documentation</td>
+            <td>Confluence HTML suite, guides, planning docs, reference data CSVs</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="first-run">Running Your First Script</h2>
+
+<h3>Step 1: Create Local Configuration</h3>
+
+<pre>
+# Copy the template configuration for buyer ID validation
+mkdir -p config/local/accuracy_testing
+cp config/templates/accuracy_testing/buyer_validation_template.yaml \
+   config/local/accuracy_testing/buyer_validation.yaml
+</pre>
+
+<p>Edit the copied file to set your input/output paths:</p>
+
+<pre>
+# config/local/accuracy_testing/buyer_validation.yaml
+
+mode: single    # 'single' for one file, 'batch' for directory scan
+
+paths:
+  input_file: "data/test/buyer_id_sample.csv"
+  output_file: "data/output/buyer_id_results.csv"
+  log_output: "logs"
+
+processing:
+  incident_code: "7_5"
+  log_level: "INFO"
+</pre>
+
+<h3>Step 2: Run the Validation</h3>
+
+<pre>
+# Using the console script (registered in setup.py)
+buyer-id-validation --config config/local/accuracy_testing/buyer_validation.yaml
+
+# Or using Python module syntax
+python -m src.accuracy_testing.scripts.buyer_id_validation \
+    --config config/local/accuracy_testing/buyer_validation.yaml
+</pre>
+
+<h3>Step 3: Review Output</h3>
+
+<p>The script produces:</p>
+<ul>
+    <li><strong>Full results CSV</strong> &mdash; all records with validation columns added (Error, Error_Details, Correction, Match, etc.)</li>
+    <li><strong>Errors-only CSV</strong> &mdash; filtered to only records flagged as errors (filename suffixed <code>_errors</code>)</li>
+    <li><strong>Log file</strong> &mdash; structured JSON log in the configured log directory</li>
+    <li><strong>Console summary</strong> &mdash; statistics printed to stdout (total records, errors found, processing time)</li>
+</ul>
+
+<h3>Other Common Scripts</h3>
+
+<pre>
+# Seller ID validation
+seller-id-validation --config config/local/accuracy_testing/seller_validation.yaml
+
+# Decision maker validation (buyer side)
+validate-ftbdm --config config/local/accuracy_testing/ftbdm_validation.yaml
+
+# SQL extract generation (batch mode)
+sql-extract --config config/local/accuracy_testing/sql_extract.yaml
+
+# Replay Phase 2 processing
+replay-phase2 --config config/local/replay/phase2.yaml
+
+# Run all validations at once
+run-all-validations --config config/local/accuracy_testing/run_all_validations.yaml
+</pre>
+
+<h2 id="config">Configuration</h2>
+
+<div class="info-panel">
+    <strong>Config templates → local copies.</strong> Templates in <code>config/templates/</code> are version-controlled.
+    Copy them to <code>config/local/</code> (gitignored) and customise. See <a href="04c_configuration_system.html">Configuration System</a> for full details.
+</div>
+
+<h3>Environment Variables</h3>
+
+<p>All configuration values can be overridden with <code>TXR_</code>-prefixed environment variables:</p>
+
+<pre>
+export TXR_LOG_LEVEL=DEBUG
+export TXR_INPUT_FILE=/path/to/data.csv
+export TXR_OUTPUT_DIR=/path/to/output/
+</pre>
+
+<p>Precedence (highest to lowest):</p>
+<ol>
+    <li>Command-line arguments (<code>--config</code>, <code>--log-level</code>, etc.)</li>
+    <li>Environment variables (<code>TXR_*</code>)</li>
+    <li>Local YAML configuration file</li>
+    <li>Default values in code</li>
+</ol>
+
+<h2 id="tests">Running Tests</h2>
+
+<pre>
+# Run the full test suite
+pytest
+
+# Run with verbose output
+pytest -v
+
+# Run a specific test module
+pytest tests/test_accuracy_testing/test_buyer_id_validation.py
+
+# Run tests with coverage report
+pytest --cov=src --cov-report=html
+
+# Run only fast unit tests (exclude integration)
+pytest -m "not integration"
+</pre>
+
+<div class="success-panel">
+    <strong>Current status:</strong> 466 tests, 100% pass rate. Expected run time: ~30 seconds.
+</div>
+
+<h2 id="gui">Launching the GUI</h2>
+
+<pre>
+# Using the console script
+txr-gui
+
+# Or using Python module syntax
+python -m src.gui.main
+</pre>
+
+<p>The GUI provides a tabbed interface for:</p>
+<ul>
+    <li><strong>Accuracy Tab</strong> &mdash; run any of the 9 accuracy testing validations with file/config pickers</li>
+    <li><strong>Replay Tab</strong> &mdash; Phase 2/3 replay processing</li>
+    <li><strong>FIRDS Tab</strong> &mdash; refresh FIRDS cache and check instrument reportability</li>
+    <li><strong>GLEIF Tab</strong> &mdash; refresh LEI cache and perform entity lookups</li>
+    <li><strong>Settings Tab</strong> &mdash; configure paths and preferences</li>
+</ul>
+
+<h2 id="next-steps">Next Steps</h2>
+
+<table>
+    <thead>
+        <tr><th>Topic</th><th>Document</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Coding standards and conventions</td><td><a href="04b_coding_standards.html">Coding Standards</a></td></tr>
+        <tr><td>Configuration system in depth</td><td><a href="04c_configuration_system.html">Configuration System</a></td></tr>
+        <tr><td>Core library API reference</td><td><a href="04d_core_api_reference.html">Core API Reference</a></td></tr>
+        <tr><td>Writing and running tests</td><td><a href="04e_testing_guide.html">Testing Guide</a></td></tr>
+        <tr><td>All CLI commands and options</td><td><a href="05j_cli_command_reference.html">CLI Command Reference</a></td></tr>
+        <tr><td>System architecture overview</td><td><a href="02a_system_architecture.html">System Architecture</a></td></tr>
+    </tbody>
+</table>
+
+<hr>
+<p><a href="03c_changelog.html">&laquo; Previous: Changelog</a> | <a href="00_index.html">Documentation Index</a> | <a href="04b_coding_standards.html">Next: Coding Standards &raquo;</a></p>
+
+</body>
+</html>

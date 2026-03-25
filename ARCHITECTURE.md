@@ -1,8 +1,8 @@
 # TXR Automation - System Architecture
 
-**Version:** 2.0  
-**Last Updated:** 17 February 2026  
-**Status:** Post-VBA Migration
+**Version:** 3.0  
+**Last Updated:** 25 March 2026  
+**Status:** Post-VBA Migration — All 12 macros migrated, Phase 6 in progress
 
 ---
 
@@ -11,11 +11,13 @@
 The Transaction Reporting (TXR) Automation system provides validation and processing capabilities for financial transaction data, specifically focused on buyer/seller identification and decision maker validation for regulatory reporting compliance.
 
 **Key Facts:**
-- **Migrated from:** VBA macros (Excel-based)
-- **Current stack:** Python 3.10+, pandas, CSV-based processing
+- **Migrated from:** 12 VBA macros (Excel-based) — all complete
+- **Current stack:** Python 3.10+, pandas, PySide6, CSV-based processing, SQLite caching
+- **Packages:** 7 (core, accuracy_testing, replay, firds, gleif, gui, utils)
+- **Console scripts:** 22 registered entry points + 1 GUI entry point
 - **Current scale:** 20,000 records quarterly
 - **Target scale:** 1.5M records daily
-- **Test coverage:** 528 passing tests (100% pass rate as of 2026-02-17)
+- **Test coverage:** 466 passing tests (100% pass rate as of 2026-03-25)
 
 ---
 
@@ -48,8 +50,8 @@ The system validates and corrects transaction reporting data for regulatory comp
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                   User Interface Layer                       │
-│  • CLI Scripts (current)                                     │
-│  • Future: GUI (Streamlit prototype → PyQt6 production)      │
+│  • CLI Scripts (22 console commands)                         │
+│  • PySide6 Desktop GUI (txr-gui)                             │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -59,7 +61,13 @@ The system validates and corrects transaction reporting data for regulatory comp
 │  │  • ID validation │  │  • Phase 2/3     │                 │
 │  │  • DM validation │  │  • Processing    │                 │
 │  │  • Pricing       │  └──────────────────┘                 │
-│  └──────────────────┘                                        │
+│  │  • Net amt/qty   │                                        │
+│  │  • Data push     │  ┌──────────────────┐                │
+│  │  • SQL extracts  │  │  firds / gleif   │                 │
+│  └──────────────────┘  │  • API clients   │                 │
+│                         │  • SQLite cache  │                 │
+│                         │  • Lookup/check  │                 │
+│                         └──────────────────┘                 │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
@@ -68,18 +76,23 @@ The system validates and corrects transaction reporting data for regulatory comp
 │  │   config    │  │     data     │  │  validation  │        │
 │  │  • YAML     │  │ • Countries  │  │  • ID rules  │        │
 │  │  • Env vars │  │ • ID formats │  │  • Formats   │        │
-│  └─────────────┘  └──────────────┘  └──────────────┘        │
-│  ┌─────────────┐  ┌──────────────┐                          │
-│  │   logging   │  │    utils     │                           │
-│  │  • Struct.  │  │  • CSV       │                           │
-│  │  • JSON     │  │  • Date      │                           │
-│  └─────────────┘  └──────────────┘                           │
+│  └─────────────┘  │ • Incidents  │  └──────────────┘        │
+│                    │ • Constants  │                           │
+│  ┌─────────────┐  └──────────────┘                          │
+│  │   logging   │  ┌──────────────┐                          │
+│  │  • Struct.  │  │    utils     │                           │
+│  │  • JSON     │  │  • CSV       │                           │
+│  └─────────────┘  │  • Date      │                           │
+│                    │  • Files     │                           │
+│                    └──────────────┘                           │
 └─────────────────────────────────────────────────────────────┘
                               ↓
 ┌─────────────────────────────────────────────────────────────┐
 │                     Data Layer                               │
 │  • CSV files (input/output)                                  │
+│  • SQLite databases (FIRDS instruments, GLEIF LEI records)   │
 │  • Reference data (country codes, ID formats, LEI lookups)   │
+│  • YAML configuration files                                  │
 │  • Logs (JSON structured logging)                            │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -156,9 +169,96 @@ accuracy_testing/
 **Purpose:** Transaction replay processing workflows (Phase 2 and Phase 3).
 
 **Key Scripts:**
-- `phase_2_processor.py`: Phase 2 processing
-- `phase_3_processor.py`: Phase 3 matching and decisioning
-- `phase_3_final_lookup.py`: Final Kaizen lookup
+- `phase_2_processor.py` (v4.2): Phase 2 transaction reference matching with hash table indexing
+- `phase_3_processor.py` (v5.2): Phase 3 client record matching with fuzzy logic
+- `phase_3_final_lookup.py`: UnaVista transaction validation
+- `merge_inconsistent_ids.py`: Merge duplicate rows in inconsistent summaries
+
+### 2.4 FIRDS Module (`src/firds/`)
+
+**Purpose:** Local-cache-based access to FCA Financial Instruments Reference Data System (FIRDS) for automated reportability determination under UK MiFIR.
+
+**Architecture:** API client → Downloader → XML parser → SQLite cache → Reportability checker
+
+**Key Components:**
+
+```
+firds/
+├── client.py              # FCA API client (FULINS/DLTINS/FULCAN files)
+├── downloader.py          # File download with extraction
+├── parser.py              # Streaming XML parser (memory-efficient iterparse)
+├── cache.py               # SQLite cache (instruments table, sync log)
+├── refresher.py           # Full + delta refresh orchestration
+├── reportability.py       # Reportability determination logic
+└── scripts/
+    ├── refresh_cache.py   # CLI: firds-refresh
+    ├── check_reportability.py  # CLI: firds-check
+    └── backfill.py        # CLI: firds-backfill
+```
+
+**Key Classes:**
+- **`FirdsApiClient`:** Queries FCA FIRDS API for instrument file listings
+- **`FirdsCacheManager`:** SQLite database with upsert, termination, and cancellation support
+- **`FirdsXmlParser`:** Streaming XML parser for FULINS/DLTINS/FULCAN files
+- **`FirdsRefresher`:** Orchestrates full weekly rebuilds and daily delta refreshes
+- **`FirdsReportabilityChecker`:** Determines whether an ISIN is reportable at a given trade date
+
+### 2.5 GLEIF Module (`src/gleif/`)
+
+**Purpose:** Local-cache-based access to GLEIF Golden Copy data for LEI validation, entity name lookup, and ISIN-to-LEI mapping.
+
+**Architecture:** API client → Downloader → CSV parser → SQLite cache → Lookup (with FTS5 full-text search)
+
+**Key Components:**
+
+```
+gleif/
+├── client.py              # GLEIF API client (LEI lookup, ISIN mapping)
+├── downloader.py          # Golden Copy download with extraction
+├── parser.py              # Streaming CSV parser (3.2M records)
+├── cache.py               # SQLite cache (lei_records, lei_isin_map, FTS5)
+├── refresher.py           # Full + delta refresh (8h/24h/7d/31d cycles)
+├── lookup.py              # LEI validation and entity lookup logic
+└── scripts/
+    ├── refresh_cache.py   # CLI: gleif-refresh
+    ├── check_lei.py       # CLI: gleif-check
+    └── backfill.py        # CLI: gleif-backfill
+```
+
+**Key Classes:**
+- **`GleifApiClient`:** Queries GLEIF API v1 for LEI records, ISIN mappings, BIC lookups
+- **`GleifCacheManager`:** SQLite with FTS5 full-text search over legal names
+- **`GleifCsvParser`:** Streaming parser for 3.2M-record Golden Copy CSV
+- **`GleifRefresher`:** Full rebuild + delta refresh (8h, 24h, 7d, 31d cycles)
+- **`GleifLookup`:** LEI validation with registration status checking and trade-date awareness
+
+### 2.6 GUI Module (`src/gui/`)
+
+**Purpose:** PySide6 desktop application providing a graphical interface for all processing modules.
+
+**Architecture:** `QMainWindow` → `QTabWidget` (5 tabs) → Background `QThread` workers
+
+**Key Components:**
+
+```
+gui/
+├── app.py                 # MainWindow entry point (txr-gui)
+├── constants.py           # App metadata, incident mappings
+├── tabs/                  # Tab implementations
+│   ├── accuracy_tab.py    # Accuracy testing tab (9 incidents)
+│   ├── replay_tab.py      # Replay processing tab
+│   ├── firds_tab.py       # FIRDS management tab
+│   ├── gleif_tab.py       # GLEIF management tab
+│   └── utilities_tab.py   # Utilities tab
+├── widgets/               # Reusable UI components
+│   ├── file_picker.py     # File/directory browser
+│   ├── config_loader.py   # YAML config loader
+│   ├── log_viewer.py      # Real-time log viewer
+│   ├── run_controls.py    # Start/stop/progress controls
+│   └── form_field.py      # Form input widgets
+└── workers/
+    └── script_runner.py   # QThread background script execution
+```
 
 ---
 
@@ -333,12 +433,17 @@ Developer Machine
 # Development mode (editable install)
 pip install -e .
 
-# This registers console scripts:
-# - validate-buyer
-# - validate-seller
-# - validate-ftbdm
-# - validate-ftsdm
-# - etc.
+# This registers 22 console scripts + 1 GUI script:
+# Accuracy: validate-buyer, validate-seller, validate-inconsistent-buyer,
+#           validate-inconsistent-seller, validate-ftbdm, validate-ftsdm,
+#           validate-pricing, validate-non-zero-net-qty, validate-non-zero-net-amt,
+#           validate-all, generate-sql-extract, generate-accuracy-template,
+#           collate-csv-extracts, data-push
+# Replay:   replay-phase2, replay-phase3, replay-phase3-final,
+#           merge-inconsistent-summaries
+# FIRDS:    firds-refresh, firds-check, firds-backfill
+# GLEIF:    gleif-refresh, gleif-check, gleif-backfill
+# GUI:      txr-gui
 ```
 
 ---
@@ -366,11 +471,11 @@ tests/
 └── fixtures/                     # Test data fixtures
 ```
 
-### 6.2 Test Coverage (as of 2026-02-17)
+### 6.2 Test Coverage (as of 2026-03-25)
 
-- **Total Tests:** 541 collected
-- **Passing:** 528 (97.6%)
-- **Skipped:** 13
+- **Total Tests:** 466 collected
+- **Passing:** 466 (100%)
+- **Skipped:** 13 (require confidential sample data)
 - **Failing:** 0 ✅
 
 ### 6.3 Test Categories

@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>User Guides — TXR Automation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
+        h1, h2, h3, h4 { color: #172B4D; }
+        table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
+        th { background-color: #F4F5F7; font-weight: 600; }
+        a { color: #0052CC; text-decoration: none; }
+        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF8B00; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
+        .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
+        code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; User Guides</p>
+<p class="last-updated">Last updated: 25 March 2026</p>
+
+<h1>User Guides</h1>
+
+<h2>Table of Contents</h2>
+<ul>
+    <li><a href="#accuracy">Accuracy Testing</a></li>
+    <li><a href="#replay">Replay Processing</a></li>
+    <li><a href="#firds">FIRDS Reportability</a></li>
+    <li><a href="#gleif">GLEIF LEI Lookup</a></li>
+    <li><a href="#gui">Desktop GUI</a></li>
+    <li><a href="#troubleshooting">Troubleshooting</a></li>
+</ul>
+
+<!-- ================================================================== -->
+<h2 id="accuracy">Accuracy Testing</h2>
+<!-- ================================================================== -->
+
+<p>The accuracy testing suite validates transaction data against regulatory requirements for UK MiFIR/RTS 22 compliance. It covers 11 incident types across buyer/seller identification, decision maker validation, and pricing checks.</p>
+
+<h3>Workflow Overview</h3>
+<ol>
+    <li><strong>Extract data</strong> &mdash; generate SQL queries to extract data from the source database</li>
+    <li><strong>Run validation</strong> &mdash; validate extracted data against format rules, logic checks, and Kaizen templates</li>
+    <li><strong>Review results</strong> &mdash; examine errors-only CSV and full results CSV</li>
+    <li><strong>Push corrections</strong> &mdash; push validated corrections to the master tracking file</li>
+</ol>
+
+<h3>Step 1: Generate SQL Extracts</h3>
+
+<pre>
+# Generate SQL queries for buyer ID incidents (batch mode)
+sql-extract --config config/local/accuracy_testing/sql_extract.yaml
+
+# Or for a specific incident
+sql-extract --config config/local/accuracy_testing/sql_extract.yaml --incident 7_37
+</pre>
+
+<p>SQL output files are written to the configured output directory, ready to run against the source database.</p>
+
+<h3>Step 2: Buyer/Seller ID Validation</h3>
+
+<div class="info-panel">
+    <strong>Incidents covered:</strong> 7_35, 7_37, 7_39 (buyer), 16_19, 16_21, 16_23 (seller) &mdash; CONCAT, NIDN, and CCPT ID types.
+</div>
+
+<pre>
+# Single incident
+buyer-id-validation --config config/local/accuracy_testing/buyer_validation.yaml
+
+# Batch mode (processes all auto-discovered incidents)
+# Set mode: "batch" in the YAML config file
+buyer-id-validation --config config/local/accuracy_testing/buyer_validation.yaml
+
+# Dry run (preview without writing output)
+buyer-id-validation --config config/local/accuracy_testing/buyer_validation.yaml --dry-run
+
+# Seller side (identical workflow)
+seller-id-validation --config config/local/accuracy_testing/seller_validation.yaml
+</pre>
+
+<h4>What the Validation Does</h4>
+<ol>
+    <li>Loads extract CSV and (optionally) Kaizen template CSV</li>
+    <li>For each record:
+        <ul>
+            <li>Determines priority country from nationality (EEA first, then ROW, alphabetical within group)</li>
+            <li>Validates ID format against 68 country-specific regex patterns</li>
+            <li>If NIDN: runs embedded logic validation (DOB extraction, checksums) for 15 countries</li>
+            <li>Tests alternative ID types if primary fails</li>
+            <li>Generates CONCAT if ID is invalid (country code + first name + surname + DOB)</li>
+            <li>Looks up record in Kaizen template for expected value comparison</li>
+        </ul>
+    </li>
+    <li>Writes full results CSV + errors-only CSV + log file</li>
+</ol>
+
+<h4>Output Columns Added</h4>
+
+<table>
+    <thead><tr><th>Column</th><th>Description</th></tr></thead>
+    <tbody>
+        <tr><td><code>Error</code></td><td>Y/N flag &mdash; Y if any validation failed</td></tr>
+        <tr><td><code>Error_Details</code></td><td>Human-readable error description</td></tr>
+        <tr><td><code>Correction</code></td><td>Suggested correction value (if applicable)</td></tr>
+        <tr><td><code>Match</code></td><td>Template match result (MATCH / MISMATCH / NOT_FOUND)</td></tr>
+        <tr><td><code>Expected_ID</code></td><td>Expected ID from Kaizen template</td></tr>
+        <tr><td><code>Expected_Type</code></td><td>Expected ID type from Kaizen template</td></tr>
+    </tbody>
+</table>
+
+<h3>Step 3: Inconsistent ID Validation</h3>
+
+<div class="info-panel">
+    <strong>Incidents covered:</strong> 7_66 (buyer), 16_20 (seller) &mdash; detects when the same person has different IDs over time.
+</div>
+
+<pre>
+inconsistent-buyer-id-validation \
+    --config config/local/accuracy_testing/inconsistent_buyer_validation.yaml
+
+inconsistent-seller-id-validation \
+    --config config/local/accuracy_testing/inconsistent_seller_validation.yaml
+</pre>
+
+<h4>Algorithm</h4>
+<ol>
+    <li>Groups records by Person Code</li>
+    <li>Sorts each group chronologically by Trade_Date_Time</li>
+    <li>Validates each ID (format + logic)</li>
+    <li>Detects inconsistencies using prefix-aware nationality grouping</li>
+    <li>Corrects INVALID IDs using the most recent PRIOR VALID ID in the same group</li>
+    <li>Valid-to-valid ID changes are preserved (not flagged as errors)</li>
+</ol>
+
+<h3>Step 4: Decision Maker Validation</h3>
+
+<pre>
+validate-ftbdm --config config/local/accuracy_testing/ftbdm_validation.yaml
+validate-ftsdm --config config/local/accuracy_testing/ftsdm_validation.yaml
+</pre>
+
+<p>Validates Field 27 (buyer DM) and Field 28 (seller DM) decision maker codes. For Discretionary (D) service level accounts, the DM code must exist and differ from the party code. LEI format validation is performed on DM codes.</p>
+
+<h3>Step 5: Pricing Validation</h3>
+
+<pre>
+pricing-validation --config config/local/accuracy_testing/pricing_validation.yaml
+</pre>
+
+<p>Verifies that Net Amount = Consideration + Interest for each transaction record. Flags discrepancies beyond a configurable tolerance threshold.</p>
+
+<h3>Step 6: Push Results</h3>
+
+<pre>
+data-push --config config/local/accuracy_testing/data_push.yaml
+</pre>
+
+<p>Pushes validated corrections from the output CSV to the master tracker file by matching on transaction reference.</p>
+
+<h3>Step 7: Run All Validations</h3>
+
+<pre>
+# Orchestrate all validation scripts in sequence
+run-all-validations --config config/local/accuracy_testing/run_all_validations.yaml
+</pre>
+
+<!-- ================================================================== -->
+<h2 id="replay">Replay Processing</h2>
+<!-- ================================================================== -->
+
+<p>Replay processing matches transaction records against source data to identify and correct reporting errors. It operates in three phases.</p>
+
+<h3>Phase 2: Transaction Reference Matching</h3>
+
+<pre>
+replay-phase2 --config config/local/replay/phase2.yaml
+</pre>
+
+<p>Matches replay records to source data using transaction reference numbers. Uses hash table indexing for O(1) lookups. Handles character encoding issues from AS/400 exports.</p>
+
+<h3>Phase 3: Client Record Matching</h3>
+
+<pre>
+replay-phase3 --config config/local/replay/phase3.yaml
+</pre>
+
+<p>Matches client records by first name, surname, date of birth, and ID value. Supports fuzzy matching with configurable thresholds. Prefers correction-bearing rows when multiple matches exist.</p>
+
+<h3>Phase 3 Final Lookup</h3>
+
+<pre>
+replay-phase3-final --config config/local/replay/phase3_final.yaml
+</pre>
+
+<p>Verifies proposed corrections from Phase 3 against UnaVista source data.</p>
+
+<h3>XLSX to CSV Converter</h3>
+
+<pre>
+replay-xlsx-converter --input data/replay/input.xlsx --output data/replay/input.csv
+</pre>
+
+<p>Converts XLSX files to CSV format for pipeline input.</p>
+
+<!-- ================================================================== -->
+<h2 id="firds">FIRDS Reportability</h2>
+<!-- ================================================================== -->
+
+<p>The FIRDS module maintains a local SQLite cache of FCA Financial Instruments Reference Data System (FIRDS) data for determining whether instruments are MiFIR reportable.</p>
+
+<h3>Refresh the Cache</h3>
+
+<pre>
+# Full refresh — downloads and rebuilds the entire cache
+firds-refresh --type full --config config/local/firds_config.yaml
+
+# Delta refresh — updates only new/changed records
+firds-refresh --type delta --config config/local/firds_config.yaml
+</pre>
+
+<h3>Check Reportability</h3>
+
+<pre>
+# Check a single ISIN
+firds-check --isin GB0007188757
+
+# Batch check from CSV
+firds-check --input data/isins_to_check.csv --output data/reportability_results.csv
+</pre>
+
+<!-- ================================================================== -->
+<h2 id="gleif">GLEIF LEI Lookup</h2>
+<!-- ================================================================== -->
+
+<p>The GLEIF module maintains a local SQLite cache (with FTS5 full-text search) of the GLEIF Legal Entity Identifier golden copy for LEI validation and entity lookups.</p>
+
+<h3>Refresh the Cache</h3>
+
+<pre>
+# Full refresh — downloads GLEIF golden copy and rebuilds cache
+gleif-refresh --type full --config config/local/gleif_config.yaml
+
+# Backfill missing LEIs from API
+gleif-backfill --config config/local/gleif_config.yaml
+</pre>
+
+<h3>Look Up an LEI</h3>
+
+<pre>
+# Single LEI lookup
+gleif-check --lei 529900T8BM49AURSDO55
+
+# Search by entity name (uses FTS5 full-text search)
+gleif-check --name "Example Corporation"
+
+# Batch lookup from CSV
+gleif-check --input data/leis_to_check.csv --output data/lei_results.csv
+</pre>
+
+<!-- ================================================================== -->
+<h2 id="gui">Desktop GUI</h2>
+<!-- ================================================================== -->
+
+<pre>
+# Launch the GUI
+txr-gui
+</pre>
+
+<p>The PySide6 desktop application provides a tabbed interface:</p>
+
+<table>
+    <thead><tr><th>Tab</th><th>Purpose</th></tr></thead>
+    <tbody>
+        <tr><td><strong>Accuracy</strong></td><td>Run any of the 9 accuracy testing validations. Includes file picker for input/output, config loader, and log viewer.</td></tr>
+        <tr><td><strong>Replay</strong></td><td>Phase 2/3 replay processing with progress reporting.</td></tr>
+        <tr><td><strong>FIRDS</strong></td><td>Cache management (refresh/delta), single ISIN reportability check.</td></tr>
+        <tr><td><strong>GLEIF</strong></td><td>Cache management (refresh/backfill), LEI lookup and entity search.</td></tr>
+        <tr><td><strong>Settings</strong></td><td>Configure default paths and preferences.</td></tr>
+    </tbody>
+</table>
+
+<div class="warning-panel">
+    <strong>Note:</strong> The GUI is in active development. All validation logic is shared with the CLI scripts, so results are identical regardless of interface used.
+</div>
+
+<!-- ================================================================== -->
+<h2 id="troubleshooting">Troubleshooting</h2>
+<!-- ================================================================== -->
+
+<table>
+    <thead><tr><th>Issue</th><th>Cause</th><th>Solution</th></tr></thead>
+    <tbody>
+        <tr>
+            <td>&ldquo;Configuration file not found&rdquo;</td>
+            <td>Missing local config</td>
+            <td>Copy template from <code>config/templates/</code> to <code>config/local/</code> and edit paths</td>
+        </tr>
+        <tr>
+            <td>&ldquo;No incidents found in batch mode&rdquo;</td>
+            <td>Extract files not in expected directory or not matching filename pattern</td>
+            <td>Check <code>batch.paths.extract_dir</code> and <code>filename_patterns.extract</code> in config</td>
+        </tr>
+        <tr>
+            <td>UnicodeDecodeError on CSV read</td>
+            <td>File uses non-UTF-8 encoding (e.g., Latin-1 from AS/400)</td>
+            <td>The system auto-detects encoding (UTF-8 → UTF-8-sig → Latin-1). If issues persist, convert file: <code>iconv -f ISO-8859-1 -t UTF-8 input.csv > output.csv</code></td>
+        </tr>
+        <tr>
+            <td>&ldquo;ModuleNotFoundError: No module named &lsquo;core&rsquo;&rdquo;</td>
+            <td>Package not installed in editable mode</td>
+            <td>Run <code>pip install -e .</code> from the project root</td>
+        </tr>
+        <tr>
+            <td>GUI fails to launch</td>
+            <td>PySide6 not installed or display server unavailable</td>
+            <td>Ensure <code>pyside6</code> is installed: <code>conda install pyside6</code></td>
+        </tr>
+        <tr>
+            <td>FIRDS/GLEIF cache is empty</td>
+            <td>Cache not yet populated</td>
+            <td>Run <code>firds-refresh --type full</code> or <code>gleif-refresh --type full</code></td>
+        </tr>
+    </tbody>
+</table>
+
+<hr>
+<p><a href="04e_testing_guide.html">&laquo; Previous: Testing Guide</a> | <a href="00_index.html">Documentation Index</a> | <a href="05j_cli_command_reference.html">Next: CLI Command Reference &raquo;</a></p>
+
+</body>
+</html>
