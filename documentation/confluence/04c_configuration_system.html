@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Configuration System — TXR Automation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
+        h1, h2, h3, h4 { color: #172B4D; }
+        table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
+        th { background-color: #F4F5F7; font-weight: 600; }
+        a { color: #0052CC; text-decoration: none; }
+        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF8B00; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
+        .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
+        code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; }
+    </style>
+</head>
+<body>
+
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Developer Guides &rsaquo; Configuration System</p>
+<p class="last-updated">Last updated: 25 March 2026</p>
+
+<h1>Configuration System</h1>
+
+<h2>Table of Contents</h2>
+<ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#architecture">Architecture</a></li>
+    <li><a href="#precedence">Configuration Precedence</a></li>
+    <li><a href="#templates">Templates &amp; Local Copies</a></li>
+    <li><a href="#single-mode">Single Mode Configuration</a></li>
+    <li><a href="#batch-mode">Batch Mode Configuration</a></li>
+    <li><a href="#env-vars">Environment Variables</a></li>
+    <li><a href="#replay-config">Replay Configuration</a></li>
+    <li><a href="#firds-gleif">FIRDS &amp; GLEIF Configuration</a></li>
+    <li><a href="#classes">Configuration Classes</a></li>
+</ul>
+
+<h2 id="overview">Overview</h2>
+
+<p>TXR Automation uses a layered YAML configuration system with two independently developed but compatible managers:</p>
+
+<table>
+    <thead>
+        <tr><th>Manager</th><th>Module</th><th>Purpose</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>ConfigManager</code></td>
+            <td><code>src/core/config/config_manager.py</code></td>
+            <td>Shared core config for replay processing. Provides <code>PathConfig</code> and <code>ProcessorConfig</code> dataclasses.</td>
+        </tr>
+        <tr>
+            <td><code>AccuracyConfigManager</code></td>
+            <td><code>src/accuracy_testing/processor.py</code></td>
+            <td>Accuracy testing config with batch/single mode support. Provides <code>AccuracyPathConfig</code> and <code>AccuracyProcessorConfig</code> dataclasses.</td>
+        </tr>
+    </tbody>
+</table>
+
+<p>Both managers follow the same design principles: YAML files as the primary source, environment variable overrides with <code>TXR_</code> prefix, and dataclass-based typed configuration objects.</p>
+
+<h2 id="architecture">Architecture</h2>
+
+<pre>
+┌──────────────────────────────────────────────────────────┐
+│                  Configuration Sources                    │
+├──────────────────────────────────────────────────────────┤
+│  CLI Arguments       (--config, --log-level, etc.)       │  ← Highest priority
+│  Environment Vars    (TXR_ACCURACY_PATHS_INPUT_FILE)     │
+│  YAML Config File    (config/local/.../*.yaml)           │
+│  Default Values      (in dataclass field defaults)       │  ← Lowest priority
+└──────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌──────────────────────────────────────────────────────────┐
+│              Config Manager (load + merge)                │
+├──────────────────────────────────────────────────────────┤
+│  1. Load YAML file → dict                                │
+│  2. Load env vars  → dict                                │
+│  3. Merge (env overrides YAML)                           │
+│  4. Parse into typed dataclass                           │
+└──────────────────────────────────────────────────────────┘
+                          │
+                          ▼
+┌──────────────────────────────────────────────────────────┐
+│         Typed Config Objects (dataclasses)                │
+├──────────────────────────────────────────────────────────┤
+│  AccuracyPathConfig        AccuracyProcessorConfig       │
+│  PathConfig (replay)       ProcessorConfig (replay)      │
+└──────────────────────────────────────────────────────────┘
+</pre>
+
+<h2 id="precedence">Configuration Precedence</h2>
+
+<p>From highest to lowest priority:</p>
+
+<table>
+    <thead>
+        <tr><th>Priority</th><th>Source</th><th>Example</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>1 (highest)</td><td>CLI arguments</td><td><code>--config path/to/config.yaml</code> / <code>--log-level DEBUG</code></td></tr>
+        <tr><td>2</td><td>Environment variables</td><td><code>TXR_ACCURACY_PATHS_INPUT_FILE=/path/to/data.csv</code></td></tr>
+        <tr><td>3</td><td>YAML configuration file</td><td><code>config/local/accuracy_testing/buyer_validation.yaml</code></td></tr>
+        <tr><td>4 (lowest)</td><td>Default values</td><td><code>log_level: str = "INFO"</code> in dataclass definition</td></tr>
+    </tbody>
+</table>
+
+<h2 id="templates">Templates &amp; Local Copies</h2>
+
+<div class="info-panel">
+    <strong>Convention:</strong> Templates in <code>config/templates/</code> are version-controlled and contain documented examples.
+    Local configs in <code>config/local/</code> are gitignored and contain actual paths for your environment.
+</div>
+
+<h3>Available Templates</h3>
+
+<table>
+    <thead>
+        <tr><th>Template Path</th><th>Script</th><th>Mode</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>config/templates/accuracy_testing/buyer_validation_template.yaml</code></td><td><code>buyer-id-validation</code></td><td>batch / single</td></tr>
+        <tr><td><code>config/templates/accuracy_testing/seller_validation_template.yaml</code></td><td><code>seller-id-validation</code></td><td>batch / single</td></tr>
+        <tr><td><code>config/templates/accuracy_testing/inconsistent_buyer_validation_template.yaml</code></td><td><code>inconsistent-buyer-id-validation</code></td><td>single</td></tr>
+        <tr><td><code>config/templates/accuracy_testing/inconsistent_seller_validation_template.yaml</code></td><td><code>inconsistent-seller-id-validation</code></td><td>single</td></tr>
+        <tr><td><code>config/templates/accuracy_testing/ftbdm_validation_template.yaml</code></td><td><code>validate-ftbdm</code></td><td>batch / single</td></tr>
+        <tr><td><code>config/templates/accuracy_testing/ftsdm_validation_template.yaml</code></td><td><code>validate-ftsdm</code></td><td>batch / single</td></tr>
+        <tr><td><code>config/templates/accuracy_testing/pricing_validation_template.yaml</code></td><td><code>pricing-validation</code></td><td>batch / single</td></tr>
+        <tr><td><code>config/templates/accuracy_testing/run_all_validations_template.yaml</code></td><td><code>run-all-validations</code></td><td>orchestrator</td></tr>
+        <tr><td><code>config/templates/gleif_config.yaml</code></td><td><code>gleif-refresh</code>, <code>gleif-check</code></td><td>&mdash;</td></tr>
+        <tr><td><code>config/templates/firds_config.yaml</code></td><td><code>firds-refresh</code>, <code>firds-check</code></td><td>&mdash;</td></tr>
+        <tr><td><code>config/templates/environments/local_template.yaml</code></td><td>General</td><td>&mdash;</td></tr>
+    </tbody>
+</table>
+
+<h3>Creating Local Configs</h3>
+
+<pre>
+# Create the local config directory structure
+mkdir -p config/local/accuracy_testing
+
+# Copy a template
+cp config/templates/accuracy_testing/buyer_validation_template.yaml \
+   config/local/accuracy_testing/buyer_validation.yaml
+
+# Edit to set your local file paths
+$EDITOR config/local/accuracy_testing/buyer_validation.yaml
+</pre>
+
+<h2 id="single-mode">Single Mode Configuration</h2>
+
+<p>Use <code>mode: "single"</code> to process one incident at a time with explicit file paths:</p>
+
+<pre>
+mode: "single"
+
+testing_period:
+  fiscal_year: "FY26"
+  quarter: "Q1"
+
+single:
+  incident_code: "7_37"
+  
+  paths:
+    # Input: SQL extract from database
+    input_file: "data/extracts/7_37_FY26_Q1.csv"
+    
+    # Reference: Kaizen template with expected values
+    template_file: "data/templates/FY26 Q1 7_37.csv"
+    
+    # Template column mapping
+    template_id_column: "Buyer identification code"
+    template_type_column: "Type of buyer identification code"
+    
+    # Output: validation results
+    output_file: "data/validated/validated_FY26_Q1_7_37.csv"
+    
+    # Optional tracker files
+    # italian_tracker: "data/trackers/italian_tracker.csv"
+    # main_tracker: "data/trackers/main_tracker.csv"
+    
+    # Log directory
+    log_output: "logs"
+</pre>
+
+<h2 id="batch-mode">Batch Mode Configuration</h2>
+
+<p>Use <code>mode: "batch"</code> to process multiple incidents automatically. The system constructs file paths using patterns and auto-discovers incidents:</p>
+
+<pre>
+mode: "batch"
+
+testing_period:
+  fiscal_year: "FY26"
+  quarter: "Q1"
+
+batch:
+  # "auto" discovers all incidents, or list specific ones: ["7_35", "7_37"]
+  incidents: "auto"
+  
+  # Auto-discovery incident list
+  auto_incidents:
+    - "7_35"    # Incorrect CONCAT value
+    - "7_37"    # Incorrect NIDN value
+    - "7_39"    # Incorrect CCPT value
+  
+  paths:
+    extract_dir: "data/extracts/FY26/Q1"
+    template_dir: "data/templates/FY26/Q1"
+    output_dir: "data/validated/FY26/Q1"
+    log_output: "logs"
+  
+  # Filename pattern construction
+  # Variables: {incident}, {fiscal_year}, {quarter}
+  filename_patterns:
+    extract: "{incident}_{fiscal_year}_{quarter}.csv"
+    template: "{fiscal_year} {quarter} {incident}.csv"
+    output: "validated_{fiscal_year}_{quarter}_{incident}.csv"
+</pre>
+
+<div class="info-panel">
+    <strong>How auto-discovery works:</strong> When <code>incidents: "auto"</code> is set, the processor scans <code>extract_dir</code>
+    for files matching the <code>filename_patterns.extract</code> pattern for each incident in <code>auto_incidents</code>.
+    Only incidents with matching extract files are processed.
+</div>
+
+<h2 id="env-vars">Environment Variables</h2>
+
+<h3>Accuracy Testing Variables</h3>
+
+<table>
+    <thead>
+        <tr><th>Variable</th><th>YAML Equivalent</th><th>Type</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>TXR_ACCURACY_PATHS_INPUT_FILE</code></td><td><code>single.paths.input_file</code></td><td>string (path)</td></tr>
+        <tr><td><code>TXR_ACCURACY_PATHS_OUTPUT_FILE</code></td><td><code>single.paths.output_file</code></td><td>string (path)</td></tr>
+        <tr><td><code>TXR_ACCURACY_PATHS_LOG_OUTPUT</code></td><td><code>single.paths.log_output</code></td><td>string (path)</td></tr>
+        <tr><td><code>TXR_ACCURACY_PROCESSOR_LOG_LEVEL</code></td><td><code>processor.log_level</code></td><td>DEBUG / INFO / WARNING / ERROR</td></tr>
+        <tr><td><code>TXR_ACCURACY_PROCESSOR_VERBOSE</code></td><td><code>processor.verbose</code></td><td>true / false</td></tr>
+        <tr><td><code>TXR_ACCURACY_PROCESSOR_BATCH_SIZE</code></td><td><code>processor.batch_size</code></td><td>integer</td></tr>
+    </tbody>
+</table>
+
+<h3>Replay Processing Variables</h3>
+
+<table>
+    <thead>
+        <tr><th>Variable</th><th>YAML Equivalent</th><th>Type</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>TXR_REPLAY_INPUT</code></td><td><code>paths.replay_input</code></td><td>string (path)</td></tr>
+        <tr><td><code>TXR_INCIDENT_FILES</code></td><td><code>paths.incident_files</code></td><td>string (path)</td></tr>
+        <tr><td><code>TXR_REPLAY_OUTPUT</code></td><td><code>paths.replay_output</code></td><td>string (path)</td></tr>
+        <tr><td><code>TXR_LOG_OUTPUT</code></td><td><code>paths.log_output</code></td><td>string (path)</td></tr>
+        <tr><td><code>TXR_LOG_LEVEL</code></td><td><code>processing.log_level</code></td><td>DEBUG / INFO / WARNING / ERROR</td></tr>
+    </tbody>
+</table>
+
+<h3>Usage with --use-env Flag</h3>
+
+<pre>
+# Set environment variables
+export TXR_ACCURACY_PATHS_INPUT_FILE="data/extracts/7_37_FY26_Q1.csv"
+export TXR_ACCURACY_PATHS_OUTPUT_FILE="data/validated/validated_7_37.csv"
+
+# Run using environment variables instead of a YAML file
+buyer-id-validation --use-env
+</pre>
+
+<h2 id="replay-config">Replay Configuration</h2>
+
+<p>Replay processing uses the core <code>ConfigManager</code> with a simpler flat structure:</p>
+
+<pre>
+# config/local/replay/phase2.yaml
+paths:
+  replay_input: "data/replay/input"
+  incident_files: "data/replay/incidents"
+  replay_output: "data/replay/output"
+  log_output: "logs"
+
+processing:
+  batch_size: 50
+  log_level: "INFO"
+  enable_progress_reporting: true
+  encoding: "utf-8"
+</pre>
+
+<h2 id="firds-gleif">FIRDS &amp; GLEIF Configuration</h2>
+
+<h3>GLEIF Config</h3>
+
+<pre>
+# config/local/gleif_config.yaml
+database:
+  path: data/gleif_cache.db
+
+gleif:
+  golden_copy_url: "https://leilookup.gleif.org/api/v2/leirecords"
+  batch_size: 200
+  cache_ttl_days: 30
+
+refresh:
+  schedule: "weekly"
+  full_refresh_day: "Sunday"
+</pre>
+
+<h3>FIRDS Config</h3>
+
+<pre>
+# config/local/firds_config.yaml
+database:
+  path: data/firds_cache.db
+
+firds:
+  api_base_url: "https://registers.esma.europa.eu/solr/esma_registers_firds"
+  batch_size: 100
+  cache_ttl_days: 7
+</pre>
+
+<h2 id="classes">Configuration Classes</h2>
+
+<h3><code>AccuracyPathConfig</code></h3>
+
+<table>
+    <thead>
+        <tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>input_file</code></td><td><code>str</code></td><td><em>required</em></td><td>Path to input CSV file</td></tr>
+        <tr><td><code>output_file</code></td><td><code>str</code></td><td><em>required</em></td><td>Path to output CSV file</td></tr>
+        <tr><td><code>log_output</code></td><td><code>str</code></td><td><code>"logs"</code></td><td>Directory for log files</td></tr>
+        <tr><td><code>italian_tracker</code></td><td><code>str</code></td><td><code>""</code></td><td>Path to Italian fiscal code tracker CSV</td></tr>
+        <tr><td><code>main_tracker</code></td><td><code>str</code></td><td><code>""</code></td><td>Path to main tracker CSV</td></tr>
+        <tr><td><code>template_file</code></td><td><code>str</code></td><td><code>""</code></td><td>Path to Kaizen template CSV</td></tr>
+        <tr><td><code>template_id_column</code></td><td><code>str</code></td><td><code>""</code></td><td>Column name for expected ID</td></tr>
+        <tr><td><code>template_type_column</code></td><td><code>str</code></td><td><code>""</code></td><td>Column name for expected type</td></tr>
+    </tbody>
+</table>
+
+<h3><code>AccuracyProcessorConfig</code></h3>
+
+<table>
+    <thead>
+        <tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>log_level</code></td><td><code>str</code></td><td><code>"INFO"</code></td><td>Logging level</td></tr>
+        <tr><td><code>verbose</code></td><td><code>bool</code></td><td><code>False</code></td><td>Enable verbose console output</td></tr>
+        <tr><td><code>batch_size</code></td><td><code>int</code></td><td><code>1000</code></td><td>Batch size for processing (future use)</td></tr>
+    </tbody>
+</table>
+
+<h3><code>PathConfig</code> (Replay)</h3>
+
+<table>
+    <thead>
+        <tr><th>Field</th><th>Type</th><th>Default</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>replay_input</code></td><td><code>str</code></td><td><em>required</em></td><td>Replay input directory</td></tr>
+        <tr><td><code>incident_files</code></td><td><code>str</code></td><td><em>required</em></td><td>Incident files directory</td></tr>
+        <tr><td><code>replay_output</code></td><td><code>str</code></td><td><em>required</em></td><td>Replay output directory</td></tr>
+        <tr><td><code>log_output</code></td><td><code>str</code></td><td><em>required</em></td><td>Log output directory</td></tr>
+        <tr><td><code>unavista_file</code></td><td><code>Optional[str]</code></td><td><code>None</code></td><td>Optional UnaVista data file</td></tr>
+    </tbody>
+</table>
+
+<hr>
+<p><a href="04b_coding_standards.html">&laquo; Previous: Coding Standards</a> | <a href="00_index.html">Documentation Index</a> | <a href="04d_core_api_reference.html">Next: Core API Reference &raquo;</a></p>
+
+</body>
+</html>

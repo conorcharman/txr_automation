@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Coverage Report — TXR Automation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
+        h1, h2, h3, h4 { color: #172B4D; }
+        table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
+        th { background-color: #F4F5F7; font-weight: 600; }
+        a { color: #0052CC; text-decoration: none; }
+        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF991F; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
+        .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
+        code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; }
+        .metric { font-size: 2em; font-weight: bold; color: #00875A; }
+        .metric-label { font-size: 0.85em; color: #6B778C; }
+        .metrics-row { display: flex; gap: 40px; margin: 20px 0; }
+        .metric-box { text-align: center; }
+    </style>
+</head>
+<body>
+
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Audit &amp; Compliance &rsaquo; Test Coverage Report</p>
+<p class="last-updated">Last updated: 25 March 2026</p>
+
+<h1>Test Coverage Report</h1>
+
+<div class="success-panel">
+    <strong>Overall Status:</strong> 466 tests &bull; 58 test files &bull; 100% pass rate &bull; 7 test directories
+</div>
+
+<div class="metrics-row">
+    <div class="metric-box">
+        <div class="metric">466</div>
+        <div class="metric-label">Total Tests</div>
+    </div>
+    <div class="metric-box">
+        <div class="metric">58</div>
+        <div class="metric-label">Test Files</div>
+    </div>
+    <div class="metric-box">
+        <div class="metric">100%</div>
+        <div class="metric-label">Pass Rate</div>
+    </div>
+    <div class="metric-box">
+        <div class="metric">7</div>
+        <div class="metric-label">Test Directories</div>
+    </div>
+</div>
+
+<h2>Table of Contents</h2>
+<ul>
+    <li><a href="#summary">Coverage Summary by Module</a></li>
+    <li><a href="#accuracy">Accuracy Testing Tests (19 files)</a></li>
+    <li><a href="#core">Core Library Tests (5 files)</a></li>
+    <li><a href="#replay">Replay Processing Tests (2 files)</a></li>
+    <li><a href="#firds">FIRDS Tests (5 files)</a></li>
+    <li><a href="#gleif">GLEIF Tests (5 files)</a></li>
+    <li><a href="#utils">Utils Tests (1 file)</a></li>
+    <li><a href="#integration">Integration Tests (5 files)</a></li>
+    <li><a href="#root">Root-Level Tests (16 files)</a></li>
+    <li><a href="#running">Running the Test Suite</a></li>
+</ul>
+
+<h2 id="summary">Coverage Summary by Module</h2>
+
+<table>
+    <thead>
+        <tr><th>Test Directory</th><th>Files</th><th>Focus Area</th><th>Key Classes/Functions Tested</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><code>test_accuracy_testing/</code></td>
+            <td>19</td>
+            <td>ID validation, CONCAT generation, SQL extraction, batch processing, data push</td>
+            <td>IDValidationProcessor, BuyerIDValidator, IDFormatManager, CountryDataManager, IDLogicValidator</td>
+        </tr>
+        <tr>
+            <td><code>test_core/</code></td>
+            <td>5</td>
+            <td>Configuration, logging, date parsing, incident codes</td>
+            <td>ConfigManager, StructuredLogger, DateParser, ProcessingStats, incident_codes</td>
+        </tr>
+        <tr>
+            <td><code>test_replay/</code></td>
+            <td>2</td>
+            <td>Phase 2/3 processing, correction logic</td>
+            <td>Phase2Processor, Phase3Processor, correction generation</td>
+        </tr>
+        <tr>
+            <td><code>test_firds/</code></td>
+            <td>5</td>
+            <td>FIRDS cache, reportability, XML parsing, backfill</td>
+            <td>FIRDSCache, ReportabilityChecker, FIRDSParser, FIRDSRefresher</td>
+        </tr>
+        <tr>
+            <td><code>test_gleif/</code></td>
+            <td>5</td>
+            <td>GLEIF cache, LEI lookup, API client, parsing</td>
+            <td>GLEIFCache, LEILookup, GLEIFClient, GLEIFParser, GLEIFRefresher</td>
+        </tr>
+        <tr>
+            <td><code>test_utils/</code></td>
+            <td>1</td>
+            <td>XLSX to CSV conversion</td>
+            <td>XLSXConverter, ConverterStats</td>
+        </tr>
+        <tr>
+            <td><code>integration/</code></td>
+            <td>5</td>
+            <td>End-to-end workflows, CLI interfaces, config loading, logger init</td>
+            <td>Full pipeline tests, CLI entry points, cross-module integration</td>
+        </tr>
+        <tr>
+            <td><code>tests/</code> (root)</td>
+            <td>16</td>
+            <td>Specific bug fixes, edge cases, feature-level tests</td>
+            <td>Error flags, Kaizen lookup, JNT correction, CONCAT detection, MU scenarios</td>
+        </tr>
+    </tbody>
+</table>
+
+<h2 id="accuracy">Accuracy Testing Tests (19 files)</h2>
+
+<table>
+    <thead>
+        <tr><th>Test File</th><th>Tests</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>test_buyer_id_validation.py</code></td><td>Buyer validation</td><td>BuyerIDValidator: CSV I/O, record processing, correction generation, error flags</td></tr>
+        <tr><td><code>test_country_codes.py</code></td><td>Country lookups</td><td>CountryDataManager: 249 countries, EEA membership, alpha-2/3 lookups, case sensitivity</td></tr>
+        <tr><td><code>test_id_formats.py</code></td><td>ID patterns</td><td>IDFormatManager: 68 patterns, GB NIDN/CONCAT, mismatch reasons, singleton pattern</td></tr>
+        <tr><td><code>test_validators.py</code></td><td>Core validators</td><td>ValidationResult, validate_not_empty, validate_date_format, validate_date_range</td></tr>
+        <tr><td><code>test_concat_validation.py</code></td><td>CONCAT segments</td><td>Name segment validation, surname prefix stripping, semantic cross-checks</td></tr>
+        <tr><td><code>test_concat_generation.py</code></td><td>CONCAT building</td><td>CONCAT generation from client data, # padding, date formatting</td></tr>
+        <tr><td><code>test_decision_maker_validation.py</code></td><td>DM validation</td><td>FTBDM/FTSDM fund trade decision maker codes</td></tr>
+        <tr><td><code>test_pricing_validation.py</code></td><td>Pricing rules</td><td>Net Amount = Consideration + Interest checks</td></tr>
+        <tr><td><code>test_net_quantity_validation.py</code></td><td>Net quantity</td><td>INTC ISIN net quantity netting to zero</td></tr>
+        <tr><td><code>test_net_amount_validation.py</code></td><td>Net amount</td><td>INTC ISIN net amount netting to zero</td></tr>
+        <tr><td><code>test_inconsistent_id_standardization.py</code></td><td>Inconsistent IDs</td><td>Cross-person ID inconsistency detection and standardisation</td></tr>
+        <tr><td><code>test_sql_extract_generator.py</code></td><td>SQL generation</td><td>SQL template rendering from transaction references, 11 templates + DTF</td></tr>
+        <tr><td><code>test_batch_sql_generation.py</code></td><td>Batch SQL</td><td>Batch mode SQL generation for multiple incidents</td></tr>
+        <tr><td><code>test_batch_validation.py</code></td><td>Batch mode</td><td>Config v2 batch mode: multiple incidents, output routing</td></tr>
+        <tr><td><code>test_accuracy_template_generator.py</code></td><td>Templates</td><td>YAML configuration template generation</td></tr>
+        <tr><td><code>test_data_push.py</code></td><td>Data push</td><td>Correction data push to master tracker by transaction reference</td></tr>
+        <tr><td><code>test_kaizen_lookup_with_preprocessing.py</code></td><td>Kaizen</td><td>Template cross-referencing with pre-processing pipeline</td></tr>
+        <tr><td><code>test_regex_fixes.py</code></td><td>Regex fixes</td><td>ESMA regex pattern corrections and edge cases</td></tr>
+        <tr><td><code>test_prefixed_nationality.py</code></td><td>Nationality</td><td>Handling prefixed nationality codes in ID validation</td></tr>
+    </tbody>
+</table>
+
+<h2 id="core">Core Library Tests (5 files)</h2>
+
+<table>
+    <thead>
+        <tr><th>Test File</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>test_config.py</code></td><td>ConfigManager: YAML loading, env var cascade, path resolution, validation</td></tr>
+        <tr><td><code>test_date_parser.py</code></td><td>DateParser: multiple date formats, edge cases, timezone handling</td></tr>
+        <tr><td><code>test_incident_codes.py</code></td><td>INCIDENT_CODE_MATRIX: routing, sides, validation types, completeness</td></tr>
+        <tr><td><code>test_processing_stats.py</code></td><td>ProcessingStats: counters, timing, summary generation</td></tr>
+        <tr><td><code>test_character_replacement.py</code></td><td>Character replacement utilities for data normalisation</td></tr>
+    </tbody>
+</table>
+
+<h2 id="replay">Replay Processing Tests (2 files)</h2>
+
+<table>
+    <thead>
+        <tr><th>Test File</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>test_integration.py</code></td><td>End-to-end Phase 2/3 processing pipeline with sample data</td></tr>
+        <tr><td><code>test_correction_logic.py</code></td><td>Correction generation, delimiter handling, field mapping</td></tr>
+    </tbody>
+</table>
+
+<h2 id="firds">FIRDS Tests (5 files)</h2>
+
+<table>
+    <thead>
+        <tr><th>Test File</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>test_cache.py</code></td><td>SQLite cache operations: insert, lookup, update, expiry</td></tr>
+        <tr><td><code>test_reportability.py</code></td><td>ISIN reportability checks against FIRDS register</td></tr>
+        <tr><td><code>test_parser.py</code></td><td>ESMA XML/CSV data parsing into FIRDS records</td></tr>
+        <tr><td><code>test_refresher.py</code></td><td>Full/delta cache refresh from ESMA API</td></tr>
+        <tr><td><code>test_backfill.py</code></td><td>Backfilling missing records from ESMA register</td></tr>
+    </tbody>
+</table>
+
+<h2 id="gleif">GLEIF Tests (5 files)</h2>
+
+<table>
+    <thead>
+        <tr><th>Test File</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>test_cache.py</code></td><td>SQLite + FTS5 cache operations: insert, search, full-text queries</td></tr>
+        <tr><td><code>test_lookup.py</code></td><td>LEI code lookups and entity name search</td></tr>
+        <tr><td><code>test_client.py</code></td><td>GLEIF API client: HTTP requests, rate limiting, error handling</td></tr>
+        <tr><td><code>test_parser.py</code></td><td>GLEIF golden copy data file parsing</td></tr>
+        <tr><td><code>test_refresher.py</code></td><td>Full cache refresh from GLEIF downloads</td></tr>
+    </tbody>
+</table>
+
+<h2 id="utils">Utils Tests (1 file)</h2>
+
+<table>
+    <thead>
+        <tr><th>Test File</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>test_xlsx_csv_converter.py</code></td><td>ConverterStats, XLSXConverter: file conversion, error handling, statistics</td></tr>
+    </tbody>
+</table>
+
+<h2 id="integration">Integration Tests (5 files)</h2>
+
+<table>
+    <thead>
+        <tr><th>Test File</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>test_core_library_integration.py</code></td><td>Cross-module integration: core library components working together</td></tr>
+        <tr><td><code>test_configuration.py</code></td><td>Full configuration loading pipeline: YAML &rarr; env vars &rarr; defaults</td></tr>
+        <tr><td><code>test_sample_data_processing.py</code></td><td>End-to-end processing with representative sample data</td></tr>
+        <tr><td><code>test_logger_initialization.py</code></td><td>StructuredLogger initialisation and output verification</td></tr>
+        <tr><td><code>test_cli_interfaces.py</code></td><td>CLI entry point smoke tests for all registered console scripts</td></tr>
+        <tr><td><code>test_accuracy_workflow.py</code></td><td>Complete accuracy testing workflow: read &rarr; validate &rarr; correct &rarr; write</td></tr>
+    </tbody>
+</table>
+
+<h2 id="root">Root-Level Tests (16 files)</h2>
+
+<p>These tests sit directly in <code>tests/</code> and cover specific bug fixes, edge cases, and feature-level validation:</p>
+
+<table>
+    <thead>
+        <tr><th>Test File</th><th>Description</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>test_error_flag_logic.py</code></td><td>Error flag Y/N setting across validation outcomes</td></tr>
+        <tr><td><code>test_error_column_fix.py</code></td><td>Error column data type handling fix</td></tr>
+        <tr><td><code>test_fallback_id_fix.py</code></td><td>Fallback ID selection when primary ID fails</td></tr>
+        <tr><td><code>test_kaizen_fix.py</code></td><td>Kaizen template lookup corrections</td></tr>
+        <tr><td><code>test_kaizen_lookup.py</code></td><td>Kaizen error lookup integration</td></tr>
+        <tr><td><code>test_jnt_correction_fix.py</code></td><td>JNT (joint account) false positive correction</td></tr>
+        <tr><td><code>test_column_name_autodetect.py</code></td><td>CSV column name auto-detection from varied headers</td></tr>
+        <tr><td><code>test_backup_dir.py</code></td><td>Backup directory creation and management</td></tr>
+        <tr><td><code>test_person_code.py</code></td><td>Person code extraction and validation</td></tr>
+        <tr><td><code>test_mu_concat_detection.py</code></td><td>MU (multiple update) CONCAT detection scenarios</td></tr>
+        <tr><td><code>test_mu_validation_complete.py</code></td><td>Complete MU validation workflow</td></tr>
+        <tr><td><code>test_csv_mu_scenarios.py</code></td><td>CSV-based MU scenario testing</td></tr>
+        <tr><td><code>test_e2e_mu_concat.py</code></td><td>End-to-end MU CONCAT testing</td></tr>
+        <tr><td><code>test_phase3_correction_delimiter.py</code></td><td>Phase 3 correction field delimiter handling</td></tr>
+        <tr><td><code>test_phase3_dm_fallback.py</code></td><td>Phase 3 decision maker fallback logic</td></tr>
+    </tbody>
+</table>
+
+<h2 id="running">Running the Test Suite</h2>
+
+<h3>Full Suite</h3>
+<pre>
+conda activate txr_automation
+pytest tests/ -v
+</pre>
+
+<h3>By Module</h3>
+<pre>
+pytest tests/test_accuracy_testing/ -v
+pytest tests/test_core/ -v
+pytest tests/test_replay/ -v
+pytest tests/test_firds/ -v
+pytest tests/test_gleif/ -v
+pytest tests/test_utils/ -v
+pytest tests/integration/ -v
+</pre>
+
+<h3>With Coverage</h3>
+<pre>
+pytest tests/ --cov=src --cov-report=html --cov-report=term-missing
+</pre>
+
+<h3>Specific Test Pattern</h3>
+<pre>
+pytest tests/ -k "buyer" -v          # All buyer-related tests
+pytest tests/ -k "concat" -v         # All CONCAT tests
+pytest tests/ -k "not integration"   # Exclude integration tests
+</pre>
+
+<div class="info-panel">
+    <strong>CI/CD:</strong> The full test suite runs on every commit via <code>scripts/run_tests.sh</code>. Coverage reports are generated with <code>scripts/run_tests_with_coverage.sh</code>.
+</div>
+
+<hr>
+<p><a href="06a_business_logic_preservation.html">&laquo; Previous: Business Logic Preservation</a> | <a href="00_index.html">Documentation Index</a> | <a href="07a_deployment_plan.html">Next: Deployment Plan &raquo;</a></p>
+
+</body>
+</html>

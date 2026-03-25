@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Project Overview — TXR Automation</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
+        h1, h2, h3, h4 { color: #172B4D; }
+        table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; }
+        th { background-color: #F4F5F7; font-weight: 600; }
+        a { color: #0052CC; text-decoration: none; }
+        a:hover { text-decoration: underline; }
+        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF8B00; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
+        .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
+        code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; }
+        .status-complete { color: #00875A; font-weight: 600; }
+        .status-progress { color: #0052CC; font-weight: 600; }
+        .status-planned { color: #6B778C; font-weight: 600; }
+    </style>
+</head>
+<body>
+
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Project Overview</p>
+<p class="last-updated">Last updated: 25 March 2026</p>
+
+<h1>Project Overview</h1>
+
+<h2>Table of Contents</h2>
+<ul>
+    <li><a href="#executive-summary">Executive Summary</a></li>
+    <li><a href="#purpose">Purpose &amp; Regulatory Context</a></li>
+    <li><a href="#scope">Scope</a></li>
+    <li><a href="#status">Current Status Dashboard</a></li>
+    <li><a href="#tech-stack">Technology Stack</a></li>
+    <li><a href="#key-metrics">Key Metrics</a></li>
+    <li><a href="#stakeholders">Stakeholders &amp; Ownership</a></li>
+</ul>
+
+<h2 id="executive-summary">Executive Summary</h2>
+
+<div class="info-panel">
+    <strong>TXR Automation</strong> is a comprehensive Python suite that automates transaction reporting validation for regulatory compliance.
+    It has successfully replaced all 12 legacy VBA macros with a unified, tested, and maintainable Python codebase.
+</div>
+
+<p>The project migrates transaction reporting automation from VBA macros (Excel-based) to Python, eliminating Excel dependencies in favour of a CSV-first, platform-independent workflow. The system validates financial transaction data for compliance with UK MiFIR and ESMA RTS 22 requirements.</p>
+
+<h3>Key Achievements</h3>
+
+<div class="success-panel">
+    <ul>
+        <li><strong>12 of 12 VBA macros fully migrated</strong> to Python (100% complete)</li>
+        <li><strong>466 automated tests</strong> with 100% pass rate</li>
+        <li><strong>50,000 records/second</strong> ID validation throughput (vs. minutes in VBA)</li>
+        <li><strong>40&ndash;50% code complexity reduction</strong> through shared core library and CSV-first approach</li>
+        <li><strong>Zero Excel dependencies</strong> &mdash; fully platform-independent</li>
+    </ul>
+</div>
+
+<h3>Business Case</h3>
+
+<table>
+    <thead>
+        <tr><th>Benefit</th><th>Before (VBA)</th><th>After (Python)</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Maintainability</td><td>12 standalone macros with duplicated logic</td><td>Shared core library, single source of truth</td></tr>
+        <tr><td>Performance</td><td>Minutes per dataset (Excel I/O)</td><td>Seconds per dataset (CSV I/O, ~50K records/sec)</td></tr>
+        <tr><td>Platform</td><td>Windows + Excel only</td><td>Any OS (macOS, Linux, Windows)</td></tr>
+        <tr><td>Testability</td><td>Manual testing only</td><td>466 automated tests, CI-ready</td></tr>
+        <tr><td>Scalability</td><td>~20K records max</td><td>Benchmarked to 1.5M records</td></tr>
+        <tr><td>Audit trail</td><td>No version control</td><td>Full Git history, structured logging</td></tr>
+    </tbody>
+</table>
+
+<h2 id="purpose">Purpose &amp; Regulatory Context</h2>
+
+<p>The system supports compliance with:</p>
+<ul>
+    <li><strong>UK MiFIR (Markets in Financial Instruments Regulation)</strong> &mdash; Transaction reporting obligations for investment firms</li>
+    <li><strong>ESMA RTS 22</strong> &mdash; Technical standards specifying the content and format of transaction reports</li>
+    <li><strong>FCA requirements</strong> &mdash; UK-specific reporting obligations to the Financial Conduct Authority</li>
+</ul>
+
+<h3>What the System Does</h3>
+
+<ol>
+    <li><strong>Quarterly Accuracy Testing</strong>: Validates a sample of reported transactions against format and logic rules, generating corrections where errors are found</li>
+    <li><strong>SQL Extract Generation</strong>: Generates database queries to retrieve the transaction samples for testing</li>
+    <li><strong>Data Push</strong>: Pushes validated corrections back to master tracking files for submission to the Approved Reporting Mechanism (ARM)</li>
+    <li><strong>Quarterly Replay</strong>: Compares third-party upload files against accuracy testing results, correcting inconsistencies</li>
+    <li><strong>FIRDS Reportability</strong>: Determines whether financial instruments are reportable under MiFIR using FCA FIRDS data</li>
+    <li><strong>GLEIF LEI Lookup</strong>: Validates Legal Entity Identifiers and retrieves entity information from GLEIF Golden Copy data</li>
+</ol>
+
+<h2 id="scope">Scope</h2>
+
+<h3>Incident Codes Covered</h3>
+
+<p>The system validates transactions across 11 incident categories:</p>
+
+<table>
+    <thead>
+        <tr><th>Incident Code</th><th>Description</th><th>Validation Type</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>7_35, 7_37, 7_39</td><td>Buyer ID Validation</td><td>Format + Logic</td></tr>
+        <tr><td>16_19, 16_21, 16_23</td><td>Seller ID Validation</td><td>Format + Logic</td></tr>
+        <tr><td>7_66</td><td>Inconsistent Buyer ID</td><td>Cross-record consistency</td></tr>
+        <tr><td>16_20</td><td>Inconsistent Seller ID</td><td>Cross-record consistency</td></tr>
+        <tr><td>12_17</td><td>Buyer Decision Maker (FTBDM)</td><td>Service level / LEI</td></tr>
+        <tr><td>21_17</td><td>Seller Decision Maker (FTSDM)</td><td>Service level / LEI</td></tr>
+        <tr><td>35_3</td><td>Pricing (Net Amount = Consideration + Interest)</td><td>Formula validation</td></tr>
+        <tr><td>7_6</td><td>Non-Zero Net Quantity</td><td>Bulk order netting</td></tr>
+        <tr><td>7_42</td><td>Non-Zero Net Amount</td><td>Bulk order netting</td></tr>
+    </tbody>
+</table>
+
+<h3>Modules</h3>
+
+<table>
+    <thead>
+        <tr><th>Package</th><th>Purpose</th><th>Key Features</th></tr>
+    </thead>
+    <tbody>
+        <tr><td><code>src/core/</code></td><td>Shared foundation</td><td>Config, logging, country codes, ID formats, incident codes, utilities</td></tr>
+        <tr><td><code>src/accuracy_testing/</code></td><td>Accuracy testing</td><td>15 CLI scripts, 68 regex patterns, 15 country-specific logic validators</td></tr>
+        <tr><td><code>src/replay/</code></td><td>Replay processing</td><td>Phase 2/3 matching, fuzzy logic, correction-bearing row preference</td></tr>
+        <tr><td><code>src/firds/</code></td><td>FIRDS reportability</td><td>FCA API client, XML parser, SQLite cache, full/delta refresh</td></tr>
+        <tr><td><code>src/gleif/</code></td><td>GLEIF LEI lookup</td><td>GLEIF API, CSV parser (3.2M records), SQLite + FTS5, delta refresh</td></tr>
+        <tr><td><code>src/gui/</code></td><td>Desktop GUI</td><td>PySide6, 5-tab interface, background workers, all modules accessible</td></tr>
+        <tr><td><code>src/utils/</code></td><td>Utilities</td><td>XLSX-to-CSV converter</td></tr>
+    </tbody>
+</table>
+
+<h2 id="status">Current Status Dashboard</h2>
+
+<table>
+    <thead>
+        <tr><th>Phase</th><th>Description</th><th>Status</th><th>Completion Date</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Phase 0</td><td>Refactoring existing Python scripts → shared core library</td><td class="status-complete">✅ Complete</td><td>January 2026</td></tr>
+        <tr><td>Phase 1</td><td>Foundation (core library, test framework, config)</td><td class="status-complete">✅ Complete</td><td>19 January 2026</td></tr>
+        <tr><td>Phase 2</td><td>Simple scripts (pricing, SQL extract, buyer/seller ID)</td><td class="status-complete">✅ Complete</td><td>21 January 2026</td></tr>
+        <tr><td>Phase 3</td><td>Decision maker validation (FTBDM/FTSDM)</td><td class="status-complete">✅ Complete</td><td>28 January 2026</td></tr>
+        <tr><td>Phase 4</td><td>Inconsistent ID validation (buyer/seller)</td><td class="status-complete">✅ Complete</td><td>27 January 2026</td></tr>
+        <tr><td>Phase 5</td><td>Data operations (data push, template generation)</td><td class="status-complete">✅ Complete</td><td>February 2026</td></tr>
+        <tr><td>Phase 6</td><td>Integration testing, cleanup, ESMA regex fixes</td><td class="status-progress">🔄 In Progress</td><td>&mdash;</td></tr>
+        <tr><td>Phase 7</td><td>Deployment &amp; transition (parallel running, training)</td><td class="status-planned">🔲 Not Started</td><td>&mdash;</td></tr>
+        <tr><td>Phase 8</td><td>Unified CLI tool (interactive menus)</td><td class="status-planned">🔲 Planning</td><td>&mdash;</td></tr>
+    </tbody>
+</table>
+
+<div class="warning-panel">
+    <strong>Phase 6 Remaining Work:</strong> One test file (<code>test_batch_validation.py</code>) needs updating to v2.0 config format. All production code is clean and ready. 466/466 tests passing.
+</div>
+
+<h3>Additional Modules (Outside Phased Migration)</h3>
+
+<table>
+    <thead>
+        <tr><th>Module</th><th>Status</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>FIRDS Reportability</td><td class="status-complete">✅ Implemented</td><td>SQLite cache, API client, full/delta refresh, reportability checker</td></tr>
+        <tr><td>GLEIF LEI Lookup</td><td class="status-complete">✅ Implemented</td><td>SQLite + FTS5 cache, API client, full/delta refresh, lookup service</td></tr>
+        <tr><td>Desktop GUI</td><td class="status-progress">🔄 In Development</td><td>PySide6 app with 5 tabs, background workers</td></tr>
+    </tbody>
+</table>
+
+<h2 id="tech-stack">Technology Stack</h2>
+
+<table>
+    <thead>
+        <tr><th>Component</th><th>Technology</th><th>Version</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Language</td><td>Python</td><td>3.10+</td></tr>
+        <tr><td>Data processing</td><td>pandas</td><td>2.0+</td></tr>
+        <tr><td>Configuration</td><td>PyYAML</td><td>6.0+</td></tr>
+        <tr><td>Desktop GUI</td><td>PySide6 (Qt for Python)</td><td>6.6+</td></tr>
+        <tr><td>Database</td><td>SQLite (via Python stdlib)</td><td>3.x</td></tr>
+        <tr><td>Testing</td><td>pytest + pytest-cov</td><td>7.4+ / 4.1+</td></tr>
+        <tr><td>Formatting</td><td>black</td><td>23.0+</td></tr>
+        <tr><td>Linting</td><td>flake8</td><td>6.0+</td></tr>
+        <tr><td>Type checking</td><td>mypy</td><td>1.4+</td></tr>
+        <tr><td>Environment</td><td>Conda</td><td>&mdash;</td></tr>
+        <tr><td>Package installer</td><td>pip (editable install)</td><td>&mdash;</td></tr>
+        <tr><td>Version control</td><td>Git</td><td>&mdash;</td></tr>
+    </tbody>
+</table>
+
+<h2 id="key-metrics">Key Metrics</h2>
+
+<table>
+    <thead>
+        <tr><th>Metric</th><th>Value</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>VBA macros migrated</td><td>12 / 12 (100%)</td></tr>
+        <tr><td>Python packages</td><td>7</td></tr>
+        <tr><td>Console scripts registered</td><td>22 + 1 GUI</td></tr>
+        <tr><td>Total test cases</td><td>466 (100% pass rate)</td></tr>
+        <tr><td>ID format regex patterns</td><td>68 across 27 countries</td></tr>
+        <tr><td>ID logic validators</td><td>15 countries with embedded DOB/gender/checksum validation</td></tr>
+        <tr><td>SQL templates</td><td>11 + 1 DTF template</td></tr>
+        <tr><td>YAML config templates</td><td>14 accuracy + 4 replay + 2 external</td></tr>
+        <tr><td>Estimated Python LOC</td><td>~15,000 (excluding tests)</td></tr>
+        <tr><td>ID validation throughput</td><td>~50,000 records/second</td></tr>
+        <tr><td>Data push throughput</td><td>~68,000 records/second</td></tr>
+    </tbody>
+</table>
+
+<h2 id="stakeholders">Stakeholders &amp; Ownership</h2>
+
+<table>
+    <thead>
+        <tr><th>Role</th><th>Responsibility</th></tr>
+    </thead>
+    <tbody>
+        <tr><td>Transaction Reporting Team</td><td>Primary users, define business rules, approve validation logic</td></tr>
+        <tr><td>Development</td><td>Code development, testing, deployment, maintenance</td></tr>
+        <tr><td>Compliance / Audit</td><td>Review VBA-to-Python traceability, validate business logic preservation</td></tr>
+        <tr><td>Management</td><td>Project oversight, resource allocation, risk management</td></tr>
+    </tbody>
+</table>
+
+<hr>
+<p><a href="00_index.html">&laquo; Back to Documentation Index</a> | <a href="02a_system_architecture.html">Next: System Architecture &raquo;</a></p>
+
+</body>
+</html>
