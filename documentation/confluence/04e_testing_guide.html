@@ -15,7 +15,7 @@
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
     </style>
 </head>
 <body>
@@ -100,29 +100,29 @@ pytest -l
 
 <pre>
 tests/
-├── conftest.py                           # Root conftest: adds src to sys.path
-├── test_accuracy_testing/                # Accuracy testing module tests
-│   ├── test_buyer_id_validation.py       #   Buyer ID format + logic
-│   ├── test_seller_id_validation.py      #   Seller ID format + logic
-│   ├── test_inconsistent_buyer.py        #   Inconsistent buyer grouping
-│   ├── test_inconsistent_seller.py       #   Inconsistent seller grouping
-│   ├── test_decision_maker.py            #   FTBDM/FTSDM validation
-│   ├── test_pricing_validation.py        #   Pricing formula checks
-│   ├── test_data_push.py                 #   Data push matching/writing
-│   ├── test_sql_extract.py              #   SQL generation templates
-│   └── fixtures/                         #   Sample CSV data files
-├── test_core/                            # Core library tests
-│   ├── test_config_manager.py            #   YAML + env config loading
-│   ├── test_country_codes.py             #   Country data lookups
-│   ├── test_id_formats.py               #   68 regex pattern tests
-│   ├── test_date_parser.py              #   Date format parsing
-│   └── test_structured_logger.py        #   Logger setup and output
-├── test_replay/                          # Replay processing tests
-├── test_firds/                           # FIRDS module tests
-├── test_gleif/                           # GLEIF module tests
-├── test_utils/                           # Utility tests
-├── integration/                          # End-to-end integration tests
-└── test_*.py                             # Standalone test files (specific bug fixes)
++-- conftest.py                           # Root conftest: adds src to sys.path
++-- test_accuracy_testing/                # Accuracy testing module tests
+|   +-- test_buyer_id_validation.py       #   Buyer ID format + logic
+|   +-- test_seller_id_validation.py      #   Seller ID format + logic
+|   +-- test_inconsistent_buyer.py        #   Inconsistent buyer grouping
+|   +-- test_inconsistent_seller.py       #   Inconsistent seller grouping
+|   +-- test_decision_maker.py            #   FTBDM/FTSDM validation
+|   +-- test_pricing_validation.py        #   Pricing formula checks
+|   +-- test_data_push.py                 #   Data push matching/writing
+|   +-- test_sql_extract.py              #   SQL generation templates
+|   +-- fixtures/                         #   Sample CSV data files
++-- test_core/                            # Core library tests
+|   +-- test_config_manager.py            #   YAML + env config loading
+|   +-- test_country_codes.py             #   Country data lookups
+|   +-- test_id_formats.py               #   68 regex pattern tests
+|   +-- test_date_parser.py              #   Date format parsing
+|   +-- test_structured_logger.py        #   Logger setup and output
++-- test_replay/                          # Replay processing tests
++-- test_firds/                           # FIRDS module tests
++-- test_gleif/                           # GLEIF module tests
++-- test_utils/                           # Utility tests
++-- integration/                          # End-to-end integration tests
++-- test_*.py                             # Standalone test files (specific bug fixes)
 </pre>
 
 <h3>Test Distribution</h3>

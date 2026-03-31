@@ -57,6 +57,15 @@ class ScriptRunnerWorker(QThread):
         self._module = script_module
         self._argv = argv
         self._cancelled = False
+        self._exit_code = 1
+        # Emit finished_signal only after run() has fully returned and the
+        # thread has stopped.  This avoids the race where _on_finished drops
+        # the last reference to this QThread while run() is still unwinding.
+        self.finished.connect(self._emit_exit_code)
+
+    def _emit_exit_code(self) -> None:
+        """Forward the stored exit code via finished_signal."""
+        self.finished_signal.emit(self._exit_code)
 
     def run(self) -> None:
         """Execute script.main() with redirected stdout/stderr."""
@@ -72,13 +81,12 @@ class ScriptRunnerWorker(QThread):
             sys.stderr = stream
             sys.argv = [self._module.__name__] + self._argv
             self._module.main()
-            self.finished_signal.emit(0)
+            self._exit_code = 0
         except SystemExit as e:
-            code = e.code if isinstance(e.code, int) else 1
-            self.finished_signal.emit(code)
+            self._exit_code = e.code if isinstance(e.code, int) else 1
         except Exception as e:
             self.error.emit(f"{type(e).__name__}: {e}")
-            self.finished_signal.emit(1)
+            self._exit_code = 1
         finally:
             sys.stdout = old_stdout
             sys.stderr = old_stderr

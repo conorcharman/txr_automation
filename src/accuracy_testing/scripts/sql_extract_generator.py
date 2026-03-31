@@ -223,7 +223,7 @@ class SQLExtractGeneratorCLI:
                 print(f"  {Path(self.output_dir).absolute()}")
                 
                 # Show what filenames would be
-                base_filename = Path(self.template_path).stem
+                base_filename = self.incident_code or Path(self.template_path).stem
                 
                 if self.output_format in ['sql', 'both']:
                     print(f"\n  SQL files (in /csv or /sql subdir):")
@@ -246,7 +246,7 @@ class SQLExtractGeneratorCLI:
                 if self.verbose:
                     print("\n[4/4] Generating files...")
                 
-                base_filename = Path(self.template_path).stem
+                base_filename = self.incident_code or Path(self.template_path).stem
                 incident_code = self.incident_code or base_filename
                 
                 generated_files = generator.generate_extracts(
@@ -613,20 +613,19 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
             
             print(f"Transaction refs: {len(refs)}")
             
-            # Generate SQL extracts
-            incident_values_mode = requires_values_mode(incident)
+            # Generate SQL extracts.
+            # Always pass placeholder=None so the generator auto-detects the token
+            # in the template (whether {VALUES} or a comment-style marker).
+            # values_mode is likewise auto-derived from the detected placeholder.
             generator = SQLExtractGenerator(
                 template_path=str(sql_template),
                 batch_size=batch_size,
-                # Skip the global placeholder override for values-mode incidents so
-                # auto-detection picks up {VALUES} from the template instead.
-                placeholder=None if incident_values_mode else placeholder,
+                placeholder=None,
                 output_format=output_format,
                 dtf_template_path=dtf_template_path,
-                values_mode=incident_values_mode
             )
 
-            if incident_values_mode and verbose:
+            if generator.values_mode and verbose:
                 print("  VALUES mode: enabled (CA references will be excluded)")
             
             summary = generator.get_summary(refs)
@@ -786,12 +785,10 @@ def main():
         print("ERROR: Output directory (--output or via --config) is required")
         return 1
     
-    # Auto-detect values_mode from incident code when provided
-    values_mode = requires_values_mode(incident_code) if incident_code else False
-
-    # Skip the global placeholder override for values-mode incidents so
-    # auto-detection picks up {VALUES} from the template instead (mirrors batch mode).
-    effective_placeholder = None if values_mode else placeholder
+    # Auto-detect placeholder from the template; values_mode is derived in
+    # SQLExtractGenerator from the detected placeholder, so no incident-code
+    # look-up is required here.
+    effective_placeholder = placeholder
 
     cli = SQLExtractGeneratorCLI(
         template_path=template_path,
@@ -805,7 +802,7 @@ def main():
         output_format=output_format,
         incident_code=incident_code,
         dtf_template_path=dtf_template_path,
-        values_mode=values_mode
+        values_mode=False,  # Auto-derived by SQLExtractGenerator from the detected placeholder
     )
     
     return cli.run()

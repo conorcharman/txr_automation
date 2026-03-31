@@ -14,7 +14,7 @@
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; line-height: 1.5; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; line-height: 1.5; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
     </style>
 </head>
 <body>
@@ -86,47 +86,50 @@
 
 <pre>
  Input CSV (Template with transaction data)
- │
- ↓
- ┌─────────────────────────────────────────────────────┐
- │  PHASE 1: Load &amp; Parse                              │
- │  • Read CSV into ClientRecord dataclasses            │
- │  • Determine client_type (buyer/seller)              │
- │  • Load reference data (singletons, cached)          │
- └─────────────────────┬───────────────────────────────┘
-                       ↓
- ┌─────────────────────────────────────────────────────┐
- │  PHASE 2: Format Validation                          │
- │  • Extract priority country from nationality         │
- │    (EEA countries prioritised over ROW)              │
- │  • Validate ID value against country-specific regex  │
- │    (68 patterns across 27 countries)                 │
- │  • Test alternative ID types if primary fails        │
- │  • Handle JNT (joint) account aggregation            │
- │  • Apply Swedish century logic for SE NIDN           │
- └─────────────────────┬───────────────────────────────┘
-                       ↓
- ┌─────────────────────────────────────────────────────┐
- │  PHASE 3: Logic Validation                           │
- │  • Check embedded DOB matches provided DOB           │
- │  • Check embedded gender code matches provided       │
- │  • Run check digit / checksum algorithms:            │
- │    - Modulus 97 (BE, SI)                             │
- │    - Modulus 11 (DK, EE, IS, LT, LV, NO)            │
- │    - Luhn (SE)                                       │
- │    - Weighted checksums (FI, IT, SK)                 │
- │  • Italian tracker lookup (confirmed fiscal codes)   │
- └─────────────────────┬───────────────────────────────┘
-                       ↓
- ┌─────────────────────────────────────────────────────┐
- │  PHASE 4: Correction &amp; Output                       │
- │  • Generate CONCAT ID if no valid format found       │
- │    (CONCAT = country + cleaned first name + surname  │
- │     + DOB in YYYYMMDD format)                        │
- │  • Perform template validation against master file   │
- │  • Set error flags and correction columns            │
- │  • Write main output CSV + errors-only CSV           │
- └─────────────────────────────────────────────────────┘
+ |
+ v
+ +-------------------------------------------------------+
+ |  PHASE 1: Load &amp; Parse                                 |
+ |  * Read CSV into ClientRecord dataclasses              |
+ |  * Determine client_type (buyer/seller)                |
+ |  * Load reference data (singletons, cached)            |
+ +--------------------------+----------------------------+
+                            |
+                            v
+ +-------------------------------------------------------+
+ |  PHASE 2: Format Validation                            |
+ |  * Extract priority country from nationality           |
+ |    (EEA countries prioritised over ROW)                |
+ |  * Validate ID value against country-specific regex    |
+ |    (68 patterns across 27 countries)                   |
+ |  * Test alternative ID types if primary fails          |
+ |  * Handle JNT (joint) account aggregation              |
+ |  * Apply Swedish century logic for SE NIDN             |
+ +--------------------------+----------------------------+
+                            |
+                            v
+ +-------------------------------------------------------+
+ |  PHASE 3: Logic Validation                             |
+ |  * Check embedded DOB matches provided DOB             |
+ |  * Check embedded gender code matches provided         |
+ |  * Run check digit / checksum algorithms:              |
+ |    - Modulus 97 (BE, SI)                               |
+ |    - Modulus 11 (DK, EE, IS, LT, LV, NO)              |
+ |    - Luhn (SE)                                         |
+ |    - Weighted checksums (FI, IT, SK)                   |
+ |  * Italian tracker lookup (confirmed fiscal codes)     |
+ +--------------------------+----------------------------+
+                            |
+                            v
+ +-------------------------------------------------------+
+ |  PHASE 4: Correction &amp; Output                          |
+ |  * Generate CONCAT ID if no valid format found         |
+ |    (CONCAT = country + cleaned first name + surname    |
+ |     + DOB in YYYYMMDD format)                          |
+ |  * Perform template validation against master file     |
+ |  * Set error flags and correction columns              |
+ |  * Write main output CSV + errors-only CSV             |
+ +-------------------------------------------------------+
 </pre>
 
 <h3>Inconsistent ID Processing</h3>
@@ -160,141 +163,151 @@
 
 <pre>
  SQL Extract CSV (FTBDM or FTSDM data)
- │
- ↓
- ┌──────────────────────────────────────────────┐
- │  Parse into DecisionMakerRecord objects       │
- │  • Determine product type (AJB, AJBIC, etc.) │
- │  • Determine service level (D, A, E)          │
- └──────────────────┬───────────────────────────┘
-                    ↓
- ┌──────────────────────────────────────────────┐
- │  Validation Rules:                            │
- │  IF service_level == "D" (Discretionary):     │
- │    • DM code MUST be populated                │
- │    • DM code MUST differ from party code      │
- │    • Correction: LEI from branch lookup CSV   │
- │  ELSE:                                        │
- │    • No validation required                   │
- └──────────────────┬───────────────────────────┘
-                    ↓
- ┌──────────────────────────────────────────────┐
- │  Output CSV with Error and Correction columns │
- └──────────────────────────────────────────────┘
+ |
+ v
+ +------------------------------------------------+
+ |  Parse into DecisionMakerRecord objects         |
+ |  * Determine product type (AJB, AJBIC, etc.)   |
+ |  * Determine service level (D, A, E)            |
+ +---------------------+--------------------------+
+                       |
+                       v
+ +------------------------------------------------+
+ |  Validation Rules:                              |
+ |  IF service_level == "D" (Discretionary):       |
+ |    * DM code MUST be populated                  |
+ |    * DM code MUST differ from party code        |
+ |    * Correction: LEI from branch lookup CSV     |
+ |  ELSE:                                          |
+ |    * No validation required                     |
+ +---------------------+--------------------------+
+                       |
+                       v
+ +------------------------------------------------+
+ |  Output CSV with Error and Correction columns   |
+ +------------------------------------------------+
 </pre>
 
 <h2 id="replay">Replay Processing Flow</h2>
 
 <pre>
  PHASE 2: Transaction Reference Matching
- ┌───────────────┐    ┌───────────────┐
- │  Replay File  │    │ Incident File │
- │  (3rd party)  │    │ (from testing)│
- └───────┬───────┘    └───────┬───────┘
-         └────────┬───────────┘
-                  ↓
- ┌──────────────────────────────────────────────┐
- │  Hash table index on Transaction Reference   │
- │  • O(1) lookup per record                    │
- │  • Character encoding normalisation          │
- │  • Match → flag as found                     │
- │  • No match → flag for Phase 3               │
- └──────────────────┬───────────────────────────┘
-                    ↓
+ +-----------------+    +-----------------+
+ |  Replay File    |    | Incident File   |
+ |  (3rd party)    |    | (from testing)  |
+ +--------+--------+    +--------+--------+
+          +----------+----------+
+                     |
+                     v
+ +------------------------------------------------+
+ |  Hash table index on Transaction Reference     |
+ |  * O(1) lookup per record                      |
+ |  * Character encoding normalisation            |
+ |  * Match --> flag as found                      |
+ |  * No match --> flag for Phase 3                |
+ +---------------------+--------------------------+
+                       |
+                       v
  PHASE 3: Client Record Matching
- ┌──────────────────────────────────────────────┐
- │  Fuzzy matching on:                           │
- │  • First name (normalised)                   │
- │  • Surname (normalised, prefix removal)       │
- │  • Date of birth (multi-format parsing)       │
- │  • ID value                                   │
- │                                               │
- │  Correction-bearing row preference:           │
- │  • If multiple matches, prefer rows with      │
- │    corrections already applied                │
- └──────────────────┬───────────────────────────┘
-                    ↓
+ +------------------------------------------------+
+ |  Fuzzy matching on:                             |
+ |  * First name (normalised)                     |
+ |  * Surname (normalised, prefix removal)         |
+ |  * Date of birth (multi-format parsing)         |
+ |  * ID value                                     |
+ |                                                 |
+ |  Correction-bearing row preference:             |
+ |  * If multiple matches, prefer rows with        |
+ |    corrections already applied                  |
+ +---------------------+--------------------------+
+                       |
+                       v
  PHASE 3 FINAL: UnaVista Validation
- ┌──────────────────────────────────────────────┐
- │  Verify proposed corrections against          │
- │  UnaVista transaction source data             │
- └──────────────────────────────────────────────┘
+ +------------------------------------------------+
+ |  Verify proposed corrections against            |
+ |  UnaVista transaction source data               |
+ +------------------------------------------------+
 </pre>
 
 <h2 id="firds">FIRDS Data Flow</h2>
 
 <pre>
  CACHE REFRESH (weekly full / daily delta)
- ┌──────────────────┐
- │  FCA FIRDS API   │
- │  data.fca.org.uk │
- └────────┬─────────┘
-          ↓
- ┌──────────────────┐
- │  File Listings   │
- │  FULINS/DLTINS/  │
- │  FULCAN           │
- └────────┬─────────┘
-          ↓
- ┌──────────────────┐
- │  Download &amp;      │
- │  Extract XML     │
- │  (8 MB chunks)   │
- └────────┬─────────┘
-          ↓
- ┌──────────────────┐     ┌──────────────────┐
- │  Stream Parse    │────→│  SQLite Cache    │
- │  (iterparse)     │     │  • instruments   │
- │  • FULINS: upsert│     │  • firds_sync_log│
- │  • DLTINS: term. │     │  (5K batch upsert│
- │  • FULCAN: cancel│     └──────────────────┘
- └──────────────────┘
+ +--------------------+
+ |  FCA FIRDS API     |
+ |  data.fca.org.uk   |
+ +---------+----------+
+           |
+           v
+ +--------------------+
+ |  File Listings     |
+ |  FULINS/DLTINS/    |
+ |  FULCAN             |
+ +---------+----------+
+           |
+           v
+ +--------------------+
+ |  Download &amp;         |
+ |  Extract XML        |
+ |  (8 MB chunks)      |
+ +---------+----------+
+           |
+           v
+ +--------------------+     +--------------------+
+ |  Stream Parse      |----&gt;|  SQLite Cache      |
+ |  (iterparse)       |     |  * instruments     |
+ |  * FULINS: upsert  |     |  * firds_sync_log  |
+ |  * DLTINS: term.   |     |  (5K batch upsert) |
+ |  * FULCAN: cancel  |     +--------------------+
+ +--------------------+
 
  REPORTABILITY CHECK
- ┌──────────┐     ┌──────────────────┐     ┌──────────────────────┐
- │  ISIN +  │────→│  SQLite Lookup   │────→│  ReportabilityResult │
- │  Trade   │     │  by ISIN (+MIC)  │     │  • ACTIVE            │
- │  Date    │     └──────────────────┘     │  • NOT_IN_FIRDS      │
- └──────────┘                               │  • ADMITTED_AFTER    │
-                                            │  • TERMINATED_BEFORE │
-                                            │  • CANCELLED         │
-                                            └──────────────────────┘
+ +----------+     +--------------------+     +------------------------+
+ |  ISIN +  |----&gt;|  SQLite Lookup    |----&gt;|  ReportabilityResult   |
+ |  Trade   |     |  by ISIN (+MIC)   |     |  * ACTIVE              |
+ |  Date    |     +--------------------+     |  * NOT_IN_FIRDS        |
+ +----------+                                |  * ADMITTED_AFTER      |
+                                             |  * TERMINATED_BEFORE   |
+                                             |  * CANCELLED           |
+                                             +------------------------+
 </pre>
 
 <h2 id="gleif">GLEIF Data Flow</h2>
 
 <pre>
  CACHE REFRESH (full rebuild + delta cycles)
- ┌──────────────────┐
- │  GLEIF API v1    │
- │  api.gleif.org   │
- └────────┬─────────┘
-          ↓
- ┌──────────────────┐
- │  Golden Copy     │
- │  Download        │
- │  (3.2M records)  │
- │  + ISIN-LEI map  │
- └────────┬─────────┘
-          ↓
- ┌──────────────────┐     ┌──────────────────────────┐
- │  Stream Parse    │────→│  SQLite Cache             │
- │  CSV (row-by-row)│     │  • lei_records            │
- │                   │     │  • lei_isin_map           │
- │                   │     │  • lei_fts (FTS5 search) │
- │                   │     │  • gleif_sync_log         │
- └──────────────────┘     │  (5K batch upsert)        │
-                          └──────────────────────────┘
+ +--------------------+
+ |  GLEIF API v1      |
+ |  api.gleif.org     |
+ +---------+----------+
+           |
+           v
+ +--------------------+
+ |  Golden Copy       |
+ |  Download          |
+ |  (3.2M records)    |
+ |  + ISIN-LEI map    |
+ +---------+----------+
+           |
+           v
+ +--------------------+     +----------------------------+
+ |  Stream Parse      |----&gt;|  SQLite Cache              |
+ |  CSV (row-by-row)  |     |  * lei_records             |
+ |                    |     |  * lei_isin_map            |
+ |                    |     |  * lei_fts (FTS5 search)   |
+ |                    |     |  * gleif_sync_log          |
+ +--------------------+     |  (5K batch upsert)         |
+                            +----------------------------+
 
  LEI LOOKUP
- ┌──────────┐     ┌──────────────────┐     ┌────────────────────────┐
- │  LEI     │────→│  Cache Lookup    │────→│  LeiLookupResult       │
- │  (+trade │     │  + FTS5 name     │     │  • ISSUED (active)     │
- │   date)  │     │    search        │     │  • LAPSED_VALID_AT_    │
- └──────────┘     └──────────────────┘     │    TRADE_DATE          │
-                                            │  • LAPSED / RETIRED   │
-                                            │  • NOT_IN_GLEIF       │
-                                            └────────────────────────┘
+ +----------+     +--------------------+     +--------------------------+
+ |  LEI     |----&gt;|  Cache Lookup     |----&gt;|  LeiLookupResult         |
+ |  (+trade |     |  + FTS5 name      |     |  * ISSUED (active)       |
+ |   date)  |     |    search         |     |  * LAPSED_VALID_AT_      |
+ +----------+     +--------------------+     |    TRADE_DATE            |
+                                             |  * LAPSED / RETIRED      |
+                                             |  * NOT_IN_GLEIF          |
+                                             +--------------------------+
 </pre>
 
 <h2 id="config">Configuration Cascade</h2>

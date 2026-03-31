@@ -516,6 +516,11 @@ Examples:
         action="store_true",
         help="Enable verbose output",
     )
+    parser.add_argument(
+        "--gui-mode",
+        action="store_true",
+        help=argparse.SUPPRESS,
+    )
     
     return parser
 
@@ -535,8 +540,14 @@ def main() -> int:
                 config_mode = config.get('mode', 'single')
         
         # Determine if we should run in batch mode
-        # Priority: --batch flag > config mode > default (single)
-        batch_mode = args.batch or (config_mode == 'batch')
+        # Priority: explicit --source/--target → single mode,
+        #           --batch flag → batch mode,
+        #           config mode → batch/single,
+        #           default → single
+        has_explicit_single = args.source_file and args.target_file
+        batch_mode = (not has_explicit_single) and (
+            args.batch or (config_mode == 'batch')
+        )
         
         if batch_mode:
             # Batch mode

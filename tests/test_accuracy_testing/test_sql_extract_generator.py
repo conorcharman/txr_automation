@@ -455,6 +455,20 @@ class TestValuesMode:
         summary = generator.get_summary(['44625CMGKHP1'])
         assert summary['values_mode'] is False
 
+    def test_values_mode_auto_detected_from_placeholder(self):
+        """values_mode is auto-derived from the {VALUES} placeholder without being passed explicitly."""
+        generator = SQLExtractGenerator(str(self.template_path))  # no values_mode kwarg
+        assert generator.values_mode is True
+        assert generator.placeholder == '{VALUES}'
+
+    def test_generate_sql_auto_values_mode(self):
+        """generate_sql works correctly when values_mode is auto-detected from the template."""
+        generator = SQLExtractGenerator(str(self.template_path))  # no values_mode kwarg
+        batch = ExtractBatch(batch_number=1, transaction_refs=SAMPLE_REFS_7_6)
+        sql = generator.generate_sql(batch)
+        assert "('446','25','C','MGKHP','1')" in sql
+        assert '{VALUES}' not in sql
+
 
 if __name__ == "__main__":
     pytest.main([__file__, "-v"])

@@ -14,7 +14,7 @@
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
     </style>
 </head>
 <body>
@@ -44,9 +44,11 @@
 <!-- validate-buyer -->
 <h3><code>validate-buyer</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.buyer_id_validation:main</code></td></tr>
     <tr><th>Purpose</th><td>Validate buyer identification codes (NIDN, CONCAT, CCPT) for incidents 7_35, 7_37, 7_39</td></tr>
     <tr><th>Modes</th><td>Single / Batch</td></tr>
+    </tbody>
 </table>
 <pre>
 validate-buyer --config config/local/accuracy_testing/buyer_validation.yaml
@@ -57,9 +59,11 @@ validate-buyer --use-env --log-level DEBUG
 <!-- validate-seller -->
 <h3><code>validate-seller</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.seller_id_validation:main</code></td></tr>
     <tr><th>Purpose</th><td>Validate seller identification codes for incidents 16_19, 16_21, 16_23</td></tr>
     <tr><th>Modes</th><td>Single / Batch</td></tr>
+    </tbody>
 </table>
 <pre>
 validate-seller --config config/local/accuracy_testing/seller_validation.yaml
@@ -68,9 +72,11 @@ validate-seller --config config/local/accuracy_testing/seller_validation.yaml
 <!-- validate-inconsistent-buyer -->
 <h3><code>validate-inconsistent-buyer</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.inconsistent_buyer_id_validation:main</code></td></tr>
     <tr><th>Purpose</th><td>Detect inconsistent buyer IDs for the same person over time (incident 7_66)</td></tr>
     <tr><th>Modes</th><td>Single only</td></tr>
+    </tbody>
 </table>
 <pre>
 validate-inconsistent-buyer --config config/local/accuracy_testing/inconsistent_buyer_validation.yaml
@@ -79,9 +85,11 @@ validate-inconsistent-buyer --config config/local/accuracy_testing/inconsistent_
 <!-- validate-inconsistent-seller -->
 <h3><code>validate-inconsistent-seller</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.inconsistent_seller_id_validation:main</code></td></tr>
     <tr><th>Purpose</th><td>Detect inconsistent seller IDs (incident 16_20)</td></tr>
     <tr><th>Modes</th><td>Single only</td></tr>
+    </tbody>
 </table>
 <pre>
 validate-inconsistent-seller --config config/local/accuracy_testing/inconsistent_seller_validation.yaml
@@ -90,9 +98,11 @@ validate-inconsistent-seller --config config/local/accuracy_testing/inconsistent
 <!-- validate-ftbdm -->
 <h3><code>validate-ftbdm</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.validate_ftbdm:main</code></td></tr>
     <tr><th>Purpose</th><td>Validate Field 27 buyer decision maker codes</td></tr>
     <tr><th>Modes</th><td>Single / Batch</td></tr>
+    </tbody>
 </table>
 <pre>
 validate-ftbdm --config config/local/accuracy_testing/ftbdm_validation.yaml
@@ -101,9 +111,11 @@ validate-ftbdm --config config/local/accuracy_testing/ftbdm_validation.yaml
 <!-- validate-ftsdm -->
 <h3><code>validate-ftsdm</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.validate_ftsdm:main</code></td></tr>
     <tr><th>Purpose</th><td>Validate Field 28 seller decision maker codes</td></tr>
     <tr><th>Modes</th><td>Single / Batch</td></tr>
+    </tbody>
 </table>
 <pre>
 validate-ftsdm --config config/local/accuracy_testing/ftsdm_validation.yaml
@@ -112,9 +124,11 @@ validate-ftsdm --config config/local/accuracy_testing/ftsdm_validation.yaml
 <!-- validate-pricing -->
 <h3><code>validate-pricing</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.pricing_validation:main</code></td></tr>
     <tr><th>Purpose</th><td>Validate pricing data (Net Amount = Consideration + Interest)</td></tr>
     <tr><th>Modes</th><td>Single / Batch</td></tr>
+    </tbody>
 </table>
 <pre>
 validate-pricing --config config/local/accuracy_testing/pricing_validation.yaml
@@ -123,8 +137,10 @@ validate-pricing --config config/local/accuracy_testing/pricing_validation.yaml
 <!-- validate-non-zero-net-qty -->
 <h3><code>validate-non-zero-net-qty</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.non_zero_net_quantity:main</code></td></tr>
     <tr><th>Purpose</th><td>Validate non-zero net quantity values</td></tr>
+    </tbody>
 </table>
 <pre>
 validate-non-zero-net-qty --config config.yaml
@@ -133,8 +149,10 @@ validate-non-zero-net-qty --config config.yaml
 <!-- validate-non-zero-net-amt -->
 <h3><code>validate-non-zero-net-amt</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.non_zero_net_amount:main</code></td></tr>
     <tr><th>Purpose</th><td>Validate non-zero net amount values</td></tr>
+    </tbody>
 </table>
 <pre>
 validate-non-zero-net-amt --config config.yaml
@@ -143,8 +161,10 @@ validate-non-zero-net-amt --config config.yaml
 <!-- validate-all -->
 <h3><code>validate-all</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.run_all_validations:main</code></td></tr>
     <tr><th>Purpose</th><td>Orchestrate all enabled validation scripts in sequence</td></tr>
+    </tbody>
 </table>
 <pre>
 validate-all --config config/local/accuracy_testing/run_all_validations.yaml
@@ -153,9 +173,11 @@ validate-all --config config/local/accuracy_testing/run_all_validations.yaml
 <!-- generate-sql-extract -->
 <h3><code>generate-sql-extract</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.sql_extract_generator:main</code></td></tr>
     <tr><th>Purpose</th><td>Generate SQL queries from transaction references using 11 templates + 1 DTF template</td></tr>
     <tr><th>Modes</th><td>Single / Batch</td></tr>
+    </tbody>
 </table>
 <pre>
 generate-sql-extract --config config/local/accuracy_testing/sql_extract.yaml
@@ -165,8 +187,10 @@ generate-sql-extract --config config.yaml --incident 7_37
 <!-- generate-accuracy-template -->
 <h3><code>generate-accuracy-template</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.accuracy_template_generator:main</code></td></tr>
     <tr><th>Purpose</th><td>Generate accuracy testing configuration templates</td></tr>
+    </tbody>
 </table>
 <pre>
 generate-accuracy-template --output config/local/accuracy_testing/
@@ -175,8 +199,10 @@ generate-accuracy-template --output config/local/accuracy_testing/
 <!-- collate-csv-extracts -->
 <h3><code>collate-csv-extracts</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.collate_csv_extracts:main</code></td></tr>
     <tr><th>Purpose</th><td>Collate multiple CSV extract files into a single consolidated file</td></tr>
+    </tbody>
 </table>
 <pre>
 collate-csv-extracts --input-dir data/extracts/ --output data/collated_extracts.csv
@@ -185,8 +211,10 @@ collate-csv-extracts --input-dir data/extracts/ --output data/collated_extracts.
 <!-- data-push -->
 <h3><code>data-push</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>accuracy_testing.scripts.data_push:main</code></td></tr>
     <tr><th>Purpose</th><td>Push validated corrections to master tracker file by transaction reference matching</td></tr>
+    </tbody>
 </table>
 <pre>
 data-push --config config/local/accuracy_testing/data_push.yaml
@@ -197,9 +225,11 @@ data-push --config config/local/accuracy_testing/data_push.yaml
 <!-- replay-phase2 -->
 <h3><code>replay-phase2</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>replay.phase_2_processor:main</code></td></tr>
     <tr><th>Purpose</th><td>Transaction reference matching with hash table indexing (O(1) lookups)</td></tr>
     <tr><th>Version</th><td>v4.2</td></tr>
+    </tbody>
 </table>
 <pre>
 replay-phase2 --config config/local/replay/phase2.yaml
@@ -208,9 +238,11 @@ replay-phase2 --config config/local/replay/phase2.yaml
 <!-- replay-phase3 -->
 <h3><code>replay-phase3</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>replay.phase_3_processor:main</code></td></tr>
     <tr><th>Purpose</th><td>Client record matching (first name, surname, DOB, ID value) with fuzzy matching</td></tr>
     <tr><th>Version</th><td>v5.2</td></tr>
+    </tbody>
 </table>
 <pre>
 replay-phase3 --config config/local/replay/phase3.yaml
@@ -219,8 +251,10 @@ replay-phase3 --config config/local/replay/phase3.yaml
 <!-- replay-phase3-final -->
 <h3><code>replay-phase3-final</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>replay.phase_3_final_lookup:main</code></td></tr>
     <tr><th>Purpose</th><td>UnaVista transaction validation &mdash; verifies proposed corrections against source data</td></tr>
+    </tbody>
 </table>
 <pre>
 replay-phase3-final --config config/local/replay/phase3_final.yaml
@@ -229,8 +263,10 @@ replay-phase3-final --config config/local/replay/phase3_final.yaml
 <!-- replay-xlsx-converter -->
 <h3><code>replay-xlsx-converter</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>utils.xlsx_csv_converter:main</code></td></tr>
     <tr><th>Purpose</th><td>Convert XLSX files to CSV format for pipeline input</td></tr>
+    </tbody>
 </table>
 <pre>
 replay-xlsx-converter --input data/input.xlsx --output data/input.csv
@@ -239,8 +275,10 @@ replay-xlsx-converter --input data/input.xlsx --output data/input.csv
 <!-- merge-inconsistent-summaries -->
 <h3><code>merge-inconsistent-summaries</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>replay.merge_inconsistent_ids:main</code></td></tr>
     <tr><th>Purpose</th><td>Merge duplicate rows in inconsistent ID summary files</td></tr>
+    </tbody>
 </table>
 <pre>
 merge-inconsistent-summaries --input data/summaries/ --output data/merged_summary.csv
@@ -251,8 +289,10 @@ merge-inconsistent-summaries --input data/summaries/ --output data/merged_summar
 <!-- firds-refresh -->
 <h3><code>firds-refresh</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>firds.scripts.refresh_cache:main</code></td></tr>
     <tr><th>Purpose</th><td>Download and rebuild the local FIRDS SQLite cache</td></tr>
+    </tbody>
 </table>
 <pre>
 firds-refresh --type full --config config/local/firds_config.yaml
@@ -262,8 +302,10 @@ firds-refresh --type delta
 <!-- firds-check -->
 <h3><code>firds-check</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>firds.scripts.check_reportability:main</code></td></tr>
     <tr><th>Purpose</th><td>Check MiFIR reportability for instruments by ISIN</td></tr>
+    </tbody>
 </table>
 <pre>
 firds-check --isin GB0007188757
@@ -273,8 +315,10 @@ firds-check --input data/isins.csv --output data/reportability.csv
 <!-- firds-backfill -->
 <h3><code>firds-backfill</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>firds.scripts.backfill:main</code></td></tr>
     <tr><th>Purpose</th><td>Backfill missing FIRDS data from the ESMA register API</td></tr>
+    </tbody>
 </table>
 <pre>
 firds-backfill --config config/local/firds_config.yaml
@@ -285,8 +329,10 @@ firds-backfill --config config/local/firds_config.yaml
 <!-- gleif-refresh -->
 <h3><code>gleif-refresh</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>gleif.scripts.refresh_cache:main</code></td></tr>
     <tr><th>Purpose</th><td>Download GLEIF golden copy and rebuild local SQLite + FTS5 cache</td></tr>
+    </tbody>
 </table>
 <pre>
 gleif-refresh --type full --config config/local/gleif_config.yaml
@@ -295,8 +341,10 @@ gleif-refresh --type full --config config/local/gleif_config.yaml
 <!-- gleif-check -->
 <h3><code>gleif-check</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>gleif.scripts.check_lei:main</code></td></tr>
     <tr><th>Purpose</th><td>Look up LEI codes and search for legal entities</td></tr>
+    </tbody>
 </table>
 <pre>
 gleif-check --lei 529900T8BM49AURSDO55
@@ -307,8 +355,10 @@ gleif-check --input data/leis.csv --output data/lei_results.csv
 <!-- gleif-backfill -->
 <h3><code>gleif-backfill</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>gleif.scripts.backfill:main</code></td></tr>
     <tr><th>Purpose</th><td>Backfill missing LEI records from the GLEIF API</td></tr>
+    </tbody>
 </table>
 <pre>
 gleif-backfill --config config/local/gleif_config.yaml
@@ -318,9 +368,11 @@ gleif-backfill --config config/local/gleif_config.yaml
 
 <h3><code>txr-gui</code></h3>
 <table>
+    <tbody>
     <tr><th>Entry point</th><td><code>gui.app:main</code></td></tr>
     <tr><th>Purpose</th><td>Launch the PySide6 desktop application with 5 tabbed interface</td></tr>
     <tr><th>Type</th><td><code>gui_scripts</code> (not <code>console_scripts</code>)</td></tr>
+    </tbody>
 </table>
 <pre>
 txr-gui

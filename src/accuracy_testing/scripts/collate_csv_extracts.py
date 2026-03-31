@@ -495,6 +495,12 @@ Examples:
         help='Enable verbose output'
     )
     
+    parser.add_argument(
+        '--gui-mode',
+        action='store_true',
+        help=argparse.SUPPRESS,
+    )
+    
     return parser
 
 
