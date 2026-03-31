@@ -749,8 +749,10 @@ def main():
             input_csv = paths.get('template_file')
         if not output_dir:
             output_dir = paths.get('output_dir', paths.get('output_directory'))
-        if not placeholder:
-            placeholder = processing.get('placeholder_pattern')
+        # placeholder_pattern is intentionally not loaded from config: the generator
+        # auto-detects the token from the template, so a hard-coded config value
+        # would conflict with templates that use {VALUES} instead of the comment style.
+        # Users who need a non-standard token can still pass --placeholder on the CLI.
         if not transaction_column:
             transaction_column = processing.get('transaction_column')
         if args.batch_size == 900:  # default value
