@@ -16,11 +16,11 @@
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
         .metric { font-size: 2em; font-weight: bold; color: #00875A; }
         .metric-label { font-size: 0.85em; color: #6B778C; }
-        .metrics-row { display: flex; gap: 40px; margin: 20px 0; }
-        .metric-box { text-align: center; }
+        .metrics-table { border: none; margin: 20px 0; }
+        .metrics-table td { border: none; }
     </style>
 </head>
 <body>
@@ -34,24 +34,28 @@
     <strong>Overall Status:</strong> 466 tests &bull; 58 test files &bull; 100% pass rate &bull; 7 test directories
 </div>
 
-<div class="metrics-row">
-    <div class="metric-box">
-        <div class="metric">466</div>
-        <div class="metric-label">Total Tests</div>
-    </div>
-    <div class="metric-box">
-        <div class="metric">58</div>
-        <div class="metric-label">Test Files</div>
-    </div>
-    <div class="metric-box">
-        <div class="metric">100%</div>
-        <div class="metric-label">Pass Rate</div>
-    </div>
-    <div class="metric-box">
-        <div class="metric">7</div>
-        <div class="metric-label">Test Directories</div>
-    </div>
-</div>
+<table class="metrics-table">
+    <tbody>
+        <tr>
+            <td style="text-align: center; border: none; padding: 12px 24px;">
+                <div class="metric">466</div>
+                <div class="metric-label">Total Tests</div>
+            </td>
+            <td style="text-align: center; border: none; padding: 12px 24px;">
+                <div class="metric">58</div>
+                <div class="metric-label">Test Files</div>
+            </td>
+            <td style="text-align: center; border: none; padding: 12px 24px;">
+                <div class="metric">100%</div>
+                <div class="metric-label">Pass Rate</div>
+            </td>
+            <td style="text-align: center; border: none; padding: 12px 24px;">
+                <div class="metric">7</div>
+                <div class="metric-label">Test Directories</div>
+            </td>
+        </tr>
+    </tbody>
+</table>
 
 <h2>Table of Contents</h2>
 <ul>

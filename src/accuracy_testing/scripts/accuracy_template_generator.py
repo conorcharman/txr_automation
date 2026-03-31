@@ -96,6 +96,12 @@ Template Formats:
         help='Preview generation without creating files'
     )
     
+    parser.add_argument(
+        '--gui-mode',
+        action='store_true',
+        help=argparse.SUPPRESS,
+    )
+    
     return parser.parse_args()
 
 

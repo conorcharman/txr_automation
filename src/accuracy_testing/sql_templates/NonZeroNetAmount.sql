@@ -17,7 +17,7 @@ target_parent AS (
         AND n.GRCONT = k.k_cont
         AND n.GRSUFF = k.k_suff
     WHERE n.STATUS = 'A'
-),i s
+),
 children AS (
     SELECT
         c.GRFIRM,

@@ -202,15 +202,213 @@ def extract_and_inline_body(html_path: Path) -> str:
     # Remove breadcrumb navigation (inter-file links don't work in Confluence)
     body_html = _strip_breadcrumbs_and_nav(body_html)
 
-    # Convert local .html links to Confluence page links (will be patched later)
-    # For now, strip href targets that point to local files
-    body_html = re.sub(
-        r'href="[^"]*\.html(?:#[^"]*)?\"',
-        'href="#"',
-        body_html,
-    )
+    # Convert heading id attributes to Confluence anchor macros so TOC links work
+    body_html = _inject_confluence_anchors(body_html)
+
+    # Convert local .html links to Confluence cross-page links
+    body_html = _convert_cross_page_links(body_html)
+
+    # Convert <pre> blocks to Confluence noformat/code macros
+    body_html = _convert_pre_to_confluence_macros(body_html)
 
     return body_html
+
+
+def _build_filename_title_map(pages: List[PageDef]) -> Dict[str, str]:
+    """Build a flat mapping of filename → Confluence page title from the page tree."""
+    mapping: Dict[str, str] = {}
+    for page in pages:
+        mapping[page.filename] = page.title
+        if page.children:
+            mapping.update(_build_filename_title_map(page.children))
+    return mapping
+
+
+# Cached filename→title mapping built from PAGE_TREE (populated lazily)
+_FILENAME_TITLE_MAP: Optional[Dict[str, str]] = None
+
+
+def _get_filename_title_map() -> Dict[str, str]:
+    """Return the filename → title mapping, building it on first call."""
+    global _FILENAME_TITLE_MAP
+    if _FILENAME_TITLE_MAP is None:
+        _FILENAME_TITLE_MAP = _build_filename_title_map(PAGE_TREE)
+    return _FILENAME_TITLE_MAP
+
+
+def _inject_confluence_anchors(html: str) -> str:
+    """
+    Convert heading id attributes to Confluence anchor macros.
+
+    For every <h1>–<h4> with an id attribute, insert an
+    ``<ac:structured-macro ac:name="anchor">`` element before the heading
+    so that ``<a href="#id">`` TOC links resolve correctly in Confluence.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    for heading in soup.find_all(re.compile(r"^h[1-4]$")):
+        anchor_id = heading.get("id")
+        if not anchor_id:
+            continue
+        # Build the Confluence anchor macro
+        macro = soup.new_tag("ac:structured-macro", attrs={"ac:name": "anchor"})
+        param = soup.new_tag("ac:parameter", attrs={"ac:name": ""})
+        param.string = anchor_id
+        macro.append(param)
+        heading.insert_before(macro)
+        del heading["id"]
+    return str(soup)
+
+
+def _convert_cross_page_links(html: str) -> str:
+    """
+    Replace local ``href="file.html"`` links with Confluence ``<ac:link>`` macros.
+
+    Links whose target filename appears in PAGE_TREE are converted to
+    Confluence page links; unknown targets are replaced with ``href="#"``.
+    """
+    title_map = _get_filename_title_map()
+    soup = BeautifulSoup(html, "html.parser")
+
+    for a_tag in soup.find_all("a", href=True):
+        href = a_tag["href"]
+        if not href.endswith(".html") and ".html#" not in href:
+            continue
+        # Split href into filename and optional anchor
+        if "#" in href:
+            filename, _anchor = href.split("#", 1)
+        else:
+            filename = href
+        title = title_map.get(filename)
+        if title:
+            # Build <ac:link><ri:page ri:content-title="Title"/><ac:plain-text-link-body>…</ac:plain-text-link-body></ac:link>
+            link_text = a_tag.get_text()
+            ac_link = soup.new_tag("ac:link")
+            ri_page = soup.new_tag("ri:page", attrs={"ri:content-title": title})
+            ac_link.append(ri_page)
+            link_body = soup.new_tag("ac:plain-text-link-body")
+            link_body.append(soup.new_string(f"<![CDATA[{link_text}]]>"))
+            ac_link.append(link_body)
+            a_tag.replace_with(ac_link)
+        else:
+            a_tag["href"] = "#"
+    return str(soup)
+
+
+# Box-drawing Unicode characters that indicate a diagram rather than code
+_BOX_DRAWING_CHARS = frozenset("┌┐└┘─│├┤┬┴┼╔╗╚╝═║↓↑→←↔↕")
+
+# Characters that render at inconsistent widths in some monospace fonts
+# (notably Courier New, which Confluence may fall back to on Windows).
+# We normalise these to pure ASCII equivalents in diagram text so alignment
+# is preserved regardless of which monospace font Confluence renders with.
+_DIAGRAM_CHAR_NORMALISATION: Dict[str, str] = {
+    "•": "*",   # U+2022 BULLET — often wider than 1ch in Courier New
+    "·": ".",   # U+00B7 MIDDLE DOT
+    "→": ">",   # U+2192 RIGHTWARDS ARROW
+    "←": "<",   # U+2190 LEFTWARDS ARROW
+    "↓": "v",   # U+2193 DOWNWARDS ARROW
+    "↑": "^",   # U+2191 UPWARDS ARROW
+    "↔": "<>",  # U+2194 LEFT RIGHT ARROW
+    "↕": "^v",  # U+2195 UP DOWN ARROW
+}
+
+
+def _normalise_diagram_text(text: str) -> str:
+    """Replace non-ASCII chars that may render at inconsistent widths."""
+    for src, dst in _DIAGRAM_CHAR_NORMALISATION.items():
+        text = text.replace(src, dst)
+    return text
+
+
+def _convert_pre_to_confluence_macros(html: str) -> str:
+    """
+    Convert ``<pre>`` blocks to Confluence storage-format macros.
+
+    ``<pre>`` blocks whose text contains box-drawing characters are converted
+    to ``code`` macros with ``language="text"`` — this forces Confluence Cloud
+    to use its high-quality monospace font stack (SFMono, Menlo, Consolas, …)
+    rather than the system default (Courier New on Windows), ensuring that
+    box-drawing characters render at consistent widths.  The bullet character
+    ``•`` and arrow characters are also normalised to ASCII equivalents before
+    insertion to prevent per-glyph width differences from breaking alignment.
+
+    All other ``<pre>`` blocks are converted to ``code`` macros with the
+    language inferred from a ``class="language-*"`` attribute on the ``<pre>``
+    or its first child ``<code>`` element (defaulting to ``text``).
+
+    ``ac:plain-text-body`` requires a raw XML CDATA section.  BeautifulSoup
+    HTML-escapes any string it serialises, so we use plain-text placeholders
+    during tree manipulation and perform a final string replacement to inject
+    the unescaped ``<![CDATA[...]]>`` markers after serialisation.
+
+    Args:
+        html: Confluence storage-format XHTML string.
+
+    Returns:
+        XHTML string with ``<pre>`` blocks replaced by Confluence macros.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    # Maps placeholder token → raw CDATA string to inject after serialisation.
+    # Placeholders use only alphanumeric/underscore chars so BS4 won't escape them.
+    cdata_map: Dict[str, str] = {}
+
+    for index, pre in enumerate(soup.find_all("pre")):
+        text = pre.get_text()
+        is_diagram = any(ch in _BOX_DRAWING_CHARS for ch in text)
+
+        if is_diagram:
+            # Normalise potentially width-inconsistent characters before storing
+            text = _normalise_diagram_text(text)
+
+        placeholder = f"TXRCDATA{index}END"
+        cdata_map[placeholder] = f"<![CDATA[{text}]]>"
+
+        # Use the code macro for both diagrams and code blocks — it uses
+        # Confluence Cloud's explicitly specified monospace font stack, giving
+        # more consistent glyph widths than noformat's system-default fallback.
+        lang = "text" if is_diagram else _detect_language(pre)
+        macro = soup.new_tag("ac:structured-macro", attrs={"ac:name": "code"})
+        lang_param = soup.new_tag("ac:parameter", attrs={"ac:name": "language"})
+        lang_param.string = lang
+        macro.append(lang_param)
+        body = soup.new_tag("ac:plain-text-body")
+        body.append(soup.new_string(placeholder))
+        macro.append(body)
+
+        pre.replace_with(macro)
+
+    result = str(soup)
+    for placeholder, cdata in cdata_map.items():
+        result = result.replace(placeholder, cdata)
+    return result
+
+
+def _detect_language(pre_tag) -> str:
+    """
+    Infer a Confluence code-macro language from a ``<pre>`` tag.
+
+    Checks:
+    1. ``class="language-*"`` on the ``<pre>`` itself.
+    2. ``class="language-*"`` on a child ``<code>`` element.
+    3. Returns ``"text"`` as a safe default.
+
+    Args:
+        pre_tag: BeautifulSoup Tag for the ``<pre>`` element.
+
+    Returns:
+        Language string (e.g. ``"python"``, ``"bash"``, ``"yaml"``, ``"text"``).
+    """
+    candidates = [pre_tag]
+    child_code = pre_tag.find("code")
+    if child_code:
+        candidates.append(child_code)
+
+    for tag in candidates:
+        for cls in tag.get("class", []):
+            if cls.startswith("language-"):
+                return cls[len("language-"):]
+
+    return "text"
 
 
 # CSS class → inline style mapping (fallback when premailer is unavailable)
@@ -233,12 +431,13 @@ _CLASS_STYLES: Dict[str, str] = {
     "metric-label": "font-size: 0.85em; color: #6B778C;",
     "metrics-row": "display: flex; gap: 40px; margin: 20px 0;",
     "metric-box": "text-align: center;",
+    "metrics-table": "border: none; margin: 20px 0;",
     "num": "text-align: right; font-variant-numeric: tabular-nums;",
 }
 
 _TAG_STYLES: Dict[str, str] = {
     "code": "background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em;",
-    "pre": "background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em;",
+    "pre": "background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace;",
     "th": "background-color: #F4F5F7; font-weight: 600; border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left;",
     "td": "border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top;",
     "table": "border-collapse: collapse; width: 100%; margin: 16px 0;",

@@ -16,6 +16,7 @@ Panels persist field values across sessions via QSettings caching.
 
 import importlib
 import os
+import re
 import tempfile
 from datetime import datetime
 from pathlib import Path
@@ -492,7 +493,10 @@ class BaseValidationPanel(QWidget):
                 val = self.batch_output_dir.get_path()
                 if val:
                     batch_paths["output_dir"] = val
-            config["batch"] = {"incidents": "auto", "paths": batch_paths}
+            batch: Dict[str, Any] = {"incidents": "auto", "paths": batch_paths}
+            if self._incidents:
+                batch["auto_incidents"] = list(self._incidents)
+            config["batch"] = batch
         else:
             config["mode"] = "single"
             paths: Dict[str, str] = {}
@@ -1419,14 +1423,6 @@ class SQLExtractPanel(QWidget):
         )
         shared_layout.addWidget(self.batch_size)
 
-        self.placeholder = FormFieldWidget(
-            "SQL placeholder token:", field_type="text",
-            tooltip="The placeholder string in the template to replace with IDs.\nExample: {PLACEHOLDER}",
-            placeholder="{PLACEHOLDER}",
-            settings_key=f"{pfx}.placeholder",
-        )
-        shared_layout.addWidget(self.placeholder)
-
         self.column = FormFieldWidget(
             "ID column name:", field_type="text",
             tooltip="Name of the CSV column containing IDs.\nExample: TransactionRef",
@@ -1557,10 +1553,6 @@ class SQLExtractPanel(QWidget):
         if batch_size and batch_size != 900:
             argv.extend(["--batch-size", str(batch_size)])
 
-        placeholder = self.placeholder.get_value()
-        if placeholder:
-            argv.extend(["--placeholder", placeholder])
-
         col = self.column.get_value()
         if col:
             argv.extend(["--column", col])
@@ -1627,30 +1619,85 @@ class SQLExtractPanel(QWidget):
         self._worker.start()
 
     def _execute_batch(self, dry_run: bool = False) -> None:
-        """Run sql_extract_generator for each checked SQL+CSV pair."""
-        checked_sql = self._get_checked_items(self._sql_file_list)
+        """Run sql_extract_generator for each incident CSV, auto-selecting
+        the correct SQL template based on the incident code in the filename."""
         checked_csv = self._get_checked_items(self._csv_file_list)
 
-        if not checked_sql or not checked_csv:
+        if not checked_csv:
             self.log_viewer.append_error(
-                "[GUI] Select at least one SQL template and one CSV file."
+                "[GUI] Select at least one CSV file."
+            )
+            return
+
+        sql_dir = self.templates_dir.get_path()
+        if not sql_dir or not os.path.isdir(sql_dir):
+            self.log_viewer.append_error(
+                "[GUI] SQL templates directory is required for batch mode."
+            )
+            return
+
+        # Import the script to access get_sql_template_for_incident()
+        module = _import_script(
+            "accuracy_testing.scripts.sql_extract_generator"
+        )
+        if module is None:
+            self.log_viewer.append_error(
+                "Failed to import sql_extract_generator"
             )
             return
 
         self._batch_queue = []
-        for sql_path in checked_sql:
-            for csv_path in checked_csv:
-                self._batch_queue.append({
-                    "template": sql_path,
-                    "input": csv_path,
-                    "dry_run": str(dry_run),
-                })
+        skipped: List[str] = []
+
+        for csv_path in checked_csv:
+            csv_stem = Path(csv_path).stem
+            # Extract incident code (e.g. "7_37") from end of filename
+            match = re.search(r'(\d+_\d+)\s*$', csv_stem)
+            if not match:
+                skipped.append(Path(csv_path).name)
+                continue
+
+            incident_code = match.group(1)
+
+            try:
+                sql_template = str(
+                    module.get_sql_template_for_incident(
+                        incident_code, Path(sql_dir)
+                    )
+                )
+            except (ValueError, FileNotFoundError) as exc:
+                self.log_viewer.append_line(
+                    f"[GUI] Skipping {Path(csv_path).name}: {exc}"
+                )
+                skipped.append(Path(csv_path).name)
+                continue
+
+            self._batch_queue.append({
+                "template": sql_template,
+                "input": csv_path,
+                "incident_code": incident_code,
+                "dry_run": str(dry_run),
+            })
 
         self.log_viewer.clear()
         self.log_viewer.append_line(
-            f"[GUI] Batch mode: {len(self._batch_queue)} run(s) "
-            f"({len(checked_sql)} template(s) x {len(checked_csv)} CSV(s))"
+            f"[GUI] Batch mode: {len(self._batch_queue)} incident(s) "
+            f"matched from {len(checked_csv)} CSV file(s)"
         )
+        if skipped:
+            preview = ", ".join(skipped[:5])
+            extra = f" (+ {len(skipped) - 5} more)" if len(skipped) > 5 else ""
+            self.log_viewer.append_line(
+                f"[GUI] Skipped {len(skipped)} file(s) with no matching "
+                f"template: {preview}{extra}"
+            )
+
+        if not self._batch_queue:
+            self.log_viewer.append_error(
+                "[GUI] No valid incident/template pairs found."
+            )
+            return
+
         self.run_controls.set_running(True)
         self._run_next_batch()
 
@@ -1684,6 +1731,9 @@ class SQLExtractPanel(QWidget):
         argv.extend(["--template", job["template"]])
         argv.extend(["--input", job["input"]])
 
+        if job.get("incident_code"):
+            argv.extend(["--incident-code", job["incident_code"]])
+
         output_dir = self.output_dir.get_path()
         if output_dir:
             argv.extend(["--output", output_dir])
@@ -1691,10 +1741,6 @@ class SQLExtractPanel(QWidget):
         batch_size = self.batch_size.get_value()
         if batch_size and batch_size != 900:
             argv.extend(["--batch-size", str(batch_size)])
-
-        placeholder = self.placeholder.get_value()
-        if placeholder:
-            argv.extend(["--placeholder", placeholder])
 
         col = self.column.get_value()
         if col:
@@ -1709,8 +1755,10 @@ class SQLExtractPanel(QWidget):
         if self.verbose.get_value():
             argv.append("--verbose")
 
+        incident_label = job.get("incident_code", "?")
         self.log_viewer.append_line(
-            f"\n[GUI] === {Path(job['template']).name} + "
+            f"\n[GUI] === Incident {incident_label}: "
+            f"{Path(job['template']).name} + "
             f"{Path(job['input']).name} ===\n"
             f"[GUI] Running: sql_extract_generator {' '.join(argv)}"
         )

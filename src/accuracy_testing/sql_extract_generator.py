@@ -111,6 +111,11 @@ class SQLExtractGenerator:
             raise ValueError(
                 f"No placeholder found in template. Expected one of: {', '.join(self.PLACEHOLDER_PATTERNS)}"
             )
+
+        # Auto-derive values_mode when the template uses a {VALUES} block.
+        # This means callers do not need to know the template style in advance.
+        if not self.values_mode and self.placeholder == '{VALUES}':
+            self.values_mode = True
         
         # Load DTF template if DTF output is requested
         if self.output_format in ['dtf', 'both']:
