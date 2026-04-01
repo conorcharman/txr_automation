@@ -22,8 +22,8 @@ files:
 merge:
   # Column name to group/merge rows on for each file.
   # Rows with the same value in this column are merged into one output row.
-  ids_group_column:   "Reported IDs"
-  names_group_column: "Reported Name & DOB"
+  ids_group_column:   "Reported Name & DOB"
+  names_group_column: "Reported ID"
 
   # Separator used between stacked values within a merged cell (default: newline).
   # Change to "|" if you prefer pipe-separated values in a single line.

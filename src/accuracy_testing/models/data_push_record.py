@@ -326,4 +326,19 @@ DEFAULT_COLUMN_MAPPINGS = [
     # Match columns
     ColumnMapping("Kaizen Error", "Kaizen Error", "Template lookup result (ID:TYPE)"),
     ColumnMapping("Match", "Match", "Match result (TRUE/FALSE)"),
+    # Net quantity (7_6) / net amount (7_42) incidents.
+    # The SQL output uses 'child_ref' and lowercase 'error' rather than the
+    # standard buyer/seller column names.  All mappings here are no-ops for
+    # other incidents because get_push_values only pushes when the source_col
+    # is present in the source file.
+    ColumnMapping("child_ref", "Transaction Reference", "Child transaction reference — match key for net qty/amt incidents"),
+    ColumnMapping("parent_ref", "parent_ref", "Parent order reference"),
+    ColumnMapping("bulk_ref", "bulk_ref", "Contract group prefix derived from parent_ref"),
+    ColumnMapping("bulk_qty", "bulk_qty", "Total contract quantity"),
+    ColumnMapping("net_qty", "net_qty", "Sum of child transaction quantities"),
+    ColumnMapping("child_netamt", "child_netamt", "Child transaction net amount"),
+    ColumnMapping("parent_netamt", "parent_netamt", "Parent order net amount"),
+    ColumnMapping("net_amt", "net_amt", "Sum of child net amounts"),
+    ColumnMapping("difference", "difference", "Calculated difference (net vs bulk)"),
+    ColumnMapping("error", "error", "Validation error flag, lowercase (N=match, Y=mismatch)"),
 ]

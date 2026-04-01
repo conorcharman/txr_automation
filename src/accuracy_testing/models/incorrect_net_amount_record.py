@@ -1,8 +1,8 @@
 """
-Pricing Validation Record Model
-================================
+Incorrect Net Amount Validation Record Model
+============================================
 
-Data structure for pricing validation (Incident Code 35_3).
+Data structure for incorrect net amount validation (Incident Code 35_3).
 
 Validates the relationship: Net Amount = Consideration + Interest
 """
@@ -13,9 +13,9 @@ from typing import Optional, Dict, Any
 
 
 @dataclass
-class PricingRecord:
+class IncorrectNetAmountRecord:
     """
-    Pricing validation record representing a single transaction.
+    Incorrect net amount validation record representing a single transaction.
     
     Validates pricing using the formula:
         Net Amount = Consideration + Interest
@@ -92,7 +92,7 @@ class PricingRecord:
             self.error = "TBC"  # To Be Confirmed - requires investigation
     
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'PricingRecord':
+    def from_dict(cls, data: Dict[str, Any]) -> 'IncorrectNetAmountRecord':
         """
         Create PricingRecord from dictionary (e.g., database row or CSV row).
         
@@ -160,5 +160,5 @@ class PricingRecord:
     
     def __repr__(self) -> str:
         """String representation for debugging."""
-        return (f"PricingRecord(ref={self.transaction_ref}, "
+        return (f"IncorrectNetAmountRecord(ref={self.transaction_ref}, "
                 f"error={self.error}, diff={self.net_difference})")

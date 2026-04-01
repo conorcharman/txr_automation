@@ -1,8 +1,8 @@
 """
-Pricing Validation Logic
-=========================
+Incorrect Net Amount Validation Logic
+======================================
 
-Core validation logic for pricing data (Incident Code 35_3).
+Core validation logic for incorrect net amount data (Incident Code 35_3).
 
 Validates the mathematical relationship:
     Net Amount = Consideration + Interest
@@ -12,12 +12,12 @@ from typing import List, Dict
 from decimal import Decimal
 import logging
 
-from ..models.pricing_record import PricingRecord
+from ..models.incorrect_net_amount_record import IncorrectNetAmountRecord
 
 logger = logging.getLogger(__name__)
 
 
-class PricingValidator:
+class IncorrectNetAmountValidator:
     """
     Validates pricing data for transactions.
     
@@ -25,7 +25,7 @@ class PricingValidator:
     within a specified tolerance for floating-point comparison.
     
     Usage:
-        validator = PricingValidator(tolerance=Decimal('0.01'))
+        validator = IncorrectNetAmountValidator(tolerance=Decimal('0.01'))
         validator.validate_record(record)
         # record.error will be "N" or "TBC"
         # record.total, expected_interest, net_difference will be calculated
@@ -43,16 +43,16 @@ class PricingValidator:
         self.verbose = verbose
         
         if self.verbose:
-            logger.info(f"PricingValidator initialized with tolerance={self.tolerance}")
+            logger.info(f"IncorrectNetAmountValidator initialized with tolerance={self.tolerance}")
     
-    def validate_record(self, record: PricingRecord) -> None:
+    def validate_record(self, record: IncorrectNetAmountRecord) -> None:
         """
         Validate a single pricing record.
         
         Calculates derived fields and sets error status based on net difference.
         
         Args:
-            record: PricingRecord to validate
+            record: IncorrectNetAmountRecord to validate
         
         Modifies:
             record.total
@@ -64,7 +64,7 @@ class PricingValidator:
             ValueError: If record has invalid numeric values
         
         Example:
-            >>> record = PricingRecord(
+            >>> record = IncorrectNetAmountRecord(
             ...     transaction_ref='TEST001',
             ...     net_amount=Decimal('1150.00'),
             ...     consideration=Decimal('1000.00'),
@@ -81,7 +81,7 @@ class PricingValidator:
             # Log discrepancies
             if record.error == "TBC" and self.verbose:
                 logger.warning(
-                    f"Pricing discrepancy for {record.transaction_ref}: "
+                    f"Incorrect net amount discrepancy for {record.transaction_ref}: "
                     f"Net Difference = {record.net_difference}"
                 )
             elif self.verbose:
@@ -93,12 +93,12 @@ class PricingValidator:
             record.comments = f"Validation Error: {str(e)}"
             raise
     
-    def validate_batch(self, records: List[PricingRecord]) -> Dict[str, int]:
+    def validate_batch(self, records: List[IncorrectNetAmountRecord]) -> Dict[str, int]:
         """
-        Validate a batch of pricing records.
+        Validate a batch of incorrect net amount records.
         
         Args:
-            records: List of PricingRecords to validate
+            records: List of IncorrectNetAmountRecords to validate
         
         Returns:
             Dictionary with validation statistics:
@@ -143,12 +143,12 @@ class PricingValidator:
         
         return stats
     
-    def validate_record_safe(self, record: PricingRecord) -> None:
+    def validate_record_safe(self, record: IncorrectNetAmountRecord) -> None:
         """
         Validate record with error handling (does not raise exceptions).
         
         Args:
-            record: PricingRecord to validate
+            record: IncorrectNetAmountRecord to validate
         
         Modifies:
             record.error (set to "ERROR" if validation fails)

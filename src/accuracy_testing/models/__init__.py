@@ -5,7 +5,7 @@ Data Models for Accuracy Testing
 Dataclasses representing records for various validation workflows.
 """
 
-from .pricing_record import PricingRecord
+from .incorrect_net_amount_record import IncorrectNetAmountRecord
 from .net_quantity_record import NetQuantityRecord
 from .net_amount_record import NetAmountRecord
 from .decision_maker_record import (
@@ -24,7 +24,7 @@ from .data_push_record import (
 )
 
 __all__ = [
-    'PricingRecord',
+    'IncorrectNetAmountRecord',
     'NetQuantityRecord',
     'NetAmountRecord',
     'DecisionMakerRecord',

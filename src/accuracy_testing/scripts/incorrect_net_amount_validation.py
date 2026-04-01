@@ -1,28 +1,28 @@
 #!/usr/bin/env python3
 """
-Pricing Data Validation Script v1.0
-====================================
+Incorrect Net Amount Validation Script v1.0
+============================================
 
-Validates transaction pricing data for accuracy testing (Incident Code 35_3).
+Validates transaction net amount data for accuracy testing (Incident Code 35_3).
 Migrated from VBA macro pricing_data_validation_v1.0.vb.
 
 This script:
-1. Reads pricing data from CSV (Transaction Reference, Net Amount, Consideration, Interest)
+1. Reads net amount data from CSV (Transaction Reference, Net Amount, Consideration, Interest)
 2. Calculates derived fields (Total, Expected Interest, Net Difference)
-3. Validates pricing using formula: Net Amount = Consideration + Interest
+3. Validates: Net Amount = Consideration + Interest
 4. Outputs results with error flag ("N" or "TBC")
 
 Usage:
     # With YAML configuration file
-    python -m src.accuracy_testing.scripts.pricing_validation --config config/local/accuracy_testing/pricing_validation.yaml
+    python -m src.accuracy_testing.scripts.incorrect_net_amount_validation --config config/local/accuracy_testing/incorrect_net_amount_validation.yaml
     
     # With environment variables
-    export TXR_ACCURACY_PATHS_INPUT_FILE="data/pricing_input.csv"
-    export TXR_ACCURACY_PATHS_OUTPUT_FILE="data/pricing_output.csv"
-    python -m src.accuracy_testing.scripts.pricing_validation --use-env
+    export TXR_ACCURACY_PATHS_INPUT_FILE="data/incorrect_net_amount_input.csv"
+    export TXR_ACCURACY_PATHS_OUTPUT_FILE="data/incorrect_net_amount_output.csv"
+    python -m src.accuracy_testing.scripts.incorrect_net_amount_validation --use-env
     
     # With direct CLI arguments (backward compatible)
-    python -m src.accuracy_testing.scripts.pricing_validation input.csv output.csv --log-level DEBUG
+    python -m src.accuracy_testing.scripts.incorrect_net_amount_validation input.csv output.csv --log-level DEBUG
 
 Input CSV columns (minimum required):
     - Transaction Reference
@@ -49,8 +49,8 @@ from decimal import Decimal
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.accuracy_testing.models.pricing_record import PricingRecord
-from src.accuracy_testing.validators.pricing_validator import PricingValidator
+from src.accuracy_testing.models.incorrect_net_amount_record import IncorrectNetAmountRecord
+from src.accuracy_testing.validators.incorrect_net_amount_validator import IncorrectNetAmountValidator
 from src.accuracy_testing.processor import (
     AccuracyConfigManager,
     AccuracyPathConfig,
@@ -75,8 +75,8 @@ except ImportError:
         return open(file_path, mode, encoding='utf-8', newline=newline), 'utf-8'
 
 
-class PricingStats:
-    """Statistics for pricing validation runs."""
+class IncorrectNetAmountStats:
+    """Statistics for incorrect net amount validation runs."""
     
     def __init__(self):
         self.total_records = 0
@@ -123,8 +123,8 @@ class PricingStats:
             print(f"{'='*70}\n")
 
 
-class PricingValidationScript:
-    """Main application class for pricing data validation."""
+class IncorrectNetAmountValidationScript:
+    """Main application class for incorrect net amount validation."""
     
     # Input CSV column mapping (0-indexed)
     # Input file has: Transaction Reference, Net Amount, Consideration, Interest
@@ -169,13 +169,13 @@ class PricingValidationScript:
         
         # Setup logging
         self.logger = create_logger(
-            name="pricing_validation",
+            name="incorrect_net_amount_validation",
             log_dir=self.path_config.log_output,
             log_level=self.proc_config.log_level
         )
         
         # Initialize validator
-        self.validator = PricingValidator(
+        self.validator = IncorrectNetAmountValidator(
             tolerance=Decimal('0.01'),
             verbose=self.proc_config.verbose
         )
@@ -185,9 +185,9 @@ class PricingValidationScript:
         self.output_file = Path(self.path_config.output_file)
         
         # Statistics
-        self.stats = PricingStats()
+        self.stats = IncorrectNetAmountStats()
     
-    def read_input_csv(self) -> List[PricingRecord]:
+    def read_input_csv(self) -> List[IncorrectNetAmountRecord]:
         """
         Read and parse input CSV file.
         
@@ -213,7 +213,7 @@ class PricingValidationScript:
                     
                     try:
                         # Create record from row data (input only has 4 columns)
-                        record = PricingRecord(
+                        record = IncorrectNetAmountRecord(
                             transaction_ref=row[self.COL_TRANSACTION_REF].strip() if row[self.COL_TRANSACTION_REF] else "",
                             net_amount=Decimal(row[self.COL_NET_AMOUNT]) if row[self.COL_NET_AMOUNT] else Decimal('0'),
                             consideration=Decimal(row[self.COL_CONSIDERATION]) if row[self.COL_CONSIDERATION] else Decimal('0'),
@@ -235,7 +235,7 @@ class PricingValidationScript:
         self.logger.info(f"Successfully read {len(records)} records")
         return records
     
-    def write_output_csv(self, records: List[PricingRecord]):
+    def write_output_csv(self, records: List[IncorrectNetAmountRecord]):
         """
         Write processed records to output CSV.
         
@@ -291,7 +291,7 @@ class PricingValidationScript:
         """Execute the validation workflow."""
         start_time = datetime.now()
         
-        self.logger.log_header("PRICING DATA VALIDATION v1.0")
+        self.logger.log_header("INCORRECT NET AMOUNT VALIDATION v1.0")
         self.logger.info(f"Input file: {self.input_file}")
         self.logger.info(f"Output file: {self.output_file}")
         if self.dry_run:
@@ -453,7 +453,7 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
         
         try:
             # Run validation for this incident
-            validator = PricingValidationScript(
+            validator = IncorrectNetAmountValidationScript(
                 config_dict=incident_config,
                 dry_run=dry_run,
                 show_progress=show_progress
@@ -612,7 +612,7 @@ def main():
             )
         else:
             # Run single validation
-            script = PricingValidationScript(
+            script = IncorrectNetAmountValidationScript(
                 config_dict=config,
                 dry_run=args.dry_run,
                 show_progress=args.progress

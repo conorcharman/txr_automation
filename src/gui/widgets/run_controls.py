@@ -33,6 +33,7 @@ class RunControlsWidget(QWidget):
 
         self._run_btn = QPushButton("Run")
         self._run_btn.setFixedWidth(80)
+        self._run_btn.setProperty("primary", True)
         self._run_btn.clicked.connect(self.run_clicked.emit)
         layout.addWidget(self._run_btn)
 

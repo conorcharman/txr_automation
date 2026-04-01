@@ -20,7 +20,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.constants import LOG_FONT_FAMILY, LOG_FONT_SIZE
+from gui.constants import COLOUR_RED, LOG_FONT_FAMILY, LOG_FONT_SIZE, COLOUR_RED
 
 
 class LogViewerWidget(QWidget):
@@ -56,7 +56,7 @@ class LogViewerWidget(QWidget):
         # Formats for normal and error text
         self._normal_fmt = QTextCharFormat()
         self._error_fmt = QTextCharFormat()
-        self._error_fmt.setForeground(QColor("#cc0000"))
+        self._error_fmt.setForeground(QColor(COLOUR_RED))
 
     def append_line(self, text: str) -> None:
         """Append a line of normal log output."""

@@ -1314,7 +1314,7 @@ class SQLExtractPanel(QWidget):
 
         inner = QWidget()
         layout = QVBoxLayout(inner)
-        layout.addWidget(QLabel("<b>SQL Extract Generator</b>"))
+        layout.addWidget(QLabel("<b>Extract Generator</b>"))
         layout.addWidget(_subtitle(
             "Generate batched SQL extract files from a template and input CSV of IDs"
         ))
@@ -1814,7 +1814,7 @@ class TemplateGeneratorPanel(QWidget):
 
         inner = QWidget()
         layout = QVBoxLayout(inner)
-        layout.addWidget(QLabel("<b>Accuracy Template Generator</b>"))
+        layout.addWidget(QLabel("<b>Template Generator</b>"))
         layout.addWidget(_subtitle(
             "Generate accuracy testing template files from error and query CSVs"
         ))
@@ -1825,6 +1825,25 @@ class TemplateGeneratorPanel(QWidget):
 
         self.config_loader = ConfigLoaderWidget()
         layout.addWidget(self.config_loader)
+
+        # Testing period
+        period_group = QGroupBox("Testing Period")
+        period_layout = QHBoxLayout(period_group)
+        self.fiscal_year = FormFieldWidget(
+            "Fiscal Year:", field_type="dropdown",
+            choices=[""] + FISCAL_YEARS,
+            tooltip="Reporting fiscal year, e.g. FY26",
+            settings_key=f"{pfx}.fiscal_year",
+        )
+        period_layout.addWidget(self.fiscal_year)
+        self.quarter = FormFieldWidget(
+            "Quarter:", field_type="dropdown",
+            choices=[""] + QUARTERS,
+            tooltip="Reporting quarter, e.g. Q1",
+            settings_key=f"{pfx}.quarter",
+        )
+        period_layout.addWidget(self.quarter)
+        layout.addWidget(period_group)
 
         # Input files group
         files_group = QGroupBox("Input Files")
@@ -1881,6 +1900,13 @@ class TemplateGeneratorPanel(QWidget):
         config_path = self.config_loader.get_last_path()
         if config_path:
             argv.extend(["--config", config_path])
+
+        fy = self.fiscal_year.get_value()
+        if fy:
+            argv.extend(["--fiscal-year", fy])
+        qtr = self.quarter.get_value()
+        if qtr:
+            argv.extend(["--quarter", qtr])
 
         errors = self.errors_csv.get_path()
         if errors:
@@ -2524,7 +2550,7 @@ class AccuracyTab(QWidget):
           "incidents": ["16_19", "16_21", "16_23"],
           "needs_template": True,
           "needs_tracker": True}),
-        ("Inconsistent Buyer", BaseValidationPanel,
+        ("Inconsistent Buyer ID", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.inconsistent_buyer_id_validation",
           "title": "Inconsistent Buyer ID Validation",
           "subtitle": "Detects inconsistent buyer IDs across transactions (incident 7_66)",
@@ -2532,7 +2558,7 @@ class AccuracyTab(QWidget):
           "incidents": ["7_66"],
           "needs_template": True,
           "needs_tracker": True}),
-        ("Inconsistent Seller", BaseValidationPanel,
+        ("Inconsistent Seller ID", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.inconsistent_seller_id_validation",
           "title": "Inconsistent Seller ID Validation",
           "subtitle": "Detects inconsistent seller IDs across transactions (incident 16_20)",
@@ -2540,31 +2566,31 @@ class AccuracyTab(QWidget):
           "incidents": ["16_20"],
           "needs_template": True,
           "needs_tracker": True}),
-        ("FTBDM", DecisionMakerPanel,
+        ("Fund Trade Buyer Decision Maker", DecisionMakerPanel,
          {"script_module_path": "accuracy_testing.scripts.validate_ftbdm",
-          "title": "FTBDM Validation",
+          "title": "Fund Trade Buyer Decision Maker Validation",
           "subtitle": "Field 27 Buyer Decision Maker validation (incident 12_17)",
           "settings_prefix": "ftbdm",
           "incidents": ["12_17"]}),
-        ("FTSDM", DecisionMakerPanel,
+        ("Fund Trade Seller Decision Maker", DecisionMakerPanel,
          {"script_module_path": "accuracy_testing.scripts.validate_ftsdm",
-          "title": "FTSDM Validation",
+          "title": "Fund Trade Seller Decision Maker Validation",
           "subtitle": "Field 28 Seller Decision Maker validation (incident 21_17)",
           "settings_prefix": "ftsdm",
           "incidents": ["21_17"]}),
-        ("Pricing", BaseValidationPanel,
-         {"script_module_path": "accuracy_testing.scripts.pricing_validation",
-          "title": "Pricing Validation",
-          "subtitle": "Validates transaction pricing fields (incident 35_3)",
-          "settings_prefix": "pricing",
+        ("Incorrect Net Amount", BaseValidationPanel,
+         {"script_module_path": "accuracy_testing.scripts.incorrect_net_amount_validation",
+          "title": "Incorrect Net Amount Validation",
+          "subtitle": "Validates transaction net amount fields (incident 35_3)",
+          "settings_prefix": "incorrect_net_amount",
           "incidents": ["35_3"]}),
-        ("Non-Zero Qty", BaseValidationPanel,
+        ("Non-Zero Net Quantity", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.non_zero_net_quantity",
           "title": "Non-Zero Net Quantity Validation",
           "subtitle": "Checks that net quantity is non-zero where required (incident 7_6)",
           "settings_prefix": "non_zero_qty",
           "incidents": ["7_6"]}),
-        ("Non-Zero Amt", BaseValidationPanel,
+        ("Non-Zero Net Amount", BaseValidationPanel,
          {"script_module_path": "accuracy_testing.scripts.non_zero_net_amount",
           "title": "Non-Zero Net Amount Validation",
           "subtitle": "Checks that net amount is non-zero where required (incident 7_42)",
@@ -2572,7 +2598,7 @@ class AccuracyTab(QWidget):
           "incidents": ["7_42"]}),
         ("Run All", RunAllPanel, {}),
         (None, None, {}),  # Section separator
-        ("SQL Extract", SQLExtractPanel, {}),
+        ("Extracts", SQLExtractPanel, {}),
         ("Templates", TemplateGeneratorPanel, {}),
         ("CSV Collation", CollationPanel, {}),
         ("Data Push", DataPushPanel, {}),

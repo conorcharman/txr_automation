@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """
-Demo: Pricing Data Validation
-==============================
+Demo: Incorrect Net Amount Validation
+======================================
 
-Demonstrates the pricing validation functionality.
+Demonstrates the incorrect net amount validation functionality.
 """
 
 from pathlib import Path
@@ -14,25 +14,25 @@ import sys
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.accuracy_testing.models.pricing_record import PricingRecord
-from src.accuracy_testing.validators.pricing_validator import PricingValidator
+from src.accuracy_testing.models.incorrect_net_amount_record import IncorrectNetAmountRecord
+from src.accuracy_testing.validators.incorrect_net_amount_validator import IncorrectNetAmountValidator
 
 
 def demo_pricing_validation():
     """Demonstrate pricing validation with various scenarios."""
     
     print("=" * 70)
-    print("PRICING DATA VALIDATION DEMO")
+    print("INCORRECT NET AMOUNT VALIDATION DEMO")
     print("=" * 70)
     print()
     
     # Create validator
-    validator = PricingValidator(tolerance=Decimal('0.01'), verbose=False)
+    validator = IncorrectNetAmountValidator(tolerance=Decimal('0.01'), verbose=False)
     
     # Test Case 1: Perfect Match (Buy Transaction)
     print("Test Case 1: Perfect Match (Buy Transaction)")
     print("-" * 70)
-    record1 = PricingRecord(
+    record1 = IncorrectNetAmountRecord(
         transaction_ref="44625CKTPC31",
         net_amount=Decimal('10250.00'),
         consideration=Decimal('10000.00'),
@@ -52,7 +52,7 @@ def demo_pricing_validation():
     # Test Case 2: Perfect Match (Sell Transaction with negative interest)
     print("Test Case 2: Perfect Match (Sell Transaction)")
     print("-" * 70)
-    record2 = PricingRecord(
+    record2 = IncorrectNetAmountRecord(
         transaction_ref="44625CKT72V1",
         net_amount=Decimal('14700.00'),
         consideration=Decimal('15000.00'),
@@ -72,7 +72,7 @@ def demo_pricing_validation():
     # Test Case 3: Error Detected (Discrepancy)
     print("Test Case 3: Error Detected (Discrepancy)")
     print("-" * 70)
-    record3 = PricingRecord(
+    record3 = IncorrectNetAmountRecord(
         transaction_ref="44625CKVNVJ1",
         net_amount=Decimal('8680.00'),
         consideration=Decimal('8500.00'),
@@ -92,7 +92,7 @@ def demo_pricing_validation():
     # Test Case 4: Tolerance Handling
     print("Test Case 4: Within Tolerance (Rounding)")
     print("-" * 70)
-    record4 = PricingRecord(
+    record4 = IncorrectNetAmountRecord(
         transaction_ref="44625CKXGQR1",
         net_amount=Decimal('1150.00'),
         consideration=Decimal('1000.00'),

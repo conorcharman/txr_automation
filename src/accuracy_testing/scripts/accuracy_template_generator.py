@@ -91,6 +91,18 @@ Template Formats:
     )
     
     parser.add_argument(
+        '--fiscal-year',
+        type=str,
+        help='Fiscal year for output file naming, e.g. FY26 (overrides config)'
+    )
+
+    parser.add_argument(
+        '--quarter',
+        type=str,
+        help='Quarter for output file naming, e.g. Q1 (overrides config)'
+    )
+
+    parser.add_argument(
         '--dry-run',
         action='store_true',
         help='Preview generation without creating files'
@@ -134,7 +146,7 @@ def print_summary(generator: AccuracyTemplateGenerator, output_dir: str, dry_run
     print(f"Total records:             {summary['total_records']}")
     print(f"  - Buyer validation:      {summary['buyer_records']}")
     print(f"  - Seller validation:     {summary['seller_records']}")
-    print(f"  - Pricing validation:    {summary['pricing_records']}")
+    print(f"  - Incorrect net amount:  {summary['incorrect_net_amount_records']}")
     print(f"  - Default format:        {summary['default_records']}")
     
     if dry_run:
@@ -172,6 +184,12 @@ def main():
         testing_period = config.get('testing_period', {})
         fiscal_year = testing_period.get('fiscal_year')
         quarter = testing_period.get('quarter')
+
+    # CLI args override config
+    if args.fiscal_year:
+        fiscal_year = args.fiscal_year
+    if args.quarter:
+        quarter = args.quarter
     
     # Determine paths (CLI args override config)
     errors_path = None

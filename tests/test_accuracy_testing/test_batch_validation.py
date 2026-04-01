@@ -3,7 +3,7 @@
 Integration tests for batch validation processing.
 
 Tests batch processing functionality across buyer_id_validation, seller_id_validation,
-and pricing_validation scripts.
+and incorrect_net_amount_validation scripts.
 """
 
 import pytest
@@ -16,7 +16,7 @@ import sys
 from io import StringIO
 
 # Import validation scripts
-from src.accuracy_testing.scripts import buyer_id_validation, seller_id_validation, pricing_validation
+from src.accuracy_testing.scripts import buyer_id_validation, seller_id_validation, incorrect_net_amount_validation
 
 
 class TestBatchValidationDetection:
@@ -439,8 +439,8 @@ TXN002,ACC002,,,,,S,12345678,PASSPORT,Charlie,Brown,1991-07-22,M,GB,
             assert output_file.exists()
 
 
-class TestPricingBatchValidation:
-    """Integration tests for pricing validation batch processing."""
+class TestIncorrectNetAmountBatchValidation:
+    """Integration tests for incorrect net amount validation batch processing."""
     
     def setup_method(self):
         """Create temporary test directories and files."""
@@ -470,11 +470,11 @@ class TestPricingBatchValidation:
                     pass  # Best effort cleanup
     
     def create_pricing_template(self, fiscal_year: str, quarter: str, incident: str) -> Path:
-        """Create a sample pricing validation template CSV."""
+        """Create a sample incorrect net amount validation template CSV."""
         filename = f"{fiscal_year} {quarter} {incident}.csv"
         filepath = self.template_dir / filename
         
-        # Pricing columns: Transaction Ref, Net Amount, Consideration, Interest
+        # Incorrect net amount columns: Transaction Ref, Net Amount, Consideration, Interest
         content = """Transaction Ref,Net Amount,Consideration,Interest
 TXN001,100.00,95.00,5.00
 TXN002,200.00,190.00,10.00
@@ -484,7 +484,7 @@ TXN002,200.00,190.00,10.00
     
     def test_processes_multiple_incidents(self):
         """Should process pricing incident in batch mode."""
-        # Only 35_3 is a pricing incident (7_37 is buyer standard_id)
+        # Only 35_3 is an incorrect net amount incident (7_37 is buyer standard_id)
         incidents = ['35_3']
         for incident in incidents:
             self.create_pricing_template('FY25', 'Q3', incident)
@@ -507,7 +507,7 @@ TXN002,200.00,190.00,10.00
             }
         }
         
-        result = pricing_validation.run_batch_validation(config, dry_run=False, show_progress=False)
+        result = incorrect_net_amount_validation.run_batch_validation(config, dry_run=False, show_progress=False)
         
         assert result == 0
         
