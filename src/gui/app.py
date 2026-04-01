@@ -30,7 +30,7 @@ from gui.constants import (
     DEFAULT_WINDOW_SIZE,
     STATUS_READY,
 )
-from gui.tabs import AccuracyTab, FirdsTab, GleifTab, ReplayTab, UtilitiesTab
+from gui.tabs import AccuracyTab, FirdsTab, GleifTab, ReplayTab, SchedulerTab, UtilitiesTab
 from gui.theme import apply_mica, apply_theme
 
 
@@ -51,6 +51,7 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(FirdsTab(), "FIRDS Reportability Data")
         self.tabs.addTab(GleifTab(), "GLEIF Reference Data")
         self.tabs.addTab(UtilitiesTab(), "Utilities")
+        self.tabs.addTab(SchedulerTab(), "Scheduler")
 
         self._create_menu_bar()
         self._create_status_bar()
