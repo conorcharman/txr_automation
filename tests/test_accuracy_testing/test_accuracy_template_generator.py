@@ -60,9 +60,9 @@ class TestTemplateFormat:
         assert '16_23' in TemplateFormat.SELLER_INCIDENTS
         assert '16_20' in TemplateFormat.SELLER_INCIDENTS
     
-    def test_pricing_incidents(self):
-        """Test pricing incident code set."""
-        assert '35_3' in TemplateFormat.PRICING_INCIDENTS
+    def test_incorrect_net_amount_incidents(self):
+        """Test incorrect net amount incident code set."""
+        assert '35_3' in TemplateFormat.INCORRECT_NET_AMOUNT_INCIDENTS
     
     def test_get_template_type_buyer(self):
         """Test template type detection for buyer incidents."""
@@ -74,9 +74,9 @@ class TestTemplateFormat:
         assert TemplateFormat.get_template_type('16_21') == 'seller'
         assert TemplateFormat.get_template_type('16_19') == 'seller'
     
-    def test_get_template_type_pricing(self):
-        """Test template type detection for pricing incidents."""
-        assert TemplateFormat.get_template_type('35_3') == 'pricing'
+    def test_get_template_type_incorrect_net_amount(self):
+        """Test template type detection for incorrect net amount incidents."""
+        assert TemplateFormat.get_template_type('35_3') == 'incorrect_net_amount'
     
     def test_get_template_type_default(self):
         """Test template type detection for unknown incidents."""
@@ -99,9 +99,9 @@ class TestTemplateFormat:
         assert 'Account ID' in cols
         assert 'Seller ID Code' in cols
     
-    def test_get_validation_columns_pricing(self):
-        """Test pricing validation columns."""
-        cols = TemplateFormat.get_validation_columns('pricing')
+    def test_get_validation_columns_incorrect_net_amount(self):
+        """Test incorrect net amount validation columns."""
+        cols = TemplateFormat.get_validation_columns('incorrect_net_amount')
         assert len(cols) == 10
         assert cols[0] == 'Transaction Reference'
         assert 'Net Amount' in cols
@@ -398,7 +398,7 @@ class TestAccuracyTemplateGenerator:
         assert summary['total_records'] == 6  # 5 original + 1 duplicated from pipe-delimiter
         assert summary['buyer_records'] == 2  # REC001, REC002
         assert summary['seller_records'] == 2  # REC002, REC003
-        assert summary['pricing_records'] == 1  # REC004
+        assert summary['incorrect_net_amount_records'] == 1  # REC004
         assert summary['default_records'] == 1  # REC005
     
     def test_empty_consolidated_data(self):

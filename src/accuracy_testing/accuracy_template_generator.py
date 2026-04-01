@@ -53,8 +53,8 @@ class TemplateFormat:
     # Seller validation incidents
     SELLER_INCIDENTS = {'16_19', '16_21', '16_23', '16_20'}
     
-    # Pricing validation incidents
-    PRICING_INCIDENTS = {'35_3'}
+    # Incorrect net amount validation incidents
+    INCORRECT_NET_AMOUNT_INCIDENTS = {'35_3'}
     
     # Net quantity validation incidents
     NET_QUANTITY_INCIDENTS = {'7_6'}
@@ -104,8 +104,8 @@ class TemplateFormat:
         "Tracker Status"
     ]
     
-    # Pricing validation template columns
-    PRICING_VALIDATION_COLS = [
+    # Incorrect net amount validation template columns
+    INCORRECT_NET_AMOUNT_VALIDATION_COLS = [
         "Transaction Reference",
         "Error",
         "Net Amount",
@@ -171,8 +171,8 @@ class TemplateFormat:
             return "buyer"
         elif incident_code in cls.SELLER_INCIDENTS:
             return "seller"
-        elif incident_code in cls.PRICING_INCIDENTS:
-            return "pricing"
+        elif incident_code in cls.INCORRECT_NET_AMOUNT_INCIDENTS:
+            return "incorrect_net_amount"
         elif incident_code in cls.NET_QUANTITY_INCIDENTS:
             return "net_quantity"
         elif incident_code in cls.NET_AMOUNT_INCIDENTS:
@@ -187,8 +187,8 @@ class TemplateFormat:
             return cls.BUYER_VALIDATION_COLS.copy()
         elif template_type == "seller":
             return cls.SELLER_VALIDATION_COLS.copy()
-        elif template_type == "pricing":
-            return cls.PRICING_VALIDATION_COLS.copy()
+        elif template_type == "incorrect_net_amount":
+            return cls.INCORRECT_NET_AMOUNT_VALIDATION_COLS.copy()
         elif template_type == "net_quantity":
             return cls.NET_QUANTITY_VALIDATION_COLS.copy()
         elif template_type == "net_amount":
@@ -442,15 +442,15 @@ class AccuracyTemplateGenerator:
                          if code in TemplateFormat.BUYER_INCIDENTS)
         seller_count = sum(len(records) for code, records in self.incident_records.items() 
                           if code in TemplateFormat.SELLER_INCIDENTS)
-        pricing_count = sum(len(records) for code, records in self.incident_records.items() 
-                           if code in TemplateFormat.PRICING_INCIDENTS)
-        default_count = total_records - buyer_count - seller_count - pricing_count
+        incorrect_net_amount_count = sum(len(records) for code, records in self.incident_records.items() 
+                           if code in TemplateFormat.INCORRECT_NET_AMOUNT_INCIDENTS)
+        default_count = total_records - buyer_count - seller_count - incorrect_net_amount_count
         
         return {
             'total_incidents': len(self.incident_records),
             'total_records': total_records,
             'buyer_records': buyer_count,
             'seller_records': seller_count,
-            'pricing_records': pricing_count,
+            'incorrect_net_amount_records': incorrect_net_amount_count,
             'default_records': default_count
         }

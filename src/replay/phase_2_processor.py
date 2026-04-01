@@ -333,8 +333,9 @@ class Phase2Processor:
         if os.path.exists(filepath_with_dash):
             return filepath_with_dash
         
-        # Fallback glob search
-        glob_pattern = os.path.join(self.path_config.incident_files, f"*{incident_code}*.csv")
+        # Fallback glob search — use a space-anchored suffix to avoid substring
+        # collisions (e.g. "9_1" matching "19_1", "59_12", "59_16").
+        glob_pattern = os.path.join(self.path_config.incident_files, f"* {incident_code}.csv")
         matches = glob.glob(glob_pattern)
         return matches[0] if matches else None
     

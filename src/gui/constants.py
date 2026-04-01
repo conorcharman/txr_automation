@@ -9,6 +9,18 @@ used across the GUI application.
 
 APP_NAME = "TXR Automation"
 APP_VERSION = "1.0.0"
+
+# ── AJ Bell brand colours ──────────────────────────────────────────────────
+COLOUR_RED = "#D50032"
+COLOUR_RED_HOVER = "#B8002B"
+COLOUR_RED_PRESSED = "#9E0025"
+COLOUR_GREY = "#6A737B"
+COLOUR_WHITE = "#FFFFFF"
+COLOUR_SURFACE = "#F3F3F3"
+COLOUR_BORDER = "#E0E0E0"
+
+# ── Fluent design font ─────────────────────────────────────────────────────
+FONT_FAMILY = "Segoe UI"
 DEFAULT_WINDOW_SIZE = (1024, 720)
 LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"]
 
@@ -17,6 +29,7 @@ CSV_FILTER = "CSV Files (*.csv);;All Files (*)"
 YAML_FILTER = "YAML Files (*.yaml *.yml);;All Files (*)"
 SQL_FILTER = "SQL Files (*.sql);;All Files (*)"
 SQLITE_FILTER = "SQLite Databases (*.db);;All Files (*)"
+XML_FILTER = "XML Files (*.xml);;All Files (*)"
 ALL_CONFIG_FILTER = (
     "Config Files (*.yaml *.yml);;CSV Files (*.csv);;All Files (*)"
 )
@@ -38,7 +51,7 @@ ACCURACY_INCIDENTS = [
     ("inconsistent-seller", "Inconsistent Seller ID (16_20)"),
     ("ftbdm", "Field 27 Buyer Decision Maker (12_17)"),
     ("ftsdm", "Field 28 Seller Decision Maker (21_17)"),
-    ("pricing", "Pricing Validation (35_3)"),
+    ("incorrect_net_amount", "Incorrect Net Amount Validation (35_3)"),
     ("non-zero-qty", "Non-Zero Net Quantity (7_6)"),
     ("non-zero-amt", "Non-Zero Net Amount (7_42)"),
 ]
@@ -52,7 +65,7 @@ INCIDENT_CODE_PATTERNS = {
     "inconsistent-seller": ["16_20"],
     "ftbdm": ["12_17"],
     "ftsdm": ["21_17"],
-    "pricing": ["35_3"],
+    "incorrect_net_amount": ["35_3"],
     "non-zero-qty": ["7_6"],
     "non-zero-amt": ["7_42"],
 }
@@ -65,7 +78,7 @@ INCIDENT_SCRIPT_MODULES = {
     "inconsistent-seller": "accuracy_testing.scripts.inconsistent_seller_id_validation",
     "ftbdm": "accuracy_testing.scripts.validate_ftbdm",
     "ftsdm": "accuracy_testing.scripts.validate_ftsdm",
-    "pricing": "accuracy_testing.scripts.pricing_validation",
+    "incorrect_net_amount": "accuracy_testing.scripts.incorrect_net_amount_validation",
     "non-zero-qty": "accuracy_testing.scripts.non_zero_net_quantity",
     "non-zero-amt": "accuracy_testing.scripts.non_zero_net_amount",
 }
@@ -83,7 +96,7 @@ INCIDENT_SETTINGS_PREFIX = {
     "inconsistent-seller": "accuracy.inconsistent_seller",
     "ftbdm": "accuracy.ftbdm",
     "ftsdm": "accuracy.ftsdm",
-    "pricing": "accuracy.pricing",
+    "incorrect_net_amount": "accuracy.incorrect_net_amount",
     "non-zero-qty": "accuracy.non_zero_qty",
     "non-zero-amt": "accuracy.non_zero_amt",
 }

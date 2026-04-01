@@ -1,8 +1,8 @@
 """
-Tests for Pricing Validation
-=============================
+Tests for Incorrect Net Amount Validation
+==========================================
 
-Unit and integration tests for pricing data validation (Incident Code 35_3).
+Unit and integration tests for incorrect net amount validation (Incident Code 35_3).
 """
 
 import pytest
@@ -14,16 +14,16 @@ import sys
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.accuracy_testing.models.pricing_record import PricingRecord
-from src.accuracy_testing.validators.pricing_validator import PricingValidator
+from src.accuracy_testing.models.incorrect_net_amount_record import IncorrectNetAmountRecord
+from src.accuracy_testing.validators.incorrect_net_amount_validator import IncorrectNetAmountValidator
 
 
-class TestPricingRecord:
-    """Test PricingRecord dataclass"""
+class TestIncorrectNetAmountRecord:
+    """Test IncorrectNetAmountRecord dataclass"""
     
     def test_create_record(self):
-        """Test creating a PricingRecord"""
-        record = PricingRecord(
+        """Test creating an IncorrectNetAmountRecord"""
+        record = IncorrectNetAmountRecord(
             transaction_ref="TEST001",
             net_amount=Decimal('1150.00'),
             consideration=Decimal('1000.00'),
@@ -38,7 +38,7 @@ class TestPricingRecord:
     
     def test_calculate_fields_perfect_match(self):
         """Test calculation when pricing is perfect"""
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="TEST001",
             net_amount=Decimal('1150.00'),
             consideration=Decimal('1000.00'),
@@ -54,7 +54,7 @@ class TestPricingRecord:
     
     def test_calculate_fields_with_discrepancy(self):
         """Test calculation when there's a pricing discrepancy"""
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="TEST002",
             net_amount=Decimal('1150.00'),
             consideration=Decimal('1000.00'),
@@ -70,7 +70,7 @@ class TestPricingRecord:
     
     def test_calculate_fields_with_tolerance(self):
         """Test tolerance handling for floating-point rounding"""
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="TEST003",
             net_amount=Decimal('1150.00'),
             consideration=Decimal('1000.00'),
@@ -91,7 +91,7 @@ class TestPricingRecord:
             'INTRST': '150.00'
         }
         
-        record = PricingRecord.from_dict(data)
+        record = IncorrectNetAmountRecord.from_dict(data)
         
         assert record.transaction_ref == '44625CKTPC31'
         assert record.net_amount == Decimal('1150.00')
@@ -107,14 +107,14 @@ class TestPricingRecord:
             'interest': '150.00'
         }
         
-        record = PricingRecord.from_dict(data)
+        record = IncorrectNetAmountRecord.from_dict(data)
         
         assert record.transaction_ref == 'TEST001'
         assert record.net_amount == Decimal('1150.00')
     
     def test_to_dict(self):
         """Test converting record to dictionary"""
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="TEST001",
             net_amount=Decimal('1150.00'),
             consideration=Decimal('1000.00'),
@@ -131,25 +131,25 @@ class TestPricingRecord:
         assert result['Net Difference'] == 0.00
 
 
-class TestPricingValidator:
-    """Test PricingValidator class"""
+class TestIncorrectNetAmountValidator:
+    """Test IncorrectNetAmountValidator class"""
     
     def test_validator_initialization(self):
         """Test validator initialization"""
-        validator = PricingValidator(tolerance=Decimal('0.01'))
+        validator = IncorrectNetAmountValidator(tolerance=Decimal('0.01'))
         assert validator.tolerance == Decimal('0.01')
         assert validator.verbose == False
     
     def test_validate_record_no_error(self):
         """Test validating record with no error"""
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="TEST001",
             net_amount=Decimal('1150.00'),
             consideration=Decimal('1000.00'),
             interest=Decimal('150.00')
         )
         
-        validator = PricingValidator()
+        validator = IncorrectNetAmountValidator()
         validator.validate_record(record)
         
         assert record.error == "N"
@@ -158,14 +158,14 @@ class TestPricingValidator:
     
     def test_validate_record_with_error(self):
         """Test validating record with discrepancy"""
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="TEST002",
             net_amount=Decimal('1150.00'),
             consideration=Decimal('1000.00'),
             interest=Decimal('145.00')
         )
         
-        validator = PricingValidator()
+        validator = IncorrectNetAmountValidator()
         validator.validate_record(record)
         
         assert record.error == "TBC"
@@ -174,12 +174,12 @@ class TestPricingValidator:
     def test_validate_batch(self):
         """Test batch validation statistics"""
         records = [
-            PricingRecord("TEST001", Decimal('1150'), Decimal('1000'), Decimal('150')),  # Valid
-            PricingRecord("TEST002", Decimal('1150'), Decimal('1000'), Decimal('145')),  # Invalid
-            PricingRecord("TEST003", Decimal('2000'), Decimal('1800'), Decimal('200'))   # Valid
+            IncorrectNetAmountRecord("TEST001", Decimal('1150'), Decimal('1000'), Decimal('150')),  # Valid
+            IncorrectNetAmountRecord("TEST002", Decimal('1150'), Decimal('1000'), Decimal('145')),  # Invalid
+            IncorrectNetAmountRecord("TEST003", Decimal('2000'), Decimal('1800'), Decimal('200'))   # Valid
         ]
         
-        validator = PricingValidator()
+        validator = IncorrectNetAmountValidator()
         stats = validator.validate_batch(records)
         
         assert stats['total'] == 3
@@ -190,14 +190,14 @@ class TestPricingValidator:
     def test_validate_record_safe_with_error(self):
         """Test safe validation handles errors gracefully"""
         # Create a record that will cause an error (empty string for amounts)
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="TEST_ERROR",
             net_amount=Decimal('0'),
             consideration=Decimal('0'),
             interest=Decimal('0')
         )
         
-        validator = PricingValidator()
+        validator = IncorrectNetAmountValidator()
         validator.validate_record_safe(record)
         
         # Should not raise exception, should set error status
@@ -209,7 +209,7 @@ class TestPricingExamples:
     
     def test_example_buy_transaction(self):
         """Test example: Buy transaction"""
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="44625CKTPC31",
             net_amount=Decimal('10250.00'),
             consideration=Decimal('10000.00'),
@@ -225,7 +225,7 @@ class TestPricingExamples:
     
     def test_example_sell_transaction(self):
         """Test example: Sell transaction with negative interest"""
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="44625CKT72V1",
             net_amount=Decimal('14700.00'),
             consideration=Decimal('15000.00'),
@@ -241,7 +241,7 @@ class TestPricingExamples:
     
     def test_example_error_case(self):
         """Test example: Error case with discrepancy"""
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="44625CKVNVJ1",
             net_amount=Decimal('8680.00'),
             consideration=Decimal('8500.00'),
@@ -257,7 +257,7 @@ class TestPricingExamples:
     
     def test_example_rounding_tolerance(self):
         """Test example: Rounding within tolerance"""
-        record = PricingRecord(
+        record = IncorrectNetAmountRecord(
             transaction_ref="44625CKXGQR1",
             net_amount=Decimal('1150.00'),
             consideration=Decimal('1000.00'),

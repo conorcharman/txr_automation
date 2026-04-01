@@ -193,14 +193,14 @@ class TestAccuracyWorkflowEndToEnd:
         assert TemplateFormat.get_template_type("7_37") == "buyer"
         assert TemplateFormat.get_template_type("7_35") == "buyer"
         assert TemplateFormat.get_template_type("16_19") == "seller"
-        assert TemplateFormat.get_template_type("35_3") == "pricing"
+        assert TemplateFormat.get_template_type("35_3") == "incorrect_net_amount"
         assert TemplateFormat.get_template_type("99_99") == "default"
 
     def test_template_columns_differ_by_type(self):
         """Test that different template types have different columns."""
         buyer_cols = TemplateFormat.get_validation_columns("buyer")
         seller_cols = TemplateFormat.get_validation_columns("seller")
-        pricing_cols = TemplateFormat.get_validation_columns("pricing")
+        pricing_cols = TemplateFormat.get_validation_columns("incorrect_net_amount")
         
         # Buyer and seller should have ID-specific columns
         assert "Buyer ID Code" in buyer_cols
@@ -443,7 +443,7 @@ class TestTemplateColumnIntegrity:
 
     def test_pricing_template_has_required_columns(self):
         """Verify pricing template has all required columns."""
-        cols = TemplateFormat.PRICING_VALIDATION_COLS
+        cols = TemplateFormat.INCORRECT_NET_AMOUNT_VALIDATION_COLS
         
         required = [
             "Transaction Reference",

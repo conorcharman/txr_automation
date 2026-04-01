@@ -31,6 +31,7 @@ from gui.constants import (
     STATUS_READY,
 )
 from gui.tabs import AccuracyTab, FirdsTab, GleifTab, ReplayTab, UtilitiesTab
+from gui.theme import apply_mica, apply_theme
 
 
 class MainWindow(QMainWindow):
@@ -46,8 +47,8 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)
 
         self.tabs.addTab(AccuracyTab(), "Accuracy Testing")
-        self.tabs.addTab(ReplayTab(), "Replay Processing")
-        self.tabs.addTab(FirdsTab(), "FIRDS Reference Data")
+        self.tabs.addTab(ReplayTab(), "Replay")
+        self.tabs.addTab(FirdsTab(), "FIRDS Reportability Data")
         self.tabs.addTab(GleifTab(), "GLEIF Reference Data")
         self.tabs.addTab(UtilitiesTab(), "Utilities")
 
@@ -85,6 +86,11 @@ class MainWindow(QMainWindow):
         about_action = help_menu.addAction("&About")
         about_action.triggered.connect(self._show_about)
 
+    def showEvent(self, event) -> None:  # type: ignore[override]
+        """Apply Mica background on Windows 11 after the window is visible."""
+        super().showEvent(event)
+        apply_mica(self)
+
     def _create_status_bar(self) -> None:
         """Build the status bar with ready message."""
         status = self.statusBar()
@@ -108,7 +114,7 @@ def main() -> None:
     app = QApplication(sys.argv)
     app.setApplicationName(APP_NAME)
     app.setApplicationVersion(APP_VERSION)
-    app.setStyle("Fusion")
+    apply_theme(app)
 
     window = MainWindow()
     window.show()

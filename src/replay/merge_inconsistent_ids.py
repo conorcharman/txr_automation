@@ -67,8 +67,8 @@ class MergeConfig:
     input_dir: Path
     ids_pattern: str = "Replay_*_Inconsistent_IDs_Summary_*.csv"
     names_pattern: str = "Replay_*_Inconsistent_Names_Summary_*.csv"
-    ids_group_column: str = "Reported IDs"
-    names_group_column: str = "Reported Name & DOB"
+    ids_group_column: str = "Reported Name & DOB"
+    names_group_column: str = "Reported ID"
     separator: str = "\n"
     dry_run: bool = False
     verbose: bool = False
@@ -95,8 +95,8 @@ class MergeConfigManager:
 
     DEFAULT_IDS_PATTERN: str = "Replay_*_Inconsistent_IDs_Summary_*.csv"
     DEFAULT_NAMES_PATTERN: str = "Replay_*_Inconsistent_Names_Summary_*.csv"
-    DEFAULT_IDS_GROUP_COLUMN: str = "Reported IDs"
-    DEFAULT_NAMES_GROUP_COLUMN: str = "Reported Name & DOB"
+    DEFAULT_IDS_GROUP_COLUMN: str = "Reported Name & DOB"
+    DEFAULT_NAMES_GROUP_COLUMN: str = "Reported ID"
     DEFAULT_SEPARATOR: str = "\n"
 
     def load(

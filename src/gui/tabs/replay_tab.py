@@ -4,9 +4,9 @@ Replay Processing Tab
 =====================
 
 Four replay processing script panels:
-- Phase 2 Processor
-- Phase 3 Processor
-- Phase 3 Final Lookup
+- Phase II
+- Phase III - Feedback
+- Phase III - Final Lookup
 - Merge Inconsistent Summaries
 
 Uses a sidebar list + stacked widget layout with per-panel log viewers.
@@ -95,6 +95,41 @@ def _scrollable(inner: QWidget) -> QScrollArea:
 
 
 # ---------------------------------------------------------------------------
+# Default incident column mappings (standardised across all incident templates)
+# ---------------------------------------------------------------------------
+
+_PHASE2_INCIDENT_COLUMNS: Dict[str, str] = {
+    "transaction_ref": "Transaction Reference",
+    "error_flag": "Error",
+    "correction": "Correction",
+    "correction_field": "Correction Field",
+    "agree_with_correction": "Agree With Correction",
+    "suggested_correction": "Suggested Correction",
+    "suggested_correction_field": "Suggested Correction Field",
+}
+
+_PHASE3_INCIDENT_COLUMNS: Dict[str, str] = {
+    **_PHASE2_INCIDENT_COLUMNS,
+    "buyer_id": "Buyer identification code",
+    "buyer_first_name": "Buyer - First name(s)",
+    "buyer_last_name": "Buyer - Surname(s)",
+    "buyer_dob": "Buyer - Date of birth",
+    "seller_id": "Seller identification code",
+    "seller_first_name": "Seller - First name(s)",
+    "seller_last_name": "Seller - Surname(s)",
+    "seller_dob": "Seller - Date of birth",
+    "buyer_dm_id": "Buyer decision maker code",
+    "buyer_dm_first_name": "Buy decision maker - First name(s)",
+    "buyer_dm_last_name": "Buy decision maker - Surname(s)",
+    "buyer_dm_dob": "Buy decision maker - Date of birth",
+    "seller_dm_id": "Sell decision maker code",
+    "seller_dm_first_name": "Sell decision maker - First name(s)",
+    "seller_dm_last_name": "Sell decision maker - Surname(s)",
+    "seller_dm_dob": "Sell decision maker - Date of birth",
+}
+
+
+# ---------------------------------------------------------------------------
 # Base replay panel (Phase 2 / Phase 3 style)
 # ---------------------------------------------------------------------------
 
@@ -112,6 +147,8 @@ class BaseReplayPanel(QWidget):
         title: str,
         subtitle: str = "",
         extra_paths: Optional[List[Dict[str, str]]] = None,
+        extra_file_patterns: Optional[List[Dict[str, Any]]] = None,
+        default_incident_columns: Optional[Dict[str, str]] = None,
         settings_prefix: str = "",
         parent: Optional[QWidget] = None,
     ) -> None:
@@ -120,6 +157,9 @@ class BaseReplayPanel(QWidget):
         self._worker: Optional[ScriptRunnerWorker] = None
         self._temp_config_path: Optional[str] = None
         self._loaded_config: Optional[Dict[str, Any]] = None
+        self._file_pattern_fields: Dict[str, FormFieldWidget] = {}
+        self._list_fields: set = set()
+        self._default_incident_columns = default_incident_columns
         pfx = f"replay.{settings_prefix}" if settings_prefix else "replay"
         self._pfx = pfx
 
@@ -184,6 +224,25 @@ class BaseReplayPanel(QWidget):
                 self._path_pickers[path_def["key"]] = picker
 
         layout.addWidget(paths_group)
+
+        # --- File Patterns ---
+        if extra_file_patterns:
+            patterns_group = QGroupBox("File Patterns")
+            patterns_layout = QVBoxLayout(patterns_group)
+            for pat_def in extra_file_patterns:
+                key = pat_def["key"]
+                field = FormFieldWidget(
+                    pat_def["label"], field_type="text",
+                    default=pat_def.get("default", ""),
+                    tooltip=pat_def.get("tooltip", ""),
+                    placeholder=pat_def.get("placeholder", ""),
+                    settings_key=f"{pfx}.files.{key}",
+                )
+                patterns_layout.addWidget(field)
+                self._file_pattern_fields[key] = field
+                if pat_def.get("is_list", False):
+                    self._list_fields.add(key)
+            layout.addWidget(patterns_group)
 
         # --- Options ---
         options_group = QGroupBox("Options")
@@ -263,6 +322,21 @@ class BaseReplayPanel(QWidget):
         if log_level:
             proc["log_level"] = log_level
 
+        # File patterns — overlay direct-field values on existing config
+        if self._file_pattern_fields:
+            files = config.setdefault("files", {})
+            for key, field in self._file_pattern_fields.items():
+                val = field.get_value()
+                if val:
+                    if key in self._list_fields:
+                        files[key] = [p.strip() for p in val.split(",") if p.strip()]
+                    else:
+                        files[key] = val
+
+        # Incident columns — inject defaults if not already in config
+        if self._default_incident_columns and not config.get("incident_columns"):
+            config["incident_columns"] = dict(self._default_incident_columns)
+
         return config
 
     def _write_temp_config(self) -> str:
@@ -331,6 +405,16 @@ class BaseReplayPanel(QWidget):
         proc = config.get("processor", {})
         if proc.get("log_level"):
             self.log_level.set_value(proc["log_level"])
+
+        # File patterns
+        files = config.get("files", {})
+        for key, field in self._file_pattern_fields.items():
+            val = files.get(key)
+            if val is not None:
+                if isinstance(val, list):
+                    field.set_value(", ".join(val))
+                else:
+                    field.set_value(str(val))
 
     # -- Run / Cancel / Finished ------------------------------------------
 
@@ -665,9 +749,9 @@ class ReplayTab(QWidget):
         layout.addWidget(self._stack, stretch=1)
 
         panels = [
-            ("Phase 2 Processor", BaseReplayPanel(
+            ("Phase II", BaseReplayPanel(
                 "replay.phase_2_processor",
-                "Phase 2 Processor",
+                "Phase II Processor",
                 subtitle="Transaction reference lookup and correction matching",
                 settings_prefix="phase2",
                 extra_paths=[
@@ -680,10 +764,20 @@ class ReplayTab(QWidget):
                     {"label": "Log directory:", "key": "log_output",
                      "tooltip": "Directory for processing log files."},
                 ],
+                extra_file_patterns=[
+                    {
+                        "label": "Incident file pattern:",
+                        "key": "incident_pattern",
+                        "default": "FY25 Q4 *.csv",
+                        "tooltip": "Glob pattern matching incident analysis CSVs, e.g. FY25 Q4 *.csv",
+                        "is_list": False,
+                    },
+                ],
+                default_incident_columns=_PHASE2_INCIDENT_COLUMNS,
             )),
-            ("Phase 3 Processor", BaseReplayPanel(
+            ("Phase III - Feedback", BaseReplayPanel(
                 "replay.phase_3_processor",
-                "Phase 3 Processor",
+                "Phase III - Feedback Processor",
                 subtitle="Inconsistent ID and name matching processor",
                 settings_prefix="phase3",
                 extra_paths=[
@@ -696,10 +790,28 @@ class ReplayTab(QWidget):
                     {"label": "Log directory:", "key": "log_output",
                      "tooltip": "Directory for processing log files."},
                 ],
+                extra_file_patterns=[
+                    {
+                        "label": "Incident file pattern:",
+                        "key": "incident_pattern",
+                        "default": "FY25 Q4 *.csv",
+                        "tooltip": "Glob pattern matching incident analysis CSVs, e.g. FY25 Q4 *.csv",
+                        "is_list": False,
+                    },
+                    {
+                        "label": "Replay file patterns:",
+                        "key": "replay_patterns",
+                        "default": "Replay_*_PHASE 3_Inconsistent_IDs_Summary_FINAL.csv, Replay_*_PHASE 3_Inconsistent_Names_Summary_FINAL.csv",
+                        "tooltip": "Comma-separated glob patterns for Phase III replay input files.",
+                        "placeholder": "Replay_*_Inconsistent_IDs_Summary_FINAL.csv, ...",
+                        "is_list": True,
+                    },
+                ],
+                default_incident_columns=_PHASE3_INCIDENT_COLUMNS,
             )),
-            ("Phase 3 Final", BaseReplayPanel(
+            ("Phase III - Final Lookup", BaseReplayPanel(
                 "replay.phase_3_final_lookup",
-                "Phase 3 Final Lookup",
+                "Phase III - Final Lookup Processor",
                 subtitle="UnaVista manual corrections final lookup",
                 settings_prefix="phase3_final",
                 extra_paths=[
