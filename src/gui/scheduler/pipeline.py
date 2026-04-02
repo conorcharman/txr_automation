@@ -244,7 +244,7 @@ class PipelineExecutor:
             if config.output_directory:
                 output_path = AutoFileNamer.generate_output_path(
                     vtype,
-                    config.testing_period,
+                    config.schedule_period,
                     config.output_directory,
                     timestamp,
                 )

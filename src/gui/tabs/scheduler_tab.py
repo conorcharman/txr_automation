@@ -24,14 +24,16 @@ from __future__ import annotations
 import os
 import subprocess
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import Optional
 
-from PySide6.QtCore import Qt, QTime, Signal
+from PySide6.QtCore import Qt, QDate, QTime, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
+    QButtonGroup,
     QCheckBox,
     QComboBox,
+    QDateEdit,
     QFormLayout,
     QGroupBox,
     QHBoxLayout,
@@ -41,6 +43,7 @@ from PySide6.QtWidgets import (
     QListWidgetItem,
     QMessageBox,
     QPushButton,
+    QRadioButton,
     QScrollArea,
     QSpinBox,
     QSplitter,
@@ -63,7 +66,9 @@ from gui.constants import (
     QUARTERS,
 )
 from gui.scheduler import (
+    FREQUENCY_PERIOD_DEFAULTS,
     PIPELINE_PRESETS,
+    PeriodType,
     PipelinePreset,
     PipelineStep,
     RunRecord,
@@ -71,8 +76,8 @@ from gui.scheduler import (
     ScheduleConfig,
     ScheduleEngine,
     ScheduleFrequency,
+    SchedulePeriod,
     ScheduleStore,
-    TestingPeriod,
     ValidationType,
 )
 from gui.utils.settings import settings
@@ -627,22 +632,85 @@ class ScheduleEditorPanel(QWidget):
             steps_v.addWidget(cb)
         form_layout.addWidget(self._steps_group)
 
-        # --- Testing period ---
-        period_group = QGroupBox("Testing Period")
-        period_h = QHBoxLayout(period_group)
+        # --- Data extraction period ---
+        period_group = QGroupBox("Data Extraction Period")
+        period_outer = QVBoxLayout(period_group)
 
-        period_h.addWidget(QLabel("Fiscal Year:"))
+        # Period type radio buttons
+        period_type_row = QHBoxLayout()
+        self._period_btn_group = QButtonGroup(self)
+        self._rb_fiscal = QRadioButton("Fiscal Quarter")
+        self._rb_relative = QRadioButton("Relative (last N days)")
+        self._rb_date_range = QRadioButton("Date Range")
+        for rb in (self._rb_fiscal, self._rb_relative, self._rb_date_range):
+            self._period_btn_group.addButton(rb)
+            period_type_row.addWidget(rb)
+        period_type_row.addStretch()
+        self._rb_fiscal.setChecked(True)
+        period_outer.addLayout(period_type_row)
+
+        # Fiscal quarter row (visible when rb_fiscal checked)
+        self._fiscal_row = QWidget()
+        fq_h = QHBoxLayout(self._fiscal_row)
+        fq_h.setContentsMargins(0, 0, 0, 0)
+        fq_h.addWidget(QLabel("Fiscal Year:"))
         self._fy_combo = QComboBox()
         for fy in FISCAL_YEARS:
             self._fy_combo.addItem(fy)
-        period_h.addWidget(self._fy_combo)
-
-        period_h.addWidget(QLabel("Quarter:"))
+        fq_h.addWidget(self._fy_combo)
+        fq_h.addWidget(QLabel("Quarter:"))
         self._q_combo = QComboBox()
         for q in QUARTERS:
             self._q_combo.addItem(q)
-        period_h.addWidget(self._q_combo)
-        period_h.addStretch()
+        fq_h.addWidget(self._q_combo)
+        fq_h.addStretch()
+        period_outer.addWidget(self._fiscal_row)
+
+        # Relative row (visible when rb_relative checked)
+        self._relative_row = QWidget()
+        rel_h = QHBoxLayout(self._relative_row)
+        rel_h.setContentsMargins(0, 0, 0, 0)
+        rel_h.addWidget(QLabel("Last"))
+        self._relative_spin = QSpinBox()
+        self._relative_spin.setRange(1, 365)
+        self._relative_spin.setValue(1)
+        self._relative_spin.setSuffix(" day(s)")
+        self._relative_spin.setFixedWidth(110)
+        rel_h.addWidget(self._relative_spin)
+        self._relative_hint = QLabel("")
+        self._relative_hint.setStyleSheet(f"color: {COLOUR_GREY}; font-style: italic;")
+        rel_h.addWidget(self._relative_hint)
+        rel_h.addStretch()
+        self._relative_row.hide()
+        period_outer.addWidget(self._relative_row)
+
+        # Date range row (visible when rb_date_range checked)
+        self._date_range_row = QWidget()
+        dr_h = QHBoxLayout(self._date_range_row)
+        dr_h.setContentsMargins(0, 0, 0, 0)
+        dr_h.addWidget(QLabel("From:"))
+        self._date_start_edit = QDateEdit()
+        self._date_start_edit.setCalendarPopup(True)
+        self._date_start_edit.setDisplayFormat("dd/MM/yyyy")
+        self._date_start_edit.setDate(QDate.currentDate().addDays(-30))
+        dr_h.addWidget(self._date_start_edit)
+        dr_h.addWidget(QLabel("To:"))
+        self._date_end_edit = QDateEdit()
+        self._date_end_edit.setCalendarPopup(True)
+        self._date_end_edit.setDisplayFormat("dd/MM/yyyy")
+        self._date_end_edit.setDate(QDate.currentDate().addDays(-1))
+        dr_h.addWidget(self._date_end_edit)
+        dr_h.addStretch()
+        self._date_range_row.hide()
+        period_outer.addWidget(self._date_range_row)
+
+        # Wire radio buttons → show/hide sub-rows
+        self._rb_fiscal.toggled.connect(lambda on: self._fiscal_row.setVisible(on))
+        self._rb_relative.toggled.connect(lambda on: self._relative_row.setVisible(on))
+        self._rb_relative.toggled.connect(self._update_relative_hint)
+        self._rb_date_range.toggled.connect(lambda on: self._date_range_row.setVisible(on))
+        self._relative_spin.valueChanged.connect(self._update_relative_hint)
+
         form_layout.addWidget(period_group)
 
         # --- Input directory (optional) ---
@@ -762,13 +830,27 @@ class ScheduleEditorPanel(QWidget):
             if idx >= 0:
                 self._preset_combo.setCurrentIndex(idx)
 
-        # Testing period
-        fy_idx = self._fy_combo.findText(config.testing_period.fiscal_year)
-        if fy_idx >= 0:
-            self._fy_combo.setCurrentIndex(fy_idx)
-        q_idx = self._q_combo.findText(config.testing_period.quarter)
-        if q_idx >= 0:
-            self._q_combo.setCurrentIndex(q_idx)
+        # Data extraction period
+        sp = config.schedule_period
+        if sp.period_type == PeriodType.FISCAL_QUARTER:
+            self._rb_fiscal.setChecked(True)
+            fy_idx = self._fy_combo.findText(sp.fiscal_year)
+            if fy_idx >= 0:
+                self._fy_combo.setCurrentIndex(fy_idx)
+            q_idx = self._q_combo.findText(sp.quarter)
+            if q_idx >= 0:
+                self._q_combo.setCurrentIndex(q_idx)
+        elif sp.period_type == PeriodType.RELATIVE:
+            self._rb_relative.setChecked(True)
+            self._relative_spin.setValue(sp.relative_days)
+        else:
+            self._rb_date_range.setChecked(True)
+            if sp.date_range_start:
+                d = sp.date_range_start
+                self._date_start_edit.setDate(QDate(d.year, d.month, d.day))
+            if sp.date_range_end:
+                d = sp.date_range_end
+                self._date_end_edit.setDate(QDate(d.year, d.month, d.day))
 
         # Directories
         self._input_picker.set_path(config.input_directory)
@@ -797,12 +879,14 @@ class ScheduleEditorPanel(QWidget):
             cb.setChecked(True)
         if self._preset_combo.count():
             self._preset_combo.setCurrentIndex(0)
+        self._rb_fiscal.setChecked(True)
         if self._fy_combo.count():
-            idx = self._fy_combo.findText(settings.load("scheduler.editor.fy", "FY26"))
-            self._fy_combo.setCurrentIndex(max(0, idx))
+            self._fy_combo.setCurrentIndex(0)
         if self._q_combo.count():
-            idx = self._q_combo.findText(settings.load("scheduler.editor.quarter", "Q1"))
-            self._q_combo.setCurrentIndex(max(0, idx))
+            self._q_combo.setCurrentIndex(0)
+        self._relative_spin.setValue(1)
+        self._date_start_edit.setDate(QDate.currentDate().addDays(-30))
+        self._date_end_edit.setDate(QDate.currentDate().addDays(-1))
         self._input_picker.set_path("")
         self._output_picker.set_path("")
         self._log_combo.setCurrentText("INFO")
@@ -851,10 +935,25 @@ class ScheduleEditorPanel(QWidget):
             if self._step_checkboxes[step].isChecked()
         ]
 
-        testing_period = TestingPeriod(
-            fiscal_year=self._fy_combo.currentText(),
-            quarter=self._q_combo.currentText(),
-        )
+        if self._rb_fiscal.isChecked():
+            schedule_period = SchedulePeriod(
+                period_type=PeriodType.FISCAL_QUARTER,
+                fiscal_year=self._fy_combo.currentText(),
+                quarter=self._q_combo.currentText(),
+            )
+        elif self._rb_relative.isChecked():
+            schedule_period = SchedulePeriod(
+                period_type=PeriodType.RELATIVE,
+                relative_days=self._relative_spin.value(),
+            )
+        else:
+            qds = self._date_start_edit.date()
+            qde = self._date_end_edit.date()
+            schedule_period = SchedulePeriod(
+                period_type=PeriodType.DATE_RANGE,
+                date_range_start=date(qds.year(), qds.month(), qds.day()),
+                date_range_end=date(qde.year(), qde.month(), qde.day()),
+            )
 
         sched_id = self._editing_id or str(uuid.uuid4())
 
@@ -869,7 +968,7 @@ class ScheduleEditorPanel(QWidget):
             cron_expression=cron,
             validation_types=validation_types,
             pipeline_steps=pipeline_steps,
-            testing_period=testing_period,
+            schedule_period=schedule_period,
             input_directory=self._input_picker.get_path(),
             output_directory=output_dir,
             log_level=self._log_combo.currentText(),
@@ -901,6 +1000,18 @@ class ScheduleEditorPanel(QWidget):
         self._cron_row_label.setVisible(is_custom)
         self._cron_edit.setVisible(is_custom)
 
+        # Auto-suggest period type based on frequency
+        suggested_type, suggested_days = FREQUENCY_PERIOD_DEFAULTS.get(
+            freq.value, (PeriodType.FISCAL_QUARTER, 0)
+        )
+        if suggested_type == PeriodType.RELATIVE:
+            self._rb_relative.setChecked(True)
+            self._relative_spin.setValue(suggested_days)
+        elif suggested_type == PeriodType.DATE_RANGE:
+            self._rb_date_range.setChecked(True)
+        else:
+            self._rb_fiscal.setChecked(True)
+
     def _on_preset_changed(self) -> None:
         """Apply preset selection — update validation type and step checkboxes."""
         key = self._preset_combo.currentData()
@@ -929,9 +1040,14 @@ class ScheduleEditorPanel(QWidget):
         config = self._build_config()
         if config is None:
             return
-        # Persist last-used fy/quarter
-        settings.save("scheduler.editor.fy", config.testing_period.fiscal_year)
-        settings.save("scheduler.editor.quarter", config.testing_period.quarter)
+        settings.save(
+            "scheduler.editor.period_type",
+            config.schedule_period.period_type.value,
+        )
+        settings.save(
+            "scheduler.editor.relative_days",
+            config.schedule_period.relative_days,
+        )
         self._store.save_schedule(config)
         self.schedule_saved.emit(config.schedule_id)
 
@@ -940,11 +1056,28 @@ class ScheduleEditorPanel(QWidget):
         config = self._build_config()
         if config is None:
             return
-        settings.save("scheduler.editor.fy", config.testing_period.fiscal_year)
-        settings.save("scheduler.editor.quarter", config.testing_period.quarter)
+        settings.save(
+            "scheduler.editor.period_type",
+            config.schedule_period.period_type.value,
+        )
+        settings.save(
+            "scheduler.editor.relative_days",
+            config.schedule_period.relative_days,
+        )
         self._store.save_schedule(config)
         # Emit special marker so SchedulerTab knows to trigger_now
         self.schedule_saved.emit(f"run:{config.schedule_id}")
+
+    def _update_relative_hint(self) -> None:
+        """Update the label next to the relative days spinbox."""
+        if not self._rb_relative.isChecked():
+            self._relative_hint.setText("")
+            return
+        days = self._relative_spin.value()
+        if days == 1:
+            self._relative_hint.setText("(yesterday only)")
+        else:
+            self._relative_hint.setText(f"(the {days} calendar days up to and including yesterday)")
 
 
 # ---------------------------------------------------------------------------

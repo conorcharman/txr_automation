@@ -38,7 +38,7 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.gui.scheduler.file_naming import AutoFileNamer
-from src.gui.scheduler.models import TestingPeriod, ValidationType
+from src.gui.scheduler.models import PeriodType, SchedulePeriod, ValidationType
 from src.accuracy_testing.core.dtf_runner import DTFRunner
 
 # ---------------------------------------------------------------------------
@@ -166,8 +166,12 @@ def main() -> None:
     logger = logging.getLogger(__name__)
 
     vtype = VALIDATION_TYPE_MAP[args.validation_type]
-    period = TestingPeriod(fiscal_year=args.fiscal_year, quarter=args.quarter)
-    start_date, end_date = fiscal_period_to_dates(args.fiscal_year, args.quarter)
+    period = SchedulePeriod(
+        period_type=PeriodType.FISCAL_QUARTER,
+        fiscal_year=args.fiscal_year,
+        quarter=args.quarter,
+    )
+    start_date, end_date = period.to_date_range()
 
     timestamp = datetime.now()
     output_dir = Path(args.output_dir)

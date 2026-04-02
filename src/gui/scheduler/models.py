@@ -18,7 +18,7 @@ from __future__ import annotations
 import enum
 import uuid
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import date, datetime
 
 
 # ---------------------------------------------------------------------------
@@ -65,6 +65,33 @@ _DISPLAY_NAMES: dict[str, str] = {
     "non-zero-qty": "Non-Zero Net Quantity Validation",
     "non-zero-amt": "Non-Zero Net Amount Validation",
     "incorrect_net_amount": "Incorrect Net Amount Validation",
+}
+
+
+class PeriodType(enum.Enum):
+    """How the data extraction period is specified for a schedule.
+
+    Attributes:
+        FISCAL_QUARTER: Full fiscal-year quarter (e.g. FY26 Q2).
+            Suitable for quarterly or monthly schedules.
+        RELATIVE: A rolling window of N calendar days ending at midnight
+            before each run.  Suitable for hourly, daily, or weekly runs.
+        DATE_RANGE: An explicit fixed start/end date pair.
+            Useful for ad-hoc or backfill schedules.
+    """
+
+    FISCAL_QUARTER = "fiscal_quarter"
+    RELATIVE = "relative"
+    DATE_RANGE = "date_range"
+
+
+#: Default relative-day windows suggested per frequency.
+FREQUENCY_PERIOD_DEFAULTS: dict[str, tuple[PeriodType, int]] = {
+    "hourly":  (PeriodType.RELATIVE, 1),
+    "daily":   (PeriodType.RELATIVE, 1),
+    "weekly":  (PeriodType.RELATIVE, 7),
+    "monthly": (PeriodType.RELATIVE, 30),
+    "custom":  (PeriodType.FISCAL_QUARTER, 0),
 }
 
 
@@ -143,6 +170,157 @@ class TestingPeriod:
 
 
 @dataclass
+class SchedulePeriod:
+    """Flexible period specification for a scheduled pipeline run.
+
+    A schedule period can be a full fiscal quarter, a rolling window of
+    calendar days, or an explicit date range.  The :attr:`period_type`
+    field governs which of the other fields are meaningful.
+
+    Attributes:
+        period_type: How the period is expressed.
+        fiscal_year: Fiscal year label (e.g. ``"FY26"``).  Used when
+            ``period_type`` is ``FISCAL_QUARTER``.
+        quarter: Quarter label (e.g. ``"Q2"``).  Used when
+            ``period_type`` is ``FISCAL_QUARTER``.
+        relative_days: Number of calendar days ending yesterday.  Used
+            when ``period_type`` is ``RELATIVE``; e.g. ``7`` means
+            "the 7 days up to and including yesterday".
+        date_range_start: Explicit start date (inclusive).  Used when
+            ``period_type`` is ``DATE_RANGE``.
+        date_range_end: Explicit end date (inclusive).  Used when
+            ``period_type`` is ``DATE_RANGE``.
+    """
+
+    period_type: PeriodType = PeriodType.FISCAL_QUARTER
+    fiscal_year: str = "FY26"
+    quarter: str = "Q1"
+    relative_days: int = 1
+    date_range_start: date | None = None
+    date_range_end: date | None = None
+
+    def to_date_range(self) -> tuple[date, date]:
+        """Resolve the period to a concrete (start_date, end_date) pair.
+
+        For RELATIVE periods the window ends on *yesterday* at the time of
+        calling, so repeated calls on different days will return different
+        values — this is the desired behaviour for rolling automated runs.
+
+        Returns:
+            Tuple of ``(start_date, end_date)``, both inclusive.
+
+        Raises:
+            ValueError: If ``period_type`` is DATE_RANGE but either bound
+                is ``None``, or if the fiscal quarter string is invalid.
+        """
+        from datetime import timedelta
+
+        today = date.today()
+
+        if self.period_type == PeriodType.RELATIVE:
+            end = today - timedelta(days=1)
+            start = end - timedelta(days=self.relative_days - 1)
+            return start, end
+
+        if self.period_type == PeriodType.DATE_RANGE:
+            if self.date_range_start is None or self.date_range_end is None:
+                raise ValueError("date_range_start and date_range_end must be set for DATE_RANGE period")
+            return self.date_range_start, self.date_range_end
+
+        # FISCAL_QUARTER
+        try:
+            fy_num = int(self.fiscal_year.lstrip("FYfy"))
+        except ValueError as exc:
+            raise ValueError(f"Invalid fiscal year: {self.fiscal_year!r}") from exc
+        fy_start_year = 2000 + fy_num - 1  # FY26 → calendar 2025
+        quarter_map: dict[str, tuple[date, date]] = {
+            "Q1": (date(fy_start_year, 4, 1),     date(fy_start_year, 6, 30)),
+            "Q2": (date(fy_start_year, 7, 1),     date(fy_start_year, 9, 30)),
+            "Q3": (date(fy_start_year, 10, 1),    date(fy_start_year, 12, 31)),
+            "Q4": (date(fy_start_year + 1, 1, 1), date(fy_start_year + 1, 3, 31)),
+        }
+        key = self.quarter.upper()
+        if key not in quarter_map:
+            raise ValueError(f"Invalid quarter: {self.quarter!r}")
+        return quarter_map[key]
+
+    def label(self) -> str:
+        """Return a short human-readable label for display and file naming.
+
+        Examples:
+            - FISCAL_QUARTER → ``"FY26_Q2"``
+            - RELATIVE (1 day) → ``"last1d"``
+            - RELATIVE (7 days) → ``"last7d"``
+            - DATE_RANGE → ``"20260101_20260331"``
+
+        Returns:
+            Compact slug suitable for embedding in a filename.
+        """
+        if self.period_type == PeriodType.FISCAL_QUARTER:
+            return f"{self.fiscal_year}_{self.quarter}"
+        if self.period_type == PeriodType.RELATIVE:
+            return f"last{self.relative_days}d"
+        # DATE_RANGE
+        start = self.date_range_start
+        end = self.date_range_end
+        if start and end:
+            return f"{start.strftime('%Y%m%d')}_{end.strftime('%Y%m%d')}"
+        return "custom_range"
+
+    def to_dict(self) -> dict:
+        """Serialise to a JSON-compatible dictionary.
+
+        Returns:
+            Dictionary suitable for QSettings storage.
+        """
+        return {
+            "period_type": self.period_type.value,
+            "fiscal_year": self.fiscal_year,
+            "quarter": self.quarter,
+            "relative_days": self.relative_days,
+            "date_range_start": self.date_range_start.isoformat() if self.date_range_start else None,
+            "date_range_end": self.date_range_end.isoformat() if self.date_range_end else None,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> SchedulePeriod:
+        """Deserialise from a plain dictionary.
+
+        Args:
+            data: Dictionary as produced by :meth:`to_dict`.
+
+        Returns:
+            Populated :class:`SchedulePeriod` instance.
+        """
+        raw_start = data.get("date_range_start")
+        raw_end = data.get("date_range_end")
+        return cls(
+            period_type=PeriodType(data.get("period_type", PeriodType.FISCAL_QUARTER.value)),
+            fiscal_year=data.get("fiscal_year", "FY26"),
+            quarter=data.get("quarter", "Q1"),
+            relative_days=int(data.get("relative_days", 1)),
+            date_range_start=date.fromisoformat(raw_start) if raw_start else None,
+            date_range_end=date.fromisoformat(raw_end) if raw_end else None,
+        )
+
+    @classmethod
+    def for_frequency(cls, frequency: ScheduleFrequency) -> SchedulePeriod:
+        """Return the recommended default period for a given schedule frequency.
+
+        Args:
+            frequency: The applicable :class:`ScheduleFrequency`.
+
+        Returns:
+            A :class:`SchedulePeriod` with sensible defaults for that frequency.
+        """
+        period_type, relative_days = FREQUENCY_PERIOD_DEFAULTS.get(
+            frequency.value if isinstance(frequency, ScheduleFrequency) else frequency,
+            (PeriodType.FISCAL_QUARTER, 0),
+        )
+        return cls(period_type=period_type, relative_days=relative_days)
+
+
+@dataclass
 class ScheduleConfig:
     """Full configuration for a recurring pipeline schedule.
 
@@ -178,8 +356,8 @@ class ScheduleConfig:
     pipeline_steps: list[PipelineStep] = field(
         default_factory=lambda: list(PipelineStep)
     )
-    testing_period: TestingPeriod = field(
-        default_factory=lambda: TestingPeriod("FY26", "Q1")
+    schedule_period: SchedulePeriod = field(
+        default_factory=SchedulePeriod
     )
     input_directory: str = ""
     output_directory: str = ""
@@ -205,7 +383,7 @@ class ScheduleConfig:
             "day_of_month": self.day_of_month,
             "validation_types": [vt.value for vt in self.validation_types],
             "pipeline_steps": [ps.value for ps in self.pipeline_steps],
-            "testing_period": self.testing_period.to_dict(),
+            "schedule_period": self.schedule_period.to_dict(),
             "input_directory": self.input_directory,
             "output_directory": self.output_directory,
             "log_level": self.log_level,
@@ -242,8 +420,12 @@ class ScheduleConfig:
             pipeline_steps=[
                 PipelineStep(s) for s in data.get("pipeline_steps", [])
             ],
-            testing_period=TestingPeriod.from_dict(
-                data.get("testing_period", {"fiscal_year": "FY26", "quarter": "Q1"})
+            schedule_period=SchedulePeriod.from_dict(
+                data.get(
+                    "schedule_period",
+                    # Backwards-compatible: migrate old "testing_period" key
+                    data.get("testing_period", {}),
+                )
             ),
             input_directory=data.get("input_directory", ""),
             output_directory=data.get("output_directory", ""),

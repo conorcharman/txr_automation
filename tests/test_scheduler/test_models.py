@@ -10,12 +10,14 @@ import pytest
 
 from src.gui.scheduler.models import (
     PIPELINE_PRESETS,
+    PeriodType,
     PipelinePreset,
     PipelineStep,
     RunRecord,
     RunStatus,
     ScheduleConfig,
     ScheduleFrequency,
+    SchedulePeriod,
     StepResult,
     TestingPeriod,
     ValidationType,
@@ -103,7 +105,11 @@ class TestScheduleConfig:
             frequency=ScheduleFrequency.DAILY,
             validation_types=[ValidationType.BUYER_ID, ValidationType.SELLER_ID],
             pipeline_steps=[PipelineStep.VALIDATE],
-            testing_period=TestingPeriod("FY26", "Q1"),
+            schedule_period=SchedulePeriod(
+                period_type=PeriodType.FISCAL_QUARTER,
+                fiscal_year="FY26",
+                quarter="Q1",
+            ),
             time_of_day="08:30",
         )
 
@@ -116,7 +122,7 @@ class TestScheduleConfig:
             "frequency",
             "validation_types",
             "pipeline_steps",
-            "testing_period",
+            "schedule_period",
         ):
             assert key in d, f"Missing key: {key}"
 
@@ -140,7 +146,7 @@ class TestScheduleConfig:
         assert restored.frequency == original.frequency
         assert restored.validation_types == original.validation_types
         assert restored.pipeline_steps == original.pipeline_steps
-        assert restored.testing_period.fiscal_year == "FY26"
+        assert restored.schedule_period.fiscal_year == "FY26"
         assert restored.time_of_day == "08:30"
 
     def test_datetime_fields_round_trip(self) -> None:

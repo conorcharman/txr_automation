@@ -14,12 +14,13 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from src.gui.scheduler.models import (
+    PeriodType,
     PipelineStep,
     RunRecord,
     RunStatus,
     ScheduleConfig,
     ScheduleFrequency,
-    TestingPeriod,
+    SchedulePeriod,
     ValidationType,
 )
 from src.gui.scheduler.pipeline import PipelineExecutor
@@ -58,7 +59,11 @@ def _make_config(
         frequency=ScheduleFrequency.DAILY,
         validation_types=validation_types or [ValidationType.BUYER_ID],
         pipeline_steps=steps or [PipelineStep.VALIDATE],
-        testing_period=TestingPeriod("FY26", "Q1"),
+        schedule_period=SchedulePeriod(
+            period_type=PeriodType.FISCAL_QUARTER,
+            fiscal_year="FY26",
+            quarter="Q1",
+        ),
         output_directory=output_directory,
     )
 

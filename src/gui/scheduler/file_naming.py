@@ -27,7 +27,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
-from .models import TestingPeriod, ValidationType
+from .models import TestingPeriod, ValidationType, SchedulePeriod
 
 
 class AutoFileNamer:
@@ -48,7 +48,7 @@ class AutoFileNamer:
     @staticmethod
     def generate_output_path(
         validation_type: ValidationType,
-        testing_period: TestingPeriod,
+        testing_period: TestingPeriod | SchedulePeriod,
         output_dir: str | Path,
         timestamp: Optional[datetime] = None,
     ) -> Path:
@@ -56,11 +56,17 @@ class AutoFileNamer:
 
         The filename follows the pattern::
 
-            {type_slug}_{fiscal_year}_{quarter}_{YYYYMMDD_HHMM}.csv
+            {type_slug}_{period_label}_{YYYYMMDD_HHMM}.csv
+
+        The period label depends on the period type:
+
+        - Fiscal quarter → ``"FY26_Q2"``
+        - Relative       → ``"last7d"``
+        - Date range     → ``"20260101_20260331"``
 
         Args:
             validation_type: The validation script type.
-            testing_period: Fiscal year and quarter for the run.
+            testing_period: Fiscal period or flexible schedule period.
             output_dir: Directory where the output file should be written.
             timestamp: Datetime to embed in the filename.  Defaults to
                 :func:`datetime.now` if ``None``.
@@ -70,27 +76,25 @@ class AutoFileNamer:
         """
         ts = timestamp or datetime.now()
         slug = AutoFileNamer._type_slug(validation_type)
-        filename = (
-            f"{slug}_{testing_period.fiscal_year}_{testing_period.quarter}"
-            f"_{ts.strftime('%Y%m%d_%H%M')}.csv"
-        )
+        period_label = AutoFileNamer._period_label(testing_period)
+        filename = f"{slug}_{period_label}_{ts.strftime('%Y%m%d_%H%M')}.csv"
         return Path(output_dir) / filename
 
     @staticmethod
     def generate_log_path(
         validation_type: ValidationType,
-        testing_period: TestingPeriod,
+        testing_period: TestingPeriod | SchedulePeriod,
         log_dir: str | Path,
         timestamp: Optional[datetime] = None,
     ) -> Path:
-        """Generate a matching log file path (```.log``` extension).
+        """Generate a matching log file path (``.log`` extension).
 
         Uses the same stem as :meth:`generate_output_path` with a ``.log``
         extension instead of ``.csv``.
 
         Args:
             validation_type: The validation script type.
-            testing_period: Fiscal year and quarter for the run.
+            testing_period: Fiscal period or flexible schedule period.
             log_dir: Directory where the log file should be written.
             timestamp: Datetime to embed in the filename.  Defaults to
                 :func:`datetime.now` if ``None``.
@@ -100,16 +104,14 @@ class AutoFileNamer:
         """
         ts = timestamp or datetime.now()
         slug = AutoFileNamer._type_slug(validation_type)
-        filename = (
-            f"{slug}_{testing_period.fiscal_year}_{testing_period.quarter}"
-            f"_{ts.strftime('%Y%m%d_%H%M')}.log"
-        )
+        period_label = AutoFileNamer._period_label(testing_period)
+        filename = f"{slug}_{period_label}_{ts.strftime('%Y%m%d_%H%M')}.log"
         return Path(log_dir) / filename
 
     @staticmethod
     def generate_extract_path(
         validation_type: ValidationType,
-        testing_period: TestingPeriod,
+        testing_period: TestingPeriod | SchedulePeriod,
         output_dir: str | Path,
         timestamp: Optional[datetime] = None,
     ) -> Path:
@@ -117,7 +119,7 @@ class AutoFileNamer:
 
         Args:
             validation_type: The validation script type.
-            testing_period: Fiscal year and quarter for the run.
+            testing_period: Fiscal period or flexible schedule period.
             output_dir: Directory where the extract file should be written.
             timestamp: Datetime to embed in the filename.  Defaults to
                 :func:`datetime.now` if ``None``.
@@ -127,11 +129,29 @@ class AutoFileNamer:
         """
         ts = timestamp or datetime.now()
         slug = AutoFileNamer._type_slug(validation_type)
-        filename = (
-            f"{slug}_{testing_period.fiscal_year}_{testing_period.quarter}"
-            f"_{ts.strftime('%Y%m%d_%H%M')}_extract.csv"
-        )
+        period_label = AutoFileNamer._period_label(testing_period)
+        filename = f"{slug}_{period_label}_{ts.strftime('%Y%m%d_%H%M')}_extract.csv"
         return Path(output_dir) / filename
+
+    @staticmethod
+    def _period_label(testing_period: TestingPeriod | SchedulePeriod) -> str:
+        """Return a compact period label for use in filenames.
+
+        Delegates to :meth:`SchedulePeriod.label` for :class:`SchedulePeriod`
+        instances.  For legacy :class:`TestingPeriod` objects it returns the
+        ``"FY26_Q2"`` pattern directly.
+
+        Args:
+            testing_period: Either a legacy :class:`TestingPeriod` or a
+                :class:`SchedulePeriod`.
+
+        Returns:
+            A short, filename-safe label string.
+        """
+        if isinstance(testing_period, SchedulePeriod):
+            return testing_period.label()
+        # Legacy TestingPeriod
+        return f"{testing_period.fiscal_year}_{testing_period.quarter}"
 
     @staticmethod
     def _type_slug(validation_type: ValidationType) -> str:

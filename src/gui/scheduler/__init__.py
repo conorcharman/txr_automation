@@ -29,13 +29,16 @@ Public API
 from .engine import ScheduleEngine
 from .file_naming import AutoFileNamer
 from .models import (
+    FREQUENCY_PERIOD_DEFAULTS,
     PIPELINE_PRESETS,
+    PeriodType,
     PipelinePreset,
     PipelineStep,
     RunRecord,
     RunStatus,
     ScheduleConfig,
     ScheduleFrequency,
+    SchedulePeriod,
     StepResult,
     TestingPeriod,
     ValidationType,
@@ -44,8 +47,10 @@ from .pipeline import PipelineExecutor
 from .store import ScheduleStore
 
 __all__ = [
+    "FREQUENCY_PERIOD_DEFAULTS",
     "PIPELINE_PRESETS",
     "AutoFileNamer",
+    "PeriodType",
     "PipelineExecutor",
     "PipelinePreset",
     "PipelineStep",
@@ -54,6 +59,7 @@ __all__ = [
     "ScheduleConfig",
     "ScheduleEngine",
     "ScheduleFrequency",
+    "SchedulePeriod",
     "ScheduleStore",
     "StepResult",
     "TestingPeriod",
