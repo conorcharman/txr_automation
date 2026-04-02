@@ -20,6 +20,7 @@ setup(
     install_requires=[
         "pyyaml>=6.0",
         "pyside6>=6.6",
+        "flask>=3.1.1",
     ],
     entry_points={
         "console_scripts": [
@@ -50,6 +51,7 @@ setup(
             "gleif-refresh=gleif.scripts.refresh_cache:main",
             "gleif-check=gleif.scripts.check_lei:main",
             "gleif-backfill=gleif.scripts.backfill:main",
+            "txr-webapp=webapp.__main__:main",
         ],
         "gui_scripts": [
             "txr-gui=gui.app:main",

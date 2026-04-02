@@ -1,0 +1,58 @@
+/*
+ * TXR Automation Web Application
+ * Custom styles to supplement Bootstrap 5.
+ */
+
+/* ---- Layout ------------------------------------------------------------ */
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+main {
+  flex: 1 0 auto;
+}
+
+footer {
+  flex-shrink: 0;
+}
+
+/* ---- Navigation -------------------------------------------------------- */
+
+.navbar-brand {
+  letter-spacing: 0.03em;
+}
+
+/* ---- Section cards ----------------------------------------------------- */
+
+.section-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.section-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12) !important;
+}
+
+.section-icon {
+  min-width: 3rem;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---- Utilities --------------------------------------------------------- */
+
+.text-monospace {
+  font-family: "Consolas", "Courier New", monospace;
+  font-size: 0.875rem;
+}
