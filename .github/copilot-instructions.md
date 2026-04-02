@@ -8,8 +8,9 @@ This project is migrating VBA macros for transaction reporting automation to Pyt
 
 - [Python_Migration_Plan.md](../documentation/planning/Python_Migration_Plan.md) - Master migration plan with phases, timelines, and technical approach
 - [Phase_8_CLI_Tool_Plan.md](../documentation/planning/Phase_8_CLI_Tool_Plan.md) - Future CLI unification plan
+- [GUI_Plan.md](../documentation/planning/GUI_Plan.md) - Phase 9 PySide6 desktop GUI plan
 
-**Current Status (25 March 2026):**
+**Current Status (1 April 2026):**
 
 - Phase 0 (Refactoring): ✅ Complete
 - Phase 1 (Foundation): ✅ Complete
@@ -20,6 +21,7 @@ This project is migrating VBA macros for transaction reporting automation to Pyt
 - Phase 6 (Integration & Testing): 🔄 In progress
 - Phase 7 (Deployment & Transition): 🔲 Not started
 - Phase 8 (Unified CLI Tool): 🔲 Planning
+- Phase 9 (PySide6 Desktop GUI): 🔲 Planning
 
 ---
 

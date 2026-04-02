@@ -1,8 +1,8 @@
 # Transaction Reporting Automation: VBA to Python Migration Plan
 
-**Version:** 2.5  
-**Date:** 6 February 2026  
-**Status:** Phase 6 In Progress (All Migration Phases 0-5 Complete)  
+**Version:** 2.6
+**Date:** 1 April 2026
+**Status:** Phase 6 In Progress; Phases 8 (CLI Tool) and 9 (PySide6 GUI) added to roadmap
 
 ---
 
@@ -1019,7 +1019,9 @@ txr_automation/
 | **5. Data Operations** | 2 weeks | Lookups, data push | Incident lookup, data push scripts |
 | **6. Integration & Testing** | 2 weeks | E2E tests, UAT | Complete test suite, documentation |
 | **7. Deployment** | 2 weeks | Production rollout | Training, parallel running, cutover |
-| **Total** | **24 weeks** | **6 months** | **Fully migrated system** |
+| **8. Unified CLI Tool** | 3–4 weeks | CLI unification | txr_cli package; see [Phase_8_CLI_Tool_Plan.md](Phase_8_CLI_Tool_Plan.md) |
+| **9. PySide6 Desktop GUI** | TBD | Desktop application | Tabbed GUI wrapping all 22 scripts; see [GUI_Plan.md](GUI_Plan.md) |
+| **Total** | **~28 weeks** | **~7 months** | **Fully migrated + GUI system** |
 
 ### **Phase Breakdown:**
 
@@ -1398,6 +1400,7 @@ User guides and training materials to be created in Phase 6.
 
 **Document Version History:**
 
+- v2.6 (1 Apr 2026): Added Phase 8 (Unified CLI Tool) and Phase 9 (PySide6 Desktop GUI) to timeline
 - v2.0 (22 Dec 2025): Updated for CSV-first approach, removed Excel dependencies
 - v1.0 (22 Dec 2025): Initial plan with Excel integration
 
