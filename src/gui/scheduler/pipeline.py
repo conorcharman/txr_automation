@@ -11,12 +11,16 @@ Steps run in pipeline order: EXTRACT → COLLATE → VALIDATE → PUSH.
 Only the steps present in ``ScheduleConfig.pipeline_steps`` are executed.
 If any step fails the pipeline halts immediately and returns a FAILED record.
 
-EXTRACT, COLLATE, and PUSH are stub implementations in Phase 1.
-VALIDATE runs each configured validation script via subprocess.
+EXTRACT launches cwbodtfx.exe (IBM i Access for Windows) for each
+configured validation type then waits for the output CSV to be written.
+COLLATE and PUSH are stubs pending future implementation.
+
+Version 1.1 Changes:
+- EXTRACT step implemented via DTFRunner.execute_dtf() + wait_for_output()
+- No Power Automate dependency required
 
 Version 1.0 Changes:
 - Initial implementation for Phase 1 scheduler foundation
-- EXTRACT, COLLATE, PUSH are stubs pending Phase 4 implementation
 """
 
 from __future__ import annotations
@@ -42,6 +46,7 @@ logger = logging.getLogger(__name__)
 
 # Resolve project root once at import time so subprocess cwd is consistent.
 _PROJECT_ROOT = Path(__file__).parent.parent.parent.parent
+_SQL_TEMPLATES_DIR = _PROJECT_ROOT / "src" / "accuracy_testing" / "sql_templates"
 
 
 class PipelineExecutor:
@@ -263,26 +268,118 @@ class PipelineExecutor:
     def _run_extract_step(
         self, config: ScheduleConfig, timestamp: datetime
     ) -> StepResult:
-        """Placeholder for the SQL extract step (Phase 4).
+        """Generate and execute a DTF extract for each configured validation type.
+
+        For each validation type in the schedule, this step:
+        1. Generates a ``.dtf`` file pointing at the expected output CSV path.
+        2. Launches ``cwbodtfx.exe`` to run the System i data transfer.
+        3. Waits for the output CSV to be written (up to 5 minutes per transfer).
+
+        If ``cwbodtfx.exe`` is not found the step fails immediately with a
+        descriptive error so the user can set the ``CWBODTFX_PATH`` environment
+        variable or install IBM i Access for Windows.
 
         Args:
-            config: Schedule configuration.
-            timestamp: Run-start timestamp.
+            config: Schedule configuration including validation types and period.
+            timestamp: Run-start timestamp used for file naming.
 
         Returns:
-            A successful :class:`~.models.StepResult` with a stub message.
+            A :class:`~.models.StepResult` with SUCCESS or FAILED status.
         """
-        logger.info(
-            "Extract step not yet implemented for schedule %s — skipping.",
-            config.schedule_id,
-        )
-        return StepResult(
+        import importlib
+
+        dtf_runner_mod = importlib.import_module("src.accuracy_testing.core.dtf_runner")
+        DTFRunner = dtf_runner_mod.DTFRunner
+
+        SQL_TEMPLATE_MAP: dict[str, str] = {
+            "buyer": "BuyerID_period.sql",
+            "seller": "SellerID_period.sql",
+            "inconsistent_buyer": "InconsistentBuyerID_period.sql",
+            "inconsistent_seller": "InconsistentSellerID_period.sql",
+            "fund_trade_buyer_dm": "FTBDM_period.sql",
+            "fund_trade_seller_dm": "FTSDM_period.sql",
+            "non_zero_net_qty": "NonZeroNetQuantity_period.sql",
+            "non_zero_net_amt": "NonZeroNetAmount_period.sql",
+            "incorrect_net_amount": "IncorrectNetAmount_period.sql",
+        }
+
+        result = StepResult(
             step=PipelineStep.EXTRACT,
-            status=RunStatus.SUCCESS,
+            status=RunStatus.RUNNING,
             started_at=datetime.now(),
-            completed_at=datetime.now(),
-            stdout="Extract step not yet implemented — skipped.",
         )
+
+        start_date, end_date = config.schedule_period.to_date_range()
+        runner = DTFRunner()
+        all_output: list[str] = []
+        output_dir = Path(config.output_directory) if config.output_directory else _PROJECT_ROOT / "data" / "extracts" / "automated"
+
+        for vtype in config.validation_types:
+            template_name = SQL_TEMPLATE_MAP.get(vtype.value)
+            if template_name is None:
+                logger.warning("No SQL template mapped for %s — skipping extract.", vtype.value)
+                continue
+
+            sql_template_path = _SQL_TEMPLATES_DIR / template_name
+            if not sql_template_path.exists():
+                result.status = RunStatus.FAILED
+                result.stderr = f"SQL template not found: {sql_template_path}"
+                result.completed_at = datetime.now()
+                return result
+
+            csv_path = AutoFileNamer.generate_extract_path(
+                vtype, config.schedule_period, output_dir, timestamp
+            )
+            dtf_path = csv_path.with_suffix(".dtf")
+
+            logger.info(
+                "Generating DTF for %s: %s → %s",
+                vtype.display_name,
+                dtf_path.name,
+                csv_path.name,
+            )
+            runner.generate_dtf_from_template(
+                sql_template_path=sql_template_path,
+                parameters={
+                    "START_DATE": str(start_date),
+                    "END_DATE": str(end_date),
+                },
+                output_csv_path=csv_path,
+                dtf_output_path=dtf_path,
+            )
+            all_output.append(f"Generated {dtf_path.name}")
+
+            logger.info("Executing DTF transfer: %s", dtf_path.name)
+            success = runner.execute_dtf(dtf_path)
+            if not success:
+                result.status = RunStatus.FAILED
+                result.stderr = (
+                    f"DTF transfer failed for {vtype.display_name}. "
+                    "Ensure IBM i Access for Windows is installed or set CWBODTFX_PATH."
+                )
+                result.stdout = "\n".join(all_output)
+                result.completed_at = datetime.now()
+                return result
+
+            logger.info("Waiting for output CSV: %s", csv_path.name)
+            appeared = runner.wait_for_output(csv_path, timeout_seconds=300)
+            if not appeared:
+                result.status = RunStatus.FAILED
+                result.stderr = (
+                    f"Timed out waiting for extract output: {csv_path.name}. "
+                    "The transfer may have completed but written to an unexpected path."
+                )
+                result.stdout = "\n".join(all_output)
+                result.completed_at = datetime.now()
+                return result
+
+            all_output.append(f"Extracted → {csv_path.name}")
+            result.output_files.append(str(csv_path))
+
+        result.status = RunStatus.SUCCESS
+        result.completed_at = datetime.now()
+        result.stdout = "\n".join(all_output) if all_output else "No validation types configured — extract skipped."
+        return result
 
     def _run_collate_step(
         self, config: ScheduleConfig, timestamp: datetime

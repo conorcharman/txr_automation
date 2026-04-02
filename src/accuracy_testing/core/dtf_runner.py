@@ -3,8 +3,19 @@
 DTF Runner
 ==========
 
-Generates System i Data Transfer (.dtf) configuration files for
-period-based SQL extraction. Supports future execution via Power Automate.
+Generates and executes System i Data Transfer (.dtf) configuration files
+for period-based SQL extraction.
+
+Execution is performed by calling ``cwbodtfx.exe`` (IBM i Access for Windows)
+directly via subprocess — no Power Automate dependency is required.
+
+The executable is located automatically from the standard IBM i Access
+installation paths.  Override with the ``CWBODTFX_PATH`` environment variable
+if your installation is non-standard.
+
+Version 1.1 Changes:
+- Implement execute_dtf() via cwbodtfx.exe subprocess — removes Power Automate dependency
+- Add _find_cwbodtfx() helper with environment variable override
 
 Version 1.0 Changes:
 - Initial implementation for Phase 4 period-based extraction
@@ -12,6 +23,8 @@ Version 1.0 Changes:
 from __future__ import annotations
 
 import logging
+import os
+import subprocess
 import time
 from pathlib import Path
 
@@ -95,25 +108,82 @@ class DTFRunner:
             sql = sql.replace(f"{{{key}}}", value)
         return self.generate_dtf(sql, output_csv_path, dtf_output_path)
 
-    def execute_dtf(self, dtf_path: str | Path) -> bool:
-        """Execute a DTF file using System i Data Transfer (future integration point).
+    def execute_dtf(self, dtf_path: str | Path, timeout: int = 300) -> bool:
+        """Execute a DTF file using System i Data Transfer (cwbodtfx.exe).
 
-        Note:
-            This method is a stub for future Power Automate / System i
-            integration.  Currently logs the intent and returns ``False``.
+        Locates ``cwbodtfx.exe`` from standard IBM i Access installation
+        paths or the ``CWBODTFX_PATH`` environment variable, then launches
+        the data transfer as a blocking subprocess.
 
         Args:
-            dtf_path: Path to the .dtf configuration file.
+            dtf_path: Path to the ``.dtf`` configuration file.
+            timeout: Maximum seconds to wait for the process to complete.
 
         Returns:
-            True if execution succeeded, False otherwise.
+            ``True`` if ``cwbodtfx.exe`` exited with return code 0,
+            ``False`` if the executable is not found or the process failed.
         """
-        logging.getLogger(__name__).warning(
-            "DTF execution not yet implemented — file generated at %s. "
-            "Execute manually via System i Data Transfer or via Power Automate.",
-            dtf_path,
-        )
-        return False
+        _log = logging.getLogger(__name__)
+        exe = self._find_cwbodtfx()
+        if exe is None:
+            _log.error(
+                "cwbodtfx.exe not found. Install IBM i Access for Windows or set "
+                "the CWBODTFX_PATH environment variable to the full executable path."
+            )
+            return False
+
+        dtf_abs = str(Path(dtf_path).resolve())
+        cmd = [exe, f"/TFRDFN:{dtf_abs}"]
+        _log.info("Launching DTF transfer: %s", " ".join(cmd))
+        try:
+            result = subprocess.run(
+                cmd,
+                capture_output=True,
+                text=True,
+                timeout=timeout,
+            )
+        except subprocess.TimeoutExpired:
+            _log.error("DTF transfer timed out after %d seconds: %s", timeout, dtf_abs)
+            return False
+        except OSError as exc:
+            _log.error("Failed to launch cwbodtfx.exe: %s", exc)
+            return False
+
+        if result.returncode != 0:
+            _log.error(
+                "DTF transfer failed (rc=%d). stderr: %s",
+                result.returncode,
+                result.stderr.strip(),
+            )
+            return False
+
+        _log.info("DTF transfer completed successfully: %s", dtf_abs)
+        return True
+
+    @staticmethod
+    def _find_cwbodtfx() -> str | None:
+        """Locate cwbodtfx.exe from standard paths or environment override.
+
+        Checks, in order:
+        1. ``CWBODTFX_PATH`` environment variable (full path to the exe).
+        2. ``C:\\Program Files (x86)\\IBM\\Client Access\\cwbodtfx.exe``
+        3. ``C:\\Program Files\\IBM\\Client Access\\cwbodtfx.exe``
+
+        Returns:
+            Full path string if found, ``None`` otherwise.
+        """
+        env_path = os.environ.get("CWBODTFX_PATH")
+        if env_path and Path(env_path).is_file():
+            return env_path
+
+        candidates = [
+            Path("C:/Program Files (x86)/IBM/Client Access/cwbodtfx.exe"),
+            Path("C:/Program Files/IBM/Client Access/cwbodtfx.exe"),
+        ]
+        for candidate in candidates:
+            if candidate.is_file():
+                return str(candidate)
+        return None
 
     def wait_for_output(
         self,

@@ -31,6 +31,9 @@ from src.gui.scheduler.pipeline import PipelineExecutor
 # ---------------------------------------------------------------------------
 
 _SUBPROCESS_RUN = "src.gui.scheduler.pipeline.subprocess.run"
+_DTF_GENERATE = "src.accuracy_testing.core.dtf_runner.DTFRunner.generate_dtf_from_template"
+_DTF_EXECUTE = "src.accuracy_testing.core.dtf_runner.DTFRunner.execute_dtf"
+_DTF_WAIT = "src.accuracy_testing.core.dtf_runner.DTFRunner.wait_for_output"
 
 
 # ---------------------------------------------------------------------------
@@ -139,12 +142,16 @@ class TestValidateStep:
 # ---------------------------------------------------------------------------
 
 class TestStubSteps:
-    """Tests for stub pipeline steps that succeed without any subprocess call."""
+    """Tests for non-validate pipeline steps."""
 
     def test_execute_extract_step_is_stub_success(self) -> None:
-        """An extract-only pipeline should return SUCCESS (stub implementation)."""
+        """An extract-only pipeline should return SUCCESS when DTFRunner succeeds."""
         config = _make_config(steps=[PipelineStep.EXTRACT])
-        record = PipelineExecutor().execute(config)
+        from pathlib import Path
+        with patch(_DTF_GENERATE, return_value=Path("fake.dtf")), \
+             patch(_DTF_EXECUTE, return_value=True), \
+             patch(_DTF_WAIT, return_value=True):
+            record = PipelineExecutor().execute(config)
         assert record.status == RunStatus.SUCCESS
 
     def test_execute_collate_step_is_stub_success(self) -> None:
@@ -177,7 +184,11 @@ class TestAllStepsInOrder:
                 PipelineStep.PUSH,
             ],
         )
-        with patch(_SUBPROCESS_RUN, return_value=_mock_subprocess_result(0)):
+        from pathlib import Path
+        with patch(_SUBPROCESS_RUN, return_value=_mock_subprocess_result(0)), \
+             patch(_DTF_GENERATE, return_value=Path("fake.dtf")), \
+             patch(_DTF_EXECUTE, return_value=True), \
+             patch(_DTF_WAIT, return_value=True):
             record = PipelineExecutor().execute(config)
 
         assert record.status == RunStatus.SUCCESS
