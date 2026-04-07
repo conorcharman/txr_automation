@@ -79,12 +79,22 @@ app.add_middleware(
 )
 
 # ── Routers ────────────────────────────────────────────────────────────────
+from api.routers.accuracy import router as accuracy_router  # noqa: E402
 from api.routers.configs import router as configs_router  # noqa: E402
 from api.routers.dashboard import router as dashboard_router  # noqa: E402
+from api.routers.firds import router as firds_router  # noqa: E402
+from api.routers.gleif import router as gleif_router  # noqa: E402
 from api.routers.health import router as health_router  # noqa: E402
 from api.routers.jobs import router as jobs_router  # noqa: E402
+from api.routers.replay import router as replay_router  # noqa: E402
+from api.routers.utilities import router as utilities_router  # noqa: E402
 
 app.include_router(health_router, prefix="/api")
 app.include_router(jobs_router, prefix="/api")
 app.include_router(configs_router, prefix="/api")
 app.include_router(dashboard_router, prefix="/api")
+app.include_router(accuracy_router, prefix="/api")
+app.include_router(replay_router, prefix="/api")
+app.include_router(firds_router, prefix="/api")
+app.include_router(gleif_router, prefix="/api")
+app.include_router(utilities_router, prefix="/api")

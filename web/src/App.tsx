@@ -5,7 +5,11 @@ import AppLayout from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Jobs from "@/pages/Jobs";
 import JobDetail from "@/pages/JobDetail";
-import ComingSoon from "@/pages/ComingSoon";
+import AccuracyTesting from "@/pages/AccuracyTesting";
+import Replay from "@/pages/Replay";
+import FIRDS from "@/pages/FIRDS";
+import GLEIF from "@/pages/GLEIF";
+import Utilities from "@/pages/Utilities";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -19,11 +23,11 @@ export default function App() {
         <Routes>
           <Route element={<AppLayout />}>
             <Route index element={<Dashboard />} />
-            <Route path="accuracy" element={<ComingSoon title="Accuracy Testing" />} />
-            <Route path="replay" element={<ComingSoon title="Replay" />} />
-            <Route path="firds" element={<ComingSoon title="FIRDS" />} />
-            <Route path="gleif" element={<ComingSoon title="GLEIF" />} />
-            <Route path="utilities" element={<ComingSoon title="Utilities" />} />
+            <Route path="accuracy" element={<AccuracyTesting />} />
+            <Route path="replay" element={<Replay />} />
+            <Route path="firds" element={<FIRDS />} />
+            <Route path="gleif" element={<GLEIF />} />
+            <Route path="utilities" element={<Utilities />} />
             <Route path="jobs" element={<Jobs />} />
             <Route path="jobs/:jobId" element={<JobDetail />} />
           </Route>

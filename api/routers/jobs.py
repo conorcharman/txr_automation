@@ -40,10 +40,42 @@ router = APIRouter(tags=["jobs"])
 #: Maps registered script name identifiers to their Python module paths.
 #: The module at each path must expose a ``main(argv: list[str]) -> None``
 #: function following the established CLI entry-point pattern.
+#:
+#: Note: ``api/services/script_runner.py`` maintains a parallel ``_SCRIPT_MODULES``
+#: dict used by the domain-specific routers.  Both must be kept in sync.
 SCRIPT_MODULES: dict[str, str] = {
-    "buyer_id_validation": "src.accuracy_testing.scripts.buyer_id_validation",
-    "seller_id_validation": "src.accuracy_testing.scripts.seller_id_validation",
-    # Phase 4 will extend this dict with all remaining scripts.
+    # Accuracy Testing — validation scripts
+    "buyer_id_validation":               "src.accuracy_testing.scripts.buyer_id_validation",
+    "seller_id_validation":              "src.accuracy_testing.scripts.seller_id_validation",
+    "inconsistent_buyer_id_validation":  "src.accuracy_testing.scripts.inconsistent_buyer_id_validation",
+    "inconsistent_seller_id_validation": "src.accuracy_testing.scripts.inconsistent_seller_id_validation",
+    "validate_ftbdm":                    "src.accuracy_testing.scripts.validate_ftbdm",
+    "validate_ftsdm":                    "src.accuracy_testing.scripts.validate_ftsdm",
+    "incorrect_net_amount_validation":   "src.accuracy_testing.scripts.incorrect_net_amount_validation",
+    "non_zero_net_quantity":             "src.accuracy_testing.scripts.non_zero_net_quantity",
+    "non_zero_net_amount":               "src.accuracy_testing.scripts.non_zero_net_amount",
+    # Accuracy Testing — utility scripts
+    "run_all_validations":               "src.accuracy_testing.scripts.run_all_validations",
+    "sql_extract_generator":             "src.accuracy_testing.scripts.sql_extract_generator",
+    "accuracy_template_generator":       "src.accuracy_testing.scripts.accuracy_template_generator",
+    "collate_csv_extracts":              "src.accuracy_testing.scripts.collate_csv_extracts",
+    "data_push":                         "src.accuracy_testing.scripts.data_push",
+    # Replay
+    "replay_phase2":                     "src.replay.phase_2_processor",
+    "replay_phase3":                     "src.replay.phase_3_processor",
+    "replay_phase3_final":               "src.replay.phase_3_final_lookup",
+    "replay_merge_inconsistent":         "src.replay.merge_inconsistent_ids",
+    # FIRDS
+    "firds_refresh":                     "src.firds.scripts.refresh_cache",
+    "firds_check":                       "src.firds.scripts.check_reportability",
+    "firds_backfill":                    "src.firds.scripts.backfill",
+    # GLEIF
+    "gleif_refresh":                     "src.gleif.scripts.refresh_cache",
+    "gleif_check":                       "src.gleif.scripts.check_lei",
+    "gleif_backfill":                    "src.gleif.scripts.backfill",
+    # Utilities
+    "xlsx_csv_converter":                "src.utils.xlsx_csv_converter",
+    "xml_csv_converter":                 "src.utils.xml_csv_converter",
 }
 
 
