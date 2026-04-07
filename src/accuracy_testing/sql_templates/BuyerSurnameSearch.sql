@@ -1,0 +1,36 @@
+-- Buyer-side surname search
+-- Returns trades where the buyer party surname OR buyer decision maker
+-- surname contains the string ",RE,"
+
+WITH Candidates AS (
+  -- Decision maker surname sits directly on TXNREPESMA — no join required
+  SELECT REPORTREF
+  FROM GLDATA / TXNREPESMA
+  WHERE TRDDATTIM > '2018-01-01'
+    AND BUYDECSURN LIKE '%,RE,%'
+
+  UNION
+
+  -- Party surname requires ESMAPTYIND, scoped to buy-side CONTCT rows
+  SELECT t1.REPORTREF
+  FROM GLDATA / TXNREPESMA t1
+  JOIN GLDATA / CONTCT t2 ON t2.FRMCOD || t2.YEAR || t2.ACCLTR || t2.CONTNO || '1' = t1.REPORTREF
+    AND t2.BUYSEL = 'B'
+  JOIN GLDATA / ESMAPTYIND t5 ON t1.REPORTREF = t5.REPORTREF
+  WHERE t1.TRDDATTIM > '2018-01-01'
+    AND t5.PTYSURN LIKE '%,RE,%'
+)
+SELECT
+  t1.REPORTREF,
+  t5.PTYFORE AS BUY_PTYFORE,
+  t5.PTYSURN AS BUY_PTYSURN,
+  t1.BUYDECIND,
+  CASE WHEN t1.BUYDECIND <> '' THEN t5.PTYSCHCODE END AS BUYDEC_ID_TYPE,
+  t1.BUYDECFORE,
+  t1.BUYDECSURN
+FROM
+  GLDATA / TXNREPESMA t1
+  JOIN Candidates c ON t1.REPORTREF = c.REPORTREF
+  JOIN GLDATA / CONTCT t2 ON t2.FRMCOD || t2.YEAR || t2.ACCLTR || t2.CONTNO || '1' = t1.REPORTREF
+    AND t2.BUYSEL = 'B'
+  JOIN GLDATA / ESMAPTYIND t5 ON t1.REPORTREF = t5.REPORTREF

@@ -76,11 +76,35 @@ class DTFRunner:
         template = Path(template_path or self.TEMPLATE_PATH)
         content = template.read_text(encoding="utf-8")
         content = content.replace("{OUTPUT_PATH}", str(output_csv_path))
-        content = content.replace("{SQL_QUERY}", sql_query)
+        content = content.replace("{SQL_QUERY}", self._flatten_sql(sql_query))
         output = Path(dtf_output_path)
         output.parent.mkdir(parents=True, exist_ok=True)
         output.write_text(content, encoding="utf-8")
         return output
+
+    @staticmethod
+    def _flatten_sql(sql: str) -> str:
+        """Collapse a multi-line SQL string to a single line suitable for the
+        ``SQLSelect=`` field of a DTF INI file.
+
+        The DTF format is an INI file — multi-line values are not supported.
+        This method strips ``--`` comments, collapses newlines, and normalises
+        whitespace so the entire statement fits on one line.
+
+        Args:
+            sql: Raw SQL text, potentially with comments and newlines.
+
+        Returns:
+            Single-line SQL string.
+        """
+        import re
+
+        lines = sql.splitlines()
+        # Remove full-line and inline -- comments
+        stripped = [re.sub(r"--.*", "", line) for line in lines]
+        # Join and collapse whitespace
+        flat = " ".join(stripped)
+        return re.sub(r"\s+", " ", flat).strip()
 
     def generate_dtf_from_template(
         self,
@@ -112,28 +136,34 @@ class DTFRunner:
         """Execute a DTF file using System i Data Transfer (cwbodtfx.exe).
 
         Locates ``cwbodtfx.exe`` from standard IBM i Access installation
-        paths or the ``CWBODTFX_PATH`` environment variable, then launches
-        the data transfer as a blocking subprocess.
+        standard IBM i Access installation paths, the Windows registry
+        ``.dtf`` file association, or the ``CWBODTFX_PATH`` environment
+        variable, then launches the data transfer as a blocking subprocess.
+
+        The batch executor is ``rtopcb.exe`` (IBM System i Access for
+        Windows batch data transfer utility).  Override the path with the
+        ``CWBODTFX_PATH`` environment variable if your installation is
+        non-standard.
 
         Args:
             dtf_path: Path to the ``.dtf`` configuration file.
             timeout: Maximum seconds to wait for the process to complete.
 
         Returns:
-            ``True`` if ``cwbodtfx.exe`` exited with return code 0,
+            ``True`` if ``rtopcb.exe`` exited with return code 0,
             ``False`` if the executable is not found or the process failed.
         """
         _log = logging.getLogger(__name__)
         exe = self._find_cwbodtfx()
         if exe is None:
             _log.error(
-                "cwbodtfx.exe not found. Install IBM i Access for Windows or set "
+                "rtopcb.exe not found. Install IBM i Access for Windows or set "
                 "the CWBODTFX_PATH environment variable to the full executable path."
             )
             return False
 
         dtf_abs = str(Path(dtf_path).resolve())
-        cmd = [exe, f"/TFRDFN:{dtf_abs}"]
+        cmd = [exe, dtf_abs]
         _log.info("Launching DTF transfer: %s", " ".join(cmd))
         try:
             result = subprocess.run(
@@ -146,7 +176,7 @@ class DTFRunner:
             _log.error("DTF transfer timed out after %d seconds: %s", timeout, dtf_abs)
             return False
         except OSError as exc:
-            _log.error("Failed to launch cwbodtfx.exe: %s", exc)
+            _log.error("Failed to launch rtopcb.exe: %s", exc)
             return False
 
         if result.returncode != 0:
@@ -162,12 +192,20 @@ class DTFRunner:
 
     @staticmethod
     def _find_cwbodtfx() -> str | None:
-        """Locate cwbodtfx.exe from standard paths or environment override.
+        """Locate rtopcb.exe (IBM i Access batch transfer utility) from standard
+        paths or an environment variable override.
+
+        ``rtopcb.exe`` is the command-line counterpart to the ``cwbtf.exe``
+        GUI editor and accepts ``.dtf`` files directly as a positional
+        argument.
 
         Checks, in order:
         1. ``CWBODTFX_PATH`` environment variable (full path to the exe).
-        2. ``C:\\Program Files (x86)\\IBM\\Client Access\\cwbodtfx.exe``
-        3. ``C:\\Program Files\\IBM\\Client Access\\cwbodtfx.exe``
+        2. ``C:\\Program Files (x86)\\IBM\\Client Access\\rtopcb.exe``
+        3. ``C:\\Program Files\\IBM\\Client Access\\rtopcb.exe``
+        4. Windows registry ``.dtf`` file association — resolves the IBM
+           Client Access installation directory and looks for ``rtopcb.exe``
+           there.
 
         Returns:
             Full path string if found, ``None`` otherwise.
@@ -177,12 +215,43 @@ class DTFRunner:
             return env_path
 
         candidates = [
-            Path("C:/Program Files (x86)/IBM/Client Access/cwbodtfx.exe"),
-            Path("C:/Program Files/IBM/Client Access/cwbodtfx.exe"),
+            Path("C:/Program Files (x86)/IBM/Client Access/rtopcb.exe"),
+            Path("C:/Program Files/IBM/Client Access/rtopcb.exe"),
         ]
         for candidate in candidates:
             if candidate.is_file():
                 return str(candidate)
+
+        # Fall back to the Windows registry: look up the open command registered
+        # for the .dtf file association, then look for rtopcb.exe in the same
+        # IBM Client Access installation directory.  The registered command
+        # points to cwbtf.exe (the GUI editor) — rtopcb.exe is in the same
+        # folder and is the correct batch executor.
+        try:
+            import winreg  # only available on Windows
+            import shlex
+
+            with winreg.OpenKey(
+                winreg.HKEY_CLASSES_ROOT, r".dtf"
+            ) as ext_key:
+                prog_id, _ = winreg.QueryValueEx(ext_key, "")
+
+            with winreg.OpenKey(
+                winreg.HKEY_CLASSES_ROOT,
+                rf"{prog_id}\shell\open\command",
+            ) as cmd_key:
+                open_cmd, _ = winreg.QueryValueEx(cmd_key, "")
+
+            # The command is typically: C:\PROGRA~2\IBM\CLIENT~1\cwbtf.exe %1
+            # Resolve the short path, then look for rtopcb.exe alongside it.
+            parts = shlex.split(open_cmd, posix=False)
+            registered_exe = Path(parts[0].strip('"')).resolve()
+            rtopcb = registered_exe.parent / "rtopcb.exe"
+            if rtopcb.is_file():
+                return str(rtopcb)
+        except Exception:  # noqa: BLE001
+            pass
+
         return None
 
     def wait_for_output(

@@ -154,10 +154,13 @@ def _action_button(label: str, danger: bool = False) -> QPushButton:
     """Create a standard action button, optionally red-on-hover."""
     btn = QPushButton(label)
     btn.setFixedHeight(28)
+    disabled_style = "QPushButton:disabled { color: #A0A0A0; background-color: #E8E8E8; border: 1px solid #C8C8C8; }"
     if danger:
         btn.setStyleSheet(
-            f"QPushButton:hover {{ background-color: {COLOUR_RED}; color: white; }}"
+            f"QPushButton:hover {{ background-color: {COLOUR_RED}; color: white; }} {disabled_style}"
         )
+    else:
+        btn.setStyleSheet(disabled_style)
     return btn
 
 

@@ -355,7 +355,7 @@ class PipelineExecutor:
                 result.status = RunStatus.FAILED
                 result.stderr = (
                     f"DTF transfer failed for {vtype.display_name}. "
-                    "Ensure IBM i Access for Windows is installed or set CWBODTFX_PATH."
+                    "Ensure IBM i Access for Windows is installed (rtopcb.exe) or set CWBODTFX_PATH."
                 )
                 result.stdout = "\n".join(all_output)
                 result.completed_at = datetime.now()

@@ -441,7 +441,7 @@ class TransactionRefPipelineExecutor:
                 sr.status = StepStatus.FAILED
                 sr.message = (
                     f"DTF execution failed for {Path(dtf_path).name}. "
-                    "Ensure IBM i Access for Windows is installed or set CWBODTFX_PATH."
+                    "Ensure IBM i Access for Windows is installed (rtopcb.exe) or set CWBODTFX_PATH."
                 )
                 sr.completed_at = datetime.now()
                 self._emit(sr)
