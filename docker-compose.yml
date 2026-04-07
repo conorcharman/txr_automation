@@ -1,0 +1,92 @@
+services:
+
+  # ---------------------------------------------------------------------------
+  # Redis — Celery broker + WebSocket pub/sub
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    networks:
+      - txr-network
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — Job history, saved configs
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - txr-network
+
+  # ---------------------------------------------------------------------------
+  # API — FastAPI + Uvicorn (hot-reload in dev)
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./src:/app/src
+      - ./api:/app/api
+      - ./config:/app/config
+      - ./data:/app/data
+    env_file: .env
+    depends_on:
+      - redis
+      - db
+    command: uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload
+    networks:
+      - txr-network
+
+  # ---------------------------------------------------------------------------
+  # Worker — Celery (same image as api)
+  # ---------------------------------------------------------------------------
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    restart: unless-stopped
+    volumes:
+      - ./src:/app/src
+      - ./api:/app/api
+      - ./config:/app/config
+      - ./data:/app/data
+    env_file: .env
+    depends_on:
+      - redis
+      - db
+    command: celery -A api.tasks.celery_app worker --loglevel=info
+    networks:
+      - txr-network
+
+  # ---------------------------------------------------------------------------
+  # Web — React SPA served by Nginx (proxies /api to backend)
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - api
+    networks:
+      - txr-network
+
+networks:
+  txr-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
