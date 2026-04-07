@@ -1,0 +1,9 @@
+Transaction Reference,Validation Status,Error,Correction,Correction Type,Correction Field
+TXN001,Invalid,Y,AB123456C:NIDN,NIDN,Buyer ID Code
+TXN002,Valid,N,,,
+TXN003,Valid,N,AB789012D:NIDN,NIDN,Buyer ID Code
+TXN004,Invalid,Y,,,Buyer ID Code
+TXN005,TBC,TBC,,,
+TXN006,Invalid,Y,549300FNDMGR00000001:LEI,LEI,Buyer DM Code
+TXN999,Invalid,Y,AB000000A:NIDN,NIDN,Buyer ID Code
+TXN008,Valid,N,,,
