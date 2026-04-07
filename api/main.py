@@ -80,5 +80,7 @@ app.add_middleware(
 
 # ── Routers ────────────────────────────────────────────────────────────────
 from api.routers.health import router as health_router  # noqa: E402
+from api.routers.jobs import router as jobs_router  # noqa: E402
 
 app.include_router(health_router, prefix="/api")
+app.include_router(jobs_router, prefix="/api")
