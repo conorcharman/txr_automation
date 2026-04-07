@@ -37,7 +37,9 @@ import importlib
 import io
 import json
 import logging
+import os
 import sys
+import threading
 from typing import Any
 
 import redis as redis_lib
@@ -47,6 +49,9 @@ from api.config import get_settings
 from api.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
+
+# Lock protecting global sys.argv mutations across concurrent Celery tasks.
+_argv_lock = threading.Lock()
 
 
 # ---------------------------------------------------------------------------
@@ -62,8 +67,11 @@ async def _update_status_async(
 ) -> None:
     """Open a fresh async DB session and update the job status.
 
-    This function is intended to be called from within ``asyncio.run()``
-    in the synchronous Celery task context, where no event loop exists.
+    A new ``AsyncEngine`` is created and disposed on each call because
+    ``asyncio.run()`` starts a fresh event loop every time, and asyncpg
+    connections are bound to the loop that created them.  This is
+    acceptable because status updates happen only twice per task
+    (running + final).
 
     Args:
         job_id: String UUID of the job to update.
@@ -174,7 +182,13 @@ def run_script(
     output_buffer = io.StringIO()
     old_stdout = sys.stdout
     old_stderr = sys.stderr
-    old_argv = sys.argv
+
+    # Identify temp config files created by ScriptRunnerService so we can
+    # clean them up after the script finishes.
+    _temp_files: list[str] = [
+        arg for arg in argv
+        if arg.endswith(".yaml") and os.sep + "tmp" in arg.lower()
+    ]
 
     try:
         module = importlib.import_module(module_path)
@@ -182,9 +196,12 @@ def run_script(
         with contextlib.redirect_stdout(output_buffer), contextlib.redirect_stderr(
             output_buffer
         ):
-            sys.argv = [module_path] + argv
+            # Protect sys.argv from concurrent task corruption.
+            with _argv_lock:
+                old_argv = sys.argv
+                sys.argv = [module_path] + argv
             try:
-                module.main(argv)
+                module.main()
             except SystemExit as exc:
                 # Treat non-zero SystemExit as a failure.
                 exit_code = exc.code if isinstance(exc.code, int) else 1
@@ -193,7 +210,8 @@ def run_script(
                         f"Script exited with code {exit_code}"
                     ) from exc
             finally:
-                sys.argv = old_argv
+                with _argv_lock:
+                    sys.argv = old_argv
 
         # Publish captured output line by line.
         output = output_buffer.getvalue()
@@ -207,10 +225,9 @@ def run_script(
         return {"status": "success", "output_files": []}
 
     except Exception as exc:
-        # Ensure stdout/argv are always restored on unexpected error.
+        # Ensure stdout is always restored on unexpected error.
         sys.stdout = old_stdout
         sys.stderr = old_stderr
-        sys.argv = old_argv
 
         # Flush any partial output.
         partial_output = output_buffer.getvalue()
@@ -227,7 +244,12 @@ def run_script(
     finally:
         sys.stdout = old_stdout
         sys.stderr = old_stderr
-        sys.argv = old_argv
+        # Clean up temporary config YAML files written by ScriptRunnerService.
+        for tmp in _temp_files:
+            try:
+                os.unlink(tmp)
+            except OSError:
+                pass
         try:
             redis_client.close()
         except Exception:  # noqa: BLE001

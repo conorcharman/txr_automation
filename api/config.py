@@ -27,8 +27,9 @@ class Settings(BaseSettings):
         upload_dir: Directory where uploaded files are stored.
         firds_db_path: Path to the FIRDS SQLite cache database.
         gleif_db_path: Path to the GLEIF SQLite cache database.
-        secret_key: Secret key for signing tokens (change in production).
+        secret_key: Secret key for signing tokens (must be overridden in production).
         version: API version string surfaced by the health endpoint.
+        environment: Deployment environment (``dev`` or ``production``).
     """
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
@@ -40,6 +41,21 @@ class Settings(BaseSettings):
     gleif_db_path: Path = Path("data/gleif_cache.db")
     secret_key: str = "dev-secret-key"
     version: str = "1.0.0"
+    environment: str = "dev"
+
+    def validate_production(self) -> None:
+        """Raise if insecure defaults are still in use for production."""
+        if self.environment == "production":
+            if self.secret_key == "dev-secret-key":
+                raise ValueError(
+                    "SECRET_KEY must be overridden in production. "
+                    "Set the SECRET_KEY environment variable."
+                )
+            if "changeme" in self.database_url:
+                raise ValueError(
+                    "DATABASE_URL still contains placeholder credentials. "
+                    "Set the DATABASE_URL environment variable."
+                )
 
 
 @lru_cache

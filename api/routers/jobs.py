@@ -93,13 +93,9 @@ def _resolve_module(script_name: str) -> str:
     """
     module_path = SCRIPT_MODULES.get(script_name)
     if module_path is None:
-        registered = sorted(SCRIPT_MODULES.keys())
         raise HTTPException(
             status_code=400,
-            detail=(
-                f"Unknown script '{script_name}'. "
-                f"Registered scripts: {registered}"
-            ),
+            detail=f"Unknown script '{script_name}'.",
         )
     return module_path
 

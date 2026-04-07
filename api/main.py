@@ -20,6 +20,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from api.config import get_settings as _get_settings
+
 # NOTE: ``src.core.logging.create_logger`` requires the project root on
 # sys.path, which is guaranteed in production (installed package) and in
 # tests (via tests/conftest.py). Standard ``logging`` is used here to
@@ -64,18 +66,28 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     logger.info("API shutting down.")
 
 
+_settings = _get_settings()
+_settings.validate_production()
+
+# Disable OpenAPI docs in production to avoid exposing API schema publicly.
+_docs_url = "/docs" if _settings.environment != "production" else None
+_redoc_url = "/redoc" if _settings.environment != "production" else None
+
 app = FastAPI(
     title="TXR Automation API",
     version="1.0.0",
     lifespan=lifespan,
+    docs_url=_docs_url,
+    redoc_url=_redoc_url,
+    openapi_url="/openapi.json" if _settings.environment != "production" else None,
 )
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000", "http://localhost:5173"],
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # ── Routers ────────────────────────────────────────────────────────────────

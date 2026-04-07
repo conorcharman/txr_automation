@@ -28,6 +28,7 @@ Note:
 """
 
 import logging
+import os
 import tempfile
 from typing import Union
 
@@ -115,18 +116,22 @@ ACCURACY_VALIDATION_SCRIPTS: frozenset[str] = frozenset(
 
 
 def _write_temp_yaml(config: dict) -> str:
-    """Serialise ``config`` to a temporary YAML file and return its path.
+    """Validate paths, serialise ``config`` to a temporary YAML file, and return its path.
 
-    The file is written with ``delete=False`` so the Celery worker process
-    can read it after this function returns.  The caller is responsible for
-    clean-up if required.
+    Applies path traversal validation to all path-like string values in
+    the config before writing.  The file is written with ``delete=False``
+    so the Celery worker process can read it after this function returns.
 
     Args:
         config: Configuration dictionary to serialise as YAML.
 
     Returns:
         Absolute filesystem path to the written temporary file.
+
+    Raises:
+        HTTPException: 400 if any path value contains traversal sequences.
     """
+    _validate_paths(config)
     with tempfile.NamedTemporaryFile(
         mode="w",
         suffix=".yaml",
@@ -153,12 +158,64 @@ def _resolve_module(script_name: str) -> str:
     if module_path is None:
         raise HTTPException(
             status_code=400,
-            detail=(
-                f"Unknown script '{script_name}'. "
-                f"Registered scripts: {sorted(_SCRIPT_MODULES)}"
-            ),
+            detail=f"Unknown script '{script_name}'.",
         )
     return module_path
+
+
+def _validate_path(value: str, field_name: str) -> str:
+    """Reject path values containing traversal sequences.
+
+    Checks both the raw input and the normalised form for ``..``
+    components.  This catches traversal attempts regardless of whether
+    ``os.path.normpath`` resolves them away.
+
+    Args:
+        value: Raw path string from the API request.
+        field_name: Human-readable field name for error messages.
+
+    Returns:
+        The normalised path string.
+
+    Raises:
+        HTTPException: 400 if the path contains traversal sequences.
+    """
+    if ".." in value.split("/"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Path traversal not allowed in '{field_name}'.",
+        )
+    normalised = os.path.normpath(value)
+    if ".." in normalised.split(os.sep):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Path traversal not allowed in '{field_name}'.",
+        )
+    return normalised
+
+
+def _validate_paths(config: dict, prefix: str = "") -> dict:
+    """Recursively validate all string values in a config dict that look like paths.
+
+    Applies ``_validate_path`` to any string value whose key ends with
+    ``_directory``, ``_dir``, ``_file``, ``_input``, ``_output``, or
+    ``parent_dir``.
+
+    Args:
+        config: Configuration dictionary (may be nested).
+        prefix: Dot-separated key prefix for error messages.
+
+    Returns:
+        The same config dict with normalised path values.
+    """
+    _PATH_SUFFIXES = ("_directory", "_dir", "_file", "_input", "_output", "parent_dir")
+    for key, value in config.items():
+        full_key = f"{prefix}.{key}" if prefix else key
+        if isinstance(value, dict):
+            _validate_paths(value, full_key)
+        elif isinstance(value, str) and any(key.endswith(s) for s in _PATH_SUFFIXES):
+            config[key] = _validate_path(value, full_key)
+    return config
 
 
 # ---------------------------------------------------------------------------
@@ -201,10 +258,7 @@ class ScriptRunnerService:
         if req.script_name not in ACCURACY_VALIDATION_SCRIPTS:
             raise HTTPException(
                 status_code=400,
-                detail=(
-                    f"'{req.script_name}' is not a valid accuracy validation script. "
-                    f"Valid scripts: {sorted(ACCURACY_VALIDATION_SCRIPTS)}"
-                ),
+                detail=f"'{req.script_name}' is not a valid accuracy validation script.",
             )
 
         module_path = _resolve_module(req.script_name)
