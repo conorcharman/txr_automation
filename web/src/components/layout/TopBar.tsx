@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { fetchHealth } from "@/api/health";
+import { fetchDashboardStats } from "@/api/dashboard";
 import { useAppStore } from "@/stores/appStore";
 
 const routeTitles: Record<string, string> = {
@@ -27,6 +28,12 @@ const TopBar: React.FC = () => {
     refetchInterval: 30_000,
   });
 
+  const { data: statsData } = useQuery({
+    queryKey: ["dashboard-stats"],
+    queryFn: fetchDashboardStats,
+    refetchInterval: 5_000,
+  });
+
   const isHealthy = !isError && health?.status === "ok";
 
   return (
@@ -42,19 +49,30 @@ const TopBar: React.FC = () => {
         </Button>
         <h1 className="text-base font-semibold">{title}</h1>
       </div>
-      <div className="flex items-center gap-2">
-        <span
-          className={`inline-block h-2.5 w-2.5 rounded-full ${
-            isHealthy ? "bg-green-500" : "bg-red-500"
-          }`}
-          aria-label={isHealthy ? "API online" : "API offline"}
-        />
-        {health?.version && (
-          <span className="text-xs text-muted-foreground">v{health.version}</span>
+      <div className="flex items-center gap-3">
+        {statsData != null && statsData.runningNow > 0 && (
+          <span className="flex items-center gap-1.5 text-xs font-medium text-amber-600 dark:text-amber-400">
+            <span className="inline-block h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
+            {statsData.runningNow} running
+          </span>
         )}
+        <div className="flex items-center gap-2">
+          <span
+            className={`inline-block h-2.5 w-2.5 rounded-full ${
+              isHealthy ? "bg-green-500" : "bg-red-500"
+            }`}
+            aria-label={isHealthy ? "API online" : "API offline"}
+          />
+          {health?.version && (
+            <span className="text-xs text-muted-foreground">
+              v{health.version}
+            </span>
+          )}
+        </div>
       </div>
     </header>
   );
 };
 
 export default TopBar;
+

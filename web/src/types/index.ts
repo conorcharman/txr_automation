@@ -40,3 +40,30 @@ export interface WsMessage {
   type: "log" | "status";
   data: string;
 }
+
+export interface DashboardStats {
+  jobsToday: number;
+  runningNow: number;
+  successRate: number;
+  totalSavedConfigs: number;
+}
+
+export interface SavedConfigResponse {
+  id: string;
+  name: string;
+  scriptName: string;
+  configData: Record<string, unknown>;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface SavedConfigCreate {
+  name: string;
+  scriptName: string;
+  configData: Record<string, unknown>;
+}
+
+export interface SavedConfigUpdate {
+  name?: string;
+  configData?: Record<string, unknown>;
+}
