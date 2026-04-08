@@ -1,36 +1,22 @@
--- Seller-side surname search
--- Returns trades where the seller party surname OR seller decision maker
--- surname contains the string ",RE,"
-
-WITH Candidates AS (
-  -- Decision maker surname sits directly on TXNREPESMA — no join required
-  SELECT REPORTREF
-  FROM GLDATA / TXNREPESMA
-  WHERE TRDDATTIM > '2018-01-01'
-    AND SELDECSURN LIKE '%,RE,%'
-
-  UNION
-
-  -- Party surname requires ESMAPTYIND, scoped to sell-side CONTCT rows
-  SELECT t1.REPORTREF
-  FROM GLDATA / TXNREPESMA t1
-  JOIN GLDATA / CONTCT t2 ON t2.FRMCOD || t2.YEAR || t2.ACCLTR || t2.CONTNO || '1' = t1.REPORTREF
-    AND t2.BUYSEL = 'S'
+SELECT 
+  t1.REPORTREF                                            AS "Report Ref",
+  t5.PTYFORE                                              AS "Seller Forename",
+  t5.PTYSURN                                              AS "Seller Surname",
+  t1.SELDECFORE                                           AS "Seller DM Forename",
+  t1.SELDECSURN                                           AS "Seller DM Surname",
+  t1.TRDDATTIM                                            AS "Trade Date Time"
+  
+FROM 
+  GLDATA / TXNREPESMA t1 
+  JOIN GLDATA / CONTCT t2 ON t2.FRMCOD || t2.YEAR || t2.ACCLTR || t2.CONTNO || '1' = t1.REPORTREF 
+	AND BUYSEL = 'S'
   JOIN GLDATA / ESMAPTYIND t5 ON t1.REPORTREF = t5.REPORTREF
-  WHERE t1.TRDDATTIM > '2018-01-01'
-    AND t5.PTYSURN LIKE '%,RE,%'
-)
-SELECT
-  t1.REPORTREF,
-  t5.PTYFORE AS SEL_PTYFORE,
-  t5.PTYSURN AS SEL_PTYSURN,
-  t1.SELDECIND,
-  CASE WHEN t1.SELDECIND <> '' THEN t5.PTYSCHCODE END AS SELDEC_ID_TYPE,
-  t1.SELDECFORE,
-  t1.SELDECSURN
-FROM
-  GLDATA / TXNREPESMA t1
-  JOIN Candidates c ON t1.REPORTREF = c.REPORTREF
-  JOIN GLDATA / CONTCT t2 ON t2.FRMCOD || t2.YEAR || t2.ACCLTR || t2.CONTNO || '1' = t1.REPORTREF
-    AND t2.BUYSEL = 'S'
-  JOIN GLDATA / ESMAPTYIND t5 ON t1.REPORTREF = t5.REPORTREF
+  LEFT JOIN GLDATA / ESMAPTYIND t5b ON t1.SELDECIND = t5b.PTYSCHCODE 
+WHERE
+  t1.TRDDATTIM > '2018-01-01'
+  AND (
+    t5.PTYSURN LIKE '%,RE,%'
+    OR t1.SELDECSURN LIKE '%,RE,%'
+    OR t5b.PTYSURN LIKE '%,RE,%'
+  ) 
+

@@ -2,9 +2,6 @@ SELECT
   t1.REPORTREF                                            AS "Report Ref",
   t5.PTYFORE                                              AS "Buyer Forename",
   t5.PTYSURN                                              AS "Buyer Surname",
-  t1.BUYDECIND                                            AS "Buyer DM Indicator",
-  CASE WHEN t1.BUYDECIND <> '' 
-       THEN t5.PTYSCHCODE END                             AS "Buyer DM ID Type", 
   t1.BUYDECFORE                                           AS "Buyer DM Forename",
   t1.BUYDECSURN                                           AS "Buyer DM Surname"
 FROM 
