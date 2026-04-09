@@ -24,7 +24,7 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Changelog</p>
-<p class="last-updated">Last updated: 25 March 2026</p>
+<p class="last-updated">Last updated: 9 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-3c.Changelog-Changelog">Changelog</h1>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
 <strong>Versioning:</strong> The project uses phase-based versioning aligned with the migration plan.
@@ -32,6 +32,7 @@
 </div>
 <h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-TableofContents">Table of Contents</h2>
 <ul>
+<li><a href="#phase9" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 9 &mdash; Fullstack Web Application (April 2026, in progress)</a></li>
 <li><a href="#phase6" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 6 &mdash; Integration &amp; Testing (March 2026, in progress)</a></li>
 <li><a href="#phase5" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 5 &mdash; Data Operations (February 2026)</a></li>
 <li><a href="#phase4" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 4 &mdash; Inconsistent ID Validation (27 January 2026)</a></li>
@@ -40,6 +41,26 @@
 <li><a href="#phase1" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 1 &mdash; Foundation (19 January 2026)</a></li>
 <li><a href="#phase0" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 0 &mdash; Refactoring (January 2026)</a></li>
 </ul>
+<span class="confluence-anchor-link" id="id-3c.Changelog-phase9"><span class="confluence-anchor-link" id="phase9" /></span><h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-Phase9—FullstackWebApplication(April2026)">Phase 9 &mdash; Fullstack Web Application (April 2026)</h2>
+<div style="background: rgb(255,250,230);border-left: 4.0px solid rgb(255,139,0);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Status:</strong> In Progress</div>
+<h3 style="color: rgb(23,43,77);">Added</h3>
+<ul>
+<li>FastAPI backend (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">api/</code>) &mdash; REST API with 9 routers: accuracy, replay, firds, gleif, schedules, runs, config, system, and logs</li>
+<li>Pydantic v2 request/response schemas with strict validation</li>
+<li>SQLAlchemy 2.0 async models with PostgreSQL backend</li>
+<li>Celery task queue with Redis broker &mdash; async execution of validation scripts, SQL generation, data push, and replay processing</li>
+<li>Celery Beat periodic task scheduler</li>
+<li>WebSocket log streaming via Redis pub/sub &mdash; real-time task output in the browser</li>
+<li>React 19 single-page application (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">web/</code>) with TypeScript 6, Vite 8, and Tailwind CSS 4</li>
+<li>shadcn/ui component library with Radix UI primitives</li>
+<li>Zustand 5 for client-side state management</li>
+<li>TanStack React Query 5 for server state and cache management</li>
+<li>React Hook Form 7 + Zod 4 for form validation</li>
+<li>Docker Compose deployment with 6 services: Redis 7, PostgreSQL 16, API (Uvicorn), Celery Worker, Celery Beat, Web (Nginx)</li>
+<li>Production Docker Compose variant (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">docker-compose.prod.yml</code>) with optimised builds and health checks</li>
+<li>Nginx reverse proxy configuration for API and WebSocket routing</li>
+</ul>
 <span class="confluence-anchor-link" id="id-3c.Changelog-phase6"><span class="confluence-anchor-link" id="phase6" /></span><h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-Phase6—Integration&amp;Testing(March2026)">Phase 6 &mdash; Integration &amp; Testing (March 2026)</h2>
 <div style="background: rgb(255,250,230);border-left: 4.0px solid rgb(255,139,0);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
 <strong>Status:</strong> In Progress</div>
@@ -47,7 +68,13 @@
 <ul>
 <li>FIRDS module (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/firds/</code>) &mdash; FCA FIRDS instrument reportability checking with SQLite + FTS5 cache and REST API client</li>
 <li>GLEIF module (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gleif/</code>) &mdash; GLEIF LEI lookup service with SQLite cache, full-text search, and golden copy downloads</li>
-<li>GUI application (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gui/</code>) &mdash; PySide6 desktop app with 5 tabs: Accuracy, Replay, FIRDS, GLEIF, Settings</li>
+<li>GUI application (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gui/</code>) &mdash; PySide6 desktop app with 6 tabs: Accuracy, Scheduler, Replay, FIRDS, GLEIF, Utilities</li>
+<li>Scheduler engine (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gui/scheduler/</code>) &mdash; cron-based schedule queue, pipeline executor, and QSettings persistence</li>
+<li>System tray application (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gui/tray/</code>) &mdash; background service with Windows toast notifications and auto-start on login</li>
+<li>Automation CLI (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-automate</code>) &mdash; headless automation entry point for scheduled/unattended runs</li>
+<li>Period extract generator (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">generate-period-extract</code>) &mdash; period-based SQL template and DTF generation for System i Data Transfer</li>
+<li>Incorrect net amount validation (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-incorrect-net-amount</code>) &mdash; replaces legacy pricing validation script</li>
+<li>Replay XLSX converter (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay-xlsx-converter</code>) &mdash; converts replay outputs to XLSX format for stakeholder distribution</li>
 <li>Config validation tool (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">scripts/validate_config_migration.py</code>) &mdash; verifies v1&rarr;v2 config migration</li>
 <li>Merge Inconsistent IDs script (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">merge_inconsistent_ids.py</code>) for deduplicating summary files</li>
 <li>Performance benchmarking scripts in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">scripts/</code>

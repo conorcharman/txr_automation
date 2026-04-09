@@ -24,7 +24,7 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Getting Started</p>
-<p class="last-updated">Last updated: 25 March 2026</p>
+<p class="last-updated">Last updated: 9 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-GettingStarted">Getting Started</h1>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
 <strong>Time to setup:</strong> ~10 minutes. This guide covers environment setup, project installation, and running your first validation script.
@@ -38,6 +38,7 @@
 <li style="margin-bottom: 6.0px;"><a href="#config" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Configuration</a></li>
 <li style="margin-bottom: 6.0px;"><a href="#tests" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Running Tests</a></li>
 <li style="margin-bottom: 6.0px;"><a href="#gui" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Launching the GUI</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#webapp" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Web Application (Docker)</a></li>
 <li style="margin-bottom: 6.0px;"><a href="#next-steps" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Next Steps</a></li>
 </ul>
 <span class="confluence-anchor-link" id="id-4a.GettingStarted-prerequisites"><span class="confluence-anchor-link" id="prerequisites" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-Prerequisites">Prerequisites</h2>
@@ -70,6 +71,16 @@
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">macOS / Windows / Linux</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">&mdash;</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">All platforms supported. macOS is the primary development platform</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Docker &amp; Docker Compose (optional)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">&ge; 24.0</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Required only for the web application (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">docker compose up</code>)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Node.js (optional)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">&ge; 20 LTS</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Required only for local web frontend development (outside Docker)</td>
 </tr>
 </tbody>
 </table></div>
@@ -181,7 +192,17 @@ txr-gui --help
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gui/</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Desktop application</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">PySide6 <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">QMainWindow</code> with 5 tabs (Accuracy, Replay, FIRDS, GLEIF, Settings)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">PySide6 <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">QMainWindow</code> with 6 tabs (Accuracy, Scheduler, Replay, FIRDS, GLEIF, Utilities), scheduler engine, tray app</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">api/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Web API backend</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FastAPI REST API with 9 routers, Celery tasks, SQLAlchemy models, WebSocket streaming</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">web/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Web frontend</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">React 19 SPA with TypeScript, Vite, Tailwind CSS 4, shadcn/ui</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/templates/</code></td>
@@ -332,14 +353,47 @@ python -m src.gui.main
 <li style="margin-bottom: 6.0px;">
 <strong>Accuracy Tab</strong> &mdash; run any of the 9 accuracy testing validations with file/config pickers</li>
 <li style="margin-bottom: 6.0px;">
+<strong>Scheduler Tab</strong> &mdash; create and manage automated schedules with cron expressions and multi-step pipelines</li>
+<li style="margin-bottom: 6.0px;">
 <strong>Replay Tab</strong> &mdash; Phase 2/3 replay processing</li>
 <li style="margin-bottom: 6.0px;">
 <strong>FIRDS Tab</strong> &mdash; refresh FIRDS cache and check instrument reportability</li>
 <li style="margin-bottom: 6.0px;">
 <strong>GLEIF Tab</strong> &mdash; refresh LEI cache and perform entity lookups</li>
 <li style="margin-bottom: 6.0px;">
-<strong>Settings Tab</strong> &mdash; configure paths and preferences</li>
+<strong>Utilities Tab</strong> &mdash; file management, log viewer, and helper tools</li>
 </ul>
+<h3 style="color: rgb(23,43,77);">System Tray Application</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+# Launch the tray service (runs in background with toast notifications)
+txr-tray
+</pre>
+</div></div>
+<p>The tray app provides background schedule execution and Windows toast notifications without the full GUI window.</p>
+<span class="confluence-anchor-link" id="id-4a.GettingStarted-webapp"><span class="confluence-anchor-link" id="webapp" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-WebApplication(Docker)">Web Application (Docker)</h2>
+<p>The fullstack web application runs all services via Docker Compose:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+# Start all 6 services (Redis, PostgreSQL, API, Celery Worker, Celery Beat, Web/Nginx)
+docker compose up --build
+
+# Access the web interface
+# http://localhost (Nginx serves the React SPA and proxies API requests)
+
+# API documentation (Swagger UI)
+# http://localhost/api/docs
+
+# Stop all services
+docker compose down
+</pre>
+</div></div>
+<p>For production deployment, use the optimised configuration:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+docker compose -f docker-compose.prod.yml up -d
+</pre>
+</div></div>
 <span class="confluence-anchor-link" id="id-4a.GettingStarted-next-steps"><span class="confluence-anchor-link" id="next-steps" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-NextSteps">Next Steps</h2>
 <div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
 <thead>

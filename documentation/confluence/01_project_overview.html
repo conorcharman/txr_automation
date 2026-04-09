@@ -24,7 +24,7 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Project Overview</p>
-<p class="last-updated">Last updated: 25 March 2026</p>
+<p class="last-updated">Last updated: 9 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-1.ProjectOverview-ProjectOverview">Project Overview</h1>
 <h2 style="color: rgb(23,43,77);" id="id-1.ProjectOverview-TableofContents">Table of Contents</h2>
 <ul>
@@ -39,6 +39,7 @@
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
 <strong>TXR Automation</strong> is a comprehensive Python suite that automates transaction reporting validation for regulatory compliance.
     It has successfully replaced all 12 legacy VBA macros with a unified, tested, and maintainable Python codebase.
+    The project now also includes a PySide6 desktop GUI, a fullstack web application (React + FastAPI), an automated scheduling engine, and Docker-based deployment.
 </div>
 <p>The project migrates transaction reporting automation from VBA macros (Excel-based) to Python, eliminating Excel dependencies in favour of a CSV-first, platform-independent workflow. The system validates financial transaction data for compliance with UK MiFIR and ESMA RTS 22 requirements.</p>
 <h3 style="color: rgb(23,43,77);" id="id-1.ProjectOverview-KeyAchievements">Key Achievements</h3>
@@ -54,6 +55,10 @@
 <strong>40&ndash;50% code complexity reduction</strong> through shared core library and CSV-first approach</li>
 <li>
 <strong>Zero Excel dependencies</strong> &mdash; fully platform-independent</li>
+<li>
+<strong>PySide6 desktop GUI</strong> with 6-tab interface and automated scheduler</li>
+<li>
+<strong>Fullstack web application</strong> &mdash; React 19 SPA + FastAPI backend with Docker Compose deployment</li>
 </ul>
 </div>
 <h3 style="color: rgb(23,43,77);" id="id-1.ProjectOverview-BusinessCase">Business Case</h3>
@@ -220,7 +225,17 @@
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gui/</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Desktop GUI</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">PySide6, 5-tab interface, background workers, all modules accessible</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">PySide6, 6-tab interface (Accuracy, Scheduler, Replay, FIRDS, GLEIF, Utilities), scheduler engine, tray app</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">api/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">FastAPI backend</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">REST API (9 routers), Celery task queue, WebSocket streaming, async PostgreSQL</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">web/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">React web application</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">React 19 SPA, TypeScript, Vite 8, Tailwind CSS 4, Zustand state, 11 pages</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/utils/</code></td>
@@ -294,6 +309,12 @@
 <td align="left" data-colorid="xmo0ikbblg" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">🔲 Planning</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">&mdash;</td>
 </tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase 9</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Fullstack web application (React + FastAPI + Docker)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">🔄 In Progress</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">&mdash;</td>
+</tr>
 </tbody>
 </table></div>
 <div style="background: rgb(255,250,230);border-left: 4.0px solid rgb(255,139,0);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
@@ -321,8 +342,23 @@
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Desktop GUI</td>
-<td align="left" data-colorid="dysf1ijaue" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">🔄 In Development</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">PySide6 app with 5 tabs, background workers</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">✅ Implemented</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">PySide6 app with 6 tabs, scheduler engine, tray app, background workers</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Scheduler Engine</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">✅ Implemented</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Polling-based engine, QSettings persistence, pipeline executor (EXTRACT&rarr;COLLATE&rarr;VALIDATE&rarr;PUSH)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">System Tray App</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">✅ Implemented</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Desktop notifications, auto-start on login (Windows), schedule monitoring</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Web Application</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">🔄 In Development</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">React 19 + FastAPI + Celery + PostgreSQL + Redis, Docker Compose (6 services)</td>
 </tr>
 </tbody>
 </table></div>
@@ -382,6 +418,41 @@
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">1.4+</td>
 </tr>
 <tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Web frontend</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">React + TypeScript + Vite</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">19.x / 6.x / 8.x</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Web styling</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Tailwind CSS + shadcn/ui (Radix)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">4.x</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">API framework</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">FastAPI + Uvicorn</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">0.115+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Task queue</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Celery + Redis</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">5.x / 7.x</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Web database</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">PostgreSQL + SQLAlchemy (async)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">16.x / 2.x</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Containerisation</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Docker + Docker Compose</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">&mdash;</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Reverse proxy</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Nginx</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Alpine</td>
+</tr>
+<tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Environment</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Conda</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">&mdash;</td>
@@ -417,7 +488,7 @@
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Console scripts registered</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">22 + 1 GUI</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">24 + 2 GUI (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-gui</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-tray</code>)</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Total test cases</td>

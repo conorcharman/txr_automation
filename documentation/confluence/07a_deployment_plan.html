@@ -24,10 +24,10 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Deployment &amp; Transition Plan</p>
-<p class="last-updated">Last updated: 25 March 2026</p>
+<p class="last-updated">Last updated: 9 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-DeploymentPlan&amp;Roadmap">Deployment Plan &amp; Roadmap</h1>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
-<strong>Current status:</strong> Phases 0&ndash;5 complete. Phase 6 (Integration &amp; Testing) in progress. Phase 7 (Deployment &amp; Transition) and Phase 8 (Unified CLI) not yet started.
+<strong>Current status:</strong> Phases 0&ndash;5 complete. Phase 6 (Integration &amp; Testing) in progress. Phase 9 (Fullstack Web Application) in progress. Phase 7 (Deployment &amp; Transition) and Phase 8 (Unified CLI) not yet started.
 </div>
 <h2 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-TableofContents">Table of Contents</h2>
 <ul>
@@ -35,6 +35,7 @@
 <li><a href="#phase7" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 7: Deployment &amp; Transition</a></li>
 <li><a href="#phase8" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 8: Unified CLI Tool</a></li>
 <li><a href="#gui" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">GUI Application Roadmap</a></li>
+<li><a href="#phase9" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 9: Fullstack Web Application</a></li>
 <li><a href="#env" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Environment &amp; Installation</a></li>
 <li><a href="#risks" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Risks &amp; Mitigations</a></li>
 </ul>
@@ -94,7 +95,7 @@
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
 <strong>7.1</strong> Environment provisioning</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Install Conda environment on production workstations; verify <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pip install -e .</code>; confirm all 22 console scripts are accessible</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Install Conda environment on production workstations; verify <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pip install -e .</code>; confirm all 27 console scripts are accessible</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">1&ndash;2 days</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Developer</td>
 </tr>
@@ -145,7 +146,7 @@
 <span class="confluence-anchor-link" id="id-7a.Deployment&amp;TransitionPlan-phase8"><span class="confluence-anchor-link" id="phase8" /></span><h2 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-Phase8:UnifiedCLITool">Phase 8: Unified CLI Tool</h2>
 <p>Detailed plan at <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">documentation/planning/Phase_8_CLI_Tool_Plan.md</code>.</p>
 <h3 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-Concept">Concept</h3>
-<p>Consolidate all 22 console scripts into a single interactive CLI entry point (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-automation</code>) with text-based menus:</p>
+<p>Consolidate all 27 console scripts into a single interactive CLI entry point (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-automation</code>) with text-based menus:</p>
 <div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
 <pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 $ txr-automation
@@ -167,7 +168,7 @@ What would you like to do?
 <h3 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-KeyDesignDecisions">Key Design Decisions</h3>
 <ul>
 <li>
-<strong>Single entry point:</strong> <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-automation</code> replaces memorising 22 separate commands</li>
+<strong>Single entry point:</strong> <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-automation</code> replaces memorising 27 separate commands</li>
 <li>
 <strong>Guided workflow:</strong> Interactive prompts for incident code selection and configuration</li>
 <li>
@@ -208,7 +209,12 @@ What would you like to do?
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Entry point</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-gui</code></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Registered as <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gui_scripts</code> in setup.py</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Registered as <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gui_scripts</code> in setup.py; launches 6-tab desktop application</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Tray app</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-tray</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">System tray application with Windows toast notifications, auto-start on login, and scheduler monitoring</td>
 </tr>
 </tbody>
 </table></div>
@@ -224,31 +230,87 @@ What would you like to do?
 <tbody>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Accuracy Testing</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">10 validation + 4 orchestration scripts</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 1 scope</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">10 validation + 5 orchestration scripts</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✅ Complete</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Scheduler</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Schedule editor, run history, pipeline builder, cron-based scheduling engine</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✅ Complete</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Replay Processing</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 2, Phase 3, Phase 3 Final, merge summaries</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 1 scope</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 2, Phase 3, Phase 3 Final, merge summaries, XLSX converter</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✅ Complete</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FIRDS Reference Data</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">cache refresh, reportability check, backfill</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 1 scope</td>
-</tr>
-<tr>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Utilities</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">XLSX-to-CSV converter</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 1 scope</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✅ Complete</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">GLEIF Reference Data</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">cache refresh, LEI check, backfill</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Deferred to Phase 2</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✅ Complete</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Utilities</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">XLSX-to-CSV converter, settings management</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✅ Complete</td>
 </tr>
 </tbody>
 </table></div>
+<span class="confluence-anchor-link" id="id-7a.Deployment&amp;TransitionPlan-phase9"><span class="confluence-anchor-link" id="phase9" /></span><h2 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-Phase9:FullstackWebApplication">Phase 9: Fullstack Web Application</h2>
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Status:</strong> In progress. Provides a browser-based alternative to the PySide6 desktop GUI, deployed via Docker Compose.
+</div>
+<h3 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-WebAppArchitecture">Architecture</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Component</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Technology</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">API</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FastAPI + Uvicorn</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">REST API with 9 routers, async SQLAlchemy + PostgreSQL</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Task queue</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Celery + Redis</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Background script execution (worker + beat scheduler), Redis pub/sub for live log streaming</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Frontend</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">React 19 + TypeScript</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Vite 8, Tailwind CSS 4, shadcn/ui components, Zustand state management</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Database</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">PostgreSQL 16</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Task history, configuration, and job metadata persistence</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Deployment</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Docker Compose</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">6 services: Redis 7, PostgreSQL 16, API (:8000), Celery Worker, Celery Beat, Web/Nginx (:80)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-WebAppDeployment">Deployment</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+# Development
+docker compose up --build
+
+# Production (with Nginx reverse proxy)
+docker compose -f docker-compose.prod.yml up -d
+</pre>
+</div></div>
 <span class="confluence-anchor-link" id="id-7a.Deployment&amp;TransitionPlan-env"><span class="confluence-anchor-link" id="env" /></span><h2 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-Environment&amp;Installation">Environment &amp; Installation</h2>
 <h3 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-Prerequisites">Prerequisites</h3>
 <div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
@@ -274,6 +336,16 @@ What would you like to do?
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Git</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Latest</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Source control</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Docker &amp; Docker Compose</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Latest</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Web application deployment (Phase 9)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Node.js</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">22+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Frontend development (Phase 9)</td>
 </tr>
 </tbody>
 </table></div>

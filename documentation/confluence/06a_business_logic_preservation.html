@@ -24,7 +24,7 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Business Logic Preservation</p>
-<p class="last-updated">Last updated: 25 March 2026</p>
+<p class="last-updated">Last updated: 9 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-BusinessLogicPreservationEvidence">Business Logic Preservation Evidence</h1>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
 <strong>Purpose:</strong> This document provides auditable evidence that every VBA business rule has been faithfully migrated to Python with equivalent behaviour. It maps each VBA rule to its Python implementation and the corresponding automated tests that verify correctness.
@@ -550,9 +550,19 @@
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gleif/</code></td>
 </tr>
 <tr>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">GUI desktop application (PySide6)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">GUI desktop application (PySide6, 6 tabs)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Non-technical users can run workflows without CLI</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gui/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Scheduler engine with cron expressions and pipelines</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Automated unattended execution of validation workflows</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gui/scheduler/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Fullstack web application (React + FastAPI + Docker)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Browser-based access to all TXR functionality, deployable via Docker</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">api/</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">web/</code></td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Batch mode processing via YAML configuration</td>

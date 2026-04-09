@@ -24,11 +24,11 @@
 </head>
 <body>
 
-<p class="last-updated">Last updated: 25 March 2026</p>
+<p class="last-updated">Last updated: 9 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="TXRAutomationDocumentation-TXRAutomationDocumentation">TXR Automation Documentation</h1>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
-<strong>Transaction Reporting Automation Suite</strong> &mdash; Comprehensive documentation for the VBA-to-Python migration project.
-    This documentation covers architecture, development methodology, user guides, audit evidence, and operational procedures.
+<strong>Transaction Reporting Automation Suite</strong> &mdash; Comprehensive documentation for the VBA-to-Python migration project and fullstack web application.
+    This documentation covers architecture, development methodology, user guides, audit evidence, operational procedures, the PySide6 desktop GUI, the React web application, and the FastAPI backend.
 </div>
 <h2 style="color: rgb(23,43,77);" id="TXRAutomationDocumentation-DocumentationMap">Documentation Map</h2>
 <p>This documentation suite is organised as a hierarchical page tree. Click any page title to navigate.</p>
@@ -105,12 +105,12 @@
 <td align="left" rowspan="2" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>5. User Guides</strong></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="05_user_guides.html" data-linked-resource-id="3436642461" data-linked-resource-version="1" data-linked-resource-type="page">5. User Guides</a></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Users, Developers</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Comprehensive operational guides for accuracy testing, replay, FIRDS, GLEIF, and the GUI</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Comprehensive operational guides for accuracy testing, replay, FIRDS, GLEIF, the desktop GUI, the scheduler, and the web application</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="05j_cli_command_reference.html" data-linked-resource-id="3436314896" data-linked-resource-version="1" data-linked-resource-type="page">5j. CLI Command Reference</a></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Users, Developers</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">All 22 console scripts with syntax, arguments, and examples</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">All 24 console scripts and 2 GUI scripts with syntax, arguments, and examples</td>
 </tr>
 <tr>
 <td align="left" rowspan="2" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>6. Audit &amp; Compliance</strong></td>
@@ -127,7 +127,7 @@
 <td align="left" rowspan="2" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>7. Operations</strong></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="07a_deployment_plan.html" data-linked-resource-id="3436609723" data-linked-resource-version="1" data-linked-resource-type="page">7a. Deployment &amp; Transition Plan</a></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Management, Developers</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase 7 deployment plan, Phase 8 CLI unification, GUI roadmap</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase 7 deployment plan, Phase 8 CLI unification, Phase 9 web application, Docker deployment, GUI roadmap</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="07b_performance_benchmarks.html" data-linked-resource-id="3436642493" data-linked-resource-version="1" data-linked-resource-type="page">7b. Performance Benchmarks</a></td>
@@ -176,6 +176,14 @@
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Review test coverage for compliance</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="06b_test_coverage_report.html" data-linked-resource-id="3436642477" data-linked-resource-version="1" data-linked-resource-type="page">6b. Test Coverage &amp; Validation Report</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Use the web application</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="05_user_guides.html#webapp">5. User Guides &mdash; Web Application</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Deploy with Docker</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="07a_deployment_plan.html#docker">7a. Deployment &amp; Transition Plan &mdash; Docker</a></td>
 </tr>
 </tbody>
 </table></div>

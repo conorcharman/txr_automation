@@ -24,7 +24,7 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Data Flow &amp; Integration</p>
-<p class="last-updated">Last updated: 25 March 2026</p>
+<p class="last-updated">Last updated: 9 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-DataFlow&amp;Integration">Data Flow &amp; Integration</h1>
 <h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-TableofContents">Table of Contents</h2>
 <ul>
@@ -36,6 +36,8 @@
 <li><a href="#gleif" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">GLEIF Data Flow</a></li>
 <li><a href="#config" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Configuration Cascade</a></li>
 <li><a href="#reference" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Reference Data Loading</a></li>
+<li><a href="#scheduler" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Scheduler Pipeline Flow</a></li>
+<li><a href="#webapp" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Web Application Data Flow</a></li>
 </ul>
 <span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-e2e"><span class="confluence-anchor-link" id="e2e" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-End-to-EndAccuracyTestingFlow">End-to-End Accuracy Testing Flow</h2>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
@@ -413,6 +415,131 @@
 <li>
 <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">LV_CENTURY_CODES</code> &mdash; Latvian century code mapping</li>
 </ul>
+<span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-scheduler"><span class="confluence-anchor-link" id="scheduler" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-SchedulerPipelineFlow">Scheduler Pipeline Flow</h2>
+<p>The desktop GUI scheduler engine executes multi-step pipelines automatically on a cron schedule:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+ Schedule Trigger (cron expression via QSettings)
+ |
+ v
+ +------------------------------------------------+
+ |  STEP 1: EXTRACT                                |
+ |  * generate-sql-extract / generate-period-extract|
+ |  * Produce .sql/.dtf files for DB execution      |
+ +---------------------+--------------------------+
+                       |
+                       v
+ +------------------------------------------------+
+ |  STEP 2: COLLATE                                |
+ |  * collate-csv-extracts                         |
+ |  * Merge DB extract CSVs into unified files     |
+ +---------------------+--------------------------+
+                       |
+                       v
+ +------------------------------------------------+
+ |  STEP 3: VALIDATE                               |
+ |  * validate-all (runs all applicable incidents) |
+ |  * Produces validated CSV + errors-only CSV     |
+ +---------------------+--------------------------+
+                       |
+                       v
+ +------------------------------------------------+
+ |  STEP 4: PUSH                                   |
+ |  * data-push                                    |
+ |  * Update master tracking files                 |
+ +------------------------------------------------+
+
+  Pipeline output files use date-stamped naming.
+  Run history and status tracked in SchedulerTab.
+  Failures trigger Windows toast notifications via TrayApp.
+</pre>
+</div></div>
+<span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-webapp"><span class="confluence-anchor-link" id="webapp" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-WebApplicationDataFlow">Web Application Data Flow</h2>
+<p>The fullstack web application uses a layered architecture with async task processing:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+ API REQUEST FLOW
+ +--------------------+
+ |  React Frontend    |
+ |  (browser)         |
+ +---------+----------+
+           |  REST / WebSocket
+           v
+ +--------------------+
+ |  Nginx             |
+ |  Reverse Proxy     |
+ |  * /api/* --> :8000 |
+ |  * /* --> static   |
+ +---------+----------+
+           |
+           v
+ +--------------------+     +--------------------+
+ |  FastAPI           |----&gt;|  Celery Worker     |
+ |  * Route handler   |     |  * Execute task    |
+ |  * Create job      |     |  * Call src/ module|
+ |  * Return job ID   |     |  * Publish logs    |
+ +---------+----------+     +---------+----------+
+           |                          |
+           v                          v
+ +--------------------+     +--------------------+
+ |  PostgreSQL        |     |  Redis             |
+ |  * Job records     |     |  * Task broker     |
+ |  * Run history     |     |  * Pub/Sub logs    |
+ +--------------------+     +---------+----------+
+                                      |
+                                      v
+                            +--------------------+
+                            |  WebSocket Manager |
+                            |  * Subscribe to    |
+                            |    Redis channel   |
+                            |  * Stream to       |
+                            |    connected       |
+                            |    browser clients |
+                            +--------------------+
+</pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-DockerServiceCommunication">Docker Service Communication</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Service</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Port</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Communicates With</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Nginx (web)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">80</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">API (upstream proxy)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">FastAPI (api)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">8000</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">PostgreSQL, Redis, Celery (via Redis)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Celery Worker</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">&mdash;</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Redis (broker), PostgreSQL (results), src/ modules</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Celery Beat</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">&mdash;</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Redis (schedule submission)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Redis</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">6379</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">All backend services</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">PostgreSQL</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">5432</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">API, Celery Worker</td>
+</tr>
+</tbody>
+</table></div>
 
 </body>
 </html>

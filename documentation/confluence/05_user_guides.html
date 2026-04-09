@@ -24,7 +24,7 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; User Guides</p>
-<p class="last-updated">Last updated: 25 March 2026</p>
+<p class="last-updated">Last updated: 9 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-5.UserGuides-UserGuides">User Guides</h1>
 <h2 style="color: rgb(23,43,77);" id="id-5.UserGuides-TableofContents">Table of Contents</h2>
 <ul>
@@ -33,6 +33,7 @@
 <li><a href="#firds" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">FIRDS Reportability</a></li>
 <li><a href="#gleif" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">GLEIF LEI Lookup</a></li>
 <li><a href="#gui" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Desktop GUI</a></li>
+<li><a href="#webapp" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Web Application</a></li>
 <li><a href="#troubleshooting" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Troubleshooting</a></li>
 </ul>
 
@@ -284,6 +285,10 @@ txr-gui
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Run any of the 9 accuracy testing validations. Includes file picker for input/output, config loader, and log viewer.</td>
 </tr>
 <tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Scheduler</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Create and manage automated schedules with cron expressions. Build multi-step pipelines (extract &rarr; collate &rarr; validate &rarr; push). View run history and upcoming schedule.</td>
+</tr>
+<tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Replay</strong></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 2/3 replay processing with progress reporting.</td>
 </tr>
@@ -296,14 +301,58 @@ txr-gui
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Cache management (refresh/backfill), LEI lookup and entity search.</td>
 </tr>
 <tr>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Settings</strong></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Configure default paths and preferences.</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Utilities</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">File management, log viewer, and helper tools.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Utilities</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">File management, log viewer, and helper tools.</td>
 </tr>
 </tbody>
 </table></div>
+<h3 style="color: rgb(23,43,77);">System Tray Application</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+# Launch the tray service
+txr-tray
+</pre>
+</div></div>
+<p>The tray app runs schedules in the background with Windows toast notifications. It can be configured to auto-start on login.</p>
 <div style="background: rgb(255,250,230);border-left: 4.0px solid rgb(255,139,0);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
 <strong>Note:</strong> The GUI is in active development. All validation logic is shared with the CLI scripts, so results are identical regardless of interface used.
 </div>
+
+<span class="confluence-anchor-link" id="id-5.UserGuides-webapp"><span class="confluence-anchor-link" id="webapp" /></span><h2 style="color: rgb(23,43,77);" id="id-5.UserGuides-WebApplication">Web Application</h2>
+
+<p>The fullstack web application provides a browser-based interface to all TXR Automation functionality, deployed via Docker Compose.</p>
+<h3 style="color: rgb(23,43,77);">Starting the Web Application</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+# Start all services
+docker compose up --build
+
+# Access the web interface at http://localhost
+# API documentation at http://localhost/api/docs
+</pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);">Key Features</h3>
+<ul>
+<li style="margin-bottom: 6.0px;"><strong>Dashboard</strong> &mdash; overview of recent runs, system status, and quick actions</li>
+<li style="margin-bottom: 6.0px;"><strong>Accuracy Testing</strong> &mdash; run validations, view results, and manage configurations through the browser</li>
+<li style="margin-bottom: 6.0px;"><strong>Real-time Logs</strong> &mdash; WebSocket-streamed task output visible in the browser as scripts execute</li>
+<li style="margin-bottom: 6.0px;"><strong>Schedule Management</strong> &mdash; create, edit, and monitor automated schedules</li>
+<li style="margin-bottom: 6.0px;"><strong>Run History</strong> &mdash; browse previous task executions with status, duration, and output</li>
+</ul>
+<h3 style="color: rgb(23,43,77);">Architecture</h3>
+<p>The web application comprises 6 Docker services:</p>
+<ul>
+<li style="margin-bottom: 6.0px;"><strong>Web (Nginx)</strong> &mdash; serves the React SPA and reverse-proxies API/WebSocket requests</li>
+<li style="margin-bottom: 6.0px;"><strong>API (FastAPI)</strong> &mdash; REST API with 9 route groups, Swagger/OpenAPI documentation</li>
+<li style="margin-bottom: 6.0px;"><strong>Celery Worker</strong> &mdash; executes validation scripts asynchronously</li>
+<li style="margin-bottom: 6.0px;"><strong>Celery Beat</strong> &mdash; periodic task scheduler</li>
+<li style="margin-bottom: 6.0px;"><strong>Redis</strong> &mdash; message broker for Celery and pub/sub for WebSocket log streaming</li>
+<li style="margin-bottom: 6.0px;"><strong>PostgreSQL</strong> &mdash; persistent storage for schedules, run history, and configuration</li>
+</ul>
 
 <span class="confluence-anchor-link" id="id-5.UserGuides-troubleshooting"><span class="confluence-anchor-link" id="troubleshooting" /></span><h2 style="color: rgb(23,43,77);" id="id-5.UserGuides-Troubleshooting">Troubleshooting</h2>
 
@@ -345,6 +394,12 @@ txr-gui
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FIRDS/GLEIF cache is empty</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Cache not yet populated</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Run <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">firds-refresh --type full</code> or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gleif-refresh --type full</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Docker containers fail to start</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Docker not running or port conflict</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Ensure Docker Desktop is running. Check ports 80, 5432, 6379 are free. Run <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">docker compose down</code> then <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">docker compose up --build</code>
 </td>
 </tr>
 </tbody>

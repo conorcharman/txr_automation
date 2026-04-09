@@ -24,19 +24,20 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; CLI Command Reference</p>
-<p class="last-updated">Last updated: 25 March 2026</p>
+<p class="last-updated">Last updated: 9 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-CLICommandReference">CLI Command Reference</h1>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
-<strong>22 console scripts + 1 GUI script</strong> registered in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">setup.py</code>.
+<strong>27 console scripts + 2 GUI scripts</strong> registered in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">setup.py</code>.
     All commands require <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pip install -e .</code> and environment activation (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">conda activate txr_automation</code>).
 </div>
 <h2 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-TableofContents">Table of Contents</h2>
 <ul>
-<li><a href="#accuracy" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Accuracy Testing Commands (14)</a></li>
-<li><a href="#replay" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Replay Commands (4)</a></li>
+<li><a href="#accuracy" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Accuracy Testing Commands (15)</a></li>
+<li><a href="#replay" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Replay Commands (5)</a></li>
 <li><a href="#firds" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">FIRDS Commands (3)</a></li>
 <li><a href="#gleif" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">GLEIF Commands (3)</a></li>
-<li><a href="#gui" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">GUI Command (1)</a></li>
+<li><a href="#automation" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Automation Command (1)</a></li>
+<li><a href="#gui" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">GUI Commands (2)</a></li>
 <li><a href="#common-args" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Common Arguments</a></li>
 </ul>
 <span class="confluence-anchor-link" id="id-5j.CLICommandReference-accuracy"><span class="confluence-anchor-link" id="accuracy" /></span><h2 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-AccuracyTestingCommands">Accuracy Testing Commands</h2>
@@ -181,16 +182,16 @@ validate-ftsdm --config config/local/accuracy_testing/ftsdm_validation.yaml
 </pre>
 </div></div>
 
-<h3 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-validate-pricing"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-pricing</code></h3>
+<h3 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-validate-incorrect-net-amount"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-incorrect-net-amount</code></h3>
 <div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
 <tbody>
 <tr>
 <th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Entry point</th>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.pricing_validation:main</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.incorrect_net_amount_validation:main</code></td>
 </tr>
 <tr>
 <th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Purpose</th>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Validate pricing data (Net Amount = Consideration + Interest)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Validate incorrect net amount values (Net Amount = Consideration + Interest)</td>
 </tr>
 <tr>
 <th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Modes</th>
@@ -200,7 +201,7 @@ validate-ftsdm --config config/local/accuracy_testing/ftsdm_validation.yaml
 </table></div>
 <div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
 <pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
-validate-pricing --config config/local/accuracy_testing/pricing_validation.yaml
+validate-incorrect-net-amount --config config/local/accuracy_testing/incorrect_net_amount_validation.yaml
 </pre>
 </div></div>
 
@@ -282,6 +283,25 @@ validate-all --config config/local/accuracy_testing/run_all_validations.yaml
 <pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 generate-sql-extract --config config/local/accuracy_testing/sql_extract.yaml
 generate-sql-extract --config config.yaml --incident 7_37
+</pre>
+</div></div>
+
+<h3 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-generate-period-extract"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">generate-period-extract</code></h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<tbody>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Entry point</th>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.period_extract_generator:main</code></td>
+</tr>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Purpose</th>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Generate period-based SQL templates and DTF files for System i Data Transfer</td>
+</tr>
+</tbody>
+</table></div>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+generate-period-extract --config config/local/accuracy_testing/period_extract.yaml
 </pre>
 </div></div>
 
@@ -565,7 +585,26 @@ gleif-check --input data/leis.csv --output data/lei_results.csv
 gleif-backfill --config config/local/gleif_config.yaml
 </pre>
 </div></div>
-<span class="confluence-anchor-link" id="id-5j.CLICommandReference-gui"><span class="confluence-anchor-link" id="gui" /></span><h2 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-GUICommand">GUI Command</h2>
+<span class="confluence-anchor-link" id="id-5j.CLICommandReference-automation"><span class="confluence-anchor-link" id="automation" /></span><h2 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-AutomationCommand">Automation Command</h2>
+<h3 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-txr-automate"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-automate</code></h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<tbody>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Entry point</th>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">automation.cli:main</code></td>
+</tr>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Purpose</th>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Headless automation entry point for scheduled and unattended runs</td>
+</tr>
+</tbody>
+</table></div>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+txr-automate --config config/local/automation.yaml
+</pre>
+</div></div>
+<span class="confluence-anchor-link" id="id-5j.CLICommandReference-gui"><span class="confluence-anchor-link" id="gui" /></span><h2 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-GUICommands">GUI Commands</h2>
 <h3 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-txr-gui"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-gui</code></h3>
 <div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
 <tbody>
@@ -575,7 +614,7 @@ gleif-backfill --config config/local/gleif_config.yaml
 </tr>
 <tr>
 <th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Purpose</th>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Launch the PySide6 desktop application with 5 tabbed interface</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Launch the PySide6 desktop application with 6-tab interface (Accuracy, Scheduler, Replay, FIRDS, GLEIF, Utilities)</td>
 </tr>
 <tr>
 <th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Type</th>
@@ -587,6 +626,30 @@ gleif-backfill --config config/local/gleif_config.yaml
 <div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
 <pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 txr-gui
+</pre>
+</div></div>
+
+<h3 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-txr-tray"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-tray</code></h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<tbody>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Entry point</th>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gui.tray.tray_app:main</code></td>
+</tr>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Purpose</th>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">System tray application with background schedule execution and toast notifications</td>
+</tr>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Type</th>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gui_scripts</code></td>
+</tr>
+</tbody>
+</table></div>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+txr-tray
 </pre>
 </div></div>
 <span class="confluence-anchor-link" id="id-5j.CLICommandReference-common-args"><span class="confluence-anchor-link" id="common-args" /></span><h2 style="color: rgb(23,43,77);" id="id-5j.CLICommandReference-CommonArguments">Common Arguments</h2>
