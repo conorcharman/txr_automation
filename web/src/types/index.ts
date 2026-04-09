@@ -278,6 +278,51 @@ export interface GleifSearchResponse {
   count: number;
 }
 
+// ---------------------------------------------------------------------------
+// Scheduler
+// ---------------------------------------------------------------------------
+
+export type ScheduleFrequency = "hourly" | "daily" | "weekly" | "monthly" | "custom";
+
+export interface Schedule {
+  id: string;
+  name: string;
+  scriptName: string;
+  frequency: ScheduleFrequency;
+  cronExpression: string | null;
+  configData: Record<string, unknown> | null;
+  isActive: boolean;
+  nextRunAt: string | null;
+  lastRunAt: string | null;
+  lastStatus: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface ScheduleCreate {
+  name: string;
+  scriptName: string;
+  frequency: ScheduleFrequency;
+  cronExpression?: string | null;
+  configData?: Record<string, unknown> | null;
+  isActive?: boolean;
+}
+
+export interface ScheduleUpdate {
+  name?: string;
+  scriptName?: string;
+  frequency?: ScheduleFrequency;
+  cronExpression?: string | null;
+  configData?: Record<string, unknown> | null;
+  isActive?: boolean;
+}
+
+export interface ScheduleTriggerResponse {
+  jobId: string;
+  scheduleId: string;
+  message: string;
+}
+
 // Utilities
 export interface XlsxConverterRequest {
   mode: "single" | "batch";

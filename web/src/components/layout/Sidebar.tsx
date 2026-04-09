@@ -8,6 +8,7 @@ import {
   Search,
   Wrench,
   History,
+  CalendarClock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/appStore";
@@ -25,6 +26,7 @@ const navItems: NavItem[] = [
   { label: "FIRDS", to: "/firds", icon: <Database size={18} /> },
   { label: "GLEIF", to: "/gleif", icon: <Search size={18} /> },
   { label: "Utilities", to: "/utilities", icon: <Wrench size={18} /> },
+  { label: "Scheduler", to: "/scheduler", icon: <CalendarClock size={18} /> },
   { label: "Job History", to: "/jobs", icon: <History size={18} /> },
 ];
 

@@ -10,6 +10,7 @@ import Replay from "@/pages/Replay";
 import FIRDS from "@/pages/FIRDS";
 import GLEIF from "@/pages/GLEIF";
 import Utilities from "@/pages/Utilities";
+import Scheduler from "@/pages/Scheduler";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -28,6 +29,7 @@ export default function App() {
             <Route path="firds" element={<FIRDS />} />
             <Route path="gleif" element={<GLEIF />} />
             <Route path="utilities" element={<Utilities />} />
+            <Route path="scheduler" element={<Scheduler />} />
             <Route path="jobs" element={<Jobs />} />
             <Route path="jobs/:jobId" element={<JobDetail />} />
           </Route>
