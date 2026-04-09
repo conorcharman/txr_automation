@@ -1,0 +1,136 @@
+services:
+
+  # ---------------------------------------------------------------------------
+  # Redis — no exposed ports in production
+  # ---------------------------------------------------------------------------
+  redis:
+    image: redis:7-alpine
+    restart: always
+    networks:
+      - txr-network
+    deploy:
+      resources:
+        limits:
+          memory: 128m
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # ---------------------------------------------------------------------------
+  # PostgreSQL — no exposed ports in production
+  # ---------------------------------------------------------------------------
+  db:
+    image: postgres:16-alpine
+    restart: always
+    env_file: .env
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - txr-network
+    deploy:
+      resources:
+        limits:
+          memory: 256m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  # ---------------------------------------------------------------------------
+  # API — no source mounts; code baked into image
+  # ---------------------------------------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data:/app/data
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    networks:
+      - txr-network
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/health')"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 20s
+
+  # ---------------------------------------------------------------------------
+  # Worker — Celery; same image as api, no exposed ports
+  # ---------------------------------------------------------------------------
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    restart: always
+    volumes:
+      - ./data:/app/data
+    env_file: .env
+    depends_on:
+      redis:
+        condition: service_healthy
+      db:
+        condition: service_healthy
+    command: celery -A api.tasks.celery_app worker --loglevel=info
+    networks:
+      - txr-network
+    deploy:
+      resources:
+        limits:
+          memory: 512m
+    healthcheck:
+      test: ["CMD", "celery", "-A", "api.tasks.celery_app", "inspect", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ---------------------------------------------------------------------------
+  # Web — port 80 in production
+  # ---------------------------------------------------------------------------
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    restart: always
+    ports:
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+    networks:
+      - txr-network
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:80"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+networks:
+  txr-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

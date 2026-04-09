@@ -1,0 +1,11 @@
+Transaction Reference,Account ID,Person Code,Buyer ID Code,Type of Buyer ID Code,First Name,Surname,Date of Birth,Gender,Primary Nationality,Secondary Nationality,Correction Output,Correction Fields,Tracker Status,Agree With Correction
+TXN001,ACC001,P001,AB22222ZZ,NIDN,John,Smith,1985-06-15,M,GB,,,,,
+TXN002,ACC002,P002,AB234567D,NIDN,Jane,Doe,1990-03-20,F,GB,,,,,
+TXN003,ACC003,P003,AB789000X,NIDN,Robert,Jones,1975-12-01,M,GB,,,,,
+TXN004,ACC004,P004,,,,Bob,Howard,1983-09-05,M,GB,,,,,
+TXN005,ACC005,P005,UNKNOWNID,NIDN,Michael,Scott,1964-03-15,M,GB,,,,,
+TXN006,ACC006,P006,,LEI,Fund,Manager,,,GB,,,,,
+TXN007,ACC007,P007,AB456789C,NIDN,Sarah,Connor,1984-05-20,F,GB,,,,,
+TXN008,ACC008,P008,EF012345B,NIDN,Tony,Stark,1970-05-29,M,GB,,,,,
+TXN009,ACC009,P009,GH234567C,NIDN,Pepper,Potts,1975-08-12,F,GB,,,,,
+TXN010,ACC010,P010,IJ345678D,NIDN,Steve,Rogers,1918-07-04,M,GB,,,,,

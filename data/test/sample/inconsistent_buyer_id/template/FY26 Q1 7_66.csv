@@ -1,0 +1,6 @@
+Transaction Reference,Account ID,Person Code,Buyer ID Code,Type of Buyer ID Code,First Name,Surname,Date of Birth,Gender,Primary Nationality,Secondary Nationality,Correction Output,Correction Fields,Tracker Status,Agree With Correction
+TXN200,ACCA001,PABC,AB123456C,NIDN,John,Smith,1985-06-15,M,GB,,,,,
+TXN201,ACCA001,PABC,AB12345ZZ,NIDN,John,Smith,1985-06-15,M,GB,,,,,
+TXN202,ACCA001,PABC,AB123456B,NIDN,John,Smith,1985-06-15,M,GB,,,,,
+TXN209,ACCD001,PFIX,BADINVALIDID,NIDN,Maria,Garcia,1988-07-22,F,GB,,,,,
+TXN210,ACCD001,PFIX,AB123456C,NIDN,Maria,Garcia,1988-07-22,F,GB,,,,,

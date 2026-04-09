@@ -1,0 +1,9 @@
+Transaction Reference,Account ID,Person Code,Seller ID Code,Type of Seller ID Code,First Name,Surname,Date of Birth,Gender,Primary Nationality,Secondary Nationality,Correction Output,Correction Fields,Tracker Status,Agree With Correction
+TXN101,ACC101,P101,AB234567D,NIDN,Helen,Brown,1982-09-10,F,GB,,,,,
+TXN102,ACC102,P102,AB234567A,NIDN,Tom,Davis,1978-04-25,M,GB,,,,,
+TXN103,ACC103,P103,FD123456C,NIDN,Carol,Evans,1991-11-08,F,GB,,,,,
+TXN104,ACC104,P104,GB19820910HELE#BROW#,CONCAT,Helen,Brown,1982-09-10,F,GB,,,,,
+TXN105,ACC105,P105,GB20001225HELE#BROW#,CONCAT,Helen,Brown,1982-09-10,F,GB,,,,,
+TXN106,ACC106,P106,GB19820910HELE#BROW#,NIDN,Helen,Brown,1982-09-10,F,GB,,,,,
+TXN109,ACC109,P109,,,Lena,Muller,1993-07-18,F,DE,,,,,
+TXN110,ACC110,P110,,NIDN,Paul,Laurent,1987-02-14,M,FR,,,,,
