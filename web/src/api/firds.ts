@@ -3,6 +3,7 @@ import type {
   FirdsRefreshRequest,
   FirdsCheckRequest,
   FirdsBackfillRequest,
+  FirdsLookupResponse,
 } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
@@ -44,4 +45,15 @@ export async function firdsBackfill(req: FirdsBackfillRequest): Promise<JobRespo
     body: JSON.stringify(req),
   });
   return handleResponse<JobResponse>(res);
+}
+
+export async function firdsLookup(
+  isin: string,
+  date: string,
+  mic?: string,
+): Promise<FirdsLookupResponse> {
+  const params = new URLSearchParams({ isin, date });
+  if (mic) params.set("mic", mic);
+  const res = await fetch(`${BASE_URL}/api/firds/lookup?${params.toString()}`);
+  return handleResponse<FirdsLookupResponse>(res);
 }

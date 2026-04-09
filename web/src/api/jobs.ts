@@ -1,4 +1,4 @@
-import type { JobResponse, CreateJobRequest } from "@/types";
+import type { JobResponse, CreateJobRequest, LastRunInfo } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -33,4 +33,9 @@ export async function cancelJob(jobId: string): Promise<JobResponse> {
     method: "POST",
   });
   return handleResponse<JobResponse>(res);
+}
+
+export async function fetchLastRuns(): Promise<Record<string, LastRunInfo>> {
+  const res = await fetch(`${BASE_URL}/api/jobs/last-runs`);
+  return handleResponse<Record<string, LastRunInfo>>(res);
 }

@@ -21,6 +21,11 @@ class XlsxConverterRequest(_CamelModel):
             used in ``"recursive"`` mode.
         input_dir: Directory containing XLSX files to convert; used in ``"single"`` mode.
         output_dir: Directory for converted CSV output files; used in ``"single"`` mode.
+        filter_year: Filter by fiscal year, e.g. ``"FY25"``.
+        filter_quarter: Filter by quarter, e.g. ``"Q3"``.
+        filter_phase: Filter by phase names, e.g. ``["phase_ii", "phase_iii"]``.
+        dry_run: If ``True``, list what would be converted without writing files.
+        force: If ``True``, force overwrite existing output files.
         log_level: Logging verbosity (default: ``"INFO"``).
     """
 
@@ -28,6 +33,11 @@ class XlsxConverterRequest(_CamelModel):
     parent_dir: str | None = None
     input_dir: str | None = None
     output_dir: str | None = None
+    filter_year: str | None = None
+    filter_quarter: str | None = None
+    filter_phase: list[str] | None = None
+    dry_run: bool = False
+    force: bool = False
     log_level: str = "INFO"
 
 

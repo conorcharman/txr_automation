@@ -48,6 +48,8 @@ class JobResponse(_CamelModel):
         completed_at: ISO 8601 timestamp of when the task finished, or ``None``.
         error_message: Human-readable error description when status is ``failed``, or ``None``.
         output_files: List of relative output file paths produced by the run, or ``None``.
+        log_output: Full captured stdout/stderr of the script run, or ``None`` if not yet
+            complete.
     """
 
     model_config = ConfigDict(
@@ -64,6 +66,7 @@ class JobResponse(_CamelModel):
     completed_at: str | None
     error_message: str | None
     output_files: list[str] | None
+    log_output: str | None
 
     @classmethod
     def from_orm_job(cls, job: Job) -> "JobResponse":
@@ -92,4 +95,19 @@ class JobResponse(_CamelModel):
             completed_at=_iso(job.completed_at),
             error_message=job.error_message,
             output_files=job.output_files,
+            log_output=job.log_output,
         )
+
+
+class LastRunInfo(_CamelModel):
+    """Most recent completed job for a given script.
+
+    Attributes:
+        script_name: The script identifier.
+        status: Final status of the most recent completed job.
+        completed_at: ISO 8601 timestamp of completion.
+    """
+
+    script_name: str
+    status: str
+    completed_at: str | None

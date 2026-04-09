@@ -12,12 +12,19 @@ Endpoints:
 
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
-from api.schemas.accuracy import RunAllRequest, RunValidationRequest
+from api.schemas.accuracy import (
+    DiscoveryRequest,
+    DiscoveryResponse,
+    DiscoveryResult,
+    RunAllRequest,
+    RunValidationRequest,
+)
 from api.schemas.jobs import JobResponse
+from api.services.discovery import INCIDENT_CODE_PATTERNS, discover_incidents
 from api.services.job_service import job_service
 from api.services.script_runner import ACCURACY_VALIDATION_SCRIPTS, script_runner_service
 from api.tasks.script_tasks import run_script
@@ -104,3 +111,38 @@ async def run_all_validations(
     )
 
     return JobResponse.from_orm_job(job)
+
+
+@router.post("/accuracy/discover", response_model=DiscoveryResponse)
+async def discover_incident_files(
+    body: DiscoveryRequest,
+) -> DiscoveryResponse:
+    """Scan a directory for CSV files matching incident code patterns.
+
+    This is used by the Run All form to preview which validation scripts
+    have matching input data before execution.
+
+    Args:
+        body: Validated ``DiscoveryRequest`` with the directory to scan.
+
+    Returns:
+        A ``DiscoveryResponse`` listing found files per validation script.
+    """
+    if ".." in body.input_directory:
+        raise HTTPException(status_code=400, detail="Path traversal not allowed.")
+
+    try:
+        raw_results = discover_incidents(body.input_directory)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    results = [
+        DiscoveryResult(
+            script_name=name,
+            codes=INCIDENT_CODE_PATTERNS.get(name, []),
+            found_files=files,
+        )
+        for name, files in raw_results.items()
+    ]
+    total = len({f for files in raw_results.values() for f in files})
+    return DiscoveryResponse(results=results, total_found=total)

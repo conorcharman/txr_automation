@@ -9,8 +9,11 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import TestingPeriodSelector from "@/components/TestingPeriodSelector";
 import ConfigLoader from "@/components/ConfigLoader";
-import { runValidation, runAllValidations } from "@/api/accuracy";
+import { PathPickerInput } from "@/components/PathPickerInput";
+import LastRunBadge from "@/components/LastRunBadge";
+import { runValidation, runAllValidations, discoverIncidents } from "@/api/accuracy";
 import { cn } from "@/lib/utils";
+import type { DiscoveryResponse } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -139,6 +142,8 @@ const validationSchema = z.object({
   outputDirectory: z.string().optional(),
   templateDirectory: z.string().optional(),
   logOutput: z.string().optional(),
+  italianTracker: z.string().optional(),
+  mainTracker: z.string().optional(),
   // Single fields
   incidentCode: z.string().optional(),
   inputFile: z.string().optional(),
@@ -157,12 +162,14 @@ interface ValidationScriptFormProps {
 
 const ValidationScriptForm: React.FC<ValidationScriptFormProps> = ({ scriptName }) => {
   const navigate = useNavigate();
+  const [showTrackers, setShowTrackers] = useState(false);
 
   const {
     control,
     register,
     handleSubmit,
     watch,
+    setValue,
     getValues,
     reset,
     formState: { errors },
@@ -175,6 +182,8 @@ const ValidationScriptForm: React.FC<ValidationScriptFormProps> = ({ scriptName 
       outputDirectory: "",
       templateDirectory: "",
       logOutput: "logs",
+      italianTracker: "",
+      mainTracker: "",
       incidentCode: "",
       inputFile: "",
       templateFile: "",
@@ -208,6 +217,8 @@ const ValidationScriptForm: React.FC<ValidationScriptFormProps> = ({ scriptName 
               outputDirectory: values.outputDirectory ?? "",
               templateDirectory: values.templateDirectory ?? "",
               logOutput: values.logOutput ?? "logs",
+              italianTracker: values.italianTracker || undefined,
+              mainTracker: values.mainTracker || undefined,
             },
             logLevel: values.logLevel,
             dryRun: values.dryRun,
@@ -279,37 +290,75 @@ const ValidationScriptForm: React.FC<ValidationScriptFormProps> = ({ scriptName 
             Batch Config
           </p>
           <Field label="Input Directory" error={errors.inputDirectory?.message}>
-            <input
-              {...register("inputDirectory")}
-              disabled={isPending}
-              className={inputCls}
+            <PathPickerInput
+              value={watch("inputDirectory") ?? ""}
+              onChange={(v) => setValue("inputDirectory", v)}
+              mode="directory"
               placeholder="/path/to/input"
+              disabled={isPending}
             />
           </Field>
           <Field label="Output Directory" error={errors.outputDirectory?.message}>
-            <input
-              {...register("outputDirectory")}
-              disabled={isPending}
-              className={inputCls}
+            <PathPickerInput
+              value={watch("outputDirectory") ?? ""}
+              onChange={(v) => setValue("outputDirectory", v)}
+              mode="directory"
               placeholder="/path/to/output"
+              disabled={isPending}
             />
           </Field>
           <Field label="Template Directory" error={errors.templateDirectory?.message}>
-            <input
-              {...register("templateDirectory")}
-              disabled={isPending}
-              className={inputCls}
+            <PathPickerInput
+              value={watch("templateDirectory") ?? ""}
+              onChange={(v) => setValue("templateDirectory", v)}
+              mode="directory"
               placeholder="/path/to/templates"
+              disabled={isPending}
             />
           </Field>
           <Field label="Log Output" error={errors.logOutput?.message}>
-            <input
-              {...register("logOutput")}
-              disabled={isPending}
-              className={inputCls}
+            <PathPickerInput
+              value={watch("logOutput") ?? ""}
+              onChange={(v) => setValue("logOutput", v)}
+              mode="directory"
               placeholder="logs"
+              disabled={isPending}
             />
           </Field>
+
+          {/* Collapsible tracker files */}
+          <div className="rounded-md border border-border">
+            <button
+              type="button"
+              onClick={() => setShowTrackers(!showTrackers)}
+              className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Advanced — Tracker Files
+              <span className={cn("transition-transform text-[10px]", showTrackers && "rotate-180")}>▾</span>
+            </button>
+            {showTrackers && (
+              <div className="space-y-3 px-3 pb-3 border-t border-border pt-3">
+                <Field label="Italian Fiscal Code Tracker">
+                  <PathPickerInput
+                    value={watch("italianTracker") ?? ""}
+                    onChange={(v) => setValue("italianTracker", v)}
+                    mode="file"
+                    placeholder="/path/to/italian_tracker.csv"
+                    disabled={isPending}
+                  />
+                </Field>
+                <Field label="Main ID Cross-Reference Tracker">
+                  <PathPickerInput
+                    value={watch("mainTracker") ?? ""}
+                    onChange={(v) => setValue("mainTracker", v)}
+                    mode="file"
+                    placeholder="/path/to/main_tracker.csv"
+                    disabled={isPending}
+                  />
+                </Field>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
@@ -328,27 +377,30 @@ const ValidationScriptForm: React.FC<ValidationScriptFormProps> = ({ scriptName 
             />
           </Field>
           <Field label="Input File" error={errors.inputFile?.message}>
-            <input
-              {...register("inputFile")}
-              disabled={isPending}
-              className={inputCls}
+            <PathPickerInput
+              value={watch("inputFile") ?? ""}
+              onChange={(v) => setValue("inputFile", v)}
+              mode="file"
               placeholder="/path/to/input.csv"
+              disabled={isPending}
             />
           </Field>
           <Field label="Template File" error={errors.templateFile?.message}>
-            <input
-              {...register("templateFile")}
-              disabled={isPending}
-              className={inputCls}
+            <PathPickerInput
+              value={watch("templateFile") ?? ""}
+              onChange={(v) => setValue("templateFile", v)}
+              mode="file"
               placeholder="/path/to/template.csv"
+              disabled={isPending}
             />
           </Field>
           <Field label="Output File" error={errors.outputFile?.message}>
-            <input
-              {...register("outputFile")}
-              disabled={isPending}
-              className={inputCls}
+            <PathPickerInput
+              value={watch("outputFile") ?? ""}
+              onChange={(v) => setValue("outputFile", v)}
+              mode="file"
               placeholder="/path/to/output.csv"
+              disabled={isPending}
             />
           </Field>
         </div>
@@ -393,6 +445,7 @@ const runAllSchema = z.object({
   templateDirectory: z.string().min(1, "Required"),
   logLevel: z.string(),
   dryRun: z.boolean(),
+  stopOnError: z.boolean(),
 });
 
 type RunAllFormValues = z.infer<typeof runAllSchema>;
@@ -402,11 +455,14 @@ const RunAllForm: React.FC = () => {
   const [selectedTypes, setSelectedTypes] = useState<string[]>(
     VALIDATION_SCRIPTS.map((s) => s.key),
   );
+  const [discoveryResult, setDiscoveryResult] = useState<DiscoveryResponse | null>(null);
 
   const {
     control,
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<RunAllFormValues>({
     resolver: zodResolver(runAllSchema),
@@ -417,14 +473,35 @@ const RunAllForm: React.FC = () => {
       templateDirectory: "",
       logLevel: "INFO",
       dryRun: false,
+      stopOnError: false,
     },
   });
+
+  const inputDirectory = watch("inputDirectory");
 
   const mutation = useMutation({
     mutationFn: runAllValidations,
     onSuccess: (job) => navigate(`/jobs/${job.id}`),
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : "Failed to start job");
+    },
+  });
+
+  const discoveryMutation = useMutation({
+    mutationFn: discoverIncidents,
+    onSuccess: (result) => {
+      setDiscoveryResult(result);
+      // Auto-select types that have found files
+      const foundTypes = result.results
+        .filter((r) => r.foundFiles.length > 0)
+        .map((r) => r.scriptName);
+      if (foundTypes.length > 0) {
+        setSelectedTypes(foundTypes);
+      }
+      toast.success(`Found ${result.totalFound} file(s) across ${foundTypes.length} script(s)`);
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Discovery failed");
     },
   });
 
@@ -437,6 +514,7 @@ const RunAllForm: React.FC = () => {
       templateDirectory: values.templateDirectory,
       logLevel: values.logLevel,
       dryRun: values.dryRun,
+      stopOnError: values.stopOnError || undefined,
     });
   };
 
@@ -499,27 +577,66 @@ const RunAllForm: React.FC = () => {
       </div>
 
       <Field label="Input Directory" error={errors.inputDirectory?.message}>
-        <input
-          {...register("inputDirectory")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("inputDirectory") ?? ""}
+          onChange={(v) => setValue("inputDirectory", v)}
+          mode="directory"
           placeholder="/path/to/input"
+          disabled={isPending}
         />
       </Field>
+
+      {/* Autodiscovery */}
+      <Button
+        type="button"
+        variant="outline"
+        disabled={!inputDirectory || discoveryMutation.isPending}
+        onClick={() => discoveryMutation.mutate({ inputDirectory })}
+        className="w-full"
+      >
+        {discoveryMutation.isPending ? "Scanning…" : "Discover Files"}
+      </Button>
+
+      {discoveryResult && (
+        <div className="rounded-lg border border-border p-4 space-y-2 text-sm">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Discovery Results — {discoveryResult.totalFound} file(s) found
+          </p>
+          {discoveryResult.results.map((r) => (
+            <div key={r.scriptName} className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full shrink-0",
+                  r.foundFiles.length > 0 ? "bg-green-500" : "bg-orange-400",
+                )}
+              />
+              <span className="truncate">
+                {VALIDATION_SCRIPTS.find((s) => s.key === r.scriptName)?.label ?? r.scriptName}
+              </span>
+              <span className="ml-auto text-xs text-muted-foreground">
+                {r.foundFiles.length} file(s)
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+
       <Field label="Output Directory" error={errors.outputDirectory?.message}>
-        <input
-          {...register("outputDirectory")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("outputDirectory") ?? ""}
+          onChange={(v) => setValue("outputDirectory", v)}
+          mode="directory"
           placeholder="/path/to/output"
+          disabled={isPending}
         />
       </Field>
       <Field label="Template Directory" error={errors.templateDirectory?.message}>
-        <input
-          {...register("templateDirectory")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("templateDirectory") ?? ""}
+          onChange={(v) => setValue("templateDirectory", v)}
+          mode="directory"
           placeholder="/path/to/templates"
+          disabled={isPending}
         />
       </Field>
 
@@ -529,6 +646,16 @@ const RunAllForm: React.FC = () => {
         disabled={isPending}
         logLevelError={errors.logLevel?.message}
       />
+
+      <label className="flex items-center gap-2 cursor-pointer text-sm">
+        <input
+          type="checkbox"
+          {...register("stopOnError")}
+          disabled={isPending}
+          className="accent-primary h-4 w-4"
+        />
+        Stop on first error
+      </label>
 
       <Button
         type="submit"
@@ -549,6 +676,7 @@ interface UtilityFieldConfig {
   name: "inputDirectory" | "outputDirectory" | "templateDirectory" | "outputFile";
   label: string;
   placeholder: string;
+  type: "file" | "directory";
 }
 
 interface UtilityConfig {
@@ -565,7 +693,7 @@ const UTILITY_CONFIGS: UtilityConfig[] = [
     label: "SQL Extract Generator",
     description: "Generate SQL extract scripts for a given testing period.",
     fields: [
-      { name: "outputDirectory", label: "Output Directory", placeholder: "/path/to/output" },
+      { name: "outputDirectory", label: "Output Directory", placeholder: "/path/to/output", type: "directory" },
     ],
     needsPeriod: true,
   },
@@ -578,11 +706,13 @@ const UTILITY_CONFIGS: UtilityConfig[] = [
         name: "outputDirectory",
         label: "Output Directory",
         placeholder: "/path/to/output",
+        type: "directory",
       },
       {
         name: "templateDirectory",
         label: "Template Directory",
         placeholder: "/path/to/templates",
+        type: "directory",
       },
     ],
     needsPeriod: true,
@@ -596,11 +726,13 @@ const UTILITY_CONFIGS: UtilityConfig[] = [
         name: "inputDirectory",
         label: "Input Directory",
         placeholder: "/path/to/input",
+        type: "directory",
       },
       {
         name: "outputFile",
         label: "Output File",
         placeholder: "/path/to/output.csv",
+        type: "file",
       },
     ],
     needsPeriod: false,
@@ -614,6 +746,7 @@ const UTILITY_CONFIGS: UtilityConfig[] = [
         name: "inputDirectory",
         label: "Input Directory",
         placeholder: "/path/to/input",
+        type: "directory",
       },
     ],
     needsPeriod: false,
@@ -643,6 +776,8 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
     control,
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<UtilityFormValues>({
     resolver: zodResolver(utilitySchema),
@@ -707,11 +842,12 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
 
       {config.fields.map((f) => (
         <Field key={f.name} label={f.label} error={fieldErrors[f.name]?.message}>
-          <input
-            {...register(f.name)}
-            disabled={isPending}
-            className={inputCls}
+          <PathPickerInput
+            value={watch(f.name) ?? ""}
+            onChange={(v) => setValue(f.name, v)}
+            mode={f.type}
             placeholder={f.placeholder}
+            disabled={isPending}
           />
         </Field>
       ))}
@@ -813,7 +949,15 @@ const AccuracyTesting: React.FC = () => {
 
           {/* Panel */}
           <div className="flex-1 min-w-0 rounded-lg border border-border p-6">
-            <h2 className="text-lg font-semibold mb-5">{selectedScriptLabel}</h2>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-semibold">{selectedScriptLabel}</h2>
+              {selectedScript !== "run-all" && (
+                <LastRunBadge scriptName={selectedScript} />
+              )}
+              {selectedScript === "run-all" && (
+                <LastRunBadge scriptName="run_all_validations" />
+              )}
+            </div>
             {selectedScript === "run-all" ? (
               <RunAllForm />
             ) : (
@@ -842,7 +986,10 @@ const AccuracyTesting: React.FC = () => {
 
           {/* Panel */}
           <div className="flex-1 min-w-0 rounded-lg border border-border p-6">
-            <h2 className="text-lg font-semibold mb-5">{selectedUtilityConfig.label}</h2>
+            <div className="flex items-center justify-between mb-5">
+              <h2 className="text-lg font-semibold">{selectedUtilityConfig.label}</h2>
+              <LastRunBadge scriptName={selectedUtilityConfig.key} />
+            </div>
             <UtilityScriptForm key={selectedUtility} config={selectedUtilityConfig} />
           </div>
         </div>

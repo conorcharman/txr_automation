@@ -27,6 +27,7 @@ class Job(Base):
         started_at: Timestamp recorded when the Celery task begins execution.
         completed_at: Timestamp recorded when the Celery task finishes.
         error_message: Human-readable error description when status is ``failed``.
+        log_output: Full captured stdout/stderr of the script run, persisted on completion.
         config_snapshot: JSON copy of the configuration used for this run.
         output_files: JSON list of relative output file paths produced by the run.
     """
@@ -46,5 +47,6 @@ class Job(Base):
         DateTime(timezone=True), nullable=True
     )
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    log_output: Mapped[str | None] = mapped_column(Text, nullable=True)
     config_snapshot: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     output_files: Mapped[list | None] = mapped_column(JSON, nullable=True)

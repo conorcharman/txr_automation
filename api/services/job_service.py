@@ -106,6 +106,7 @@ class JobService:
         status: str,
         error_message: str | None = None,
         output_files: list[str] | None = None,
+        log_output: str | None = None,
     ) -> None:
         """Update the status of an existing job, setting lifecycle timestamps.
 
@@ -120,6 +121,8 @@ class JobService:
             error_message: Optional error description; stored when status is
                 ``"failed"``.
             output_files: Optional list of relative output file paths to record.
+            log_output: Optional full captured stdout/stderr to persist on
+                completion so the frontend can display logs after the job finishes.
         """
         job = await self.get_job(db, job_id)
         if job is None:
@@ -138,6 +141,9 @@ class JobService:
 
         if output_files is not None:
             job.output_files = output_files
+
+        if log_output is not None:
+            job.log_output = log_output
 
         await db.commit()
 

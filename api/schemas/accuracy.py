@@ -33,6 +33,8 @@ class BatchModeConfig(_CamelModel):
         template_directory: Path to the directory containing Kaizen template files.
         log_output: Directory for log output (default: ``"logs"``).
         tracker_files: Optional list of tracker CSV file paths.
+        italian_tracker: Optional path to the Italian fiscal code tracker CSV.
+        main_tracker: Optional path to the main ID cross-reference tracker CSV.
     """
 
     input_directory: str
@@ -40,6 +42,8 @@ class BatchModeConfig(_CamelModel):
     template_directory: str
     log_output: str = "logs"
     tracker_files: list[str] = []
+    italian_tracker: str | None = None
+    main_tracker: str | None = None
 
 
 class SingleModeConfig(_CamelModel):
@@ -100,6 +104,8 @@ class RunAllRequest(_CamelModel):
         template_directory: Path to the directory containing Kaizen template files.
         log_level: Logging verbosity (default: ``"INFO"``).
         dry_run: If ``True``, validate without executing the scripts (default: ``False``).
+        stop_on_error: If ``True``, stop execution on first validation failure
+            (default: ``False``).
     """
 
     testing_period: TestingPeriod
@@ -109,3 +115,40 @@ class RunAllRequest(_CamelModel):
     template_directory: str
     log_level: str = "INFO"
     dry_run: bool = False
+    stop_on_error: bool = False
+
+
+class DiscoveryRequest(_CamelModel):
+    """Request body for discovering incident CSV files in a directory.
+
+    Attributes:
+        input_directory: Path to the directory to scan for incident CSV files.
+    """
+
+    input_directory: str
+
+
+class DiscoveryResult(_CamelModel):
+    """Discovery result for a single validation script.
+
+    Attributes:
+        script_name: The validation script identifier.
+        codes: The incident codes associated with this validation.
+        found_files: List of CSV file paths matching the incident codes.
+    """
+
+    script_name: str
+    codes: list[str]
+    found_files: list[str]
+
+
+class DiscoveryResponse(_CamelModel):
+    """Response body for the file discovery endpoint.
+
+    Attributes:
+        results: Per-script discovery results.
+        total_found: Total number of unique files found across all scripts.
+    """
+
+    results: list[DiscoveryResult]
+    total_found: int

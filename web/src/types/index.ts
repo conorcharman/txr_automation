@@ -3,6 +3,22 @@ export interface HealthResponse {
   version: string;
 }
 
+// ---------------------------------------------------------------------------
+// Filesystem browse
+// ---------------------------------------------------------------------------
+
+export interface FilesystemEntry {
+  name: string;
+  path: string;
+  isDir: boolean;
+}
+
+export interface BrowseResponse {
+  current: string;
+  parent: string | null;
+  entries: FilesystemEntry[];
+}
+
 export type JobStatus = "pending" | "running" | "success" | "failed" | "cancelled";
 
 export interface Job {
@@ -24,6 +40,7 @@ export interface JobResponse {
   completedAt: string | null;
   errorMessage: string | null;
   outputFiles: string[] | null;
+  logOutput: string | null;
 }
 
 export interface CreateJobRequest {
@@ -80,6 +97,8 @@ export interface BatchModeConfig {
   templateDirectory: string;
   logOutput?: string;
   trackerFiles?: string[];
+  italianTracker?: string;
+  mainTracker?: string;
 }
 
 export interface SingleModeConfig {
@@ -110,6 +129,30 @@ export interface RunAllRequest {
   templateDirectory: string;
   logLevel?: string;
   dryRun?: boolean;
+  stopOnError?: boolean;
+}
+
+// Accuracy Testing - Discovery
+export interface DiscoveryRequest {
+  inputDirectory: string;
+}
+
+export interface DiscoveryResult {
+  scriptName: string;
+  codes: string[];
+  foundFiles: string[];
+}
+
+export interface DiscoveryResponse {
+  results: DiscoveryResult[];
+  totalFound: number;
+}
+
+// Jobs - Last Run
+export interface LastRunInfo {
+  scriptName: string;
+  status: string;
+  completedAt: string | null;
 }
 
 // Replay
@@ -149,43 +192,90 @@ export interface ReplayMergeRequest {
 export interface FirdsRefreshRequest {
   refreshType: "full" | "delta" | "auto";
   publicationDate?: string;
+  dbPath?: string;
   logLevel?: string;
 }
 
 export interface FirdsCheckRequest {
   mode: "single" | "batch";
   isin?: string;
+  date?: string;
+  mic?: string;
   inputFile?: string;
   outputFile?: string;
   logLevel?: string;
 }
 
 export interface FirdsBackfillRequest {
-  startDate: string;
-  endDate: string;
+  inputFile: string;
+  outputFile: string;
+  format?: "auto" | "incident" | "generic";
+  dbPath?: string;
+  skipRefresh?: boolean;
   logLevel?: string;
+}
+
+export interface FirdsLookupResponse {
+  isReportable: boolean;
+  reason: string;
+  isin: string;
+  tradeDate: string;
+  mic: string | null;
+  matchedMics: string[];
 }
 
 // GLEIF
 export interface GleifRefreshRequest {
   refreshType: "full" | "delta" | "auto";
   deltaType?: "monthly" | "weekly" | "daily";
+  dbPath?: string;
+  skipIsinMap?: boolean;
   logLevel?: string;
 }
 
 export interface GleifCheckRequest {
-  mode: "single" | "batch";
+  mode: "single" | "name_search" | "batch";
   lei?: string;
   name?: string;
+  limit?: number;
   inputFile?: string;
   outputFile?: string;
   logLevel?: string;
 }
 
 export interface GleifBackfillRequest {
-  startDate: string;
-  endDate: string;
+  inputFile: string;
+  outputFile: string;
+  format?: "auto" | "incident" | "generic";
+  dbPath?: string;
+  skipRefresh?: boolean;
   logLevel?: string;
+}
+
+export interface GleifLookupResponse {
+  lei: string;
+  isValid: boolean;
+  reason: string;
+  legalName: string;
+  entityStatus: string;
+  entityCategory: string;
+  legalAddressCountry: string;
+  registrationStatus: string;
+  nextRenewalDate: string;
+  successorLei: string;
+  tradeDate: string | null;
+}
+
+export interface GleifSearchResult {
+  lei: string;
+  legalName: string;
+  status: string;
+  country: string;
+}
+
+export interface GleifSearchResponse {
+  results: GleifSearchResult[];
+  count: number;
 }
 
 // Utilities
@@ -194,6 +284,11 @@ export interface XlsxConverterRequest {
   parentDir?: string;
   inputDir?: string;
   outputDir?: string;
+  filterYear?: string;
+  filterQuarter?: string;
+  filterPhase?: string[];
+  dryRun?: boolean;
+  force?: boolean;
   logLevel?: string;
 }
 

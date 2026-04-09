@@ -20,11 +20,12 @@ more scripts are migrated from the GUI.
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
 from api.schemas.common import JobStatus
-from api.schemas.jobs import JobCreate, JobResponse
+from api.schemas.jobs import JobCreate, JobResponse, LastRunInfo
 from api.services.job_service import job_service
 from api.tasks.script_tasks import run_script
 from api.websocket.log_stream import log_stream_ws
@@ -123,6 +124,35 @@ async def list_jobs(
     """
     jobs = await job_service.list_jobs(db, limit=limit, offset=offset)
     return [JobResponse.from_orm_job(j) for j in jobs]
+
+
+@router.get("/jobs/last-runs", response_model=dict[str, LastRunInfo])
+async def last_runs(
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, LastRunInfo]:
+    """Return the most recent completed job for each script name.
+
+    Returns:
+        A dictionary mapping script names to their most recent run info.
+    """
+    query = text("""
+        SELECT DISTINCT ON (script_name)
+            script_name, status, completed_at
+        FROM jobs
+        WHERE status IN ('success', 'failed')
+        ORDER BY script_name, completed_at DESC
+    """)
+    result = await db.execute(query)
+    rows = result.fetchall()
+
+    runs: dict[str, LastRunInfo] = {}
+    for row in rows:
+        runs[row.script_name] = LastRunInfo(
+            script_name=row.script_name,
+            status=row.status,
+            completed_at=row.completed_at.isoformat() if row.completed_at else None,
+        )
+    return runs
 
 
 @router.get("/jobs/{job_id}", response_model=JobResponse)

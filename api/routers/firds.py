@@ -13,14 +13,21 @@ Endpoints:
 """
 
 import logging
+from datetime import date as date_type
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
-from api.schemas.firds import FirdsBackfillRequest, FirdsCheckRequest, FirdsRefreshRequest
+from api.schemas.firds import (
+    FirdsBackfillRequest,
+    FirdsCheckRequest,
+    FirdsLookupResponse,
+    FirdsRefreshRequest,
+)
 from api.schemas.jobs import JobResponse
 from api.services.job_service import job_service
+from api.services.lookup import firds_lookup_service
 from api.services.script_runner import script_runner_service
 from api.tasks.script_tasks import run_script
 
@@ -45,6 +52,30 @@ async def list_firds_scripts() -> list[str]:
         Alphabetically sorted list of FIRDS script name strings.
     """
     return _FIRDS_SCRIPTS
+
+
+@router.get("/firds/lookup", response_model=FirdsLookupResponse)
+async def firds_lookup(
+    isin: str,
+    date: str,
+    mic: str | None = None,
+) -> FirdsLookupResponse:
+    """Check FIRDS reportability for a single ISIN synchronously.
+
+    This endpoint calls the FIRDS reportability checker directly without
+    dispatching a Celery task, returning the result immediately.
+
+    Args:
+        isin: The ISIN code to check.
+        date: Trade date in ``YYYY-MM-DD`` format.
+        mic: Optional MIC code to narrow venue matching.
+
+    Returns:
+        A ``FirdsLookupResponse`` with the reportability result.
+    """
+    trade_date = date_type.fromisoformat(date)
+    result = firds_lookup_service.check_reportability(isin, trade_date, mic)
+    return FirdsLookupResponse(**result)
 
 
 @router.post("/firds/refresh", response_model=JobResponse)

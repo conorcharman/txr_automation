@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +44,18 @@ const JobDetail: React.FC = () => {
       setLogLines((prev) => [...prev, msg.data]);
     }
   }, []);
+
+  // For completed/failed jobs, seed logLines from the persisted log_output
+  // returned by the API (WebSocket is only active whilst the job is running).
+  useEffect(() => {
+    if (
+      job?.logOutput &&
+      job.status !== "running" &&
+      job.status !== "pending"
+    ) {
+      setLogLines(job.logOutput.split("\n"));
+    }
+  }, [job?.logOutput, job?.status]);
 
   const wsUrl = jobId ? buildWsUrl(jobId) : "";
 

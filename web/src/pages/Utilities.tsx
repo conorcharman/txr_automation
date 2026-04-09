@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { PathPickerInput } from "@/components/PathPickerInput";
+import LastRunBadge from "@/components/LastRunBadge";
 import { xlsxConvert, xmlConvert } from "@/api/utilities";
 import { cn } from "@/lib/utils";
 
@@ -73,6 +75,11 @@ const xlsxSchema = z
     parentDir: z.string().optional(),
     inputDir: z.string().optional(),
     outputDir: z.string().optional(),
+    filterYear: z.string().optional(),
+    filterQuarter: z.string().optional(),
+    filterPhase: z.string().optional(),
+    dryRun: z.boolean(),
+    force: z.boolean(),
     logLevel: z.string(),
   })
   .superRefine((data, ctx) => {
@@ -93,11 +100,13 @@ type XlsxFormValues = z.infer<typeof xlsxSchema>;
 
 const XlsxForm: React.FC = () => {
   const navigate = useNavigate();
+  const [showFilters, setShowFilters] = useState(false);
 
   const {
     register,
     handleSubmit,
     watch,
+    setValue,
     formState: { errors },
   } = useForm<XlsxFormValues>({
     resolver: zodResolver(xlsxSchema),
@@ -106,6 +115,11 @@ const XlsxForm: React.FC = () => {
       parentDir: "",
       inputDir: "",
       outputDir: "",
+      filterYear: "",
+      filterQuarter: "",
+      filterPhase: "",
+      dryRun: false,
+      force: false,
       logLevel: "INFO",
     },
   });
@@ -121,11 +135,19 @@ const XlsxForm: React.FC = () => {
   });
 
   const onSubmit = (values: XlsxFormValues) => {
+    const filterPhase = values.filterPhase
+      ? values.filterPhase.split(",").map((s) => s.trim()).filter(Boolean)
+      : undefined;
     mutation.mutate({
       mode: values.mode,
       parentDir: values.parentDir || undefined,
       inputDir: values.inputDir || undefined,
       outputDir: values.outputDir || undefined,
+      filterYear: values.filterYear || undefined,
+      filterQuarter: values.filterQuarter || undefined,
+      filterPhase: filterPhase?.length ? filterPhase : undefined,
+      dryRun: values.dryRun || undefined,
+      force: values.force || undefined,
       logLevel: values.logLevel,
     });
   };
@@ -158,19 +180,21 @@ const XlsxForm: React.FC = () => {
       {mode === "single" && (
         <>
           <Field label="Input Directory" error={errors.inputDir?.message}>
-            <input
-              {...register("inputDir")}
-              disabled={isPending}
-              className={inputCls}
+            <PathPickerInput
+              value={watch("inputDir") ?? ""}
+              onChange={(v) => setValue("inputDir", v)}
+              mode="directory"
               placeholder="/path/to/input/dir"
+              disabled={isPending}
             />
           </Field>
           <Field label="Output Directory" error={errors.outputDir?.message}>
-            <input
-              {...register("outputDir")}
-              disabled={isPending}
-              className={inputCls}
+            <PathPickerInput
+              value={watch("outputDir") ?? ""}
+              onChange={(v) => setValue("outputDir", v)}
+              mode="directory"
               placeholder="/path/to/output/dir"
+              disabled={isPending}
             />
           </Field>
         </>
@@ -178,14 +202,77 @@ const XlsxForm: React.FC = () => {
 
       {mode === "batch" && (
         <Field label="Parent Directory" error={errors.parentDir?.message}>
-          <input
-            {...register("parentDir")}
-            disabled={isPending}
-            className={inputCls}
+          <PathPickerInput
+            value={watch("parentDir") ?? ""}
+            onChange={(v) => setValue("parentDir", v)}
+            mode="directory"
             placeholder="/path/to/parent/dir"
+            disabled={isPending}
           />
         </Field>
       )}
+
+      {/* Collapsible Filters & Options */}
+      <div className="rounded-lg border border-border">
+        <button
+          type="button"
+          onClick={() => setShowFilters(!showFilters)}
+          className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Filters &amp; Options
+          <span className={cn("transition-transform", showFilters && "rotate-180")}>▾</span>
+        </button>
+        {showFilters && (
+          <div className="space-y-3 px-4 pb-4 border-t border-border pt-3">
+            <div className="grid grid-cols-2 gap-3">
+              <Field label="Filter Year" error={errors.filterYear?.message}>
+                <input
+                  {...register("filterYear")}
+                  disabled={isPending}
+                  className={inputCls}
+                  placeholder="e.g. FY25"
+                />
+              </Field>
+              <Field label="Filter Quarter" error={errors.filterQuarter?.message}>
+                <input
+                  {...register("filterQuarter")}
+                  disabled={isPending}
+                  className={inputCls}
+                  placeholder="e.g. Q3"
+                />
+              </Field>
+            </div>
+            <Field label="Filter Phase (comma-separated)" error={errors.filterPhase?.message}>
+              <input
+                {...register("filterPhase")}
+                disabled={isPending}
+                className={inputCls}
+                placeholder="e.g. phase_ii, phase_iii"
+              />
+            </Field>
+            <div className="flex gap-6">
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  {...register("dryRun")}
+                  disabled={isPending}
+                  className="rounded border-input"
+                />
+                Dry Run
+              </label>
+              <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  {...register("force")}
+                  disabled={isPending}
+                  className="rounded border-input"
+                />
+                Force Overwrite
+              </label>
+            </div>
+          </div>
+        )}
+      </div>
 
       <Field label="Log Level" error={errors.logLevel?.message}>
         <select {...register("logLevel")} disabled={isPending} className={selectCls}>
@@ -229,6 +316,8 @@ const XmlForm: React.FC = () => {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<XmlFormValues>({
     resolver: zodResolver(xmlSchema),
@@ -266,29 +355,32 @@ const XmlForm: React.FC = () => {
       </p>
 
       <Field label="Input File" error={errors.inputFile?.message}>
-        <input
-          {...register("inputFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("inputFile") ?? ""}
+          onChange={(v) => setValue("inputFile", v)}
+          mode="file"
           placeholder="/path/to/input.xml"
+          disabled={isPending}
         />
       </Field>
 
       <Field label="Parent Directory" error={errors.parentDir?.message}>
-        <input
-          {...register("parentDir")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("parentDir") ?? ""}
+          onChange={(v) => setValue("parentDir", v)}
+          mode="directory"
           placeholder="/path/to/parent/dir"
+          disabled={isPending}
         />
       </Field>
 
       <Field label="Output Directory" error={errors.outputDir?.message}>
-        <input
-          {...register("outputDir")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("outputDir") ?? ""}
+          onChange={(v) => setValue("outputDir", v)}
+          mode="directory"
           placeholder="/path/to/output/dir"
+          disabled={isPending}
         />
       </Field>
 
@@ -356,7 +448,12 @@ const Utilities: React.FC = () => {
 
         {/* Panel */}
         <div className="flex-1 min-w-0 rounded-lg border border-border p-6">
-          <h2 className="text-lg font-semibold mb-5">{activeLabel}</h2>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold">{activeLabel}</h2>
+            <LastRunBadge
+              scriptName={selected === "xlsx" ? "xlsx_csv_converter" : "xml_csv_converter"}
+            />
+          </div>
           <ActiveForm key={selected} />
         </div>
       </div>

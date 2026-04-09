@@ -64,6 +64,7 @@ async def _update_status_async(
     status: str,
     error_message: str | None = None,
     output_files: list[str] | None = None,
+    log_output: str | None = None,
 ) -> None:
     """Open a fresh async DB session and update the job status.
 
@@ -78,6 +79,7 @@ async def _update_status_async(
         status: New status string.
         error_message: Optional error description to store.
         output_files: Optional list of output file paths to record.
+        log_output: Optional full captured stdout/stderr to persist.
     """
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
@@ -95,6 +97,7 @@ async def _update_status_async(
                 status,
                 error_message=error_message,
                 output_files=output_files,
+                log_output=log_output,
             )
     finally:
         await engine.dispose()
@@ -105,6 +108,7 @@ def _sync_update_status(
     status: str,
     error_message: str | None = None,
     output_files: list[str] | None = None,
+    log_output: str | None = None,
 ) -> None:
     """Synchronous wrapper that calls ``_update_status_async`` via asyncio.run.
 
@@ -113,6 +117,7 @@ def _sync_update_status(
         status: New status string.
         error_message: Optional error description to store.
         output_files: Optional list of output file paths to record.
+        log_output: Optional full captured stdout/stderr to persist.
     """
     asyncio.run(
         _update_status_async(
@@ -120,6 +125,7 @@ def _sync_update_status(
             status,
             error_message=error_message,
             output_files=output_files,
+            log_output=log_output,
         )
     )
 
@@ -178,6 +184,15 @@ def run_script(
     _sync_update_status(job_id, "running")
     _publish({"type": "status", "data": "running"})
 
+    # Some scripts use non-zero exit codes for informational results rather
+    # than errors.  Map module paths to the set of codes that should be
+    # treated as successful completion.
+    _ACCEPTED_EXIT_CODES: dict[str, set[int]] = {
+        # check_reportability exits with 2 when the instrument is NOT reportable.
+        "src.firds.scripts.check_reportability": {2},
+    }
+    accepted_exit_codes = _ACCEPTED_EXIT_CODES.get(module_path, set())
+
     # ── Import and run the module ────────────────────────────────────────────
     output_buffer = io.StringIO()
     old_stdout = sys.stdout
@@ -203,9 +218,12 @@ def run_script(
             try:
                 module.main()
             except SystemExit as exc:
-                # Treat non-zero SystemExit as a failure.
+                # Treat non-zero SystemExit as a failure *unless* the exit
+                # code is an expected "informational" code for this script.
+                # FIRDS check_reportability uses exit-code 2 to signal
+                # "not reportable" — that is a valid result, not an error.
                 exit_code = exc.code if isinstance(exc.code, int) else 1
-                if exit_code != 0:
+                if exit_code != 0 and exit_code not in accepted_exit_codes:
                     raise RuntimeError(
                         f"Script exited with code {exit_code}"
                     ) from exc
@@ -220,7 +238,7 @@ def run_script(
                 _publish({"type": "log", "data": line})
 
         # ── Success ─────────────────────────────────────────────────────────
-        _sync_update_status(job_id, "success", output_files=[])
+        _sync_update_status(job_id, "success", output_files=[], log_output=output)
         _publish({"type": "status", "data": "success"})
         return {"status": "success", "output_files": []}
 
@@ -238,7 +256,8 @@ def run_script(
         error_str = f"{type(exc).__name__}: {exc}"
         _publish({"type": "log", "data": error_str})
         _publish({"type": "status", "data": "failed"})
-        _sync_update_status(job_id, "failed", error_message=error_str)
+        full_log = partial_output + ("\n" if partial_output else "") + error_str
+        _sync_update_status(job_id, "failed", error_message=error_str, log_output=full_log)
         raise
 
     finally:

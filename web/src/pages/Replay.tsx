@@ -7,7 +7,9 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import { PathPickerInput } from "@/components/PathPickerInput";
 import TestingPeriodSelector from "@/components/TestingPeriodSelector";
+import LastRunBadge from "@/components/LastRunBadge";
 import {
   runReplayPhase2,
   runReplayPhase3,
@@ -38,11 +40,6 @@ function currentFY(): string {
 // ---------------------------------------------------------------------------
 // Shared styles
 // ---------------------------------------------------------------------------
-
-const inputCls =
-  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm " +
-  "focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 " +
-  "placeholder:text-muted-foreground";
 
 const selectCls =
   "h-9 w-40 rounded-md border border-input bg-background px-3 text-sm " +
@@ -95,6 +92,8 @@ const Phase2Form: React.FC = () => {
     control,
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<Phase2FormValues>({
     resolver: zodResolver(phase2Schema),
@@ -133,20 +132,22 @@ const Phase2Form: React.FC = () => {
       </p>
 
       <Field label="Input File" error={errors.inputFile?.message}>
-        <input
-          {...register("inputFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("inputFile") ?? ""}
+          onChange={(v) => setValue("inputFile", v)}
+          mode="file"
           placeholder="/path/to/input.csv"
+          disabled={isPending}
         />
       </Field>
 
       <Field label="Output File" error={errors.outputFile?.message}>
-        <input
-          {...register("outputFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("outputFile") ?? ""}
+          onChange={(v) => setValue("outputFile", v)}
+          mode="file"
           placeholder="/path/to/output.csv"
+          disabled={isPending}
         />
       </Field>
 
@@ -211,6 +212,8 @@ const Phase3Form: React.FC = () => {
     control,
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<Phase3FormValues>({
     resolver: zodResolver(phase3Schema),
@@ -251,29 +254,32 @@ const Phase3Form: React.FC = () => {
       </p>
 
       <Field label="Input File" error={errors.inputFile?.message}>
-        <input
-          {...register("inputFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("inputFile") ?? ""}
+          onChange={(v) => setValue("inputFile", v)}
+          mode="file"
           placeholder="/path/to/input.csv"
+          disabled={isPending}
         />
       </Field>
 
       <Field label="Feedback File" error={errors.feedbackFile?.message}>
-        <input
-          {...register("feedbackFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("feedbackFile") ?? ""}
+          onChange={(v) => setValue("feedbackFile", v)}
+          mode="file"
           placeholder="/path/to/feedback.csv"
+          disabled={isPending}
         />
       </Field>
 
       <Field label="Output File" error={errors.outputFile?.message}>
-        <input
-          {...register("outputFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("outputFile") ?? ""}
+          onChange={(v) => setValue("outputFile", v)}
+          mode="file"
           placeholder="/path/to/output.csv"
+          disabled={isPending}
         />
       </Field>
 
@@ -337,6 +343,8 @@ const Phase3FinalForm: React.FC = () => {
     control,
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<Phase3FinalFormValues>({
     resolver: zodResolver(phase3FinalSchema),
@@ -375,20 +383,22 @@ const Phase3FinalForm: React.FC = () => {
       </p>
 
       <Field label="Input File" error={errors.inputFile?.message}>
-        <input
-          {...register("inputFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("inputFile") ?? ""}
+          onChange={(v) => setValue("inputFile", v)}
+          mode="file"
           placeholder="/path/to/input.csv"
+          disabled={isPending}
         />
       </Field>
 
       <Field label="Output File" error={errors.outputFile?.message}>
-        <input
-          {...register("outputFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("outputFile") ?? ""}
+          onChange={(v) => setValue("outputFile", v)}
+          mode="file"
           placeholder="/path/to/output.csv"
+          disabled={isPending}
         />
       </Field>
 
@@ -451,6 +461,8 @@ const MergeForm: React.FC = () => {
   const {
     register,
     handleSubmit,
+    watch,
+    setValue,
     formState: { errors },
   } = useForm<MergeFormValues>({
     resolver: zodResolver(mergeSchema),
@@ -488,29 +500,32 @@ const MergeForm: React.FC = () => {
       </p>
 
       <Field label="Buyer File" error={errors.buyerFile?.message}>
-        <input
-          {...register("buyerFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("buyerFile") ?? ""}
+          onChange={(v) => setValue("buyerFile", v)}
+          mode="file"
           placeholder="/path/to/buyer_summary.csv"
+          disabled={isPending}
         />
       </Field>
 
       <Field label="Seller File" error={errors.sellerFile?.message}>
-        <input
-          {...register("sellerFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("sellerFile") ?? ""}
+          onChange={(v) => setValue("sellerFile", v)}
+          mode="file"
           placeholder="/path/to/seller_summary.csv"
+          disabled={isPending}
         />
       </Field>
 
       <Field label="Output File" error={errors.outputFile?.message}>
-        <input
-          {...register("outputFile")}
-          disabled={isPending}
-          className={inputCls}
+        <PathPickerInput
+          value={watch("outputFile") ?? ""}
+          onChange={(v) => setValue("outputFile", v)}
+          mode="file"
           placeholder="/path/to/merged_output.csv"
+          disabled={isPending}
         />
       </Field>
 
@@ -583,7 +598,20 @@ const Replay: React.FC = () => {
 
         {/* Panel */}
         <div className="flex-1 min-w-0 rounded-lg border border-border p-6">
-          <h2 className="text-lg font-semibold mb-5">{activeLabel}</h2>
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold">{activeLabel}</h2>
+            <LastRunBadge
+              scriptName={
+                selected === "phase2"
+                  ? "replay_phase2"
+                  : selected === "phase3"
+                    ? "replay_phase3"
+                    : selected === "phase3final"
+                      ? "replay_phase3_final"
+                      : "replay_merge_inconsistent"
+              }
+            />
+          </div>
           <ActiveForm key={selected} />
         </div>
       </div>

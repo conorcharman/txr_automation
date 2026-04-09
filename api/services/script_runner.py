@@ -30,11 +30,13 @@ Note:
 import logging
 import os
 import tempfile
+from pathlib import Path
 from typing import Union
 
 import yaml
 from fastapi import HTTPException
 
+from api.config import get_settings
 from api.schemas.accuracy import RunAllRequest, RunValidationRequest
 from api.schemas.firds import FirdsBackfillRequest, FirdsCheckRequest, FirdsRefreshRequest
 from api.schemas.gleif import GleifBackfillRequest, GleifCheckRequest, GleifRefreshRequest
@@ -122,6 +124,10 @@ def _write_temp_yaml(config: dict) -> str:
     the config before writing.  The file is written with ``delete=False``
     so the Celery worker process can read it after this function returns.
 
+    Temp files are placed in ``/app/data/tmp/`` rather than the system
+    ``/tmp/`` because the API and Celery worker run in separate Docker
+    containers that share the ``./data`` volume mount but not ``/tmp/``.
+
     Args:
         config: Configuration dictionary to serialise as YAML.
 
@@ -132,9 +138,12 @@ def _write_temp_yaml(config: dict) -> str:
         HTTPException: 400 if any path value contains traversal sequences.
     """
     _validate_paths(config)
+    shared_tmp = Path("/app/data/tmp")
+    shared_tmp.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         mode="w",
         suffix=".yaml",
+        dir=shared_tmp,
         delete=False,
         encoding="utf-8",
     ) as fh:
@@ -279,6 +288,8 @@ class ScriptRunnerService:
                     "template_directory": req.batch_config.template_directory,
                     "log_output": req.batch_config.log_output,
                     "tracker_files": req.batch_config.tracker_files,
+                    "italian_tracker": req.batch_config.italian_tracker,
+                    "main_tracker": req.batch_config.main_tracker,
                 }
             }
         elif req.mode == "single" and req.single_config is not None:
@@ -358,6 +369,8 @@ class ScriptRunnerService:
         run_all_config: dict = {"validations": validations}
         tmp_path = _write_temp_yaml(run_all_config)
         argv = ["--config", tmp_path, "--log-level", req.log_level]
+        if req.stop_on_error:
+            argv.append("--stop-on-error")
 
         logger.debug(
             "Wrote run_all config to %s for %d validation(s).",
@@ -489,19 +502,36 @@ class ScriptRunnerService:
             HTTPException: 400 if ``script_name`` is not a registered FIRDS script.
         """
         module_path = _resolve_module(script_name)
+        settings = get_settings()
 
         config: dict
 
         if isinstance(req, FirdsRefreshRequest):
+            db_path = req.db_path or str(settings.firds_db_path)
+            # The CLI only accepts "full"; treat "auto" and "delta" as "full"
+            # until the script gains native support for those modes.
+            refresh_type = req.refresh_type if req.refresh_type == "full" else "full"
             config = {
                 "refresh": {
-                    "type": req.refresh_type,
+                    "type": refresh_type,
                     "publication_date": req.publication_date,
                 },
                 "processor": {"log_level": req.log_level},
             }
+            # Pass --config with an empty YAML to suppress auto-discovery of
+            # config/local/firds_config.yaml (which may contain host-specific paths).
+            tmp_path = _write_temp_yaml(config)
+            argv = [
+                "--type", refresh_type,
+                "--db", db_path,
+                "--config", tmp_path,
+                "--log-level", req.log_level,
+            ]
+            if req.publication_date:
+                argv.extend(["--date", req.publication_date])
 
         elif isinstance(req, FirdsCheckRequest):
+            db_path = str(settings.firds_db_path)
             config = {
                 "check": {
                     "mode": req.mode,
@@ -511,20 +541,43 @@ class ScriptRunnerService:
                 },
                 "processor": {"log_level": req.log_level},
             }
+            tmp_path = _write_temp_yaml(config)
+            argv = ["--db", db_path, "--config", tmp_path, "--log-level", req.log_level]
+            if req.isin:
+                argv.extend(["--isin", req.isin])
+            if req.date:
+                argv.extend(["--date", req.date])
+            if req.mic:
+                argv.extend(["--mic", req.mic])
+            if req.input_file:
+                argv.extend(["--input", req.input_file])
+            if req.output_file:
+                argv.extend(["--output", req.output_file])
 
         else:  # FirdsBackfillRequest
+            db_path = req.db_path or str(settings.firds_db_path)
             config = {
-                "paths": {
-                    "input_directory": req.input_directory,
-                    "output_directory": req.output_directory,
+                "backfill": {
+                    "input_file": req.input_file,
+                    "output_file": req.output_file,
+                    "format": req.format,
                 },
                 "processor": {"log_level": req.log_level},
             }
+            tmp_path = _write_temp_yaml(config)
+            argv = [
+                "--input", req.input_file,
+                "--output", req.output_file,
+                "--db", db_path,
+                "--config", tmp_path,
+                "--log-level", req.log_level,
+            ]
+            if req.format != "auto":
+                argv.extend(["--format", req.format])
+            if req.skip_refresh:
+                argv.append("--skip-refresh")
 
-        tmp_path = _write_temp_yaml(config)
-        argv = ["--config", tmp_path, "--log-level", req.log_level]
-
-        logger.debug("Wrote FIRDS config to %s for script %s.", tmp_path, script_name)
+        logger.debug("Built FIRDS argv %s for script %s.", argv, script_name)
         return module_path, argv, config
 
     def build_gleif_argv(
@@ -545,17 +598,35 @@ class ScriptRunnerService:
             HTTPException: 400 if ``script_name`` is not a registered GLEIF script.
         """
         module_path = _resolve_module(script_name)
+        settings = get_settings()
+        db_path = str(settings.gleif_db_path)
 
         config: dict
 
         if isinstance(req, GleifRefreshRequest):
+            # The CLI only accepts "full"; treat "auto" as "full".
+            refresh_type = req.refresh_type if req.refresh_type in ("full", "delta") else "full"
+            if req.db_path:
+                db_path = req.db_path
             config = {
                 "refresh": {
-                    "type": req.refresh_type,
+                    "type": refresh_type,
                     "delta_type": req.delta_type,
                 },
                 "processor": {"log_level": req.log_level},
             }
+            # Pass --config with a YAML to suppress auto-discovery of local config.
+            tmp_path = _write_temp_yaml(config)
+            argv = [
+                "--type", refresh_type,
+                "--db", db_path,
+                "--config", tmp_path,
+                "--log-level", req.log_level,
+            ]
+            if req.delta_type and req.delta_type != "24h":
+                argv.extend(["--delta-type", req.delta_type])
+            if req.skip_isin_map:
+                argv.append("--skip-isin-map")
 
         elif isinstance(req, GleifCheckRequest):
             config = {
@@ -568,20 +639,44 @@ class ScriptRunnerService:
                 },
                 "processor": {"log_level": req.log_level},
             }
+            tmp_path = _write_temp_yaml(config)
+            argv = ["--db", db_path, "--config", tmp_path, "--log-level", req.log_level]
+            if req.lei:
+                argv.extend(["--lei", req.lei])
+            if req.name:
+                argv.extend(["--name", req.name])
+            if req.name and req.limit:
+                argv.extend(["--limit", str(req.limit)])
+            if req.input_file:
+                argv.extend(["--input", req.input_file])
+            if req.output_file:
+                argv.extend(["--output", req.output_file])
 
         else:  # GleifBackfillRequest
+            if req.db_path:
+                db_path = req.db_path
             config = {
-                "paths": {
-                    "input_directory": req.input_directory,
-                    "output_directory": req.output_directory,
+                "backfill": {
+                    "input_file": req.input_file,
+                    "output_file": req.output_file,
+                    "format": req.format,
                 },
                 "processor": {"log_level": req.log_level},
             }
+            tmp_path = _write_temp_yaml(config)
+            argv = [
+                "--input", req.input_file,
+                "--output", req.output_file,
+                "--db", db_path,
+                "--config", tmp_path,
+                "--log-level", req.log_level,
+            ]
+            if req.format != "auto":
+                argv.extend(["--format", req.format])
+            if req.skip_refresh:
+                argv.append("--skip-refresh")
 
-        tmp_path = _write_temp_yaml(config)
-        argv = ["--config", tmp_path, "--log-level", req.log_level]
-
-        logger.debug("Wrote GLEIF config to %s for script %s.", tmp_path, script_name)
+        logger.debug("Built GLEIF argv %s for script %s.", argv, script_name)
         return module_path, argv, config
 
     def build_utilities_argv(
@@ -612,9 +707,24 @@ class ScriptRunnerService:
                     "parent_dir": req.parent_dir,
                     "input_dir": req.input_dir,
                     "output_dir": req.output_dir,
+                    "filter_year": req.filter_year,
+                    "filter_quarter": req.filter_quarter,
+                    "filter_phase": req.filter_phase,
                 },
                 "processor": {"log_level": req.log_level},
             }
+            tmp_path = _write_temp_yaml(config)
+            argv = ["--config", tmp_path, "--log-level", req.log_level]
+            if req.filter_year:
+                argv.extend(["--filter-year", req.filter_year])
+            if req.filter_quarter:
+                argv.extend(["--filter-quarter", req.filter_quarter])
+            if req.filter_phase:
+                argv.extend(["--filter-phase"] + req.filter_phase)
+            if req.dry_run:
+                argv.append("--dry-run")
+            if req.force:
+                argv.append("--force")
 
         else:  # XmlConverterRequest
             config = {
@@ -624,12 +734,13 @@ class ScriptRunnerService:
                 },
                 "processor": {"log_level": req.log_level},
             }
-
-        tmp_path = _write_temp_yaml(config)
-        argv = ["--config", tmp_path, "--log-level", req.log_level]
+            # xml_csv_converter uses CLI-only args, not --config
+            argv = ["--input", req.input_file, "--log-level", req.log_level]
+            if req.output_file:
+                argv.extend(["--output-dir", req.output_file])
 
         logger.debug(
-            "Wrote utilities config to %s for script %s.", tmp_path, script_name
+            "Built utilities argv %s for script %s.", argv, script_name
         )
         return module_path, argv, config
 

@@ -1,4 +1,4 @@
-import type { JobResponse, RunValidationRequest, RunAllRequest } from "@/types";
+import type { JobResponse, RunValidationRequest, RunAllRequest, DiscoveryRequest, DiscoveryResponse } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -30,4 +30,13 @@ export async function runAllValidations(req: RunAllRequest): Promise<JobResponse
     body: JSON.stringify(req),
   });
   return handleResponse<JobResponse>(res);
+}
+
+export async function discoverIncidents(req: DiscoveryRequest): Promise<DiscoveryResponse> {
+  const res = await fetch(`${BASE_URL}/api/accuracy/discover`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  return handleResponse<DiscoveryResponse>(res);
 }
