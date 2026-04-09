@@ -24,7 +24,7 @@ from types import ModuleType
 from typing import Any, Dict, List, Optional
 
 import yaml
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal as _QSignal, QThread as _QThread
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
     QGroupBox,
@@ -2523,6 +2523,459 @@ class DataPushPanel(QWidget):
 
 
 # ---------------------------------------------------------------------------
+# Pipeline Panel — End-to-end transaction-reference pipeline
+# ---------------------------------------------------------------------------
+
+
+class PipelinePanel(QWidget):
+    """End-to-end pipeline: Generate → Execute DTF → Collate → Validate → Push.
+
+    Orchestrates the full accuracy testing workflow for transaction-reference
+    extracts.  The user selects a validation type and input CSV; the panel
+    chains every downstream step automatically.
+
+    Set *Auto-execute DTF* to have ``cwbodtfx.exe`` run the data transfers
+    automatically, or leave it unchecked to pause after generation so the
+    user can execute them manually and then click *Resume*.
+    """
+
+    # Step display names in pipeline order.
+    _STEPS = ["Generate", "Execute DTF", "Collate", "Validate", "Push"]
+
+    # Validation type label → (ValidationType.value, default SQL template filename)
+    _VALIDATION_TYPES: list[tuple[str, str, str]] = [
+        ("Buyer ID", "buyer", "BuyerID.sql"),
+        ("Seller ID", "seller", "SellerID.sql"),
+        ("Inconsistent Buyer ID", "inconsistent-buyer", "InconsistentBuyerID.sql"),
+        ("Inconsistent Seller ID", "inconsistent-seller", "InconsistentSellerID.sql"),
+        ("Fund Trade Buyer DM", "ftbdm", "FTBDM.sql"),
+        ("Fund Trade Seller DM", "ftsdm", "FTSDM.sql"),
+        ("Non-Zero Net Quantity", "non-zero-qty", "NonZeroNetQuantity.sql"),
+        ("Non-Zero Net Amount", "non-zero-amt", "NonZeroNetAmount.sql"),
+        ("Incorrect Net Amount", "incorrect_net_amount", "InconsistentNetAmount.sql"),
+    ]
+
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
+        super().__init__(parent)
+        self._worker: Optional[_PipelineWorker] = None
+        self._partial_result = None
+        pfx = "accuracy.pipeline"
+
+        inner = QWidget()
+        layout = QVBoxLayout(inner)
+        layout.addWidget(QLabel("<b>Pipeline</b>"))
+        layout.addWidget(_subtitle(
+            "End-to-end: extract generation → DTF execution → "
+            "collation → validation → data push"
+        ))
+
+        self._last_run = _last_run_label()
+        _restore_last_run(self._last_run, pfx)
+        layout.addWidget(self._last_run)
+
+        # --- Validation type ---
+        from PySide6.QtWidgets import QComboBox
+
+        vtype_row = QHBoxLayout()
+        vtype_row.addWidget(QLabel("Validation type:"))
+        self._vtype_combo = QComboBox()
+        for label, _val, _tpl in self._VALIDATION_TYPES:
+            self._vtype_combo.addItem(label)
+        self._vtype_combo.currentIndexChanged.connect(self._on_vtype_changed)
+        vtype_row.addWidget(self._vtype_combo, stretch=1)
+        layout.addLayout(vtype_row)
+
+        # Persist last selection.
+        saved_idx = settings.load(f"{pfx}.vtype_index", 0)
+        if isinstance(saved_idx, int) and 0 <= saved_idx < len(self._VALIDATION_TYPES):
+            self._vtype_combo.setCurrentIndex(saved_idx)
+
+        # --- Input CSV ---
+        self.input_csv = FilePickerWidget(
+            "Transaction references CSV:",
+            mode="file", file_filter=CSV_FILTER,
+            tooltip="CSV containing the transaction references to extract.",
+            settings_key=f"{pfx}.input_csv",
+        )
+        layout.addWidget(self.input_csv)
+
+        # --- SQL template ---
+        self.sql_template = FilePickerWidget(
+            "SQL template:",
+            mode="file", file_filter=SQL_FILTER,
+            tooltip="SQL template with transaction-reference placeholder.\n"
+                    "Auto-populated when you select a validation type.",
+            settings_key=f"{pfx}.sql_template",
+        )
+        layout.addWidget(self.sql_template)
+
+        # --- Output directory ---
+        self.output_dir = FilePickerWidget(
+            "Output directory:",
+            mode="directory",
+            tooltip="Base directory for generated SQL, DTF and CSV output files.",
+            settings_key=f"{pfx}.output_dir",
+        )
+        layout.addWidget(self.output_dir)
+
+        # --- Parameters ---
+        params_group = QGroupBox("Parameters")
+        params_layout = QVBoxLayout(params_group)
+
+        self.batch_size = FormFieldWidget(
+            "Batch size:", field_type="spinbox", default=900,
+            tooltip="Transaction references per SQL batch (default 900).",
+            settings_key=f"{pfx}.batch_size",
+        )
+        params_layout.addWidget(self.batch_size)
+
+        self.incident_code = FormFieldWidget(
+            "Incident code:", field_type="text",
+            tooltip="Code used for file naming (e.g. 7_37).\n"
+                    "Leave blank to use the validation type key.",
+            placeholder="e.g. 7_37",
+            settings_key=f"{pfx}.incident_code",
+        )
+        params_layout.addWidget(self.incident_code)
+
+        self.auto_execute = FormFieldWidget(
+            "Auto-execute DTF (requires IBM i Access):",
+            field_type="checkbox", default=False,
+            tooltip="When checked, DTF files are launched automatically via "
+                    "cwbodtfx.exe.\nWhen unchecked, the pipeline pauses after "
+                    "generation so you can execute them manually.",
+            settings_key=f"{pfx}.auto_execute",
+        )
+        params_layout.addWidget(self.auto_execute)
+
+        layout.addWidget(params_group)
+
+        # --- Step progress strip ---
+        progress_group = QGroupBox("Pipeline Progress")
+        progress_layout = QHBoxLayout(progress_group)
+        self._step_labels: list[QLabel] = []
+        for i, step_name in enumerate(self._STEPS):
+            if i > 0:
+                arrow = QLabel(" → ")
+                arrow.setStyleSheet("color: grey;")
+                progress_layout.addWidget(arrow)
+            lbl = QLabel(step_name)
+            lbl.setStyleSheet(
+                "padding: 2px 8px; border: 1px solid #ccc; border-radius: 3px; "
+                "background: #f5f5f5; color: grey;"
+            )
+            self._step_labels.append(lbl)
+            progress_layout.addWidget(lbl)
+        progress_layout.addStretch()
+        layout.addWidget(progress_group)
+
+        # --- Controls ---
+        self.run_controls = RunControlsWidget()
+        self.run_controls.run_clicked.connect(lambda: self._on_run(dry_run=False))
+        self.run_controls.dry_run_clicked.connect(lambda: self._on_run(dry_run=True))
+        self.run_controls.cancel_clicked.connect(self._on_cancel)
+        layout.addWidget(self.run_controls)
+
+        # Resume button (shown when EXECUTE_DTF pauses for manual execution).
+        self._resume_btn = QPushButton("Resume (DTF files executed)")
+        self._resume_btn.setVisible(False)
+        self._resume_btn.clicked.connect(self._on_resume)
+        layout.addWidget(self._resume_btn)
+
+        # --- Log ---
+        self.log_viewer = LogViewerWidget()
+        layout.addWidget(self.log_viewer, stretch=1)
+
+        layout.addStretch()
+
+        self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().addWidget(_scrollable(inner))
+
+        # Auto-populate SQL template.
+        self._on_vtype_changed()
+
+    # ------------------------------------------------------------------
+    # Slots
+    # ------------------------------------------------------------------
+
+    def _on_vtype_changed(self) -> None:
+        """Auto-populate the SQL template path when validation type changes."""
+        idx = self._vtype_combo.currentIndex()
+        if 0 <= idx < len(self._VALIDATION_TYPES):
+            _label, _val, tpl_name = self._VALIDATION_TYPES[idx]
+            tpl_dir = (
+                Path(__file__).parent.parent.parent
+                / "accuracy_testing" / "sql_templates"
+            )
+            tpl_path = tpl_dir / tpl_name
+            if tpl_path.exists():
+                self.sql_template.set_path(str(tpl_path))
+        settings.save("accuracy.pipeline.vtype_index", idx)
+
+    def _on_run(self, *, dry_run: bool = False) -> None:
+        """Validate form and launch the pipeline in a background thread."""
+        input_csv = self.input_csv.get_path()
+        if not input_csv:
+            from PySide6.QtWidgets import QMessageBox
+
+            QMessageBox.warning(self, "Validation", "Input CSV is required.")
+            return
+
+        sql_tpl = self.sql_template.get_path()
+        if not sql_tpl:
+            from PySide6.QtWidgets import QMessageBox
+
+            QMessageBox.warning(self, "Validation", "SQL template is required.")
+            return
+
+        output = self.output_dir.get_path()
+        if not output:
+            from PySide6.QtWidgets import QMessageBox
+
+            QMessageBox.warning(self, "Validation", "Output directory is required.")
+            return
+
+        idx = self._vtype_combo.currentIndex()
+        _label, vtype_val, _tpl = self._VALIDATION_TYPES[idx]
+
+        from src.accuracy_testing.core.txn_ref_pipeline import (
+            TransactionRefPipelineConfig,
+        )
+
+        config = TransactionRefPipelineConfig(
+            input_csv=Path(input_csv),
+            validation_type=vtype_val,
+            sql_template_path=Path(sql_tpl),
+            output_dir=Path(output),
+            batch_size=int(self.batch_size.value()),
+            auto_execute_dtf=bool(self.auto_execute.value()),
+            dry_run=dry_run,
+            incident_code=str(self.incident_code.value() or ""),
+            script_module_path=INCIDENT_SCRIPT_MODULES.get(vtype_val, ""),
+        )
+
+        self.log_viewer.clear()
+        self._reset_step_labels()
+        self.run_controls.set_running(True)
+        self._resume_btn.setVisible(False)
+
+        self._worker = _PipelineWorker(config)
+        self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.step_update.connect(self._on_step_update)
+        self._worker.pipeline_done.connect(self._on_pipeline_done)
+        self._worker.start()
+
+    def _on_cancel(self) -> None:
+        """Cancel a running pipeline (best-effort)."""
+        if self._worker and self._worker.isRunning():
+            self._worker.terminate()
+            self._worker = None
+        self.run_controls.set_running(False)
+        self._resume_btn.setVisible(False)
+        self.log_viewer.append_error("[GUI] Pipeline cancelled.")
+
+    def _on_resume(self) -> None:
+        """Resume after manual DTF execution."""
+        if self._worker is None:
+            return
+
+        partial_result = self._worker.partial_result
+        if partial_result is None:
+            return
+
+        config = self._worker.config
+        self._resume_btn.setVisible(False)
+        self.run_controls.set_running(True)
+
+        self._worker = _PipelineResumeWorker(config, partial_result)
+        self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.step_update.connect(self._on_step_update)
+        self._worker.pipeline_done.connect(self._on_pipeline_done)
+        self._worker.start()
+
+    def _on_step_update(self, step_name: str, status: str, message: str) -> None:
+        """Update the step progress strip."""
+        step_index_map = {
+            "generate": 0,
+            "execute_dtf": 1,
+            "collate": 2,
+            "validate": 3,
+            "push": 4,
+        }
+        idx = step_index_map.get(step_name)
+        if idx is None or idx >= len(self._step_labels):
+            return
+
+        lbl = self._step_labels[idx]
+        if status == "running":
+            lbl.setStyleSheet(
+                "padding: 2px 8px; border: 1px solid #1976D2; border-radius: 3px; "
+                "background: #E3F2FD; color: #1976D2; font-weight: bold;"
+            )
+        elif status == "success":
+            lbl.setStyleSheet(
+                "padding: 2px 8px; border: 1px solid #2E7D32; border-radius: 3px; "
+                "background: #E8F5E9; color: #2E7D32;"
+            )
+        elif status == "failed":
+            lbl.setStyleSheet(
+                "padding: 2px 8px; border: 1px solid #D50032; border-radius: 3px; "
+                "background: #FFEBEE; color: #D50032;"
+            )
+        elif status == "waiting":
+            lbl.setStyleSheet(
+                "padding: 2px 8px; border: 1px solid #FF8F00; border-radius: 3px; "
+                "background: #FFF8E1; color: #FF8F00; font-weight: bold;"
+            )
+        elif status == "skipped":
+            lbl.setStyleSheet(
+                "padding: 2px 8px; border: 1px solid #ccc; border-radius: 3px; "
+                "background: #f5f5f5; color: #999;"
+            )
+
+        if message:
+            self.log_viewer.append_line(f"[{self._STEPS[idx]}] {message}")
+
+    def _on_pipeline_done(self, success: bool, waiting: bool) -> None:
+        """Handle pipeline completion or pause."""
+        self.run_controls.set_running(False)
+        pfx = "accuracy.pipeline"
+
+        if waiting:
+            self._resume_btn.setVisible(True)
+            self.log_viewer.append_line(
+                "\n[GUI] Pipeline paused — execute DTF files manually, "
+                "then click 'Resume (DTF files executed)'."
+            )
+            return
+
+        _update_last_run(self._last_run, pfx, success)
+        if success:
+            self.log_viewer.append_line("\n[GUI] Pipeline completed successfully.")
+        else:
+            self.log_viewer.append_error("\n[GUI] Pipeline failed.")
+        self._worker = None
+
+    # ------------------------------------------------------------------
+    # Helpers
+    # ------------------------------------------------------------------
+
+    def _reset_step_labels(self) -> None:
+        """Reset all step labels to the default pending style."""
+        for lbl in self._step_labels:
+            lbl.setStyleSheet(
+                "padding: 2px 8px; border: 1px solid #ccc; border-radius: 3px; "
+                "background: #f5f5f5; color: grey;"
+            )
+
+    def populate_from_config(self, config: Dict[str, Any]) -> None:
+        """Populate panel fields from a loaded YAML config dict.
+
+        Args:
+            config: Loaded YAML dict with panel field values.
+        """
+        paths = config.get("paths", {})
+        if p := paths.get("input_csv"):
+            self.input_csv.set_path(p)
+        if p := paths.get("sql_template"):
+            self.sql_template.set_path(p)
+        if p := paths.get("output_dir"):
+            self.output_dir.set_path(p)
+        if bs := config.get("batch_size"):
+            self.batch_size._input.setValue(int(bs))
+
+
+class _PipelineWorker(_QThread):
+    """Background thread for ``TransactionRefPipelineExecutor.execute()``."""
+
+    output_line = _QSignal(str)
+    step_update = _QSignal(str, str, str)     # step_name, status, message
+    pipeline_done = _QSignal(bool, bool)       # success, waiting
+
+    def __init__(
+        self,
+        config: "TransactionRefPipelineConfig",
+        parent: Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self.config = config
+        self._partial_result = None
+
+    def run(self) -> None:  # noqa: D102
+        from src.accuracy_testing.core.txn_ref_pipeline import (
+            TransactionRefPipelineExecutor,
+            StepStatus,
+        )
+
+        def _on_progress(step, status, msg):
+            self.step_update.emit(step.value, status.value, msg)
+
+        def _on_output(line):
+            self.output_line.emit(line)
+
+        executor = TransactionRefPipelineExecutor(
+            on_progress=_on_progress,
+            on_output=_on_output,
+        )
+        result = executor.execute(self.config)
+        self._partial_result = result
+
+        if result.status == StepStatus.WAITING:
+            self.pipeline_done.emit(False, True)
+        elif result.status == StepStatus.SUCCESS:
+            self.pipeline_done.emit(True, False)
+        else:
+            self.pipeline_done.emit(False, False)
+
+    @property
+    def partial_result(self):
+        """Return the pipeline result (may be partial if WAITING)."""
+        return self._partial_result
+
+
+class _PipelineResumeWorker(_QThread):
+    """Background thread for ``TransactionRefPipelineExecutor.resume()``."""
+
+    output_line = _QSignal(str)
+    step_update = _QSignal(str, str, str)
+    pipeline_done = _QSignal(bool, bool)
+
+    def __init__(
+        self,
+        config: "TransactionRefPipelineConfig",
+        partial_result: "PipelineResult",
+        parent: Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self.config = config
+        self._partial_result = partial_result
+
+    def run(self) -> None:  # noqa: D102
+        from src.accuracy_testing.core.txn_ref_pipeline import (
+            TransactionRefPipelineExecutor,
+            StepStatus,
+        )
+
+        def _on_progress(step, status, msg):
+            self.step_update.emit(step.value, status.value, msg)
+
+        def _on_output(line):
+            self.output_line.emit(line)
+
+        executor = TransactionRefPipelineExecutor(
+            on_progress=_on_progress,
+            on_output=_on_output,
+        )
+        result = executor.resume(self.config, self._partial_result)
+
+        if result.status == StepStatus.SUCCESS:
+            self.pipeline_done.emit(True, False)
+        else:
+            self.pipeline_done.emit(False, False)
+
+
+# ---------------------------------------------------------------------------
 # Main Accuracy Tab
 # ---------------------------------------------------------------------------
 
@@ -2597,6 +3050,7 @@ class AccuracyTab(QWidget):
           "settings_prefix": "non_zero_amt",
           "incidents": ["7_42"]}),
         ("Run All", RunAllPanel, {}),
+        ("Pipeline", PipelinePanel, {}),
         (None, None, {}),  # Section separator
         ("Extracts", SQLExtractPanel, {}),
         ("Templates", TemplateGeneratorPanel, {}),
