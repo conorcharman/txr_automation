@@ -40,6 +40,7 @@ setup(
             "validate-non-zero-net-amt=accuracy_testing.scripts.non_zero_net_amount:main",
             "validate-all=accuracy_testing.scripts.run_all_validations:main",
             "generate-sql-extract=accuracy_testing.scripts.sql_extract_generator:main",
+            "generate-period-extract=accuracy_testing.scripts.period_extract_generator:main",
             "generate-accuracy-template=accuracy_testing.scripts.accuracy_template_generator:main",
             "collate-csv-extracts=accuracy_testing.scripts.collate_csv_extracts:main",
             "data-push=accuracy_testing.scripts.data_push:main",
@@ -50,9 +51,11 @@ setup(
             "gleif-refresh=gleif.scripts.refresh_cache:main",
             "gleif-check=gleif.scripts.check_lei:main",
             "gleif-backfill=gleif.scripts.backfill:main",
+            "txr-automate=automation.cli:main",
         ],
         "gui_scripts": [
             "txr-gui=gui.app:main",
+            "txr-tray=gui.tray.tray_app:main",
         ],
     },
     classifiers=[
