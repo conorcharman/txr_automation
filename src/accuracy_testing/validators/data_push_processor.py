@@ -575,9 +575,10 @@ class BatchDataPushProcessor:
         """
         # Try multiple naming patterns for target file (master tracking files)
         target_patterns = [
-            f"{self.fiscal_year} {self.quarter} {incident}.csv",     # Common format (no dash)
-            f"{self.fiscal_year} {self.quarter} - {incident}.csv",   # Format with dash
-            f"{incident}.csv",                                        # Generic fallback
+            f"{incident}_{self.fiscal_year}_{self.quarter}.csv",      # Standard format: 7_42_FY25_Q4.csv
+            f"{self.fiscal_year} {self.quarter} {incident}.csv",      # Legacy: FY25 Q4 7_42.csv
+            f"{self.fiscal_year} {self.quarter} - {incident}.csv",    # Legacy with dash
+            f"{incident}.csv",                                         # Generic fallback
         ]
         
         target_path = None

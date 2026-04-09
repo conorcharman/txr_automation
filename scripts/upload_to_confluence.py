@@ -205,6 +205,9 @@ def extract_and_inline_body(html_path: Path) -> str:
     # Convert heading id attributes to Confluence anchor macros so TOC links work
     body_html = _inject_confluence_anchors(body_html)
 
+    # Convert intra-page TOC anchor links (href="#id") to ac:link macros
+    body_html = _convert_intrapage_anchor_links(body_html)
+
     # Convert local .html links to Confluence cross-page links
     body_html = _convert_cross_page_links(body_html)
 
@@ -238,25 +241,126 @@ def _get_filename_title_map() -> Dict[str, str]:
 
 def _inject_confluence_anchors(html: str) -> str:
     """
-    Convert heading id attributes to Confluence anchor macros.
+    Convert heading id attributes and confluence-anchor-link spans to Confluence anchor macros.
 
-    For every <h1>–<h4> with an id attribute, insert an
-    ``<ac:structured-macro ac:name="anchor">`` element before the heading
-    so that ``<a href="#id">`` TOC links resolve correctly in Confluence.
+    The Confluence exporter produces two layers of anchor IDs:
+
+    * ``<span class="confluence-anchor-link" id="<short-id>">`` — the **short**
+      ID that TOC ``<a href="#short-id">`` links actually target (e.g.
+      ``executive-summary``, ``purpose``).
+    * ``<h2 id="<long-id>">`` — a longer namespace-prefixed ID on the heading
+      element itself (e.g. ``id-1.ProjectOverview-ExecutiveSummary``).
+
+    The original implementation only converted heading IDs, so no anchor macro
+    was ever created for the short IDs — breaking all TOC links in Confluence.
+
+    Two additional subtleties are handled:
+
+    1. **Self-closing spans** — the inner anchor span uses the HTML4 self-closing
+       style (``<span ... />``) which HTML5 parsers do not honour.  A regex
+       pre-pass normalises ``<span .../>`` to ``<span ...></span>`` so that
+       BeautifulSoup sees it as a proper child element.
+
+    2. **Nested span processing order** — ``find_all`` returns elements in
+       document order (outer before inner).  Calling ``replace_with`` on an
+       outer span detaches and destroys its inner children, making subsequent
+       processing of those inner elements a no-op.  We fix this by collecting
+       IDs from all nested ``confluence-anchor-link`` spans *before* replacing
+       the outer span, and skipping those nested spans when the iterator
+       reaches them.
     """
+    # Pre-process: normalise self-closing <span .../> to <span ...></span>
+    # so BS4's html.parser sees them as proper child elements.
+    html = re.sub(r"(<span\b[^>]*)/>\s*", r"\1></span>", html)
+
     soup = BeautifulSoup(html, "html.parser")
-    for heading in soup.find_all(re.compile(r"^h[1-4]$")):
-        anchor_id = heading.get("id")
-        if not anchor_id:
-            continue
-        # Build the Confluence anchor macro
+
+    def _make_anchor_macro(anchor_id: str):
         macro = soup.new_tag("ac:structured-macro", attrs={"ac:name": "anchor"})
         param = soup.new_tag("ac:parameter", attrs={"ac:name": ""})
         param.string = anchor_id
         macro.append(param)
-        heading.insert_before(macro)
+        return macro
+
+    # Track nested spans already handled so we don't double-process them.
+    processed_ids: set = set()
+
+    for span in soup.find_all("span", class_="confluence-anchor-link"):
+        if id(span) in processed_ids:
+            continue
+
+        # Collect this span's ID plus the IDs of all nested anchor spans
+        # BEFORE replacing the outer span (which would detach the nested ones).
+        all_ids = []
+        if span.get("id"):
+            all_ids.append(span["id"])
+        for nested in span.find_all("span", class_="confluence-anchor-link"):
+            processed_ids.add(id(nested))
+            if nested.get("id"):
+                all_ids.append(nested["id"])
+
+        # Insert one anchor macro per ID, then remove the entire span subtree.
+        for anchor_id in all_ids:
+            span.insert_before(_make_anchor_macro(anchor_id))
+        span.decompose()
+
+    # Also convert h1–h4 heading id attributes so that direct heading links work.
+    for heading in soup.find_all(re.compile(r"^h[1-4]$")):
+        anchor_id = heading.get("id")
+        if not anchor_id:
+            continue
+        heading.insert_before(_make_anchor_macro(anchor_id))
         del heading["id"]
+
     return str(soup)
+
+
+def _convert_intrapage_anchor_links(html: str) -> str:
+    """
+    Convert intra-page anchor links to Confluence ``<ac:link ac:anchor>`` macros.
+
+    Plain HTML ``<a href="#anchor-id">`` links are not supported in Confluence
+    storage format for intra-page navigation — they render as broken ``#anchor``
+    references that the browser cannot resolve.  The correct storage-format
+    equivalent is::
+
+        <ac:link ac:anchor="anchor-id">
+          <ac:plain-text-link-body><![CDATA[link text]]></ac:plain-text-link-body>
+        </ac:link>
+
+    This function handles all ``href="#..."`` links (e.g. TOC links).  Cross-page
+    links (``href="page.html"`` or ``href="page.html#anchor"``) are left for
+    ``_convert_cross_page_links`` to handle.
+
+    ``ac:plain-text-link-body`` requires a raw XML CDATA section.  BeautifulSoup
+    HTML-escapes any string it serialises, so placeholders are used during tree
+    manipulation and replaced with unescaped ``<![CDATA[...]]>`` markers after
+    serialisation.
+    """
+    soup = BeautifulSoup(html, "html.parser")
+    cdata_map: Dict[str, str] = {}
+
+    for index, a_tag in enumerate(soup.find_all("a", href=True)):
+        href = a_tag["href"]
+        # Only handle pure intra-page anchors; cross-page links handled elsewhere
+        if not href.startswith("#") or len(href) <= 1:
+            continue
+
+        anchor_id = href[1:]  # strip leading '#'
+        link_text = a_tag.get_text()
+        placeholder = f"TXRCDATAINTRA{index}END"
+        cdata_map[placeholder] = f"<![CDATA[{link_text}]]>"
+
+        ac_link = soup.new_tag("ac:link", attrs={"ac:anchor": anchor_id})
+        link_body = soup.new_tag("ac:plain-text-link-body")
+        link_body.append(soup.new_string(placeholder))
+        ac_link.append(link_body)
+        a_tag.replace_with(ac_link)
+
+    result = str(soup)
+    for placeholder, cdata in cdata_map.items():
+        result = result.replace(placeholder, cdata)
+    return result
 
 
 def _convert_cross_page_links(html: str) -> str:

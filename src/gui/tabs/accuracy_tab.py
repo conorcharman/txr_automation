@@ -2436,13 +2436,22 @@ class DataPushPanel(QWidget):
         if config_path:
             argv.extend(["--config", config_path])
 
-        if self.batch_mode.get_value():
+        is_batch = self.batch_mode.get_value()
+        if is_batch:
             argv.append("--batch")
 
         for picker, flag in [
             (self.source_file, "--source"),
             (self.target_file, "--target"),
             (self.output_file, "--output"),
+        ]:
+            if is_batch:
+                continue
+            val = picker.get_path()
+            if val:
+                argv.extend([flag, val])
+
+        for picker, flag in [
             (self.source_dir, "--source-dir"),
             (self.target_dir, "--target-dir"),
         ]:
@@ -2454,10 +2463,15 @@ class DataPushPanel(QWidget):
         if incident_val:
             argv.extend(["--incident", incident_val])
 
-        if self.batch_mode.get_value():
+        if is_batch:
             selected = self.incident_selector.get_selected()
             if selected:
-                argv.extend(["--incidents", ",".join(selected)])
+                # Translate incident names to their numeric codes using INCIDENT_CODE_PATTERNS.
+                # e.g. "non-zero-qty" → "7_6", "buyer" → "7_35,7_37,7_39"
+                codes: List[str] = []
+                for name in selected:
+                    codes.extend(INCIDENT_CODE_PATTERNS.get(name, [name]))
+                argv.extend(["--incidents", ",".join(codes)])
 
         for field, flag in [
             (self.fiscal_year, "--fiscal-year"),
