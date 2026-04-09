@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Configuration System &mdash; TXR Automation</title>
+    <title>Configuration System — TXR Automation</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
         h1, h2, h3, h4 { color: #172B4D; }
@@ -11,60 +11,77 @@
         th { background-color: #F4F5F7; font-weight: 600; }
         a { color: #0052CC; text-decoration: none; }
         a:hover { text-decoration: underline; }
-        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF8B00; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; white-space: pre; margin: 0; }
+        .confluence-anchor-link { display: none; }
+        .code.panel { border: 1px solid #DFE1E6; border-radius: 3px; margin: 16px 0; overflow: hidden; }
+        .codeContent { padding: 0; }
+        .syntaxhighlighter-pre { background: #F4F5F7; padding: 16px; margin: 0; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; border: none; border-radius: 0; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
-
-<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Developer Guide &rsaquo; Configuration System</p>
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Configuration System</p>
 <p class="last-updated">Last updated: 25 March 2026</p>
-
-<h1>Configuration System</h1>
-
-<div class="info-panel">
-    <strong>All scripts</strong> support a unified configuration cascade: <strong>CLI arguments &gt; environment variables &gt; YAML file &gt; defaults</strong>.
-    YAML templates are version-controlled in <code>config/templates/</code>; local copies live in <code>config/local/</code> (gitignored).
+<h1 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-ConfigurationSystem">Configuration System</h1>
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>All scripts</strong> support a unified configuration cascade: <strong>CLI arguments &gt; environment variables &gt; YAML file &gt; defaults</strong>.
+    YAML templates are version-controlled in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/templates/</code>; local copies live in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/local/</code> (gitignored).
 </div>
-
-<h2>Table of Contents</h2>
+<h2 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-TableofContents">Table of Contents</h2>
 <ul>
-    <li><a href="#cascade">Configuration Cascade</a></li>
-    <li><a href="#yaml-structure">YAML Configuration Structure</a></li>
-    <li><a href="#templates">Template Reference</a></li>
-    <li><a href="#env-vars">Environment Variables</a></li>
-    <li><a href="#local-setup">Local Configuration Setup</a></li>
-    <li><a href="#managers">Config Manager API</a></li>
-    <li><a href="#examples">Configuration Examples</a></li>
-    <li><a href="#troubleshooting">Troubleshooting</a></li>
+<li><a href="#cascade" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Configuration Cascade</a></li>
+<li><a href="#yaml-structure" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">YAML Configuration Structure</a></li>
+<li><a href="#templates" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Template Reference</a></li>
+<li><a href="#env-vars" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Environment Variables</a></li>
+<li><a href="#local-setup" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Local Configuration Setup</a></li>
+<li><a href="#managers" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Config Manager API</a></li>
+<li><a href="#examples" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Configuration Examples</a></li>
+<li><a href="#troubleshooting" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Troubleshooting</a></li>
 </ul>
 
-<!-- ================================================================== -->
-
-<h2 id="cascade">Configuration Cascade</h2>
-
+<span class="confluence-anchor-link" id="id-4c.ConfigurationSystem-cascade"><span class="confluence-anchor-link" id="cascade" /></span><h2 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-ConfigurationCascade">Configuration Cascade</h2>
 <p>Every CLI script resolves configuration values using the following priority order (highest wins):</p>
-
-<table>
-    <thead>
-        <tr><th>Priority</th><th>Source</th><th>Example</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>1 (highest)</td><td>CLI arguments</td><td><code>--log-level DEBUG</code>, <code>--dry-run</code></td></tr>
-        <tr><td>2</td><td>Environment variables</td><td><code>TXR_ACCURACY_PROCESSOR_LOG_LEVEL=DEBUG</code></td></tr>
-        <tr><td>3</td><td>YAML configuration file</td><td><code>--config config/local/accuracy_testing/buyer_validation.yaml</code></td></tr>
-        <tr><td>4 (lowest)</td><td>Hard-coded defaults</td><td><code>log_level: INFO</code>, <code>batch_size: 1000</code></td></tr>
-    </tbody>
-</table>
-
-<h3>Resolution Flow</h3>
-
-<pre>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Priority</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Source</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">1 (highest)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CLI arguments</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--log-level DEBUG</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--dry-run</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">2</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Environment variables</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_ACCURACY_PROCESSOR_LOG_LEVEL=DEBUG</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">3</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">YAML configuration file</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--config config/local/accuracy_testing/buyer_validation.yaml</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">4 (lowest)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Hard-coded defaults</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">log_level: INFO</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">batch_size: 1000</code>
+</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-ResolutionFlow">Resolution Flow</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 CLI script invoked
     |
     +-- --config PATH provided?
@@ -78,91 +95,166 @@ CLI script invoked
     |
     +-- Fill remaining gaps with hard-coded defaults
 </pre>
+</div></div>
 
-<!-- ================================================================== -->
-
-<h2 id="yaml-structure">YAML Configuration Structure</h2>
-
+<span class="confluence-anchor-link" id="id-4c.ConfigurationSystem-yaml-structure"><span class="confluence-anchor-link" id="yaml-structure" /></span><h2 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-YAMLConfigurationStructure">YAML Configuration Structure</h2>
 <p>All YAML configuration files share core sections, with script-specific extensions.</p>
-
-<h3>Common Sections</h3>
-
-<table>
-    <thead>
-        <tr><th>Section</th><th>Purpose</th><th>Required</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>mode</code></td><td>Processing mode: <code>"single"</code> (one incident) or <code>"batch"</code> (multiple incidents)</td><td>Yes (accuracy testing)</td></tr>
-        <tr><td><code>testing_period</code></td><td>Fiscal year and quarter (e.g., <code>FY26</code>, <code>Q1</code>)</td><td>Yes (accuracy testing)</td></tr>
-        <tr><td><code>single.paths</code></td><td>Explicit file paths for single-incident mode</td><td>If mode is <code>single</code></td></tr>
-        <tr><td><code>batch.paths</code></td><td>Directory paths for multi-incident batch mode</td><td>If mode is <code>batch</code></td></tr>
-        <tr><td><code>batch.filename_patterns</code></td><td>Filename templates with <code>{incident}</code>, <code>{fiscal_year}</code>, <code>{quarter}</code> variables</td><td>If mode is <code>batch</code></td></tr>
-        <tr><td><code>processor</code></td><td>Log level, verbosity, batch size</td><td>Optional (has defaults)</td></tr>
-        <tr><td><code>options</code></td><td>Script-specific flags: <code>dry_run</code>, <code>show_progress</code></td><td>Optional</td></tr>
-    </tbody>
-</table>
-
-<h3>Single Mode Paths</h3>
-
-<table>
-    <thead>
-        <tr><th>Key</th><th>Description</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>input_file</code></td><td>Extract file (SQL database export) &mdash; validation input</td></tr>
-        <tr><td><code>template_file</code></td><td>Template file (Kaizen expected values) &mdash; validation reference</td></tr>
-        <tr><td><code>output_file</code></td><td>Output file (validation results)</td></tr>
-        <tr><td><code>log_output</code></td><td>Log output directory</td></tr>
-        <tr><td><code>italian_tracker</code></td><td>Optional: Italian ID tracker CSV</td></tr>
-        <tr><td><code>main_tracker</code></td><td>Optional: Main tracker CSV</td></tr>
-    </tbody>
-</table>
-
-<h3>Batch Mode Paths</h3>
-
-<table>
-    <thead>
-        <tr><th>Key</th><th>Description</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>extract_dir</code></td><td>Directory containing extract files</td></tr>
-        <tr><td><code>template_dir</code></td><td>Directory containing template files</td></tr>
-        <tr><td><code>output_dir</code></td><td>Directory for output files</td></tr>
-        <tr><td><code>log_output</code></td><td>Log output directory</td></tr>
-    </tbody>
-</table>
-
-<h3>Filename Pattern Variables</h3>
-
-<table>
-    <thead>
-        <tr><th>Variable</th><th>Source</th><th>Example Value</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>{incident}</code></td><td>Current incident code</td><td><code>7_37</code></td></tr>
-        <tr><td><code>{fiscal_year}</code></td><td><code>testing_period.fiscal_year</code></td><td><code>FY26</code></td></tr>
-        <tr><td><code>{quarter}</code></td><td><code>testing_period.quarter</code></td><td><code>Q1</code></td></tr>
-    </tbody>
-</table>
-
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-CommonSections">Common Sections</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Section</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Purpose</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Required</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">mode</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Processing mode: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">&quot;single&quot;</code> (one incident) or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">&quot;batch&quot;</code> (multiple incidents)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Yes (accuracy testing)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">testing_period</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Fiscal year and quarter (e.g., <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FY26</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Q1</code>)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Yes (accuracy testing)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">single.paths</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Explicit file paths for single-incident mode</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">If mode is <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">single</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">batch.paths</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Directory paths for multi-incident batch mode</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">If mode is <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">batch</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">batch.filename_patterns</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Filename templates with <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">{incident}</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">{fiscal_year}</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">{quarter}</code> variables</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">If mode is <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">batch</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">processor</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Log level, verbosity, batch size</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Optional (has defaults)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">options</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Script-specific flags: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">dry_run</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">show_progress</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Optional</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-SingleModePaths">Single Mode Paths</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Key</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">input_file</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract file (SQL database export) &mdash; validation input</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">template_file</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Template file (Kaizen expected values) &mdash; validation reference</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">output_file</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Output file (validation results)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">log_output</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Log output directory</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">italian_tracker</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Optional: Italian ID tracker CSV</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">main_tracker</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Optional: Main tracker CSV</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-BatchModePaths">Batch Mode Paths</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Key</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">extract_dir</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Directory containing extract files</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">template_dir</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Directory containing template files</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">output_dir</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Directory for output files</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">log_output</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Log output directory</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-FilenamePatternVariables">Filename Pattern Variables</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Variable</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Source</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Example Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">{incident}</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Current incident code</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">7_37</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">{fiscal_year}</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">testing_period.fiscal_year</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FY26</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">{quarter}</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">testing_period.quarter</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Q1</code></td>
+</tr>
+</tbody>
+</table></div>
 <p>Example pattern substitution:</p>
-<pre>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Pattern:
-extract: "{incident}_{fiscal_year}_{quarter}.csv"
+extract: &quot;{incident}_{fiscal_year}_{quarter}.csv&quot;
 
 # Resolves to:
 7_37_FY26_Q1.csv
 </pre>
+</div></div>
 
-<!-- ================================================================== -->
-
-<h2 id="templates">Template Reference</h2>
-
-<p>All templates are version-controlled in <code>config/templates/</code>. Copy to <code>config/local/</code> and customise for your environment.</p>
-
-<h3>Directory Layout</h3>
-
-<pre>
+<span class="confluence-anchor-link" id="id-4c.ConfigurationSystem-templates"><span class="confluence-anchor-link" id="templates" /></span><h2 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-TemplateReference">Template Reference</h2>
+<p>All templates are version-controlled in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/templates/</code>. Copy to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/local/</code> and customise for your environment.</p>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-DirectoryLayout">Directory Layout</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 config/
 +-- templates/                              # Version-controlled (committed)
 |   +-- accuracy_testing/                   # 14 accuracy testing templates
@@ -194,387 +286,438 @@ config/
     +-- replay/
     +-- environments/
 </pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-TemplateDescriptions">Template Descriptions</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Category</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Template</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">CLI Command</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" rowspan="10" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Accuracy Testing</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">buyer_validation_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-buyer</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Buyer ID validation for incidents 7_35, 7_37, 7_39</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">seller_validation_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-seller</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Seller ID validation for incidents 16_19, 16_21, 16_23</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">inconsistent_buyer_validation_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-inconsistent-buyer</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Inconsistent buyer ID detection (incident 7_66)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">inconsistent_seller_validation_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-inconsistent-seller</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Inconsistent seller ID detection (incident 16_20)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ftbdm_validation_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-ftbdm</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Field 27 buyer decision maker validation</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ftsdm_validation_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-ftsdm</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Field 28 seller decision maker validation</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pricing_validation_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-pricing</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Pricing data validation (Net = Consideration + Interest)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">run_all_validations_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-all</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Orchestrate all enabled validation scripts in sequence</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">sql_extract_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">generate-sql-extract</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Generate SQL queries using 11 templates + 1 DTF template</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data_push_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data-push</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Push validated corrections to master tracker file</td>
+</tr>
+<tr>
+<td align="left" rowspan="4" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Replay</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">phase2_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay-phase2</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Transaction reference matching with hash table indexing</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">phase3_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay-phase3</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Client record matching (name, DOB, ID) with fuzzy matching</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">phase3_final_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay-phase3-final</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">UnaVista transaction validation of proposed corrections</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">merge_inconsistent_ids_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">merge-inconsistent-summaries</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Merge duplicate rows in inconsistent ID summary files</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Utils</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">xlsx_converter_template.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay-xlsx-converter</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Convert XLSX files to CSV format for pipeline input</td>
+</tr>
+</tbody>
+</table></div>
 
-<h3>Template Descriptions</h3>
+<span class="confluence-anchor-link" id="id-4c.ConfigurationSystem-env-vars"><span class="confluence-anchor-link" id="env-vars" /></span><h2 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-EnvironmentVariables">Environment Variables</h2>
+<p>When a YAML file is not available (e.g., in CI/CD pipelines), scripts can load configuration entirely from environment variables using the <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--use-env</code> flag.</p>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-AccuracyTestingVariables">Accuracy Testing Variables</h3>
+<p>Prefix: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_ACCURACY_</code></p>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Variable</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Maps To</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_ACCURACY_PATHS_INPUT_FILE</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">single.paths.input_file</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data/extracts/7_37_FY26_Q1.csv</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_ACCURACY_PATHS_TEMPLATE_FILE</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">single.paths.template_file</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data/templates/FY26 Q1 7_37.csv</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_ACCURACY_PATHS_OUTPUT_FILE</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">single.paths.output_file</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data/validated/validated_FY26_Q1_7_37.csv</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_ACCURACY_PATHS_LOG_OUTPUT</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">single.paths.log_output</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">logs</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_ACCURACY_PROCESSOR_LOG_LEVEL</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">processor.log_level</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DEBUG</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_ACCURACY_PROCESSOR_VERBOSE</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">processor.verbose</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">true</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_ACCURACY_PROCESSOR_BATCH_SIZE</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">processor.batch_size</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">1000</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-ReplayVariables">Replay Variables</h3>
+<p>Prefix: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_</code></p>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Variable</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Maps To</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_PATHS_INPUT_FILE</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">paths.replay_input</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data/sample/phase_ii</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_PATHS_OUTPUT_FILE</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">paths.replay_output</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data/output/phase_ii</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_PATHS_LOG_OUTPUT</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">paths.log_output</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data/output/logs</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_PROCESSOR_LOG_LEVEL</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">processor.log_level</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">INFO</code></td>
+</tr>
+</tbody>
+</table></div>
 
-<table>
-    <thead>
-        <tr><th>Category</th><th>Template</th><th>CLI Command</th><th>Description</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td rowspan="10"><strong>Accuracy Testing</strong></td>
-            <td><code>buyer_validation_template.yaml</code></td>
-            <td><code>validate-buyer</code></td>
-            <td>Buyer ID validation for incidents 7_35, 7_37, 7_39</td>
-        </tr>
-        <tr>
-            <td><code>seller_validation_template.yaml</code></td>
-            <td><code>validate-seller</code></td>
-            <td>Seller ID validation for incidents 16_19, 16_21, 16_23</td>
-        </tr>
-        <tr>
-            <td><code>inconsistent_buyer_validation_template.yaml</code></td>
-            <td><code>validate-inconsistent-buyer</code></td>
-            <td>Inconsistent buyer ID detection (incident 7_66)</td>
-        </tr>
-        <tr>
-            <td><code>inconsistent_seller_validation_template.yaml</code></td>
-            <td><code>validate-inconsistent-seller</code></td>
-            <td>Inconsistent seller ID detection (incident 16_20)</td>
-        </tr>
-        <tr>
-            <td><code>ftbdm_validation_template.yaml</code></td>
-            <td><code>validate-ftbdm</code></td>
-            <td>Field 27 buyer decision maker validation</td>
-        </tr>
-        <tr>
-            <td><code>ftsdm_validation_template.yaml</code></td>
-            <td><code>validate-ftsdm</code></td>
-            <td>Field 28 seller decision maker validation</td>
-        </tr>
-        <tr>
-            <td><code>pricing_validation_template.yaml</code></td>
-            <td><code>validate-pricing</code></td>
-            <td>Pricing data validation (Net = Consideration + Interest)</td>
-        </tr>
-        <tr>
-            <td><code>run_all_validations_template.yaml</code></td>
-            <td><code>validate-all</code></td>
-            <td>Orchestrate all enabled validation scripts in sequence</td>
-        </tr>
-        <tr>
-            <td><code>sql_extract_template.yaml</code></td>
-            <td><code>generate-sql-extract</code></td>
-            <td>Generate SQL queries using 11 templates + 1 DTF template</td>
-        </tr>
-        <tr>
-            <td><code>data_push_template.yaml</code></td>
-            <td><code>data-push</code></td>
-            <td>Push validated corrections to master tracker file</td>
-        </tr>
-        <tr>
-            <td rowspan="4"><strong>Replay</strong></td>
-            <td><code>phase2_template.yaml</code></td>
-            <td><code>replay-phase2</code></td>
-            <td>Transaction reference matching with hash table indexing</td>
-        </tr>
-        <tr>
-            <td><code>phase3_template.yaml</code></td>
-            <td><code>replay-phase3</code></td>
-            <td>Client record matching (name, DOB, ID) with fuzzy matching</td>
-        </tr>
-        <tr>
-            <td><code>phase3_final_template.yaml</code></td>
-            <td><code>replay-phase3-final</code></td>
-            <td>UnaVista transaction validation of proposed corrections</td>
-        </tr>
-        <tr>
-            <td><code>merge_inconsistent_ids_template.yaml</code></td>
-            <td><code>merge-inconsistent-summaries</code></td>
-            <td>Merge duplicate rows in inconsistent ID summary files</td>
-        </tr>
-        <tr>
-            <td><strong>Utils</strong></td>
-            <td><code>xlsx_converter_template.yaml</code></td>
-            <td><code>replay-xlsx-converter</code></td>
-            <td>Convert XLSX files to CSV format for pipeline input</td>
-        </tr>
-    </tbody>
-</table>
-
-<!-- ================================================================== -->
-
-<h2 id="env-vars">Environment Variables</h2>
-
-<p>When a YAML file is not available (e.g., in CI/CD pipelines), scripts can load configuration entirely from environment variables using the <code>--use-env</code> flag.</p>
-
-<h3>Accuracy Testing Variables</h3>
-
-<p>Prefix: <code>TXR_ACCURACY_</code></p>
-
-<table>
-    <thead>
-        <tr><th>Variable</th><th>Maps To</th><th>Example</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>TXR_ACCURACY_PATHS_INPUT_FILE</code></td><td><code>single.paths.input_file</code></td><td><code>data/extracts/7_37_FY26_Q1.csv</code></td></tr>
-        <tr><td><code>TXR_ACCURACY_PATHS_TEMPLATE_FILE</code></td><td><code>single.paths.template_file</code></td><td><code>data/templates/FY26 Q1 7_37.csv</code></td></tr>
-        <tr><td><code>TXR_ACCURACY_PATHS_OUTPUT_FILE</code></td><td><code>single.paths.output_file</code></td><td><code>data/validated/validated_FY26_Q1_7_37.csv</code></td></tr>
-        <tr><td><code>TXR_ACCURACY_PATHS_LOG_OUTPUT</code></td><td><code>single.paths.log_output</code></td><td><code>logs</code></td></tr>
-        <tr><td><code>TXR_ACCURACY_PROCESSOR_LOG_LEVEL</code></td><td><code>processor.log_level</code></td><td><code>DEBUG</code></td></tr>
-        <tr><td><code>TXR_ACCURACY_PROCESSOR_VERBOSE</code></td><td><code>processor.verbose</code></td><td><code>true</code></td></tr>
-        <tr><td><code>TXR_ACCURACY_PROCESSOR_BATCH_SIZE</code></td><td><code>processor.batch_size</code></td><td><code>1000</code></td></tr>
-    </tbody>
-</table>
-
-<h3>Replay Variables</h3>
-
-<p>Prefix: <code>TXR_</code></p>
-
-<table>
-    <thead>
-        <tr><th>Variable</th><th>Maps To</th><th>Example</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>TXR_PATHS_INPUT_FILE</code></td><td><code>paths.replay_input</code></td><td><code>data/sample/phase_ii</code></td></tr>
-        <tr><td><code>TXR_PATHS_OUTPUT_FILE</code></td><td><code>paths.replay_output</code></td><td><code>data/output/phase_ii</code></td></tr>
-        <tr><td><code>TXR_PATHS_LOG_OUTPUT</code></td><td><code>paths.log_output</code></td><td><code>data/output/logs</code></td></tr>
-        <tr><td><code>TXR_PROCESSOR_LOG_LEVEL</code></td><td><code>processor.log_level</code></td><td><code>INFO</code></td></tr>
-    </tbody>
-</table>
-
-<!-- ================================================================== -->
-
-<h2 id="local-setup">Local Configuration Setup</h2>
-
-<h3>Initial Setup</h3>
-
+<span class="confluence-anchor-link" id="id-4c.ConfigurationSystem-local-setup"><span class="confluence-anchor-link" id="local-setup" /></span><h2 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-LocalConfigurationSetup">Local Configuration Setup</h2>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-InitialSetup">Initial Setup</h3>
 <ol>
-    <li>Copy a template to the local directory:
-<pre>
+<li>Copy a template to the local directory:
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 cp config/templates/accuracy_testing/buyer_validation_template.yaml \
    config/local/accuracy_testing/buyer_validation.yaml
 </pre>
-    </li>
-    <li>Edit the local copy with your file paths and preferences</li>
-    <li>Local files are automatically gitignored &mdash; they will not be committed</li>
+</div></div>
+</li>
+<li>Edit the local copy with your file paths and preferences</li>
+<li>Local files are automatically gitignored &mdash; they will not be committed</li>
 </ol>
-
-<div class="warning-panel">
-    <strong>Never commit local config files.</strong> The <code>config/local/</code> directory is gitignored to prevent accidental
-    exposure of environment-specific paths. Always use templates from <code>config/templates/</code> as the starting point.
+<div style="background: rgb(255,250,230);border-left: 4.0px solid rgb(255,139,0);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Never commit local config files.</strong> The <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/local/</code> directory is gitignored to prevent accidental
+    exposure of environment-specific paths. Always use templates from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/templates/</code> as the starting point.
 </div>
-
-<h3>Gitignore Pattern</h3>
-
-<pre>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-GitignorePattern">Gitignore Pattern</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # From .gitignore
 config/local/
 </pre>
+</div></div>
 
-<!-- ================================================================== -->
-
-<h2 id="managers">Config Manager API</h2>
-
+<span class="confluence-anchor-link" id="id-4c.ConfigurationSystem-managers"><span class="confluence-anchor-link" id="managers" /></span><h2 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-ConfigManagerAPI">Config Manager API</h2>
 <p>Two config manager classes handle configuration loading and validation.</p>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-AccuracyConfigManager"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyConfigManager</code></h3>
+<p>Location: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/accuracy_testing/processor.py</code></p>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Method</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Signature</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">load_from_yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">(config_path: str) &rarr; Dict</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Parse a YAML file and return the configuration dictionary</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">load_from_env</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">(prefix: str = &quot;TXR_ACCURACY_&quot;) &rarr; Dict</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Build configuration from environment variables with the given prefix</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">get_path_config</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">(config: Dict) &rarr; AccuracyPathConfig</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract and validate paths into an <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyPathConfig</code> dataclass</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">get_processor_config</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">(config: Dict) &rarr; AccuracyProcessorConfig</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract processor settings into an <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyProcessorConfig</code> dataclass</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-ConfigManager(Core)">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ConfigManager</code> (Core)</h3>
+<p>Location: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/core/config/config_manager.py</code></p>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Method</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Signature</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">load_from_yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">(config_path: str, use_cache: bool = True) &rarr; Dict</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Parse a YAML file (with optional caching for repeated loads)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">load_from_env</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">(prefix: str = &quot;TXR_&quot;) &rarr; Dict</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Build configuration from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_</code>-prefixed environment variables</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-ConfigurationDataclasses">Configuration Dataclasses</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Dataclass</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Module</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Key Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyPathConfig</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.processor</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">input_file</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">template_file</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">output_file</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">log_output</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">italian_tracker</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">main_tracker</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyProcessorConfig</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.processor</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">log_level</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">verbose</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">batch_size</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">PathConfig</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core.config</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">input_file</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">output_file</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">log_output</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ProcessorConfig</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core.config</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">log_level</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">verbose</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">batch_size</code>
+</td>
+</tr>
+</tbody>
+</table></div>
 
-<h3><code>AccuracyConfigManager</code></h3>
-
-<p>Location: <code>src/accuracy_testing/processor.py</code></p>
-
-<table>
-    <thead>
-        <tr><th>Method</th><th>Signature</th><th>Description</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>load_from_yaml</code></td>
-            <td><code>(config_path: str) &rarr; Dict</code></td>
-            <td>Parse a YAML file and return the configuration dictionary</td>
-        </tr>
-        <tr>
-            <td><code>load_from_env</code></td>
-            <td><code>(prefix: str = "TXR_ACCURACY_") &rarr; Dict</code></td>
-            <td>Build configuration from environment variables with the given prefix</td>
-        </tr>
-        <tr>
-            <td><code>get_path_config</code></td>
-            <td><code>(config: Dict) &rarr; AccuracyPathConfig</code></td>
-            <td>Extract and validate paths into an <code>AccuracyPathConfig</code> dataclass</td>
-        </tr>
-        <tr>
-            <td><code>get_processor_config</code></td>
-            <td><code>(config: Dict) &rarr; AccuracyProcessorConfig</code></td>
-            <td>Extract processor settings into an <code>AccuracyProcessorConfig</code> dataclass</td>
-        </tr>
-    </tbody>
-</table>
-
-<h3><code>ConfigManager</code> (Core)</h3>
-
-<p>Location: <code>src/core/config/config_manager.py</code></p>
-
-<table>
-    <thead>
-        <tr><th>Method</th><th>Signature</th><th>Description</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>load_from_yaml</code></td>
-            <td><code>(config_path: str, use_cache: bool = True) &rarr; Dict</code></td>
-            <td>Parse a YAML file (with optional caching for repeated loads)</td>
-        </tr>
-        <tr>
-            <td><code>load_from_env</code></td>
-            <td><code>(prefix: str = "TXR_") &rarr; Dict</code></td>
-            <td>Build configuration from <code>TXR_</code>-prefixed environment variables</td>
-        </tr>
-    </tbody>
-</table>
-
-<h3>Configuration Dataclasses</h3>
-
-<table>
-    <thead>
-        <tr><th>Dataclass</th><th>Module</th><th>Key Fields</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>AccuracyPathConfig</code></td>
-            <td><code>accuracy_testing.processor</code></td>
-            <td><code>input_file</code>, <code>template_file</code>, <code>output_file</code>, <code>log_output</code>, <code>italian_tracker</code>, <code>main_tracker</code></td>
-        </tr>
-        <tr>
-            <td><code>AccuracyProcessorConfig</code></td>
-            <td><code>accuracy_testing.processor</code></td>
-            <td><code>log_level</code>, <code>verbose</code>, <code>batch_size</code></td>
-        </tr>
-        <tr>
-            <td><code>PathConfig</code></td>
-            <td><code>core.config</code></td>
-            <td><code>input_file</code>, <code>output_file</code>, <code>log_output</code></td>
-        </tr>
-        <tr>
-            <td><code>ProcessorConfig</code></td>
-            <td><code>core.config</code></td>
-            <td><code>log_level</code>, <code>verbose</code>, <code>batch_size</code></td>
-        </tr>
-    </tbody>
-</table>
-
-<!-- ================================================================== -->
-
-<h2 id="examples">Configuration Examples</h2>
-
-<h3>Buyer Validation &mdash; Batch Mode</h3>
-
-<pre>
-mode: "batch"
+<span class="confluence-anchor-link" id="id-4c.ConfigurationSystem-examples"><span class="confluence-anchor-link" id="examples" /></span><h2 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-ConfigurationExamples">Configuration Examples</h2>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-BuyerValidation—BatchMode">Buyer Validation &mdash; Batch Mode</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+mode: &quot;batch&quot;
 
 testing_period:
-  fiscal_year: "FY26"
-  quarter: "Q1"
+  fiscal_year: &quot;FY26&quot;
+  quarter: &quot;Q1&quot;
 
 batch:
-  incidents: "auto"
+  incidents: &quot;auto&quot;
   auto_incidents:
-    - "7_35"
-    - "7_37"
-    - "7_39"
+    - &quot;7_35&quot;
+    - &quot;7_37&quot;
+    - &quot;7_39&quot;
 
   paths:
-    extract_dir: "data/extracts/FY26/Q1"
-    template_dir: "data/templates/FY26/Q1"
-    output_dir: "data/validated/FY26/Q1"
-    log_output: "logs"
+    extract_dir: &quot;data/extracts/FY26/Q1&quot;
+    template_dir: &quot;data/templates/FY26/Q1&quot;
+    output_dir: &quot;data/validated/FY26/Q1&quot;
+    log_output: &quot;logs&quot;
 
   filename_patterns:
-    extract: "{incident}_{fiscal_year}_{quarter}.csv"
-    template: "{fiscal_year} {quarter} {incident}.csv"
-    output: "validated_{fiscal_year}_{quarter}_{incident}.csv"
+    extract: &quot;{incident}_{fiscal_year}_{quarter}.csv&quot;
+    template: &quot;{fiscal_year} {quarter} {incident}.csv&quot;
+    output: &quot;validated_{fiscal_year}_{quarter}_{incident}.csv&quot;
 
 processor:
-  log_level: "INFO"
+  log_level: &quot;INFO&quot;
   verbose: false
 
 options:
   dry_run: false
   show_progress: true
 </pre>
-
-<h3>Replay Phase 2</h3>
-
-<pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-ReplayPhase2">Replay Phase 2</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 paths:
-  replay_input: "data/sample/phase_ii"
-  incident_files: "data/sample/incident_code_files"
-  replay_output: "data/output/phase_ii"
-  log_output: "data/output/logs"
+  replay_input: &quot;data/sample/phase_ii&quot;
+  incident_files: &quot;data/sample/incident_code_files&quot;
+  replay_output: &quot;data/output/phase_ii&quot;
+  log_output: &quot;data/output/logs&quot;
 
 files:
   replay_patterns:
-    - "*.csv"
-  incident_pattern: "FY26 Q1 *.csv"
+    - &quot;*.csv&quot;
+  incident_pattern: &quot;FY26 Q1 *.csv&quot;
 
 incident_columns:
-  transaction_ref: "Transaction Reference"
-  correction: "Correction"
-  correction_field: "Correction Field"
-  agree_with_correction: "Agree With Correction"
-  suggested_correction: "Suggested Correction"
-  suggested_correction_field: "Suggested Correction Field"
+  transaction_ref: &quot;Transaction Reference&quot;
+  correction: &quot;Correction&quot;
+  correction_field: &quot;Correction Field&quot;
+  agree_with_correction: &quot;Agree With Correction&quot;
+  suggested_correction: &quot;Suggested Correction&quot;
+  suggested_correction_field: &quot;Suggested Correction Field&quot;
 
 processor:
   batch_size: 50
-  log_level: "INFO"
+  log_level: &quot;INFO&quot;
   replace_pattern:
-    from: "KR"
-    to: "AJB"
+    from: &quot;KR&quot;
+    to: &quot;AJB&quot;
 </pre>
-
-<h3>Run All Validations</h3>
-
-<pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-RunAllValidations">Run All Validations</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 validations:
-  - name: "buyer"
-    script_module: "src.accuracy_testing.scripts.buyer_id_validation"
-    config_file: "config/local/accuracy_testing/buyer_validation.yaml"
+  - name: &quot;buyer&quot;
+    script_module: &quot;src.accuracy_testing.scripts.buyer_id_validation&quot;
+    config_file: &quot;config/local/accuracy_testing/buyer_validation.yaml&quot;
     enabled: true
-    description: "Buyer ID Validation (7_35, 7_37, 7_39)"
+    description: &quot;Buyer ID Validation (7_35, 7_37, 7_39)&quot;
 
-  - name: "seller"
-    script_module: "src.accuracy_testing.scripts.seller_id_validation"
-    config_file: "config/local/accuracy_testing/seller_validation.yaml"
+  - name: &quot;seller&quot;
+    script_module: &quot;src.accuracy_testing.scripts.seller_id_validation&quot;
+    config_file: &quot;config/local/accuracy_testing/seller_validation.yaml&quot;
     enabled: true
-    description: "Seller ID Validation (16_19, 16_21, 16_23)"
+    description: &quot;Seller ID Validation (16_19, 16_21, 16_23)&quot;
 
-  - name: "inconsistent-buyer"
-    script_module: "src.accuracy_testing.scripts.inconsistent_buyer_id_validation"
-    config_file: "config/local/accuracy_testing/inconsistent_buyer_validation.yaml"
+  - name: &quot;inconsistent-buyer&quot;
+    script_module: &quot;src.accuracy_testing.scripts.inconsistent_buyer_id_validation&quot;
+    config_file: &quot;config/local/accuracy_testing/inconsistent_buyer_validation.yaml&quot;
     enabled: false
-    description: "Inconsistent Buyer ID Validation (7_66)"
+    description: &quot;Inconsistent Buyer ID Validation (7_66)&quot;
 </pre>
+</div></div>
 
-<!-- ================================================================== -->
-
-<h2 id="troubleshooting">Troubleshooting</h2>
-
-<table>
-    <thead>
-        <tr><th>Symptom</th><th>Cause</th><th>Resolution</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Script exits with &ldquo;No configuration found&rdquo;</td>
-            <td>No <code>--config</code> or <code>--use-env</code> specified and no auto-discoverable file exists</td>
-            <td>Copy a template to <code>config/local/</code> and pass <code>--config PATH</code></td>
-        </tr>
-        <tr>
-            <td>FileNotFoundError for input/template files</td>
-            <td>Paths in YAML are relative and the working directory differs from expected</td>
-            <td>Use absolute paths in YAML, or always run scripts from the project root</td>
-        </tr>
-        <tr>
-            <td>Environment variables not picked up</td>
-            <td>Missing <code>--use-env</code> flag, or incorrect prefix (<code>TXR_ACCURACY_</code> vs <code>TXR_</code>)</td>
-            <td>Ensure the flag is passed and the variable prefix matches the script category</td>
-        </tr>
-        <tr>
-            <td>Batch mode finds no files</td>
-            <td>Filename patterns do not match actual filenames on disc</td>
-            <td>Check <code>filename_patterns</code> against actual files; verify <code>testing_period</code> values</td>
-        </tr>
-        <tr>
-            <td>YAML parsing error</td>
-            <td>Invalid YAML syntax (indentation, special characters)</td>
-            <td>Validate YAML with a linter; ensure strings with colons or special characters are quoted</td>
-        </tr>
-    </tbody>
-</table>
-
-<hr>
-<p><a href="04b_coding_standards.html">&laquo; Previous: Coding Standards</a> | <a href="00_index.html">Documentation Index</a> | <a href="04d_core_api_reference.html">Next: Core API Reference &raquo;</a></p>
+<span class="confluence-anchor-link" id="id-4c.ConfigurationSystem-troubleshooting"><span class="confluence-anchor-link" id="troubleshooting" /></span><h2 style="color: rgb(23,43,77);" id="id-4c.ConfigurationSystem-Troubleshooting">Troubleshooting</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Symptom</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Cause</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Resolution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Script exits with &ldquo;No configuration found&rdquo;</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">No <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--config</code> or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--use-env</code> specified and no auto-discoverable file exists</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Copy a template to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/local/</code> and pass <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--config PATH</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FileNotFoundError for input/template files</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Paths in YAML are relative and the working directory differs from expected</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Use absolute paths in YAML, or always run scripts from the project root</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Environment variables not picked up</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Missing <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--use-env</code> flag, or incorrect prefix (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_ACCURACY_</code> vs <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_</code>)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Ensure the flag is passed and the variable prefix matches the script category</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Batch mode finds no files</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Filename patterns do not match actual filenames on disc</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Check <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">filename_patterns</code> against actual files; verify <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">testing_period</code> values</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">YAML parsing error</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Invalid YAML syntax (indentation, special characters)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Validate YAML with a linter; ensure strings with colons or special characters are quoted</td>
+</tr>
+</tbody>
+</table></div>
 
 </body>
 </html>

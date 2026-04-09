@@ -10,55 +10,75 @@
         th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
         th { background-color: #F4F5F7; font-weight: 600; }
         a { color: #0052CC; text-decoration: none; }
-        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        a:hover { text-decoration: underline; }
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; white-space: pre; margin: 0; }
+        .confluence-anchor-link { display: none; }
+        .code.panel { border: 1px solid #DFE1E6; border-radius: 3px; margin: 16px 0; overflow: hidden; }
+        .codeContent { padding: 0; }
+        .syntaxhighlighter-pre { background: #F4F5F7; padding: 16px; margin: 0; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; border: none; border-radius: 0; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
-
-<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Developer Guides &rsaquo; Testing Guide</p>
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Testing Guide</p>
 <p class="last-updated">Last updated: 25 March 2026</p>
-
-<h1>Testing Guide</h1>
-
-<div class="success-panel">
-    <strong>Current status:</strong> 466 tests, 100% pass rate. All tests run in ~30 seconds.
+<h1 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-TestingGuide">Testing Guide</h1>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Current status:</strong> 466 tests, 100% pass rate. All tests run in ~30 seconds.
 </div>
-
-<h2>Table of Contents</h2>
+<h2 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-TableofContents">Table of Contents</h2>
 <ul>
-    <li><a href="#overview">Overview</a></li>
-    <li><a href="#running">Running Tests</a></li>
-    <li><a href="#structure">Test Structure</a></li>
-    <li><a href="#naming">Naming Conventions</a></li>
-    <li><a href="#fixtures">Fixtures &amp; conftest.py</a></li>
-    <li><a href="#writing">Writing New Tests</a></li>
-    <li><a href="#patterns">Common Test Patterns</a></li>
-    <li><a href="#coverage">Coverage Reporting</a></li>
-    <li><a href="#integration">Integration Tests</a></li>
+<li><a href="#overview" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Overview</a></li>
+<li><a href="#running" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Running Tests</a></li>
+<li><a href="#structure" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Test Structure</a></li>
+<li><a href="#naming" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Naming Conventions</a></li>
+<li><a href="#fixtures" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Fixtures &amp; conftest.py</a></li>
+<li><a href="#writing" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Writing New Tests</a></li>
+<li><a href="#patterns" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Common Test Patterns</a></li>
+<li><a href="#coverage" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Coverage Reporting</a></li>
+<li><a href="#integration" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Integration Tests</a></li>
 </ul>
-
-<h2 id="overview">Overview</h2>
-
-<table>
-    <thead><tr><th>Aspect</th><th>Detail</th></tr></thead>
-    <tbody>
-        <tr><td>Framework</td><td>pytest &ge; 7.4</td></tr>
-        <tr><td>Coverage tool</td><td>pytest-cov &ge; 4.1</td></tr>
-        <tr><td>Test count</td><td>466</td></tr>
-        <tr><td>Pass rate</td><td>100%</td></tr>
-        <tr><td>Config file</td><td><code>tests/conftest.py</code> (adds project root to <code>sys.path</code>)</td></tr>
-        <tr><td>Test packages</td><td>6: <code>test_accuracy_testing</code>, <code>test_core</code>, <code>test_replay</code>, <code>test_firds</code>, <code>test_gleif</code>, <code>test_utils</code>, plus standalone test files and <code>integration/</code></td></tr>
-    </tbody>
-</table>
-
-<h2 id="running">Running Tests</h2>
-
-<pre>
+<span class="confluence-anchor-link" id="id-4e.TestingGuide-overview"><span class="confluence-anchor-link" id="overview" /></span><h2 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-Overview">Overview</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Aspect</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Detail</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Framework</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">pytest &ge; 7.4</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Coverage tool</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">pytest-cov &ge; 4.1</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Test count</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">466</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Pass rate</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">100%</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Config file</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">tests/conftest.py</code> (adds project root to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">sys.path</code>)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Test packages</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">6: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_accuracy_testing</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_core</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_replay</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_firds</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_gleif</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_utils</code>, plus standalone test files and <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">integration/</code>
+</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-4e.TestingGuide-running"><span class="confluence-anchor-link" id="running" /></span><h2 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-RunningTests">Running Tests</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Activate the environment first
 conda activate txr_automation
 
@@ -72,13 +92,13 @@ pytest -v
 pytest tests/test_accuracy_testing/test_buyer_id_validation.py
 
 # Run a specific test by name pattern
-pytest -k "test_validate_nidn_valid_uk_nino"
+pytest -k &quot;test_validate_nidn_valid_uk_nino&quot;
 
 # Run tests matching multiple patterns
-pytest -k "buyer and nidn"
+pytest -k &quot;buyer and nidn&quot;
 
 # Run only fast unit tests (skip integration)
-pytest -m "not integration"
+pytest -m &quot;not integration&quot;
 
 # Run with coverage report
 pytest --cov=src --cov-report=html
@@ -95,10 +115,10 @@ pytest -x
 # Show local variables in tracebacks
 pytest -l
 </pre>
-
-<h2 id="structure">Test Structure</h2>
-
-<pre>
+</div></div>
+<span class="confluence-anchor-link" id="id-4e.TestingGuide-structure"><span class="confluence-anchor-link" id="structure" /></span><h2 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-TestStructure">Test Structure</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 tests/
 +-- conftest.py                           # Root conftest: adds src to sys.path
 +-- test_accuracy_testing/                # Accuracy testing module tests
@@ -124,36 +144,82 @@ tests/
 +-- integration/                          # End-to-end integration tests
 +-- test_*.py                             # Standalone test files (specific bug fixes)
 </pre>
-
-<h3>Test Distribution</h3>
-
-<table>
-    <thead><tr><th>Package</th><th>Approximate Count</th><th>Focus</th></tr></thead>
-    <tbody>
-        <tr><td><code>test_accuracy_testing</code></td><td>~250</td><td>ID validation, DM validation, pricing, SQL generation, data push</td></tr>
-        <tr><td><code>test_core</code></td><td>~100</td><td>Config, country data, ID format patterns, date parsing, logging</td></tr>
-        <tr><td><code>test_replay</code></td><td>~40</td><td>Phase 2/3 processors, matching logic</td></tr>
-        <tr><td><code>test_firds</code></td><td>~25</td><td>FIRDS cache, API client, reportability</td></tr>
-        <tr><td><code>test_gleif</code></td><td>~25</td><td>GLEIF cache, FTS5 search, LEI lookup</td></tr>
-        <tr><td>Standalone + integration</td><td>~26</td><td>Bug fix regressions, end-to-end flows</td></tr>
-    </tbody>
-</table>
-
-<h2 id="naming">Naming Conventions</h2>
-
-<table>
-    <thead><tr><th>Element</th><th>Convention</th><th>Example</th></tr></thead>
-    <tbody>
-        <tr><td>Test file</td><td><code>test_&lt;module_name&gt;.py</code></td><td><code>test_buyer_id_validation.py</code></td></tr>
-        <tr><td>Test function</td><td><code>test_&lt;action&gt;_&lt;scenario&gt;</code></td><td><code>test_validate_nidn_valid_uk_nino</code></td></tr>
-        <tr><td>Test class</td><td><code>Test&lt;ClassName&gt;</code></td><td><code>TestIDFormatManager</code></td></tr>
-        <tr><td>Fixture</td><td><code>sample_&lt;data&gt;</code> or <code>&lt;object&gt;_fixture</code></td><td><code>sample_buyer_records</code></td></tr>
-    </tbody>
-</table>
-
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-TestDistribution">Test Distribution</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Package</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Approximate Count</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Focus</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_accuracy_testing</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">~250</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">ID validation, DM validation, pricing, SQL generation, data push</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_core</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">~100</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Config, country data, ID format patterns, date parsing, logging</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_replay</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">~40</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 2/3 processors, matching logic</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_firds</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">~25</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FIRDS cache, API client, reportability</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_gleif</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">~25</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">GLEIF cache, FTS5 search, LEI lookup</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Standalone + integration</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">~26</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Bug fix regressions, end-to-end flows</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-4e.TestingGuide-naming"><span class="confluence-anchor-link" id="naming" /></span><h2 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-NamingConventions">Naming Conventions</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Element</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Convention</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Example</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Test file</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_&lt;module_name&gt;.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_buyer_id_validation.py</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Test function</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_&lt;action&gt;_&lt;scenario&gt;</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_validate_nidn_valid_uk_nino</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Test class</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Test&lt;ClassName&gt;</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TestIDFormatManager</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Fixture</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">sample_&lt;data&gt;</code> or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">&lt;object&gt;_fixture</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">sample_buyer_records</code></td>
+</tr>
+</tbody>
+</table></div>
 <p>Test function names should be descriptive enough that the test purpose is clear from the name alone:</p>
-
-<pre>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Good: descriptive, specific
 def test_validate_nidn_valid_uk_nino():
 def test_validate_nidn_invalid_checksum_returns_false():
@@ -164,14 +230,12 @@ def test_validation():
 def test_it_works():
 def test_buyer():
 </pre>
-
-<h2 id="fixtures">Fixtures &amp; conftest.py</h2>
-
-<h3>Root conftest.py</h3>
-
-<p>Located at <code>tests/conftest.py</code>, it adds the project root to <code>sys.path</code> for <code>src.*</code> imports:</p>
-
-<pre>
+</div></div>
+<span class="confluence-anchor-link" id="id-4e.TestingGuide-fixtures"><span class="confluence-anchor-link" id="fixtures" /></span><h2 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-Fixtures&amp;conftest.py">Fixtures &amp; conftest.py</h2>
+<h3 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-Rootconftest.py">Root conftest.py</h3>
+<p>Located at <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">tests/conftest.py</code>, it adds the project root to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">sys.path</code> for <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src.*</code> imports:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 import sys
 from pathlib import Path
 
@@ -179,153 +243,161 @@ project_root = Path(__file__).parent.parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 </pre>
-
-<h3>Common Fixture Patterns</h3>
-
-<pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-CommonFixturePatterns">Common Fixture Patterns</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 import pytest
 import pandas as pd
 from pathlib import Path
 
 @pytest.fixture
 def sample_buyer_records():
-    """Fixture providing sample buyer records for validation testing."""
+    &quot;&quot;&quot;Fixture providing sample buyer records for validation testing.&quot;&quot;&quot;
     return pd.DataFrame({
-        "Transaction_Ref": ["TXN001", "TXN002", "TXN003"],
-        "Person_Code": ["P001", "P002", "P003"],
-        "ID_Value": ["AB123456C", "INVALID", "DE12345678901"],
-        "ID_Type": ["NIDN", "NIDN", "NIDN"],
-        "Nationality": ["GB", "GB", "DE"],
+        &quot;Transaction_Ref&quot;: [&quot;TXN001&quot;, &quot;TXN002&quot;, &quot;TXN003&quot;],
+        &quot;Person_Code&quot;: [&quot;P001&quot;, &quot;P002&quot;, &quot;P003&quot;],
+        &quot;ID_Value&quot;: [&quot;AB123456C&quot;, &quot;INVALID&quot;, &quot;DE12345678901&quot;],
+        &quot;ID_Type&quot;: [&quot;NIDN&quot;, &quot;NIDN&quot;, &quot;NIDN&quot;],
+        &quot;Nationality&quot;: [&quot;GB&quot;, &quot;GB&quot;, &quot;DE&quot;],
     })
 
 @pytest.fixture
 def temp_csv(tmp_path):
-    """Fixture creating a temporary CSV file."""
-    csv_path = tmp_path / "test_data.csv"
+    &quot;&quot;&quot;Fixture creating a temporary CSV file.&quot;&quot;&quot;
+    csv_path = tmp_path / &quot;test_data.csv&quot;
     return csv_path
 
 @pytest.fixture
 def config_dict():
-    """Fixture providing a test configuration dictionary."""
+    &quot;&quot;&quot;Fixture providing a test configuration dictionary.&quot;&quot;&quot;
     return {
-        "mode": "single",
-        "single": {
-            "incident_code": "7_37",
-            "paths": {
-                "input_file": "test_input.csv",
-                "output_file": "test_output.csv",
-                "log_output": "logs",
+        &quot;mode&quot;: &quot;single&quot;,
+        &quot;single&quot;: {
+            &quot;incident_code&quot;: &quot;7_37&quot;,
+            &quot;paths&quot;: {
+                &quot;input_file&quot;: &quot;test_input.csv&quot;,
+                &quot;output_file&quot;: &quot;test_output.csv&quot;,
+                &quot;log_output&quot;: &quot;logs&quot;,
             }
         }
     }
 </pre>
-
-<h2 id="writing">Writing New Tests</h2>
-
-<h3>Step-by-Step</h3>
+</div></div>
+<span class="confluence-anchor-link" id="id-4e.TestingGuide-writing"><span class="confluence-anchor-link" id="writing" /></span><h2 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-WritingNewTests">Writing New Tests</h2>
+<h3 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-Step-by-Step">Step-by-Step</h3>
 <ol>
-    <li><strong>Identify the module under test</strong> &mdash; find the matching <code>test_</code> file or create one</li>
-    <li><strong>Write the test function</strong> with a descriptive name</li>
-    <li><strong>Add a docstring</strong> explaining what is being tested and why</li>
-    <li><strong>Use fixtures</strong> for shared setup (data, config, temp files)</li>
-    <li><strong>Assert specific outcomes</strong> &mdash; one concept per test</li>
-    <li><strong>Run the test</strong>: <code>pytest tests/path/to/test_file.py -v</code></li>
+<li>
+<strong>Identify the module under test</strong> &mdash; find the matching <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_</code> file or create one</li>
+<li>
+<strong>Write the test function</strong> with a descriptive name</li>
+<li>
+<strong>Add a docstring</strong> explaining what is being tested and why</li>
+<li>
+<strong>Use fixtures</strong> for shared setup (data, config, temp files)</li>
+<li>
+<strong>Assert specific outcomes</strong> &mdash; one concept per test</li>
+<li>
+<strong>Run the test</strong>: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pytest tests/path/to/test_file.py -v</code>
+</li>
 </ol>
-
-<h3>Template</h3>
-
-<pre>
-"""Tests for the XYZ validation module."""
+<h3 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-Template">Template</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+&quot;&quot;&quot;Tests for the XYZ validation module.&quot;&quot;&quot;
 
 import pytest
 from src.accuracy_testing.validators.xyz_validator import XYZValidator
 
 
 class TestXYZValidator:
-    """Tests for XYZValidator class."""
+    &quot;&quot;&quot;Tests for XYZValidator class.&quot;&quot;&quot;
 
     def test_validate_valid_input_returns_true(self):
-        """Validate that a correct input passes validation."""
+        &quot;&quot;&quot;Validate that a correct input passes validation.&quot;&quot;&quot;
         validator = XYZValidator()
-        result = validator.validate("VALID_INPUT")
+        result = validator.validate(&quot;VALID_INPUT&quot;)
         assert result.is_valid is True
         assert len(result.errors) == 0
 
     def test_validate_empty_input_returns_error(self):
-        """Validate that empty input is rejected with appropriate error."""
+        &quot;&quot;&quot;Validate that empty input is rejected with appropriate error.&quot;&quot;&quot;
         validator = XYZValidator()
-        result = validator.validate("")
+        result = validator.validate(&quot;&quot;)
         assert result.is_valid is False
-        assert "empty" in result.errors[0].lower()
+        assert &quot;empty&quot; in result.errors[0].lower()
 
-    @pytest.mark.parametrize("input_value,expected", [
-        ("AB123456C", True),   # Valid UK NINO
-        ("INVALID", False),     # Too short
-        ("AB000000Z", False),   # Invalid suffix
+    @pytest.mark.parametrize(&quot;input_value,expected&quot;, [
+        (&quot;AB123456C&quot;, True),   # Valid UK NINO
+        (&quot;INVALID&quot;, False),     # Too short
+        (&quot;AB000000Z&quot;, False),   # Invalid suffix
     ])
     def test_validate_parametrized_cases(self, input_value, expected):
-        """Validate multiple input/output combinations."""
+        &quot;&quot;&quot;Validate multiple input/output combinations.&quot;&quot;&quot;
         validator = XYZValidator()
         result = validator.validate(input_value)
         assert result.is_valid is expected
 </pre>
-
-<h2 id="patterns">Common Test Patterns</h2>
-
-<h3>Parametrised Tests</h3>
-<pre>
-@pytest.mark.parametrize("country,id_type,value,expected", [
-    ("GB", "NIDN", "AB123456C", True),
-    ("DE", "NIDN", "12345678901", True),
-    ("FR", "NIDN", "1234567890123", True),
-    ("XX", "NIDN", "INVALID", False),
+</div></div>
+<span class="confluence-anchor-link" id="id-4e.TestingGuide-patterns"><span class="confluence-anchor-link" id="patterns" /></span><h2 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-CommonTestPatterns">Common Test Patterns</h2>
+<h3 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-ParametrisedTests">Parametrised Tests</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+@pytest.mark.parametrize(&quot;country,id_type,value,expected&quot;, [
+    (&quot;GB&quot;, &quot;NIDN&quot;, &quot;AB123456C&quot;, True),
+    (&quot;DE&quot;, &quot;NIDN&quot;, &quot;12345678901&quot;, True),
+    (&quot;FR&quot;, &quot;NIDN&quot;, &quot;1234567890123&quot;, True),
+    (&quot;XX&quot;, &quot;NIDN&quot;, &quot;INVALID&quot;, False),
 ])
 def test_id_format_validation(country, id_type, value, expected):
-    """Parametrised format validation across countries."""
+    &quot;&quot;&quot;Parametrised format validation across countries.&quot;&quot;&quot;
     result = id_format_manager.validate_format(country, id_type, value)
     assert result == expected
 </pre>
-
-<h3>Testing DataFrames</h3>
-<pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-TestingDataFrames">Testing DataFrames</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 import pandas as pd
 from pandas.testing import assert_frame_equal
 
 def test_processor_adds_error_column(sample_data):
-    """Verify processor adds Error column to output."""
+    &quot;&quot;&quot;Verify processor adds Error column to output.&quot;&quot;&quot;
     result = processor.process(sample_data)
-    assert "Error" in result.columns
-    assert result["Error"].dtype == object
+    assert &quot;Error&quot; in result.columns
+    assert result[&quot;Error&quot;].dtype == object
 
 def test_output_matches_expected(sample_data, expected_output):
-    """Compare processor output against expected results."""
+    &quot;&quot;&quot;Compare processor output against expected results.&quot;&quot;&quot;
     result = processor.process(sample_data)
     assert_frame_equal(result, expected_output, check_dtype=False)
 </pre>
-
-<h3>Testing File I/O</h3>
-<pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-TestingFileI/O">Testing File I/O</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 def test_csv_output_written(tmp_path, sample_data):
-    """Verify CSV output file is created with correct content."""
-    output_path = tmp_path / "output.csv"
+    &quot;&quot;&quot;Verify CSV output file is created with correct content.&quot;&quot;&quot;
+    output_path = tmp_path / &quot;output.csv&quot;
     write_results(sample_data, output_path)
     
     assert output_path.exists()
     result = pd.read_csv(output_path)
     assert len(result) == len(sample_data)
 </pre>
-
-<h3>Testing Exceptions</h3>
-<pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-TestingExceptions">Testing Exceptions</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 def test_missing_config_raises_file_not_found():
-    """Verify FileNotFoundError for missing config file."""
-    with pytest.raises(FileNotFoundError, match="not found"):
-        AccuracyConfigManager.load_from_yaml("nonexistent.yaml")
+    &quot;&quot;&quot;Verify FileNotFoundError for missing config file.&quot;&quot;&quot;
+    with pytest.raises(FileNotFoundError, match=&quot;not found&quot;):
+        AccuracyConfigManager.load_from_yaml(&quot;nonexistent.yaml&quot;)
 </pre>
-
-<h2 id="coverage">Coverage Reporting</h2>
-
-<pre>
+</div></div>
+<span class="confluence-anchor-link" id="id-4e.TestingGuide-coverage"><span class="confluence-anchor-link" id="coverage" /></span><h2 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-CoverageReporting">Coverage Reporting</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Generate HTML coverage report
 pytest --cov=src --cov-report=html
 
@@ -338,38 +410,34 @@ pytest --cov=src --cov-report=term-missing
 # Generate XML report (for CI integration)
 pytest --cov=src --cov-report=xml
 </pre>
-
-<h2 id="integration">Integration Tests</h2>
-
-<p>Integration tests live in <code>tests/integration/</code> and test end-to-end workflows:</p>
-
-<pre>
+</div></div>
+<span class="confluence-anchor-link" id="id-4e.TestingGuide-integration"><span class="confluence-anchor-link" id="integration" /></span><h2 style="color: rgb(23,43,77);" id="id-4e.TestingGuide-IntegrationTests">Integration Tests</h2>
+<p>Integration tests live in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">tests/integration/</code> and test end-to-end workflows:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Mark integration tests
 @pytest.mark.integration
 def test_end_to_end_buyer_validation(tmp_path):
-    """Full buyer ID validation pipeline: CSV in → validated CSV out."""
+    &quot;&quot;&quot;Full buyer ID validation pipeline: CSV in &gt; validated CSV out.&quot;&quot;&quot;
     # 1. Create input CSV
-    input_csv = create_test_csv(tmp_path / "input.csv")
+    input_csv = create_test_csv(tmp_path / &quot;input.csv&quot;)
     
     # 2. Create config
-    config = create_test_config(input_csv, tmp_path / "output.csv")
+    config = create_test_config(input_csv, tmp_path / &quot;output.csv&quot;)
     
     # 3. Run validation
     exit_code = run_buyer_validation(config)
     
     # 4. Verify output
     assert exit_code == 0
-    output = pd.read_csv(tmp_path / "output.csv")
-    assert "Error" in output.columns
+    output = pd.read_csv(tmp_path / &quot;output.csv&quot;)
+    assert &quot;Error&quot; in output.columns
     assert len(output) == expected_record_count
 </pre>
-
-<div class="info-panel">
-    <strong>Skipping integration tests:</strong> Use <code>pytest -m "not integration"</code> for fast unit-test-only runs.
+</div></div>
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Skipping integration tests:</strong> Use <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pytest -m &quot;not integration&quot;</code> for fast unit-test-only runs.
 </div>
-
-<hr>
-<p><a href="04d_core_api_reference.html">&laquo; Previous: Core API Reference</a> | <a href="00_index.html">Documentation Index</a> | <a href="05_user_guides.html">Next: User Guides &raquo;</a></p>
 
 </body>
 </html>

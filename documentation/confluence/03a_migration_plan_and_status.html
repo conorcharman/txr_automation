@@ -2,249 +2,386 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Migration Plan &amp; Status — TXR Automation</title>
+    <title>Migration Plan & Status — TXR Automation</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
-        h1, h2, h3 { color: #172B4D; }
+        h1, h2, h3, h4 { color: #172B4D; }
         table { border-collapse: collapse; width: 100%; margin: 16px 0; }
-        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
         th { background-color: #F4F5F7; font-weight: 600; }
         a { color: #0052CC; text-decoration: none; }
-        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF8B00; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        a:hover { text-decoration: underline; }
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; }
-        .status-complete { color: #00875A; font-weight: 600; }
-        .status-progress { color: #0052CC; font-weight: 600; }
-        .status-planned { color: #6B778C; font-weight: 600; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; white-space: pre; margin: 0; }
+        .confluence-anchor-link { display: none; }
+        .code.panel { border: 1px solid #DFE1E6; border-radius: 3px; margin: 16px 0; overflow: hidden; }
+        .codeContent { padding: 0; }
+        .syntaxhighlighter-pre { background: #F4F5F7; padding: 16px; margin: 0; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; border: none; border-radius: 0; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
-
-<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Migration &rsaquo; Migration Plan &amp; Status</p>
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Migration Plan &amp; Status</p>
 <p class="last-updated">Last updated: 25 March 2026</p>
-
-<h1>Migration Plan &amp; Status</h1>
-
-<h2>Table of Contents</h2>
+<h1 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-MigrationPlan&amp;Status">Migration Plan &amp; Status</h1>
+<h2 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-TableofContents">Table of Contents</h2>
 <ul>
-    <li><a href="#overview">Migration Overview</a></li>
-    <li><a href="#approach">Technical Approach</a></li>
-    <li><a href="#phases">Phase Breakdown</a></li>
-    <li><a href="#remaining">Remaining Work</a></li>
-    <li><a href="#risks">Risks &amp; Mitigations</a></li>
+<li><a href="#overview" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Migration Overview</a></li>
+<li><a href="#approach" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Technical Approach</a></li>
+<li><a href="#phases" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase Breakdown</a></li>
+<li><a href="#remaining" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Remaining Work</a></li>
+<li><a href="#risks" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Risks &amp; Mitigations</a></li>
 </ul>
-
-<h2 id="overview">Migration Overview</h2>
-
-<div class="success-panel">
-    <strong>All 12 VBA macros have been successfully migrated to Python.</strong> The core migration (Phases 0&ndash;5) is complete.
+<span class="confluence-anchor-link" id="id-3a.MigrationPlan&amp;Status-overview"><span class="confluence-anchor-link" id="overview" /></span><h2 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-MigrationOverview">Migration Overview</h2>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>All 12 VBA macros have been successfully migrated to Python.</strong> The core migration (Phases 0&ndash;5) is complete.
     Phase 6 (integration testing and cleanup) is in progress. Phases 7 and 8 cover deployment and future enhancements.
 </div>
-
-<h3>Migration Strategy</h3>
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-MigrationStrategy">Migration Strategy</h3>
 <ul>
-    <li><strong>CSV-First Approach:</strong> All Excel I/O replaced with CSV, eliminating <code>openpyxl</code>/<code>xlrd</code> dependencies</li>
-    <li><strong>Shared Core Library:</strong> Common functions extracted into <code>src/core/</code> before any VBA conversion began</li>
-    <li><strong>Incremental Conversion:</strong> One macro at a time, starting with simpler scripts, each with full test coverage before moving on</li>
-    <li><strong>Business Logic Preservation:</strong> Python must produce <em>identical</em> results to VBA for the same inputs</li>
-    <li><strong>Parallel Running:</strong> Both VBA and Python versions to be run side-by-side during Phase 7, outputs compared</li>
+<li>
+<strong>CSV-First Approach:</strong> All Excel I/O replaced with CSV, eliminating <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">openpyxl</code>/<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">xlrd</code> dependencies</li>
+<li>
+<strong>Shared Core Library:</strong> Common functions extracted into <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/core/</code> before any VBA conversion began</li>
+<li>
+<strong>Incremental Conversion:</strong> One macro at a time, starting with simpler scripts, each with full test coverage before moving on</li>
+<li>
+<strong>Business Logic Preservation:</strong> Python must produce <em>identical</em> results to VBA for the same inputs</li>
+<li>
+<strong>Parallel Running:</strong> Both VBA and Python versions to be run side-by-side during Phase 7, outputs compared</li>
 </ul>
-
-<h2 id="approach">Technical Approach</h2>
-
-<h3>Key Design Decisions</h3>
-
-<table>
-    <thead>
-        <tr><th>Decision</th><th>Rationale</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>CSV-first I/O (no Excel)</td><td>40&ndash;50% code reduction, 5&ndash;10x performance gain, platform independence</td></tr>
-        <tr><td>Shared <code>core</code> library first</td><td>Ensures consistency across all scripts, avoids code duplication</td></tr>
-        <tr><td>Dataclasses for all DTOs</td><td>Type safety, IDE support, self-documenting code</td></tr>
-        <tr><td>Singleton reference data managers</td><td>Load once, use everywhere — eliminates repeated file reads</td></tr>
-        <tr><td>YAML + env var configuration</td><td>Flexible deployment (local dev, CI, production) without code changes</td></tr>
-        <tr><td>argparse CLI interfaces</td><td>Standard Python CLI tooling, scriptable, self-documenting <code>--help</code></td></tr>
-        <tr><td>pytest for testing</td><td>Industry standard, rich assertion introspection, fixture support</td></tr>
-    </tbody>
-</table>
-
-<h2 id="phases">Phase Breakdown</h2>
-
-<h3>Phase 0: Refactoring (✅ Complete)</h3>
-
+<span class="confluence-anchor-link" id="id-3a.MigrationPlan&amp;Status-approach"><span class="confluence-anchor-link" id="approach" /></span><h2 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-TechnicalApproach">Technical Approach</h2>
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-KeyDesignDecisions">Key Design Decisions</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Decision</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Rationale</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">CSV-first I/O (no Excel)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">40&ndash;50% code reduction, 5&ndash;10x performance gain, platform independence</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Shared <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core</code> library first</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Ensures consistency across all scripts, avoids code duplication</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Dataclasses for all DTOs</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Type safety, IDE support, self-documenting code</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Singleton reference data managers</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Load once, use everywhere &mdash; eliminates repeated file reads</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">YAML + env var configuration</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Flexible deployment (local dev, CI, production) without code changes</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">argparse CLI interfaces</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Standard Python CLI tooling, scriptable, self-documenting <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--help</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">pytest for testing</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Industry standard, rich assertion introspection, fixture support</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-3a.MigrationPlan&amp;Status-phases"><span class="confluence-anchor-link" id="phases" /></span><h2 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-PhaseBreakdown">Phase Breakdown</h2>
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-Phase0:Refactoring(✅Complete)">Phase 0: Refactoring (✅ Complete)</h3>
 <p><strong>Goal:</strong> Create shared core library from existing replay scripts to establish a foundation for VBA migration.</p>
-
-<table>
-    <thead><tr><th>Deliverable</th><th>Details</th></tr></thead>
-    <tbody>
-        <tr><td>Core library (<code>src/core/</code>)</td><td>Configuration management, structured logging, data structures, utilities</td></tr>
-        <tr><td>Refactored replay scripts</td><td>Phase 2/3 processors migrated to use core library</td></tr>
-        <tr><td>Test framework</td><td>pytest setup with fixtures, initial 35 tests</td></tr>
-        <tr><td>Configuration templates</td><td>YAML templates for replay processing</td></tr>
-    </tbody>
-</table>
-
-<h3>Phase 1: Foundation (✅ Complete &mdash; 19 January 2026)</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Deliverable</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Details</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Core library (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/core/</code>)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Configuration management, structured logging, data structures, utilities</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Refactored replay scripts</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase 2/3 processors migrated to use core library</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Test framework</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">pytest setup with fixtures, initial 35 tests</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Configuration templates</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">YAML templates for replay processing</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-Phase1:Foundation(✅Complete—19January2026)">Phase 1: Foundation (✅ Complete &mdash; 19 January 2026)</h3>
 <p><strong>Goal:</strong> Extend core library with accuracy testing foundations.</p>
-
-<table>
-    <thead><tr><th>Deliverable</th><th>Details</th></tr></thead>
-    <tbody>
-        <tr><td>Country data management</td><td><code>CountryDataManager</code> with ISO 3166-1 data and EEA classification</td></tr>
-        <tr><td>ID format validation</td><td><code>IDFormatManager</code> with 68 compiled regex patterns across 27 countries</td></tr>
-        <tr><td>Incident code matrix</td><td>Metadata for all 11 incident types (buyer/seller/inconsistent classification)</td></tr>
-        <tr><td><code>ClientRecord</code> dataclass</td><td>Main data model for ID validation with 30+ fields</td></tr>
-        <tr><td><code>AccuracyConfigManager</code></td><td>Mode-based (batch/single) configuration management</td></tr>
-    </tbody>
-</table>
-
-<h3>Phase 2: Simple Scripts (✅ Complete &mdash; 21 January 2026)</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Deliverable</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Details</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Country data management</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">CountryDataManager</code> with ISO 3166-1 data and EEA classification</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">ID format validation</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDFormatManager</code> with 68 compiled regex patterns across 27 countries</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Incident code matrix</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Metadata for all 11 incident types (buyer/seller/inconsistent classification)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ClientRecord</code> dataclass</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Main data model for ID validation with 30+ fields</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyConfigManager</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Mode-based (batch/single) configuration management</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-Phase2:SimpleScripts(✅Complete—21January2026)">Phase 2: Simple Scripts (✅ Complete &mdash; 21 January 2026)</h3>
 <p><strong>Goal:</strong> Migrate the simpler VBA macros that primarily require format validation.</p>
-
-<table>
-    <thead><tr><th>VBA Source</th><th>Python Target</th><th>Key Features</th></tr></thead>
-    <tbody>
-        <tr><td><code>BuyerIDValidation5_6.vb</code></td><td><code>buyer_id_validation.py</code></td><td>Format + logic validation, CONCAT generation, Italian tracker, template lookup</td></tr>
-        <tr><td><code>SellerIDValidation5_6.vb</code></td><td><code>seller_id_validation.py</code></td><td>Identical to buyer, configured for seller-side incidents</td></tr>
-        <tr><td><code>pricing_data_validation_v1.0.vb</code></td><td><code>pricing_validation.py</code></td><td>Net Amount = Consideration + Interest formula check</td></tr>
-        <tr><td><code>ExtractBuyerID4_1.vb</code></td><td rowspan="3"><code>sql_extract_generator.py</code> (unified)</td><td rowspan="3">Batch/single SQL generation with 11 templates, 900-ref batching</td></tr>
-        <tr><td><code>ExtractInconsistentBuyerID1_0.vb</code></td></tr>
-        <tr><td><code>SCR_extract_generator_v1_0.vb</code></td></tr>
-    </tbody>
-</table>
-
-<h3>Phase 3: Decision Maker Validation (✅ Complete &mdash; 28 January 2026)</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">VBA Source</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Python Target</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Key Features</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">BuyerIDValidation5_6.vb</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">buyer_id_validation.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Format + logic validation, CONCAT generation, Italian tracker, template lookup</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">SellerIDValidation5_6.vb</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">seller_id_validation.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Identical to buyer, configured for seller-side incidents</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pricing_data_validation_v1.0.vb</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pricing_validation.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Net Amount = Consideration + Interest formula check</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ExtractBuyerID4_1.vb</code></td>
+<td align="left" rowspan="3" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">sql_extract_generator.py</code> (unified)</td>
+<td align="left" rowspan="3" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Batch/single SQL generation with 11 templates, 900-ref batching</td>
+</tr>
+<tr><td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ExtractInconsistentBuyerID1_0.vb</code></td></tr>
+<tr><td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">SCR_extract_generator_v1_0.vb</code></td></tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-Phase3:DecisionMakerValidation(✅Complete—28January2026)">Phase 3: Decision Maker Validation (✅ Complete &mdash; 28 January 2026)</h3>
 <p><strong>Goal:</strong> Migrate decision maker validation with LEI lookup integration.</p>
-
-<table>
-    <thead><tr><th>VBA Source</th><th>Python Target</th><th>Key Features</th></tr></thead>
-    <tbody>
-        <tr><td><code>ValidateFTBDM3_0.vb</code></td><td><code>validate_ftbdm.py</code></td><td>Service level D detection, LEI format validation, branch→LEI lookup</td></tr>
-        <tr><td><code>ValidateFTSDM3_0.vb</code></td><td><code>validate_ftsdm.py</code></td><td>Same logic, seller-side; 40 test cases</td></tr>
-    </tbody>
-</table>
-
-<h3>Phase 4: Inconsistent ID (✅ Complete &mdash; 27 January 2026)</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">VBA Source</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Python Target</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Key Features</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ValidateFTBDM3_0.vb</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate_ftbdm.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Service level D detection, LEI format validation, branch&rarr;LEI lookup</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ValidateFTSDM3_0.vb</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate_ftsdm.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Same logic, seller-side; 40 test cases</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-Phase4:InconsistentID(✅Complete—27January2026)">Phase 4: Inconsistent ID (✅ Complete &mdash; 27 January 2026)</h3>
 <p><strong>Goal:</strong> Migrate the complex inconsistent ID detection logic with chronological grouping.</p>
-
-<table>
-    <thead><tr><th>VBA Source</th><th>Python Target</th><th>Key Features</th></tr></thead>
-    <tbody>
-        <tr><td><code>InconsistentBuyerIDValidation1_3.vb</code></td><td><code>inconsistent_buyer_id_validation.py</code></td><td>Person Code grouping, chronological sorting, fallback ID detection, prefix-aware comparison</td></tr>
-        <tr><td><code>InconsistentSellerIDValidation1_3.vb</code></td><td><code>inconsistent_seller_id_validation.py</code></td><td>Same logic, seller-side</td></tr>
-    </tbody>
-</table>
-
-<h3>Phase 5: Data Operations (✅ Complete &mdash; February 2026)</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">VBA Source</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Python Target</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Key Features</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">InconsistentBuyerIDValidation1_3.vb</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">inconsistent_buyer_id_validation.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Person Code grouping, chronological sorting, fallback ID detection, prefix-aware comparison</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">InconsistentSellerIDValidation1_3.vb</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">inconsistent_seller_id_validation.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Same logic, seller-side</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-Phase5:DataOperations(✅Complete—February2026)">Phase 5: Data Operations (✅ Complete &mdash; February 2026)</h3>
 <p><strong>Goal:</strong> Migrate data push and remaining operational scripts.</p>
-
-<table>
-    <thead><tr><th>VBA Source</th><th>Python Target</th><th>Key Features</th></tr></thead>
-    <tbody>
-        <tr><td><code>DataPush1_0.vb</code></td><td><code>data_push.py</code></td><td>Transaction reference matching, column mapping, batch push; 32 tests, 68K records/sec</td></tr>
-        <tr><td><code>IncidentLookup1_1.vb</code></td><td><em>Deprecated</em></td><td>Functionality absorbed into validation pipeline; no longer needed as standalone</td></tr>
-    </tbody>
-</table>
-
-<h3>Phase 6: Integration &amp; Testing (🔄 In Progress)</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">VBA Source</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Python Target</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Key Features</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DataPush1_0.vb</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data_push.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Transaction reference matching, column mapping, batch push; 32 tests, 68K records/sec</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IncidentLookup1_1.vb</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><em>Deprecated</em></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Functionality absorbed into validation pipeline; no longer needed as standalone</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-Phase6:Integration&amp;Testing(🔄InProgress)">Phase 6: Integration &amp; Testing (🔄 In Progress)</h3>
 <p><strong>Goal:</strong> Comprehensive integration testing, cleanup, and validation.</p>
-
-<div class="warning-panel">
-    <strong>Remaining:</strong> <code>test_batch_validation.py</code> needs updating to v2.0 config format (~8 test configurations). All production code is clean and ready.
+<div style="background: rgb(255,250,230);border-left: 4.0px solid rgb(255,139,0);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Remaining:</strong> <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_batch_validation.py</code> needs updating to v2.0 config format (~8 test configurations). All production code is clean and ready.
 </div>
-
-<table>
-    <thead><tr><th>Deliverable</th><th>Status</th></tr></thead>
-    <tbody>
-        <tr><td>Configuration cleanup (removed deprecated templates, updated error messages)</td><td class="status-complete">✅ Done</td></tr>
-        <tr><td>ESMA regex pattern validation and fixes (NL, ES, GB patterns)</td><td class="status-complete">✅ Done</td></tr>
-        <tr><td>Prefix-aware inconsistency detection</td><td class="status-complete">✅ Done</td></tr>
-        <tr><td>Config validation tool (<code>validate_config_migration.py</code>)</td><td class="status-complete">✅ Done</td></tr>
-        <tr><td>Performance benchmarking (all scripts)</td><td class="status-complete">✅ Done</td></tr>
-        <tr><td>Test suite: 466/466 passing</td><td class="status-complete">✅ Done</td></tr>
-        <tr><td>Batch validation tests: v2.0 config format update</td><td class="status-progress">🔄 Deferred</td></tr>
-    </tbody>
-</table>
-
-<h3>Phase 7: Deployment &amp; Transition (🔲 Not Started)</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Deliverable</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Status</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Configuration cleanup (removed deprecated templates, updated error messages)</td>
+<td align="left" data-colorid="szntdn09ex" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">✅ Done</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">ESMA regex pattern validation and fixes (NL, ES, GB patterns)</td>
+<td align="left" data-colorid="jxjvub0sdc" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">✅ Done</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Prefix-aware inconsistency detection</td>
+<td align="left" data-colorid="dp3e903nzi" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">✅ Done</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Config validation tool (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate_config_migration.py</code>)</td>
+<td align="left" data-colorid="x0rrhefsvq" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">✅ Done</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Performance benchmarking (all scripts)</td>
+<td align="left" data-colorid="o0k6zeerod" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">✅ Done</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Test suite: 466/466 passing</td>
+<td align="left" data-colorid="wv4roqqh10" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">✅ Done</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Batch validation tests: v2.0 config format update</td>
+<td align="left" data-colorid="jo3wgw52ao" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;font-weight: 600;" class="confluenceTd">🔄 Deferred</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-Phase7:Deployment&amp;Transition(🔲NotStarted)">Phase 7: Deployment &amp; Transition (🔲 Not Started)</h3>
 <p><strong>Goal:</strong> Deploy to production with parallel running and training.</p>
 <ul>
-    <li>Parallel running: VBA + Python side-by-side for one quarter, comparing outputs</li>
-    <li>User training and documentation</li>
-    <li>VBA macro retirement</li>
-    <li>Production cutover</li>
+<li>Parallel running: VBA + Python side-by-side for one quarter, comparing outputs</li>
+<li>User training and documentation</li>
+<li>VBA macro retirement</li>
+<li>Production cutover</li>
 </ul>
-
-<h3>Phase 8: Unified CLI Tool (🔲 Planning)</h3>
-
+<h3 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-Phase8:UnifiedCLITool(🔲Planning)">Phase 8: Unified CLI Tool (🔲 Planning)</h3>
 <p><strong>Goal:</strong> Consolidate 22 console scripts into a single interactive CLI with menus.</p>
 <ul>
-    <li>Interactive menus for script selection</li>
-    <li>Guided configuration (prompted inputs)</li>
-    <li>Progress reporting and logging unified</li>
-    <li>See <code>documentation/planning/Phase_8_CLI_Tool_Plan.md</code> for detailed design</li>
+<li>Interactive menus for script selection</li>
+<li>Guided configuration (prompted inputs)</li>
+<li>Progress reporting and logging unified</li>
+<li>See <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">documentation/planning/Phase_8_CLI_Tool_Plan.md</code> for detailed design</li>
 </ul>
-
-<h2 id="remaining">Remaining Work Summary</h2>
-
-<table>
-    <thead>
-        <tr><th>Priority</th><th>Task</th><th>Effort Estimate</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>High</td><td>Update <code>test_batch_validation.py</code> to v2.0 config format</td><td>1&ndash;2 days</td></tr>
-        <tr><td>High</td><td>Phase 7: Parallel running setup and comparison framework</td><td>2&ndash;3 weeks</td></tr>
-        <tr><td>Medium</td><td>Phase 7: User training material and sessions</td><td>1 week</td></tr>
-        <tr><td>Medium</td><td>GUI development completion and testing</td><td>2&ndash;4 weeks</td></tr>
-        <tr><td>Low</td><td>Phase 8: Unified CLI tool implementation</td><td>3&ndash;4 weeks</td></tr>
-        <tr><td>Low</td><td>Add <code>pandas</code> to <code>setup.py</code> <code>install_requires</code></td><td>5 minutes</td></tr>
-    </tbody>
-</table>
-
-<h2 id="risks">Risks &amp; Mitigations</h2>
-
-<table>
-    <thead>
-        <tr><th>Risk</th><th>Impact</th><th>Mitigation</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Output discrepancy between VBA and Python</td>
-            <td>High &mdash; regulatory compliance</td>
-            <td>Parallel running (Phase 7), automated output comparison, 466 unit/integration tests</td>
-        </tr>
-        <tr>
-            <td>ESMA/FCA rule changes during migration</td>
-            <td>Medium</td>
-            <td>Regex patterns externalised and documented; easy to update without code changes</td>
-        </tr>
-        <tr>
-            <td>User adoption resistance</td>
-            <td>Medium</td>
-            <td>GUI development (familiar interface), comprehensive user guides, training sessions</td>
-        </tr>
-        <tr>
-            <td>Performance at scale (1.5M daily)</td>
-            <td>Low (mitigated)</td>
-            <td>Benchmarked at 50K records/sec; chunked processing available; scalability tested to 1.5M</td>
-        </tr>
-    </tbody>
-</table>
-
-<hr>
-<p><a href="02b_data_flow.html">&laquo; Previous: Data Flow</a> | <a href="00_index.html">Documentation Index</a> | <a href="03b_traceability_matrix.html">Next: Traceability Matrix &raquo;</a></p>
+<span class="confluence-anchor-link" id="id-3a.MigrationPlan&amp;Status-remaining"><span class="confluence-anchor-link" id="remaining" /></span><h2 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-RemainingWorkSummary">Remaining Work Summary</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Priority</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Task</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Effort Estimate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">High</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Update <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_batch_validation.py</code> to v2.0 config format</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">1&ndash;2 days</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">High</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase 7: Parallel running setup and comparison framework</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">2&ndash;3 weeks</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Medium</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase 7: User training material and sessions</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">1 week</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Medium</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">GUI development completion and testing</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">2&ndash;4 weeks</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Low</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase 8: Unified CLI tool implementation</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">3&ndash;4 weeks</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Low</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Add <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pandas</code> to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">setup.py</code> <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">install_requires</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">5 minutes</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-3a.MigrationPlan&amp;Status-risks"><span class="confluence-anchor-link" id="risks" /></span><h2 style="color: rgb(23,43,77);" id="id-3a.MigrationPlan&amp;Status-Risks&amp;Mitigations">Risks &amp; Mitigations</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Risk</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Impact</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Mitigation</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Output discrepancy between VBA and Python</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">High &mdash; regulatory compliance</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Parallel running (Phase 7), automated output comparison, 466 unit/integration tests</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">ESMA/FCA rule changes during migration</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Medium</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Regex patterns externalised and documented; easy to update without code changes</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">User adoption resistance</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Medium</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">GUI development (familiar interface), comprehensive user guides, training sessions</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Performance at scale (1.5M daily)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Low (mitigated)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Benchmarked at 50K records/sec; chunked processing available; scalability tested to 1.5M</td>
+</tr>
+</tbody>
+</table></div>
 
 </body>
 </html>

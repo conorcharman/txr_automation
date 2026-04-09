@@ -10,205 +10,219 @@
         th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
         th { background-color: #F4F5F7; font-weight: 600; }
         a { color: #0052CC; text-decoration: none; }
-        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF8B00; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        a:hover { text-decoration: underline; }
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; white-space: pre; margin: 0; }
+        .confluence-anchor-link { display: none; }
+        .code.panel { border: 1px solid #DFE1E6; border-radius: 3px; margin: 16px 0; overflow: hidden; }
+        .codeContent { padding: 0; }
+        .syntaxhighlighter-pre { background: #F4F5F7; padding: 16px; margin: 0; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; border: none; border-radius: 0; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
-
-<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Migration &rsaquo; Changelog</p>
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Changelog</p>
 <p class="last-updated">Last updated: 25 March 2026</p>
-
-<h1>Changelog</h1>
-
-<div class="info-panel">
-    <strong>Versioning:</strong> The project uses phase-based versioning aligned with the migration plan.
-    Package version in <code>setup.py</code> is <code>1.0.0</code>. Individual scripts carry their own version numbers reflecting VBA heritage (e.g., <code>phase_2_processor v4.2</code>).
+<h1 style="color: rgb(23,43,77);" id="id-3c.Changelog-Changelog">Changelog</h1>
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Versioning:</strong> The project uses phase-based versioning aligned with the migration plan.
+    Package version in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">setup.py</code> is <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">1.0.0</code>. Individual scripts carry their own version numbers reflecting VBA heritage (e.g., <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">phase_2_processor v4.2</code>).
 </div>
-
-<h2>Table of Contents</h2>
+<h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-TableofContents">Table of Contents</h2>
 <ul>
-    <li><a href="#phase6">Phase 6 &mdash; Integration &amp; Testing (March 2026, in progress)</a></li>
-    <li><a href="#phase5">Phase 5 &mdash; Data Operations (February 2026)</a></li>
-    <li><a href="#phase4">Phase 4 &mdash; Inconsistent ID Validation (27 January 2026)</a></li>
-    <li><a href="#phase3">Phase 3 &mdash; Decision Maker Validation (28 January 2026)</a></li>
-    <li><a href="#phase2">Phase 2 &mdash; Simple Scripts (21 January 2026)</a></li>
-    <li><a href="#phase1">Phase 1 &mdash; Foundation (19 January 2026)</a></li>
-    <li><a href="#phase0">Phase 0 &mdash; Refactoring (January 2026)</a></li>
+<li><a href="#phase6" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 6 &mdash; Integration &amp; Testing (March 2026, in progress)</a></li>
+<li><a href="#phase5" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 5 &mdash; Data Operations (February 2026)</a></li>
+<li><a href="#phase4" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 4 &mdash; Inconsistent ID Validation (27 January 2026)</a></li>
+<li><a href="#phase3" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 3 &mdash; Decision Maker Validation (28 January 2026)</a></li>
+<li><a href="#phase2" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 2 &mdash; Simple Scripts (21 January 2026)</a></li>
+<li><a href="#phase1" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 1 &mdash; Foundation (19 January 2026)</a></li>
+<li><a href="#phase0" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Phase 0 &mdash; Refactoring (January 2026)</a></li>
 </ul>
-
-<h2 id="phase6">Phase 6 &mdash; Integration &amp; Testing (March 2026)</h2>
-
-<div class="warning-panel"><strong>Status:</strong> In Progress</div>
-
-<h3>Added</h3>
+<span class="confluence-anchor-link" id="id-3c.Changelog-phase6"><span class="confluence-anchor-link" id="phase6" /></span><h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-Phase6—Integration&amp;Testing(March2026)">Phase 6 &mdash; Integration &amp; Testing (March 2026)</h2>
+<div style="background: rgb(255,250,230);border-left: 4.0px solid rgb(255,139,0);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Status:</strong> In Progress</div>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Added">Added</h3>
 <ul>
-    <li>FIRDS module (<code>src/firds/</code>) &mdash; FCA FIRDS instrument reportability checking with SQLite + FTS5 cache and REST API client</li>
-    <li>GLEIF module (<code>src/gleif/</code>) &mdash; GLEIF LEI lookup service with SQLite cache, full-text search, and golden copy downloads</li>
-    <li>GUI application (<code>src/gui/</code>) &mdash; PySide6 desktop app with 5 tabs: Accuracy, Replay, FIRDS, GLEIF, Settings</li>
-    <li>Config validation tool (<code>scripts/validate_config_migration.py</code>) &mdash; verifies v1→v2 config migration</li>
-    <li>Merge Inconsistent IDs script (<code>merge_inconsistent_ids.py</code>) for deduplicating summary files</li>
-    <li>Performance benchmarking scripts in <code>scripts/</code></li>
-    <li>Comprehensive documentation suite (Confluence HTML format, 15+ pages)</li>
+<li>FIRDS module (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/firds/</code>) &mdash; FCA FIRDS instrument reportability checking with SQLite + FTS5 cache and REST API client</li>
+<li>GLEIF module (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gleif/</code>) &mdash; GLEIF LEI lookup service with SQLite cache, full-text search, and golden copy downloads</li>
+<li>GUI application (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gui/</code>) &mdash; PySide6 desktop app with 5 tabs: Accuracy, Replay, FIRDS, GLEIF, Settings</li>
+<li>Config validation tool (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">scripts/validate_config_migration.py</code>) &mdash; verifies v1&rarr;v2 config migration</li>
+<li>Merge Inconsistent IDs script (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">merge_inconsistent_ids.py</code>) for deduplicating summary files</li>
+<li>Performance benchmarking scripts in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">scripts/</code>
+</li>
+<li>Comprehensive documentation suite (Confluence HTML format, 15+ pages)</li>
 </ul>
-
-<h3>Changed</h3>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Changed">Changed</h3>
 <ul>
-    <li>ESMA regex pattern corrections: NL (9 chars, not 11), ES (9 chars, not 10), GB patterns updated to match ESMA CID guidance</li>
-    <li>Inconsistent ID detection now uses prefix-aware nationality grouping &mdash; eliminates false positives from nationality changes</li>
-    <li>Configuration system upgraded to v2.0 with batch/single mode support and environment variable cascade</li>
-    <li>Deprecated v1 configuration templates removed; replaced with v2 branch-specific templates</li>
-    <li>Error messages now include expected format lengths calculated from regex patterns</li>
-    <li>JNT (joint account) false positive correction &mdash; improved detection logic</li>
-    <li>CONCAT surname handling enhanced for multi-part surnames with prefix removal</li>
-    <li>Fallback ID detection fix &mdash; corrected pattern matching for Person Code used as ID</li>
+<li>ESMA regex pattern corrections: NL (9 chars, not 11), ES (9 chars, not 10), GB patterns updated to match ESMA CID guidance</li>
+<li>Inconsistent ID detection now uses prefix-aware nationality grouping &mdash; eliminates false positives from nationality changes</li>
+<li>Configuration system upgraded to v2.0 with batch/single mode support and environment variable cascade</li>
+<li>Deprecated v1 configuration templates removed; replaced with v2 branch-specific templates</li>
+<li>Error messages now include expected format lengths calculated from regex patterns</li>
+<li>JNT (joint account) false positive correction &mdash; improved detection logic</li>
+<li>CONCAT surname handling enhanced for multi-part surnames with prefix removal</li>
+<li>Fallback ID detection fix &mdash; corrected pattern matching for Person Code used as ID</li>
 </ul>
-
-<h3>Fixed</h3>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Fixed">Fixed</h3>
 <ul>
-    <li>Dutch (NL) NIDN regex was accepting 11-character values instead of the correct 9</li>
-    <li>Spanish (ES) NIDN regex was accepting 10-character values instead of the correct 9</li>
-    <li>UK NINO regex updated to reject temporary NINOs (prefix TN)</li>
-    <li>JNT account pairs were generating false positive inconsistencies</li>
-    <li>Correction logic v2 typo fix (<code>fix_correction_typo.py</code>)</li>
+<li>Dutch (NL) NIDN regex was accepting 11-character values instead of the correct 9</li>
+<li>Spanish (ES) NIDN regex was accepting 10-character values instead of the correct 9</li>
+<li>UK NINO regex updated to reject temporary NINOs (prefix TN)</li>
+<li>JNT account pairs were generating false positive inconsistencies</li>
+<li>Correction logic v2 typo fix (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">fix_correction_typo.py</code>)</li>
 </ul>
-
-<h3>Remaining</h3>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Remaining">Remaining</h3>
 <ul>
-    <li><code>test_batch_validation.py</code> needs updating to v2.0 config format (~8 test configurations)</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_batch_validation.py</code> needs updating to v2.0 config format (~8 test configurations)</li>
 </ul>
-
-<h2 id="phase5">Phase 5 &mdash; Data Operations (February 2026)</h2>
-
-<div class="success-panel"><strong>Status:</strong> Complete</div>
-
-<h3>Added</h3>
+<span class="confluence-anchor-link" id="id-3c.Changelog-phase5"><span class="confluence-anchor-link" id="phase5" /></span><h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-Phase5—DataOperations(February2026)">Phase 5 &mdash; Data Operations (February 2026)</h2>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Status:</strong> Complete</div>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Added.1">Added</h3>
 <ul>
-    <li><code>data_push.py</code> &mdash; migrated from <code>DataPush1_0.vb</code>; transaction reference matching and column push between CSV files</li>
-    <li><code>DataPushProcessor</code> class with <code>ColumnMapping</code> and <code>PushAction</code> enum for flexible push configuration</li>
-    <li><code>DataPushRecord</code> dataclass model</li>
-    <li>32 test cases for data push functionality</li>
-    <li>Achieved 68K records/second processing throughput</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data_push.py</code> &mdash; migrated from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DataPush1_0.vb</code>; transaction reference matching and column push between CSV files</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DataPushProcessor</code> class with <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ColumnMapping</code> and <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">PushAction</code> enum for flexible push configuration</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DataPushRecord</code> dataclass model</li>
+<li>32 test cases for data push functionality</li>
+<li>Achieved 68K records/second processing throughput</li>
 </ul>
-
-<h3>Deprecated</h3>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Deprecated">Deprecated</h3>
 <ul>
-    <li><code>IncidentLookup1_1.vb</code> &mdash; functionality absorbed into the validation pipeline; transaction reference lookup is now integral to <code>IDValidationProcessor._perform_template_validation()</code></li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IncidentLookup1_1.vb</code> &mdash; functionality absorbed into the validation pipeline; transaction reference lookup is now integral to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._perform_template_validation()</code>
+</li>
 </ul>
-
-<h2 id="phase4">Phase 4 &mdash; Inconsistent ID Validation (27 January 2026)</h2>
-
-<div class="success-panel"><strong>Status:</strong> Complete</div>
-
-<h3>Added</h3>
+<span class="confluence-anchor-link" id="id-3c.Changelog-phase4"><span class="confluence-anchor-link" id="phase4" /></span><h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-Phase4—InconsistentIDValidation(27January2026)">Phase 4 &mdash; Inconsistent ID Validation (27 January 2026)</h2>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Status:</strong> Complete</div>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Added.2">Added</h3>
 <ul>
-    <li><code>inconsistent_buyer_id_validation.py</code> &mdash; migrated from <code>InconsistentBuyerIDValidation1_3.vb</code></li>
-    <li><code>inconsistent_seller_id_validation.py</code> &mdash; migrated from <code>InconsistentSellerIDValidation1_3.vb</code></li>
-    <li><code>InconsistentIDProcessor</code> class with Person Code grouping, chronological sorting, fallback ID detection</li>
-    <li>Prefix-aware comparison (Python enhancement beyond VBA) &mdash; extract nationality prefix from ID value for grouping</li>
-    <li>New &ldquo;Prefixed Nationality&rdquo; output column for audit trail</li>
-    <li>30+ test cases per side (buyer/seller)</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">inconsistent_buyer_id_validation.py</code> &mdash; migrated from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">InconsistentBuyerIDValidation1_3.vb</code>
+</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">inconsistent_seller_id_validation.py</code> &mdash; migrated from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">InconsistentSellerIDValidation1_3.vb</code>
+</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">InconsistentIDProcessor</code> class with Person Code grouping, chronological sorting, fallback ID detection</li>
+<li>Prefix-aware comparison (Python enhancement beyond VBA) &mdash; extract nationality prefix from ID value for grouping</li>
+<li>New &ldquo;Prefixed Nationality&rdquo; output column for audit trail</li>
+<li>30+ test cases per side (buyer/seller)</li>
 </ul>
-
-<h3>Key Decisions</h3>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-KeyDecisions">Key Decisions</h3>
 <ul>
-    <li>Buyer and seller share a single <code>InconsistentIDProcessor</code> class, parameterised by side</li>
-    <li>Chronological sorting uses trade date/time for determining &ldquo;most recent&rdquo; valid ID</li>
+<li>Buyer and seller share a single <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">InconsistentIDProcessor</code> class, parameterised by side</li>
+<li>Chronological sorting uses trade date/time for determining &ldquo;most recent&rdquo; valid ID</li>
 </ul>
-
-<h2 id="phase3">Phase 3 &mdash; Decision Maker Validation (28 January 2026)</h2>
-
-<div class="success-panel"><strong>Status:</strong> Complete</div>
-
-<h3>Added</h3>
+<span class="confluence-anchor-link" id="id-3c.Changelog-phase3"><span class="confluence-anchor-link" id="phase3" /></span><h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-Phase3—DecisionMakerValidation(28January2026)">Phase 3 &mdash; Decision Maker Validation (28 January 2026)</h2>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Status:</strong> Complete</div>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Added.3">Added</h3>
 <ul>
-    <li><code>validate_ftbdm.py</code> &mdash; migrated from <code>ValidateFTBDM3_0.vb</code></li>
-    <li><code>validate_ftsdm.py</code> &mdash; migrated from <code>ValidateFTSDM3_0.vb</code></li>
-    <li><code>DecisionMakerValidator</code> class with <code>Product</code> and <code>ServiceLevel</code> enums</li>
-    <li><code>DecisionMakerRecord</code> dataclass model</li>
-    <li><code>LEILookupManager</code> for branch→LEI mapping from CSV</li>
-    <li>40 test cases covering all product/service level combinations</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate_ftbdm.py</code> &mdash; migrated from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ValidateFTBDM3_0.vb</code>
+</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate_ftsdm.py</code> &mdash; migrated from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ValidateFTSDM3_0.vb</code>
+</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DecisionMakerValidator</code> class with <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Product</code> and <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ServiceLevel</code> enums</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DecisionMakerRecord</code> dataclass model</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">LEILookupManager</code> for branch&rarr;LEI mapping from CSV</li>
+<li>40 test cases covering all product/service level combinations</li>
 </ul>
-
-<h3>Key Decisions</h3>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-KeyDecisions.1">Key Decisions</h3>
 <ul>
-    <li>Product classification uses <code>Product</code> enum: AJB, AJBIC, DODL, CUSTODY_SOLUTIONS</li>
-    <li>Service level detection: D (Discretionary) requires DM code validation; A (Advisory) and E (Execution-only) do not</li>
+<li>Product classification uses <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Product</code> enum: AJB, AJBIC, DODL, CUSTODY_SOLUTIONS</li>
+<li>Service level detection: D (Discretionary) requires DM code validation; A (Advisory) and E (Execution-only) do not</li>
 </ul>
-
-<h2 id="phase2">Phase 2 &mdash; Simple Scripts (21 January 2026)</h2>
-
-<div class="success-panel"><strong>Status:</strong> Complete</div>
-
-<h3>Added</h3>
+<span class="confluence-anchor-link" id="id-3c.Changelog-phase2"><span class="confluence-anchor-link" id="phase2" /></span><h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-Phase2—SimpleScripts(21January2026)">Phase 2 &mdash; Simple Scripts (21 January 2026)</h2>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Status:</strong> Complete</div>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Added.4">Added</h3>
 <ul>
-    <li><code>buyer_id_validation.py</code> &mdash; migrated from <code>BuyerIDValidation5_6.vb</code> (~1,853 lines of VBA)</li>
-    <li><code>seller_id_validation.py</code> &mdash; migrated from <code>SellerIDValidation5_6.vb</code> (~1,780 lines of VBA)</li>
-    <li><code>IDValidationProcessor</code> &mdash; shared processor for buyer/seller with 30+ field <code>ClientRecord</code></li>
-    <li><code>IDLogicValidator</code> &mdash; embedded ID logic validation with 15 country-specific validators</li>
-    <li><code>pricing_validation.py</code> &mdash; migrated from <code>pricing_data_validation_v1.0.vb</code></li>
-    <li><code>PricingValidator</code> and <code>PricingRecord</code> classes</li>
-    <li><code>sql_extract_generator.py</code> &mdash; unified migration of 3 VBA extract scripts</li>
-    <li>11 SQL templates in <code>sql_templates/</code> covering all incident types</li>
-    <li>1 DTF template for transaction file processing</li>
-    <li>CONCAT generation with surname prefix removal (VON, VAN, DE, DI, etc.)</li>
-    <li>Italian fiscal code tracker integration</li>
-    <li>50+ test cases per side for buyer/seller ID validation</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">buyer_id_validation.py</code> &mdash; migrated from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">BuyerIDValidation5_6.vb</code> (~1,853 lines of VBA)</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">seller_id_validation.py</code> &mdash; migrated from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">SellerIDValidation5_6.vb</code> (~1,780 lines of VBA)</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor</code> &mdash; shared processor for buyer/seller with 30+ field <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ClientRecord</code>
+</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDLogicValidator</code> &mdash; embedded ID logic validation with 15 country-specific validators</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pricing_validation.py</code> &mdash; migrated from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pricing_data_validation_v1.0.vb</code>
+</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">PricingValidator</code> and <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">PricingRecord</code> classes</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">sql_extract_generator.py</code> &mdash; unified migration of 3 VBA extract scripts</li>
+<li>11 SQL templates in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">sql_templates/</code> covering all incident types</li>
+<li>1 DTF template for transaction file processing</li>
+<li>CONCAT generation with surname prefix removal (VON, VAN, DE, DI, etc.)</li>
+<li>Italian fiscal code tracker integration</li>
+<li>50+ test cases per side for buyer/seller ID validation</li>
 </ul>
-
-<h3>Key Decisions</h3>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-KeyDecisions.2">Key Decisions</h3>
 <ul>
-    <li>Three separate VBA SQL extract scripts consolidated into a single Python module with template-driven generation</li>
-    <li>900-reference batching preserved from VBA for SQL IN clause generation</li>
-    <li>Buyer and seller validation scripts share <code>IDValidationProcessor</code>, differentiated by <code>client_type</code> parameter</li>
+<li>Three separate VBA SQL extract scripts consolidated into a single Python module with template-driven generation</li>
+<li>900-reference batching preserved from VBA for SQL IN clause generation</li>
+<li>Buyer and seller validation scripts share <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor</code>, differentiated by <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">client_type</code> parameter</li>
 </ul>
-
-<h2 id="phase1">Phase 1 &mdash; Foundation (19 January 2026)</h2>
-
-<div class="success-panel"><strong>Status:</strong> Complete</div>
-
-<h3>Added</h3>
+<span class="confluence-anchor-link" id="id-3c.Changelog-phase1"><span class="confluence-anchor-link" id="phase1" /></span><h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-Phase1—Foundation(19January2026)">Phase 1 &mdash; Foundation (19 January 2026)</h2>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Status:</strong> Complete</div>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Added.5">Added</h3>
 <ul>
-    <li><code>CountryDataManager</code> &mdash; ISO 3166-1 country data with EEA/ROW classification</li>
-    <li><code>IDFormatManager</code> &mdash; 68 compiled regex patterns across 27 countries, loaded from CSV reference data</li>
-    <li>Incident code matrix with metadata for all 11 incident types</li>
-    <li><code>ClientRecord</code> dataclass &mdash; primary data model with 30+ fields, <code>from_dict()</code> factory, CSV round-tripping</li>
-    <li><code>AccuracyConfigManager</code> &mdash; YAML configuration with batch/single mode, path resolution, env var override</li>
-    <li><code>AccuracyPathConfig</code> and <code>AccuracyProcessorConfig</code> dataclasses</li>
-    <li>Reference data CSV files: <code>country_codes.csv</code>, <code>id_formats.csv</code>, <code>incident_matrix.csv</code></li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">CountryDataManager</code> &mdash; ISO 3166-1 country data with EEA/ROW classification</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDFormatManager</code> &mdash; 68 compiled regex patterns across 27 countries, loaded from CSV reference data</li>
+<li>Incident code matrix with metadata for all 11 incident types</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ClientRecord</code> dataclass &mdash; primary data model with 30+ fields, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">from_dict()</code> factory, CSV round-tripping</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyConfigManager</code> &mdash; YAML configuration with batch/single mode, path resolution, env var override</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyPathConfig</code> and <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyProcessorConfig</code> dataclasses</li>
+<li>Reference data CSV files: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">country_codes.csv</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">id_formats.csv</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">incident_matrix.csv</code>
+</li>
 </ul>
-
-<h2 id="phase0">Phase 0 &mdash; Refactoring (January 2026)</h2>
-
-<div class="success-panel"><strong>Status:</strong> Complete</div>
-
-<h3>Added</h3>
+<span class="confluence-anchor-link" id="id-3c.Changelog-phase0"><span class="confluence-anchor-link" id="phase0" /></span><h2 style="color: rgb(23,43,77);" id="id-3c.Changelog-Phase0—Refactoring(January2026)">Phase 0 &mdash; Refactoring (January 2026)</h2>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Status:</strong> Complete</div>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Added.6">Added</h3>
 <ul>
-    <li>Shared core library (<code>src/core/</code>) extracted from existing replay processing scripts</li>
-    <li><code>StructuredLogger</code> &mdash; JSON-structured logging with file + console handlers, context injection</li>
-    <li><code>ConfigManager</code> &mdash; YAML configuration with environment variable cascade (<code>TXR_*</code> prefix)</li>
-    <li><code>DateParser</code> &mdash; multi-format date parsing (25+ recognised formats)</li>
-    <li><code>FileDiscovery</code> &mdash; auto-discovery of input files in configured directories</li>
-    <li><code>safe_open_csv</code> utility for encoding-safe CSV operations</li>
-    <li>pytest framework with fixtures and conftest.py</li>
-    <li>35 initial test cases</li>
+<li>Shared core library (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/core/</code>) extracted from existing replay processing scripts</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">StructuredLogger</code> &mdash; JSON-structured logging with file + console handlers, context injection</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ConfigManager</code> &mdash; YAML configuration with environment variable cascade (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_*</code> prefix)</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DateParser</code> &mdash; multi-format date parsing (25+ recognised formats)</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FileDiscovery</code> &mdash; auto-discovery of input files in configured directories</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">safe_open_csv</code> utility for encoding-safe CSV operations</li>
+<li>pytest framework with fixtures and conftest.py</li>
+<li>35 initial test cases</li>
 </ul>
-
-<h3>Changed</h3>
+<h3 style="color: rgb(23,43,77);" id="id-3c.Changelog-Changed.1">Changed</h3>
 <ul>
-    <li>Replay Phase 2 processor refactored to v4.2 &mdash; now uses core library for config, logging, and data structures</li>
-    <li>Replay Phase 3 processor refactored to v5.2 &mdash; added hash table indexing for O(1) transaction reference lookups</li>
-    <li>All existing scripts migrated from ad-hoc logging to <code>StructuredLogger</code></li>
-    <li>All existing scripts migrated from hardcoded paths to YAML configuration</li>
+<li>Replay Phase 2 processor refactored to v4.2 &mdash; now uses core library for config, logging, and data structures</li>
+<li>Replay Phase 3 processor refactored to v5.2 &mdash; added hash table indexing for O(1) transaction reference lookups</li>
+<li>All existing scripts migrated from ad-hoc logging to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">StructuredLogger</code>
+</li>
+<li>All existing scripts migrated from hardcoded paths to YAML configuration</li>
 </ul>
-
-<hr>
-<p><a href="03b_traceability_matrix.html">&laquo; Previous: Traceability Matrix</a> | <a href="00_index.html">Documentation Index</a> | <a href="04a_getting_started.html">Next: Getting Started &raquo;</a></p>
 
 </body>
 </html>

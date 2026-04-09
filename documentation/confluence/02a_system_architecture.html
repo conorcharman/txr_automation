@@ -7,46 +7,43 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
         h1, h2, h3, h4 { color: #172B4D; }
         table { border-collapse: collapse; width: 100%; margin: 16px 0; }
-        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
         th { background-color: #F4F5F7; font-weight: 600; }
         a { color: #0052CC; text-decoration: none; }
         a:hover { text-decoration: underline; }
-        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; line-height: 1.5; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; white-space: pre; margin: 0; }
+        .confluence-anchor-link { display: none; }
+        .code.panel { border: 1px solid #DFE1E6; border-radius: 3px; margin: 16px 0; overflow: hidden; }
+        .codeContent { padding: 0; }
+        .syntaxhighlighter-pre { background: #F4F5F7; padding: 16px; margin: 0; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; border: none; border-radius: 0; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
-
-<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Architecture &rsaquo; System Architecture</p>
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; System Architecture</p>
 <p class="last-updated">Last updated: 25 March 2026</p>
-
-<h1>System Architecture</h1>
-
-<h2>Table of Contents</h2>
+<h1 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-SystemArchitecture">System Architecture</h1>
+<h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-TableofContents">Table of Contents</h2>
 <ul>
-    <li><a href="#overview">Architecture Overview</a></li>
-    <li><a href="#layers">Layered Architecture</a></li>
-    <li><a href="#modules">Module Architecture</a></li>
-    <li><a href="#patterns">Design Patterns</a></li>
-    <li><a href="#dependencies">Module Dependencies</a></li>
-    <li><a href="#entry-points">Entry Points (22 CLI + 1 GUI)</a></li>
+<li><a href="#overview" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Architecture Overview</a></li>
+<li><a href="#layers" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Layered Architecture</a></li>
+<li><a href="#modules" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Module Architecture</a></li>
+<li><a href="#patterns" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Design Patterns</a></li>
+<li><a href="#dependencies" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Module Dependencies</a></li>
+<li><a href="#entry-points" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Entry Points (22 CLI + 1 GUI)</a></li>
 </ul>
-
-<h2 id="overview">Architecture Overview</h2>
-
+<span class="confluence-anchor-link" id="id-2a.SystemArchitecture-overview"><span class="confluence-anchor-link" id="overview" /></span><h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-ArchitectureOverview">Architecture Overview</h2>
 <p>TXR Automation follows a <strong>four-layer architecture</strong> with clear separation of concerns. The core library provides shared functionality consumed by all processing modules, which are exposed through CLI scripts and a desktop GUI.</p>
-
-<div class="info-panel">
-    <strong>Design Philosophy:</strong> Minimise external dependencies, maximise code reuse through a shared core library,
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Design Philosophy:</strong> Minimise external dependencies, maximise code reuse through a shared core library,
     use dataclasses for all data transfer, CSV-first I/O (no Excel), and singleton reference data managers for performance.
 </div>
-
-<h2 id="layers">Layered Architecture</h2>
-
-<pre>
+<span class="confluence-anchor-link" id="id-2a.SystemArchitecture-layers"><span class="confluence-anchor-link" id="layers" /></span><h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-LayeredArchitecture">Layered Architecture</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 +-------------------------------------------------------------------+
 |                      User Interface Layer                          |
 |                                                                    |
@@ -109,242 +106,359 @@
 |  +-----------+  +----------+  +----------+  +------------------+  |
 +-------------------------------------------------------------------+
 </pre>
-
-<h3>Layer Responsibilities</h3>
-
-<table>
-    <thead>
-        <tr><th>Layer</th><th>Responsibility</th><th>Key Principle</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><strong>User Interface</strong></td>
-            <td>CLI argument parsing, GUI event handling, user interaction</td>
-            <td>Thin layer &mdash; delegates all logic downward</td>
-        </tr>
-        <tr>
-            <td><strong>Processing</strong></td>
-            <td>Business logic, validation rules, data transformation</td>
-            <td>Domain-specific logic, uses core library for common operations</td>
-        </tr>
-        <tr>
-            <td><strong>Core Library</strong></td>
-            <td>Shared configuration, logging, reference data, validation utilities</td>
-            <td>Single source of truth for common functionality</td>
-        </tr>
-        <tr>
-            <td><strong>Data</strong></td>
-            <td>Persistent storage, file I/O, caching</td>
-            <td>CSV-first for I/O, SQLite for caching, YAML for config</td>
-        </tr>
-    </tbody>
-</table>
-
-<h2 id="modules">Module Architecture</h2>
-
-<h3>Core Module (<code>src/core/</code>)</h3>
-
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-LayerResponsibilities">Layer Responsibilities</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Layer</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Responsibility</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Key Principle</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>User Interface</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">CLI argument parsing, GUI event handling, user interaction</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Thin layer &mdash; delegates all logic downward</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Processing</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Business logic, validation rules, data transformation</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Domain-specific logic, uses core library for common operations</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Core Library</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Shared configuration, logging, reference data, validation utilities</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Single source of truth for common functionality</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Data</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Persistent storage, file I/O, caching</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">CSV-first for I/O, SQLite for caching, YAML for config</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-2a.SystemArchitecture-modules"><span class="confluence-anchor-link" id="modules" /></span><h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-ModuleArchitecture">Module Architecture</h2>
+<h3 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-CoreModule(src/core/)">Core Module (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/core/</code>)</h3>
 <p>The foundation library providing shared functionality across all packages. Version: 1.1.0.</p>
-
-<table>
-    <thead>
-        <tr><th>Subpackage</th><th>Key Classes</th><th>Purpose</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>config/</code></td>
-            <td><code>ConfigManager</code>, <code>PathConfig</code>, <code>ProcessorConfig</code></td>
-            <td>YAML loading with LRU caching, environment variable override, priority cascade</td>
-        </tr>
-        <tr>
-            <td><code>data/</code></td>
-            <td><code>CountryDataManager</code>, <code>IDFormatManager</code>, <code>INCIDENT_CODE_MATRIX</code></td>
-            <td>ISO 3166-1 country codes (EEA classification), 68 ID regex patterns, incident metadata</td>
-        </tr>
-        <tr>
-            <td><code>logging/</code></td>
-            <td><code>StructuredLogger</code>, <code>create_logger()</code></td>
-            <td>JSON structured logging with file + console output, statistics protocol</td>
-        </tr>
-        <tr>
-            <td><code>utils/</code></td>
-            <td><code>DateParser</code>, <code>FileDiscovery</code>, <code>safe_open_csv</code></td>
-            <td>Multi-format date parsing with caching, file discovery, safe CSV operations</td>
-        </tr>
-        <tr>
-            <td><code>validation/</code></td>
-            <td><code>validate_id</code>, <code>validate_id_auto</code>, <code>validate_not_empty</code></td>
-            <td>ID format validation against regex patterns, common validation utilities</td>
-        </tr>
-    </tbody>
-</table>
-
-<h3>Accuracy Testing Module (<code>src/accuracy_testing/</code>)</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Subpackage</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Key Classes</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ConfigManager</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">PathConfig</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ProcessorConfig</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">YAML loading with LRU caching, environment variable override, priority cascade</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">CountryDataManager</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDFormatManager</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">INCIDENT_CODE_MATRIX</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">ISO 3166-1 country codes (EEA classification), 68 ID regex patterns, incident metadata</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">logging/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">StructuredLogger</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">create_logger()</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">JSON structured logging with file + console output, statistics protocol</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">utils/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DateParser</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FileDiscovery</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">safe_open_csv</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Multi-format date parsing with caching, file discovery, safe CSV operations</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validation/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate_id</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate_id_auto</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate_not_empty</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">ID format validation against regex patterns, common validation utilities</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-AccuracyTestingModule(src/accuracy_testing/)">Accuracy Testing Module (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/accuracy_testing/</code>)</h3>
 <p>The largest module, containing all accuracy testing validation logic. Version: 3.0.0.</p>
-
-<table>
-    <thead>
-        <tr><th>Component</th><th>Key Classes</th><th>Purpose</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>processor.py</code><br>(2,611 LOC)</td>
-            <td><code>IDValidationProcessor</code>, <code>InconsistentIDProcessor</code>, <code>ClientRecord</code>, <code>AccuracyConfigManager</code></td>
-            <td>Main validation pipeline: format check → logic check → correction → CONCAT generation. Also handles inconsistent ID grouping by Person Code.</td>
-        </tr>
-        <tr>
-            <td><code>id_logic_validator.py</code><br>(1,125 LOC)</td>
-            <td><code>IDLogicValidator</code></td>
-            <td>Validates embedded information in national IDs: DOB extraction, gender codes, check digits (Modulus 97, Modulus 11, Luhn). Covers 15 countries.</td>
-        </tr>
-        <tr>
-            <td><code>models/</code></td>
-            <td><code>DecisionMakerRecord</code>, <code>PricingRecord</code>, <code>NetAmountRecord</code>, <code>NetQuantityRecord</code>, <code>DataPushRecord</code></td>
-            <td>Dataclass models with factory methods (<code>from_dict()</code>, <code>from_row()</code>) for each validation type</td>
-        </tr>
-        <tr>
-            <td><code>validators/</code></td>
-            <td><code>DecisionMakerValidator</code>, <code>PricingValidator</code>, <code>NetAmountValidator</code>, <code>NetQuantityValidator</code>, <code>DataPushProcessor</code></td>
-            <td>Dedicated validator classes for each incident type, with batch processing support</td>
-        </tr>
-        <tr>
-            <td><code>scripts/</code></td>
-            <td>15 CLI entry points</td>
-            <td>Thin CLI wrappers: argument parsing → config loading → processor invocation → output writing</td>
-        </tr>
-        <tr>
-            <td><code>sql_templates/</code></td>
-            <td>11 SQL + 1 DTF template</td>
-            <td>Parameterised SQL query templates with transaction reference batching (groups of 900)</td>
-        </tr>
-    </tbody>
-</table>
-
-<h3>FIRDS Module (<code>src/firds/</code>)</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Component</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Key Classes</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">processor.py</code><br />(2,611 LOC)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">InconsistentIDProcessor</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ClientRecord</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyConfigManager</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Main validation pipeline: format check &rarr; logic check &rarr; correction &rarr; CONCAT generation. Also handles inconsistent ID grouping by Person Code.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">id_logic_validator.py</code><br />(1,125 LOC)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDLogicValidator</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Validates embedded information in national IDs: DOB extraction, gender codes, check digits (Modulus 97, Modulus 11, Luhn). Covers 15 countries.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">models/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DecisionMakerRecord</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">PricingRecord</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">NetAmountRecord</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">NetQuantityRecord</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DataPushRecord</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Dataclass models with factory methods (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">from_dict()</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">from_row()</code>) for each validation type</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validators/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DecisionMakerValidator</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">PricingValidator</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">NetAmountValidator</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">NetQuantityValidator</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DataPushProcessor</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Dedicated validator classes for each incident type, with batch processing support</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">scripts/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">15 CLI entry points</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Thin CLI wrappers: argument parsing &rarr; config loading &rarr; processor invocation &rarr; output writing</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">sql_templates/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">11 SQL + 1 DTF template</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Parameterised SQL query templates with transaction reference batching (groups of 900)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-FIRDSModule(src/firds/)">FIRDS Module (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/firds/</code>)</h3>
 <p>Self-contained module for FCA FIRDS instrument reportability.</p>
-
-<table>
-    <thead>
-        <tr><th>Component</th><th>Purpose</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>FirdsApiClient</code></td><td>Queries FCA Data API for FULINS/DLTINS/FULCAN file listings</td></tr>
-        <tr><td><code>FirdsDownloader</code></td><td>Downloads and extracts XML files (8 MB chunk size)</td></tr>
-        <tr><td><code>FirdsXmlParser</code></td><td>Memory-efficient streaming XML parser using <code>iterparse</code></td></tr>
-        <tr><td><code>FirdsCacheManager</code></td><td>SQLite database: <code>instruments</code> table with upsert, termination, cancellation; <code>firds_sync_log</code> for idempotency</td></tr>
-        <tr><td><code>FirdsRefresher</code></td><td>Orchestrates full weekly rebuilds and daily delta refreshes (5,000-record upsert batches)</td></tr>
-        <tr><td><code>FirdsReportabilityChecker</code></td><td>Determines reportability: ACTIVE, NOT_IN_FIRDS, ADMISSION_AFTER_TRADE, TERMINATED_BEFORE_TRADE, CANCELLED</td></tr>
-    </tbody>
-</table>
-
-<h3>GLEIF Module (<code>src/gleif/</code>)</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Component</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FirdsApiClient</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Queries FCA Data API for FULINS/DLTINS/FULCAN file listings</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FirdsDownloader</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Downloads and extracts XML files (8 MB chunk size)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FirdsXmlParser</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Memory-efficient streaming XML parser using <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">iterparse</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FirdsCacheManager</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">SQLite database: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">instruments</code> table with upsert, termination, cancellation; <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">firds_sync_log</code> for idempotency</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FirdsRefresher</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Orchestrates full weekly rebuilds and daily delta refreshes (5,000-record upsert batches)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FirdsReportabilityChecker</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Determines reportability: ACTIVE, NOT_IN_FIRDS, ADMISSION_AFTER_TRADE, TERMINATED_BEFORE_TRADE, CANCELLED</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-GLEIFModule(src/gleif/)">GLEIF Module (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gleif/</code>)</h3>
 <p>Self-contained module for GLEIF LEI validation and entity lookup.</p>
-
-<table>
-    <thead>
-        <tr><th>Component</th><th>Purpose</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>GleifApiClient</code></td><td>Queries GLEIF API v1 for LEI records, ISIN mappings, BIC lookups (rate limit: 60/min)</td></tr>
-        <tr><td><code>GleifDownloader</code></td><td>Downloads Golden Copy files (300s timeout, custom User-Agent)</td></tr>
-        <tr><td><code>GleifCsvParser</code></td><td>Streaming parser for 3.2M-record Golden Copy CSV, row-by-row processing</td></tr>
-        <tr><td><code>GleifCacheManager</code></td><td>SQLite: <code>lei_records</code>, <code>lei_isin_map</code>, <code>lei_fts</code> (FTS5 full-text search), <code>gleif_sync_log</code></td></tr>
-        <tr><td><code>GleifRefresher</code></td><td>Full rebuild + delta refresh cycles (8h, 24h, 7d, 31d) with 5,000-record batches</td></tr>
-        <tr><td><code>GleifLookup</code></td><td>LEI validation with registration status, trade-date awareness, name search, BIC lookup</td></tr>
-    </tbody>
-</table>
-
-<h3>Replay Module (<code>src/replay/</code>)</h3>
-
-<table>
-    <thead>
-        <tr><th>Script</th><th>Version</th><th>Purpose</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>phase_2_processor.py</code></td><td>v4.2</td><td>Transaction reference matching with hash table indexing (O(1) lookups), character encoding handling</td></tr>
-        <tr><td><code>phase_3_processor.py</code></td><td>v5.2</td><td>Client record matching: first name, surname, DOB, ID value. Fuzzy matching, correction-bearing row preference</td></tr>
-        <tr><td><code>phase_3_final_lookup.py</code></td><td>&mdash;</td><td>UnaVista transaction validation &mdash; verifies proposed corrections against source data</td></tr>
-        <tr><td><code>merge_inconsistent_ids.py</code></td><td>&mdash;</td><td>Merges duplicate rows in inconsistent ID summary files</td></tr>
-    </tbody>
-</table>
-
-<h3>GUI Module (<code>src/gui/</code>)</h3>
-
-<table>
-    <thead>
-        <tr><th>Component</th><th>Purpose</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>MainWindow</code></td><td><code>QMainWindow</code> with <code>QTabWidget</code> (5 tabs), menu bar, status bar</td></tr>
-        <tr><td><code>AccuracyTab</code></td><td>Runs 9 accuracy testing incidents with config/file picker</td></tr>
-        <tr><td><code>ReplayTab</code></td><td>Phase 2/3 replay processing interface</td></tr>
-        <tr><td><code>FirdsTab</code> / <code>GleifTab</code></td><td>Cache management, refresh, lookup interfaces</td></tr>
-        <tr><td><code>ScriptRunnerWorker</code></td><td><code>QThread</code> background worker for non-blocking script execution</td></tr>
-        <tr><td>Reusable widgets</td><td><code>FilePickerWidget</code>, <code>ConfigLoaderWidget</code>, <code>LogViewerWidget</code>, <code>RunControlsWidget</code></td></tr>
-    </tbody>
-</table>
-
-<h2 id="patterns">Design Patterns</h2>
-
-<table>
-    <thead>
-        <tr><th>Pattern</th><th>Implementation</th><th>Where Used</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><strong>Singleton</strong></td>
-            <td>Single instance of reference data loaded once, cached globally</td>
-            <td><code>country_manager</code>, <code>id_format_manager</code> (lazy-loaded at import time)</td>
-        </tr>
-        <tr>
-            <td><strong>Factory</strong></td>
-            <td>Factory functions create instances from configuration</td>
-            <td><code>create_logger()</code>, <code>ClientRecord.from_dict()</code>, <code>DecisionMakerRecord.from_row()</code></td>
-        </tr>
-        <tr>
-            <td><strong>Strategy</strong></td>
-            <td>Different validation strategies selected by country code or ID type</td>
-            <td><code>IDLogicValidator</code> dispatches to 15 country-specific validators</td>
-        </tr>
-        <tr>
-            <td><strong>Template Method</strong></td>
-            <td>Common processing pipeline shared across scripts</td>
-            <td>All CLI scripts: parse args → load config → read CSV → process → write CSV → log summary</td>
-        </tr>
-        <tr>
-            <td><strong>Configuration Cascade</strong></td>
-            <td>Layered config resolution: env vars → YAML → defaults</td>
-            <td><code>ConfigManager</code>, <code>AccuracyConfigManager</code></td>
-        </tr>
-        <tr>
-            <td><strong>Repository / Cache</strong></td>
-            <td>SQLite databases with upsert semantics and sync logs</td>
-            <td><code>FirdsCacheManager</code>, <code>GleifCacheManager</code></td>
-        </tr>
-        <tr>
-            <td><strong>Observer</strong></td>
-            <td>Structured logging with statistics collection</td>
-            <td><code>StructuredLogger</code> with <code>StatsProtocol</code></td>
-        </tr>
-        <tr>
-            <td><strong>Dataclass / DTO</strong></td>
-            <td>Immutable data transfer objects with factory methods</td>
-            <td><code>ClientRecord</code>, <code>DecisionMakerRecord</code>, <code>PricingRecord</code>, <code>ReportabilityResult</code>, etc.</td>
-        </tr>
-        <tr>
-            <td><strong>Worker Thread</strong></td>
-            <td><code>QThread</code> background execution with signal/slot communication</td>
-            <td><code>ScriptRunnerWorker</code> in GUI module</td>
-        </tr>
-    </tbody>
-</table>
-
-<h2 id="dependencies">Module Dependencies</h2>
-
-<pre>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Component</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GleifApiClient</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Queries GLEIF API v1 for LEI records, ISIN mappings, BIC lookups (rate limit: 60/min)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GleifDownloader</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Downloads Golden Copy files (300s timeout, custom User-Agent)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GleifCsvParser</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Streaming parser for 3.2M-record Golden Copy CSV, row-by-row processing</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GleifCacheManager</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">SQLite: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">lei_records</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">lei_isin_map</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">lei_fts</code> (FTS5 full-text search), <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gleif_sync_log</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GleifRefresher</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Full rebuild + delta refresh cycles (8h, 24h, 7d, 31d) with 5,000-record batches</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GleifLookup</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">LEI validation with registration status, trade-date awareness, name search, BIC lookup</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-ReplayModule(src/replay/)">Replay Module (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/replay/</code>)</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Script</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Version</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">phase_2_processor.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">v4.2</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Transaction reference matching with hash table indexing (O(1) lookups), character encoding handling</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">phase_3_processor.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">v5.2</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Client record matching: first name, surname, DOB, ID value. Fuzzy matching, correction-bearing row preference</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">phase_3_final_lookup.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">&mdash;</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">UnaVista transaction validation &mdash; verifies proposed corrections against source data</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">merge_inconsistent_ids.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">&mdash;</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Merges duplicate rows in inconsistent ID summary files</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-GUIModule(src/gui/)">GUI Module (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gui/</code>)</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Component</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">MainWindow</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">QMainWindow</code> with <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">QTabWidget</code> (5 tabs), menu bar, status bar</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyTab</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Runs 9 accuracy testing incidents with config/file picker</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ReplayTab</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase 2/3 replay processing interface</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FirdsTab</code> / <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GleifTab</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Cache management, refresh, lookup interfaces</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ScriptRunnerWorker</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">QThread</code> background worker for non-blocking script execution</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Reusable widgets</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FilePickerWidget</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ConfigLoaderWidget</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">LogViewerWidget</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">RunControlsWidget</code>
+</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-2a.SystemArchitecture-patterns"><span class="confluence-anchor-link" id="patterns" /></span><h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-DesignPatterns">Design Patterns</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Pattern</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Implementation</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Where Used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Singleton</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Single instance of reference data loaded once, cached globally</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">country_manager</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">id_format_manager</code> (lazy-loaded at import time)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Factory</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Factory functions create instances from configuration</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">create_logger()</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ClientRecord.from_dict()</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DecisionMakerRecord.from_row()</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Strategy</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Different validation strategies selected by country code or ID type</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDLogicValidator</code> dispatches to 15 country-specific validators</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Template Method</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Common processing pipeline shared across scripts</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">All CLI scripts: parse args &rarr; load config &rarr; read CSV &rarr; process &rarr; write CSV &rarr; log summary</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Configuration Cascade</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Layered config resolution: env vars &rarr; YAML &rarr; defaults</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ConfigManager</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">AccuracyConfigManager</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Repository / Cache</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">SQLite databases with upsert semantics and sync logs</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FirdsCacheManager</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GleifCacheManager</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Observer</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Structured logging with statistics collection</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">StructuredLogger</code> with <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">StatsProtocol</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Dataclass / DTO</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Immutable data transfer objects with factory methods</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ClientRecord</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">DecisionMakerRecord</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">PricingRecord</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ReportabilityResult</code>, etc.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Worker Thread</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">QThread</code> background execution with signal/slot communication</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">ScriptRunnerWorker</code> in GUI module</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-2a.SystemArchitecture-dependencies"><span class="confluence-anchor-link" id="dependencies" /></span><h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-ModuleDependencies">Module Dependencies</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 +-------------------------------------------------------------------+
 |                      accuracy_testing                              |
 |  +----------------+  +----------------+  +----------------+       |
@@ -380,55 +494,138 @@
 |   uses core for logging)     |  |   uses core for logging)      |
 +------------------------------+  +-------------------------------+
 </pre>
-
-<h3>Key Dependency Rules</h3>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-KeyDependencyRules">Key Dependency Rules</h3>
 <ul>
-    <li><strong>Core depends on nothing</strong> &mdash; it is the foundation layer</li>
-    <li><strong>Processing modules depend on Core</strong> &mdash; for config, logging, validation, reference data</li>
-    <li><strong>FIRDS and GLEIF are independent</strong> &mdash; they use Core for logging but are otherwise self-contained</li>
-    <li><strong>GUI depends on all processing modules</strong> &mdash; it invokes them as CLI scripts via <code>QThread</code> workers</li>
-    <li><strong>No circular dependencies</strong> &mdash; dependency flow is strictly top-down</li>
+<li>
+<strong>Core depends on nothing</strong> &mdash; it is the foundation layer</li>
+<li>
+<strong>Processing modules depend on Core</strong> &mdash; for config, logging, validation, reference data</li>
+<li>
+<strong>FIRDS and GLEIF are independent</strong> &mdash; they use Core for logging but are otherwise self-contained</li>
+<li>
+<strong>GUI depends on all processing modules</strong> &mdash; it invokes them as CLI scripts via <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">QThread</code> workers</li>
+<li>
+<strong>No circular dependencies</strong> &mdash; dependency flow is strictly top-down</li>
 </ul>
-
-<h2 id="entry-points">Entry Points</h2>
-
-<p>All entry points are registered in <code>setup.py</code> as console scripts. After <code>pip install -e .</code>, they are available system-wide within the Conda environment.</p>
-
-<table>
-    <thead>
-        <tr><th>Category</th><th>Command</th><th>Module Path</th></tr>
-    </thead>
-    <tbody>
-        <tr><td rowspan="14">Accuracy Testing (14)</td><td><code>validate-buyer</code></td><td><code>accuracy_testing.scripts.buyer_id_validation:main</code></td></tr>
-        <tr><td><code>validate-seller</code></td><td><code>accuracy_testing.scripts.seller_id_validation:main</code></td></tr>
-        <tr><td><code>validate-inconsistent-buyer</code></td><td><code>accuracy_testing.scripts.inconsistent_buyer_id_validation:main</code></td></tr>
-        <tr><td><code>validate-inconsistent-seller</code></td><td><code>accuracy_testing.scripts.inconsistent_seller_id_validation:main</code></td></tr>
-        <tr><td><code>validate-ftbdm</code></td><td><code>accuracy_testing.scripts.validate_ftbdm:main</code></td></tr>
-        <tr><td><code>validate-ftsdm</code></td><td><code>accuracy_testing.scripts.validate_ftsdm:main</code></td></tr>
-        <tr><td><code>validate-pricing</code></td><td><code>accuracy_testing.scripts.pricing_validation:main</code></td></tr>
-        <tr><td><code>validate-non-zero-net-qty</code></td><td><code>accuracy_testing.scripts.non_zero_net_quantity:main</code></td></tr>
-        <tr><td><code>validate-non-zero-net-amt</code></td><td><code>accuracy_testing.scripts.non_zero_net_amount:main</code></td></tr>
-        <tr><td><code>validate-all</code></td><td><code>accuracy_testing.scripts.run_all_validations:main</code></td></tr>
-        <tr><td><code>generate-sql-extract</code></td><td><code>accuracy_testing.scripts.sql_extract_generator:main</code></td></tr>
-        <tr><td><code>generate-accuracy-template</code></td><td><code>accuracy_testing.scripts.accuracy_template_generator:main</code></td></tr>
-        <tr><td><code>collate-csv-extracts</code></td><td><code>accuracy_testing.scripts.collate_csv_extracts:main</code></td></tr>
-        <tr><td><code>data-push</code></td><td><code>accuracy_testing.scripts.data_push:main</code></td></tr>
-        <tr><td rowspan="4">Replay (4)</td><td><code>replay-phase2</code></td><td><code>replay.phase_2_processor:main</code></td></tr>
-        <tr><td><code>replay-phase3</code></td><td><code>replay.phase_3_processor:main</code></td></tr>
-        <tr><td><code>replay-phase3-final</code></td><td><code>replay.phase_3_final_lookup:main</code></td></tr>
-        <tr><td><code>merge-inconsistent-summaries</code></td><td><code>replay.merge_inconsistent_ids:main</code></td></tr>
-        <tr><td rowspan="3">FIRDS (3)</td><td><code>firds-refresh</code></td><td><code>firds.scripts.refresh_cache:main</code></td></tr>
-        <tr><td><code>firds-check</code></td><td><code>firds.scripts.check_reportability:main</code></td></tr>
-        <tr><td><code>firds-backfill</code></td><td><code>firds.scripts.backfill:main</code></td></tr>
-        <tr><td rowspan="3">GLEIF (3)</td><td><code>gleif-refresh</code></td><td><code>gleif.scripts.refresh_cache:main</code></td></tr>
-        <tr><td><code>gleif-check</code></td><td><code>gleif.scripts.check_lei:main</code></td></tr>
-        <tr><td><code>gleif-backfill</code></td><td><code>gleif.scripts.backfill:main</code></td></tr>
-        <tr><td>GUI (1)</td><td><code>txr-gui</code></td><td><code>gui.app:main</code></td></tr>
-    </tbody>
-</table>
-
-<hr>
-<p><a href="01_project_overview.html">&laquo; Previous: Project Overview</a> | <a href="00_index.html">Documentation Index</a> | <a href="02b_data_flow.html">Next: Data Flow &amp; Integration &raquo;</a></p>
+<span class="confluence-anchor-link" id="id-2a.SystemArchitecture-entry-points"><span class="confluence-anchor-link" id="entry-points" /></span><h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-EntryPoints">Entry Points</h2>
+<p>All entry points are registered in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">setup.py</code> as console scripts. After <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pip install -e .</code>, they are available system-wide within the Conda environment.</p>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Category</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Command</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Module Path</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" rowspan="14" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Accuracy Testing (14)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-buyer</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.buyer_id_validation:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-seller</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.seller_id_validation:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-inconsistent-buyer</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.inconsistent_buyer_id_validation:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-inconsistent-seller</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.inconsistent_seller_id_validation:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-ftbdm</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.validate_ftbdm:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-ftsdm</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.validate_ftsdm:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-pricing</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.pricing_validation:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-non-zero-net-qty</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.non_zero_net_quantity:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-non-zero-net-amt</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.non_zero_net_amount:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-all</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.run_all_validations:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">generate-sql-extract</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.sql_extract_generator:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">generate-accuracy-template</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.accuracy_template_generator:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">collate-csv-extracts</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.collate_csv_extracts:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">data-push</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">accuracy_testing.scripts.data_push:main</code></td>
+</tr>
+<tr>
+<td align="left" rowspan="4" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Replay (4)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay-phase2</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay.phase_2_processor:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay-phase3</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay.phase_3_processor:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay-phase3-final</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay.phase_3_final_lookup:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">merge-inconsistent-summaries</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay.merge_inconsistent_ids:main</code></td>
+</tr>
+<tr>
+<td align="left" rowspan="3" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">FIRDS (3)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">firds-refresh</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">firds.scripts.refresh_cache:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">firds-check</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">firds.scripts.check_reportability:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">firds-backfill</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">firds.scripts.backfill:main</code></td>
+</tr>
+<tr>
+<td align="left" rowspan="3" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">GLEIF (3)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gleif-refresh</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gleif.scripts.refresh_cache:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gleif-check</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gleif.scripts.check_lei:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gleif-backfill</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gleif.scripts.backfill:main</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">GUI (1)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr-gui</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gui.app:main</code></td>
+</tr>
+</tbody>
+</table></div>
 
 </body>
 </html>

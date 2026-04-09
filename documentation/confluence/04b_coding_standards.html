@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Coding Standards — TXR Automation</title>
+    <title>Coding Standards & Conventions — TXR Automation</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
         h1, h2, h3, h4 { color: #172B4D; }
@@ -10,63 +10,96 @@
         th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
         th { background-color: #F4F5F7; font-weight: 600; }
         a { color: #0052CC; text-decoration: none; }
-        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF8B00; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        a:hover { text-decoration: underline; }
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
-        ol li, ul li { margin-bottom: 6px; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; white-space: pre; margin: 0; }
+        .confluence-anchor-link { display: none; }
+        .code.panel { border: 1px solid #DFE1E6; border-radius: 3px; margin: 16px 0; overflow: hidden; }
+        .codeContent { padding: 0; }
+        .syntaxhighlighter-pre { background: #F4F5F7; padding: 16px; margin: 0; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; border: none; border-radius: 0; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
-
-<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Developer Guides &rsaquo; Coding Standards</p>
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Coding Standards &amp; Conventions</p>
 <p class="last-updated">Last updated: 25 March 2026</p>
-
-<h1>Coding Standards</h1>
-
-<h2>Table of Contents</h2>
+<h1 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-CodingStandards">Coding Standards</h1>
+<h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-TableofContents">Table of Contents</h2>
 <ul>
-    <li><a href="#python">Python Conventions</a></li>
-    <li><a href="#imports">Import Order</a></li>
-    <li><a href="#type-hints">Type Hints</a></li>
-    <li><a href="#docstrings">Docstrings</a></li>
-    <li><a href="#dataclasses">Dataclasses</a></li>
-    <li><a href="#error-handling">Error Handling</a></li>
-    <li><a href="#logging">Logging</a></li>
-    <li><a href="#performance">Performance Patterns</a></li>
-    <li><a href="#vba-patterns">VBA-to-Python Conversion Patterns</a></li>
-    <li><a href="#documentation">Documentation Standards</a></li>
-    <li><a href="#git">Git Workflow</a></li>
-    <li><a href="#pitfalls">Common Pitfalls</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#python" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Python Conventions</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#imports" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Import Order</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#type-hints" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Type Hints</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#docstrings" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Docstrings</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#dataclasses" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Dataclasses</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#error-handling" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Error Handling</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#logging" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Logging</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#performance" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Performance Patterns</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#vba-patterns" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">VBA-to-Python Conversion Patterns</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#documentation" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Documentation Standards</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#git" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Git Workflow</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#pitfalls" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Common Pitfalls</a></li>
 </ul>
-
-<h2 id="python">Python Conventions</h2>
-
-<table>
-    <thead>
-        <tr><th>Rule</th><th>Standard</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>Python version</td><td>&ge; 3.10 (required for <code>match</code> and <code>X | Y</code> union syntax)</td></tr>
-        <tr><td>Style</td><td>PEP 8 compliant</td></tr>
-        <tr><td>Line length</td><td>100 characters (soft), 120 (hard)</td></tr>
-        <tr><td>Type hints</td><td>Required on all functions and methods</td></tr>
-        <tr><td>Docstrings</td><td>Google-style, required on all public functions, classes, and modules</td></tr>
-        <tr><td>Formatter</td><td><code>black</code> (v23+)</td></tr>
-        <tr><td>Linter</td><td><code>flake8</code> (v6+)</td></tr>
-        <tr><td>Type checker</td><td><code>mypy</code> (v1.4+)</td></tr>
-        <tr><td>I/O format</td><td>CSV only &mdash; no Excel libraries for data I/O</td></tr>
-        <tr><td>Language</td><td>British English in documentation (colour, organisation, behaviour)</td></tr>
-    </tbody>
-</table>
-
-<h3>Module Header Template</h3>
-
-<pre>
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-python"><span class="confluence-anchor-link" id="python" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-PythonConventions">Python Conventions</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Rule</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Standard</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Python version</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">&ge; 3.10 (required for <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">match</code> and <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">X | Y</code> union syntax)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Style</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">PEP 8 compliant</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Line length</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">100 characters (soft), 120 (hard)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Type hints</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Required on all functions and methods</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Docstrings</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Google-style, required on all public functions, classes, and modules</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Formatter</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">black</code> (v23+)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Linter</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">flake8</code> (v6+)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Type checker</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">mypy</code> (v1.4+)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">I/O format</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CSV only &mdash; no Excel libraries for data I/O</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Language</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">British English in documentation (colour, organisation, behaviour)</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-ModuleHeaderTemplate">Module Header Template</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 #!/usr/bin/env python3
-"""
+&quot;&quot;&quot;
 Module Name
 ===========
 
@@ -77,14 +110,13 @@ Version X.Y Changes:
 
 Usage:
     Example usage if applicable
-"""
+&quot;&quot;&quot;
 </pre>
-
-<h2 id="imports">Import Order</h2>
-
+</div></div>
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-imports"><span class="confluence-anchor-link" id="imports" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-ImportOrder">Import Order</h2>
 <p>Imports follow a four-group convention, separated by blank lines:</p>
-
-<pre>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # 1. Standard library
 import os
 import sys
@@ -106,66 +138,83 @@ from core import (
 # 4. Local package imports
 from .processor import ClientRecord, IDValidationProcessor
 </pre>
-
-<div class="info-panel">
-    <strong>Rule:</strong> Never use wildcard imports (<code>from module import *</code>). Always import specific names.
+</div></div>
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Rule:</strong> Never use wildcard imports (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">from module import *</code>). Always import specific names.
 </div>
-
-<h2 id="type-hints">Type Hints</h2>
-
-<p>Required on all function signatures. Use <code>typing</code> module for complex types:</p>
-
-<pre>
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-type-hints"><span class="confluence-anchor-link" id="type-hints" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-TypeHints">Type Hints</h2>
+<p>Required on all function signatures. Use <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">typing</code> module for complex types:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 from typing import Optional, Dict, List, Tuple
 
 def validate_records(
     records: List[ClientRecord],
     country: str,
     strict: bool = False,
-) -> Tuple[List[ClientRecord], ProcessingStats]:
-    """Validate a list of client records."""
+) -&gt; Tuple[List[ClientRecord], ProcessingStats]:
+    &quot;&quot;&quot;Validate a list of client records.&quot;&quot;&quot;
     ...
 
 def find_by_person_code(
     person_code: str,
     records: Dict[str, List[ClientRecord]],
-) -> Optional[ClientRecord]:
-    """Find the most recent record for a person code."""
+) -&gt; Optional[ClientRecord]:
+    &quot;&quot;&quot;Find the most recent record for a person code.&quot;&quot;&quot;
     ...
 </pre>
-
-<h3>Return Type Conventions</h3>
-
-<table>
-    <thead>
-        <tr><th>Pattern</th><th>Return Type</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>May return nothing</td><td><code>Optional[T]</code></td></tr>
-        <tr><td>Boolean check</td><td><code>bool</code></td></tr>
-        <tr><td>Side-effect only</td><td><code>None</code></td></tr>
-        <tr><td>Multiple values</td><td><code>Tuple[T1, T2]</code> or a dataclass</td></tr>
-        <tr><td>Collection</td><td><code>List[T]</code> or <code>Dict[K, V]</code></td></tr>
-    </tbody>
-</table>
-
-<h2 id="docstrings">Docstrings (Google Style)</h2>
-
-<pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-ReturnTypeConventions">Return Type Conventions</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Pattern</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Return Type</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">May return nothing</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Optional[T]</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Boolean check</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">bool</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Side-effect only</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">None</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Multiple values</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Tuple[T1, T2]</code> or a dataclass</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Collection</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">List[T]</code> or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Dict[K, V]</code>
+</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-docstrings"><span class="confluence-anchor-link" id="docstrings" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-Docstrings(GoogleStyle)">Docstrings (Google Style)</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 def validate_id_format(
     country: str,
     id_type: str,
     id_value: str,
-) -> bool:
-    """
+) -&gt; bool:
+    &quot;&quot;&quot;
     Validate an ID value against the expected format for a country/type pair.
 
     Checks the ID value against compiled regex patterns from the ESMA CID
     guidance. Returns True if the value matches the expected format.
 
     Args:
-        country: ISO 3166-1 alpha-2 country code (e.g., "GB", "DE")
-        id_type: ID type code (e.g., "NIDN", "CCPT", "CONCAT")
+        country: ISO 3166-1 alpha-2 country code (e.g., &quot;GB&quot;, &quot;DE&quot;)
+        id_type: ID type code (e.g., &quot;NIDN&quot;, &quot;CCPT&quot;, &quot;CONCAT&quot;)
         id_value: The ID value to validate
 
     Returns:
@@ -175,229 +224,300 @@ def validate_id_format(
         ValueError: If country or id_type is not recognised
 
     Example:
-        >>> validate_id_format("GB", "NIDN", "AB123456C")
+        &gt;&gt;&gt; validate_id_format(&quot;GB&quot;, &quot;NIDN&quot;, &quot;AB123456C&quot;)
         True
-        >>> validate_id_format("GB", "NIDN", "INVALID")
+        &gt;&gt;&gt; validate_id_format(&quot;GB&quot;, &quot;NIDN&quot;, &quot;INVALID&quot;)
         False
-    """
+    &quot;&quot;&quot;
 </pre>
-
-<p><strong>Required on:</strong> all public functions, classes, class methods, and module-level docstrings. Private methods (<code>_name</code>) should have at least a one-line docstring.</p>
-
-<h2 id="dataclasses">Dataclasses</h2>
-
-<p>All data transfer objects (DTOs) use Python <code>@dataclass</code>:</p>
-
-<pre>
+</div></div>
+<p><strong>Required on:</strong> all public functions, classes, class methods, and module-level docstrings. Private methods (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_name</code>) should have at least a one-line docstring.</p>
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-dataclasses"><span class="confluence-anchor-link" id="dataclasses" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-Dataclasses">Dataclasses</h2>
+<p>All data transfer objects (DTOs) use Python <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">@dataclass</code>:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 from dataclasses import dataclass, field
 from typing import Optional, List
 
 @dataclass
 class ClientRecord:
-    """Represents a client record for ID validation."""
+    &quot;&quot;&quot;Represents a client record for ID validation.&quot;&quot;&quot;
 
     transaction_ref: str
     account_id: str
     person_code: str
-    id_value: str = ""
-    id_type: str = ""
-    correction: str = ""
-    error_flag: str = "N"
+    id_value: str = &quot;&quot;
+    id_type: str = &quot;&quot;
+    correction: str = &quot;&quot;
+    error_flag: str = &quot;N&quot;
     error_details: List[str] = field(default_factory=list)
 
     @classmethod
-    def from_dict(cls, data: dict) -> "ClientRecord":
-        """Create a ClientRecord from a dictionary (e.g., CSV row)."""
+    def from_dict(cls, data: dict) -&gt; &quot;ClientRecord&quot;:
+        &quot;&quot;&quot;Create a ClientRecord from a dictionary (e.g., CSV row).&quot;&quot;&quot;
         return cls(
-            transaction_ref=data.get("Transaction_Ref", ""),
-            account_id=data.get("Account_ID", ""),
-            person_code=data.get("Person_Code", ""),
+            transaction_ref=data.get(&quot;Transaction_Ref&quot;, &quot;&quot;),
+            account_id=data.get(&quot;Account_ID&quot;, &quot;&quot;),
+            person_code=data.get(&quot;Person_Code&quot;, &quot;&quot;),
         )
 </pre>
-
-<h3>Conventions</h3>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-Conventions">Conventions</h3>
 <ul>
-    <li>Use <code>@dataclass</code> (not <code>NamedTuple</code>) for mutable records</li>
-    <li>Always provide a <code>from_dict()</code> or <code>from_row()</code> factory classmethod for CSV/dict construction</li>
-    <li>Use <code>field(default_factory=list)</code> for mutable defaults</li>
-    <li>Keep field names consistent with CSV column names where possible</li>
+<li style="margin-bottom: 6.0px;">Use <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">@dataclass</code> (not <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">NamedTuple</code>) for mutable records</li>
+<li style="margin-bottom: 6.0px;">Always provide a <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">from_dict()</code> or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">from_row()</code> factory classmethod for CSV/dict construction</li>
+<li style="margin-bottom: 6.0px;">Use <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">field(default_factory=list)</code> for mutable defaults</li>
+<li style="margin-bottom: 6.0px;">Keep field names consistent with CSV column names where possible</li>
 </ul>
-
-<h2 id="error-handling">Error Handling</h2>
-
-<pre>
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-error-handling"><span class="confluence-anchor-link" id="error-handling" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-ErrorHandling">Error Handling</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 try:
     result = process_record(record)
 except ValueError as e:
     logger.warning(
-        f"Validation failed for {record.transaction_ref}: {e}"
+        f&quot;Validation failed for {record.transaction_ref}: {e}&quot;
     )
-    record.error_flag = "Y"
+    record.error_flag = &quot;Y&quot;
 except Exception as e:
     logger.error(
-        f"Unexpected error processing {record.transaction_ref}: {e}"
+        f&quot;Unexpected error processing {record.transaction_ref}: {e}&quot;
     )
     raise
 </pre>
-
-<h3>Rules</h3>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-Rules">Rules</h3>
 <ul>
-    <li><strong>Catch specific exceptions</strong> &mdash; never bare <code>except:</code></li>
-    <li><strong>Log before re-raising</strong> &mdash; ensures context is captured in structured logs</li>
-    <li><strong>Validation errors are warnings</strong> &mdash; they set <code>error_flag = "Y"</code> but do not stop processing</li>
-    <li><strong>System errors are fatal</strong> &mdash; file I/O failures, config errors, etc. should raise and halt</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Catch specific exceptions</strong> &mdash; never bare <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">except:</code>
+</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Log before re-raising</strong> &mdash; ensures context is captured in structured logs</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Validation errors are warnings</strong> &mdash; they set <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">error_flag = &quot;Y&quot;</code> but do not stop processing</li>
+<li style="margin-bottom: 6.0px;">
+<strong>System errors are fatal</strong> &mdash; file I/O failures, config errors, etc. should raise and halt</li>
 </ul>
-
-<h2 id="logging">Logging</h2>
-
-<p>Use the structured logging framework from <code>core</code>:</p>
-
-<pre>
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-logging"><span class="confluence-anchor-link" id="logging" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-Logging">Logging</h2>
+<p>Use the structured logging framework from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core</code>:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 from core import create_logger
 
 logger = create_logger(__name__)
 
 # Informational
-logger.info("Processing batch", extra={
-    "batch_size": len(records),
-    "incident_code": "7_39",
+logger.info(&quot;Processing batch&quot;, extra={
+    &quot;batch_size&quot;: len(records),
+    &quot;incident_code&quot;: &quot;7_39&quot;,
 })
 
 # Warning (validation failure)
-logger.warning("Invalid ID format", extra={
-    "person_code": record.person_code,
-    "expected": "AB123456C",
-    "actual": record.id_value,
+logger.warning(&quot;Invalid ID format&quot;, extra={
+    &quot;person_code&quot;: record.person_code,
+    &quot;expected&quot;: &quot;AB123456C&quot;,
+    &quot;actual&quot;: record.id_value,
 })
 
 # Error (system failure)
-logger.error("Failed to read input file", extra={
-    "path": str(input_path),
-    "error": str(e),
+logger.error(&quot;Failed to read input file&quot;, extra={
+    &quot;path&quot;: str(input_path),
+    &quot;error&quot;: str(e),
 })
 </pre>
-
-<div class="warning-panel">
-    <strong>Never log sensitive data.</strong> Do not log full ID values, names, or account numbers in production. Use truncated or hashed values for debugging.
+</div></div>
+<div style="background: rgb(255,250,230);border-left: 4.0px solid rgb(255,139,0);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Never log sensitive data.</strong> Do not log full ID values, names, or account numbers in production. Use truncated or hashed values for debugging.
 </div>
-
-<h2 id="performance">Performance Patterns</h2>
-
-<table>
-    <thead>
-        <tr><th>Pattern</th><th>Example</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Pre-compile regex patterns</td>
-            <td><pre>import re
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-performance"><span class="confluence-anchor-link" id="performance" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-PerformancePatterns">Performance Patterns</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Pattern</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Example</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Pre-compile regex patterns</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">import re
 PATTERNS = {
-    "uk_nino": re.compile(r"^[A-Z]{2}\d{6}[A-Z]$"),
-}</pre></td>
-        </tr>
-        <tr>
-            <td>Index for O(1) lookups</td>
-            <td><pre>from collections import defaultdict
+    &quot;uk_nino&quot;: re.compile(r&quot;^[A-Z]{2}\d{6}[A-Z]$&quot;),
+}</pre>
+</div></div></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Index for O(1) lookups</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">from collections import defaultdict
 records_by_person = defaultdict(list)
 for record in records:
-    records_by_person[record.person_code].append(record)</pre></td>
-        </tr>
-        <tr>
-            <td>Lazy load reference data</td>
-            <td>Singleton managers (<code>country_manager</code>, <code>id_format_manager</code>) load data once at first access</td>
-        </tr>
-        <tr>
-            <td>Batch processing</td>
-            <td>SQL generation batches 900 references per IN clause to avoid query length limits</td>
-        </tr>
-    </tbody>
-</table>
-
-<h2 id="vba-patterns">VBA-to-Python Conversion Patterns</h2>
-
+    records_by_person[record.person_code].append(record)</pre>
+</div></div></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Lazy load reference data</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Singleton managers (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">country_manager</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">id_format_manager</code>) load data once at first access</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Batch processing</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">SQL generation batches 900 references per IN clause to avoid query length limits</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-vba-patterns"><span class="confluence-anchor-link" id="vba-patterns" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-VBA-to-PythonConversionPatterns">VBA-to-Python Conversion Patterns</h2>
 <p>When migrating VBA functions to Python, use these standard mappings:</p>
-
-<table>
-    <thead>
-        <tr><th>VBA Pattern</th><th>Python Equivalent</th></tr>
-    </thead>
-    <tbody>
-        <tr><td><code>Dim x As String</code></td><td><code>x: str = ""</code></td></tr>
-        <tr><td><code>For i = 1 To n</code></td><td><code>for i in range(1, n + 1):</code></td></tr>
-        <tr><td><code>Left(str, n)</code></td><td><code>str[:n]</code></td></tr>
-        <tr><td><code>Right(str, n)</code></td><td><code>str[-n:]</code></td></tr>
-        <tr><td><code>Mid(str, start, len)</code></td><td><code>str[start-1:start-1+len]</code></td></tr>
-        <tr><td><code>Len(str)</code></td><td><code>len(str)</code></td></tr>
-        <tr><td><code>UCase(str)</code> / <code>LCase(str)</code></td><td><code>str.upper()</code> / <code>str.lower()</code></td></tr>
-        <tr><td><code>Trim(str)</code></td><td><code>str.strip()</code></td></tr>
-        <tr><td><code>IsNumeric(x)</code></td><td><code>str(x).isdigit()</code> or regex</td></tr>
-        <tr><td><code>InStr(str, sub)</code></td><td><code>sub in str</code> or <code>str.find(sub)</code></td></tr>
-        <tr><td><code>Split(str, delim)</code></td><td><code>str.split(delim)</code></td></tr>
-        <tr><td><code>Join(arr, delim)</code></td><td><code>delim.join(arr)</code></td></tr>
-        <tr><td><code>Range("A1").Value</code></td><td>pandas DataFrame or CSV reader</td></tr>
-        <tr><td><code>Cells(row, col).Value</code></td><td><code>df.iloc[row, col]</code></td></tr>
-    </tbody>
-</table>
-
-<h3>Migration Checklist</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">VBA Pattern</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Python Equivalent</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Dim x As String</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">x: str = &quot;&quot;</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">For i = 1 To n</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">for i in range(1, n + 1):</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Left(str, n)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">str[:n]</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Right(str, n)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">str[-n:]</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Mid(str, start, len)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">str[start-1:start-1+len]</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Len(str)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">len(str)</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">UCase(str)</code> / <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">LCase(str)</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">str.upper()</code> / <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">str.lower()</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Trim(str)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">str.strip()</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IsNumeric(x)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">str(x).isdigit()</code> or regex</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">InStr(str, sub)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">sub in str</code> or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">str.find(sub)</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Split(str, delim)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">str.split(delim)</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Join(arr, delim)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">delim.join(arr)</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Range(&quot;A1&quot;).Value</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">pandas DataFrame or CSV reader</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Cells(row, col).Value</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">df.iloc[row, col]</code></td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-MigrationChecklist">Migration Checklist</h3>
 <ol>
-    <li>Read and understand the VBA source completely</li>
-    <li>Document VBA-to-Python function mapping</li>
-    <li>Create test fixtures from VBA expected outputs</li>
-    <li>Write unit tests for validation logic</li>
-    <li>Implement core validation using existing utilities</li>
-    <li>Create CLI script following established patterns</li>
-    <li>Add integration tests</li>
-    <li>Verify output matches VBA exactly</li>
-    <li>Update documentation and exports</li>
+<li style="margin-bottom: 6.0px;">Read and understand the VBA source completely</li>
+<li style="margin-bottom: 6.0px;">Document VBA-to-Python function mapping</li>
+<li style="margin-bottom: 6.0px;">Create test fixtures from VBA expected outputs</li>
+<li style="margin-bottom: 6.0px;">Write unit tests for validation logic</li>
+<li style="margin-bottom: 6.0px;">Implement core validation using existing utilities</li>
+<li style="margin-bottom: 6.0px;">Create CLI script following established patterns</li>
+<li style="margin-bottom: 6.0px;">Add integration tests</li>
+<li style="margin-bottom: 6.0px;">Verify output matches VBA exactly</li>
+<li style="margin-bottom: 6.0px;">Update documentation and exports</li>
 </ol>
-
-<h2 id="documentation">Documentation Standards</h2>
-
-<h3>Language</h3>
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-documentation"><span class="confluence-anchor-link" id="documentation" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-DocumentationStandards">Documentation Standards</h2>
+<h3 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-Language">Language</h3>
 <ul>
-    <li><strong>British English</strong> throughout (colour, organisation, behaviour, licence/license)</li>
-    <li>Use &ldquo;whilst&rdquo; appropriately, but &ldquo;while&rdquo; is also acceptable</li>
+<li style="margin-bottom: 6.0px;">
+<strong>British English</strong> throughout (colour, organisation, behaviour, licence/license)</li>
+<li style="margin-bottom: 6.0px;">Use &ldquo;whilst&rdquo; appropriately, but &ldquo;while&rdquo; is also acceptable</li>
 </ul>
-
-<h3>Markdown (markdownlint Compliant)</h3>
+<h3 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-Markdown(markdownlintCompliant)">Markdown (markdownlint Compliant)</h3>
 <ul>
-    <li>ATX-style headings (<code>#</code>, <code>##</code>) with blank lines before and after</li>
-    <li>Unordered lists use <code>-</code> consistently</li>
-    <li>Fenced code blocks with language identifiers (<code>python</code>, <code>bash</code>, <code>yaml</code>)</li>
-    <li>100-character line length target</li>
-    <li>Single trailing newline at end of file</li>
+<li style="margin-bottom: 6.0px;">ATX-style headings (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">#</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">##</code>) with blank lines before and after</li>
+<li style="margin-bottom: 6.0px;">Unordered lists use <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">-</code> consistently</li>
+<li style="margin-bottom: 6.0px;">Fenced code blocks with language identifiers (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">python</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">bash</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">yaml</code>)</li>
+<li style="margin-bottom: 6.0px;">100-character line length target</li>
+<li style="margin-bottom: 6.0px;">Single trailing newline at end of file</li>
 </ul>
-
-<h2 id="git">Git Workflow</h2>
-
-<table>
-    <thead>
-        <tr><th>Convention</th><th>Standard</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>Branch</td><td><code>vba-migration</code> for all VBA migration work</td></tr>
-        <tr><td>Commit format</td><td><code>type(scope): description</code></td></tr>
-        <tr><td>Types</td><td><code>feat</code>, <code>fix</code>, <code>docs</code>, <code>refactor</code>, <code>test</code>, <code>chore</code></td></tr>
-        <tr><td>Example</td><td><code>feat(accuracy): add seller ID validation script</code></td></tr>
-    </tbody>
-</table>
-
-<h2 id="pitfalls">Common Pitfalls to Avoid</h2>
-
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-git"><span class="confluence-anchor-link" id="git" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-GitWorkflow">Git Workflow</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Convention</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Standard</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Branch</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">vba-migration</code> for all VBA migration work</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Commit format</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">type(scope): description</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Types</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">feat</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">fix</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">docs</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">refactor</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">chore</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Example</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">feat(accuracy): add seller ID validation script</code></td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-4b.CodingStandards&amp;Conventions-pitfalls"><span class="confluence-anchor-link" id="pitfalls" /></span><h2 style="color: rgb(23,43,77);" id="id-4b.CodingStandards&amp;Conventions-CommonPitfallstoAvoid">Common Pitfalls to Avoid</h2>
 <ol>
-    <li><strong>Don&rsquo;t reinvent utilities</strong> &mdash; check <code>src/core/</code> and <code>src/accuracy_testing/core/</code> before writing new helper functions</li>
-    <li><strong>Don&rsquo;t use Excel libraries</strong> &mdash; all I/O is CSV-based. Use <code>pandas</code> or <code>csv</code> module</li>
-    <li><strong>Don&rsquo;t hardcode paths</strong> &mdash; all paths come from YAML configuration or environment variables</li>
-    <li><strong>Don&rsquo;t skip type hints</strong> &mdash; required on every function and method</li>
-    <li><strong>Don&rsquo;t use American English</strong> in documentation</li>
-    <li><strong>Don&rsquo;t skip tests</strong> &mdash; every function needs unit tests before merging</li>
-    <li><strong>Don&rsquo;t modify VBA files</strong> in <code>legacy/vba/</code> &mdash; they are read-only reference</li>
-    <li><strong>Don&rsquo;t create duplicate reference data</strong> &mdash; use existing CSVs in <code>documentation/reference_data/</code></li>
+<li style="margin-bottom: 6.0px;">
+<strong>Don&rsquo;t reinvent utilities</strong> &mdash; check <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/core/</code> and <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/accuracy_testing/core/</code> before writing new helper functions</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Don&rsquo;t use Excel libraries</strong> &mdash; all I/O is CSV-based. Use <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pandas</code> or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">csv</code> module</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Don&rsquo;t hardcode paths</strong> &mdash; all paths come from YAML configuration or environment variables</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Don&rsquo;t skip type hints</strong> &mdash; required on every function and method</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Don&rsquo;t use American English</strong> in documentation</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Don&rsquo;t skip tests</strong> &mdash; every function needs unit tests before merging</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Don&rsquo;t modify VBA files</strong> in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">legacy/vba/</code> &mdash; they are read-only reference</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Don&rsquo;t create duplicate reference data</strong> &mdash; use existing CSVs in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">documentation/reference_data/</code>
+</li>
 </ol>
-
-<hr>
-<p><a href="04a_getting_started.html">&laquo; Previous: Getting Started</a> | <a href="00_index.html">Documentation Index</a> | <a href="04c_configuration_system.html">Next: Configuration System &raquo;</a></p>
 
 </body>
 </html>

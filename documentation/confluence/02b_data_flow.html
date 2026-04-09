@@ -2,61 +2,61 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Data Flow &amp; Integration — TXR Automation</title>
+    <title>Data Flow & Integration — TXR Automation</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
         h1, h2, h3, h4 { color: #172B4D; }
         table { border-collapse: collapse; width: 100%; margin: 16px 0; }
-        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
         th { background-color: #F4F5F7; font-weight: 600; }
         a { color: #0052CC; text-decoration: none; }
-        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        a:hover { text-decoration: underline; }
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; line-height: 1.5; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; white-space: pre; margin: 0; }
+        .confluence-anchor-link { display: none; }
+        .code.panel { border: 1px solid #DFE1E6; border-radius: 3px; margin: 16px 0; overflow: hidden; }
+        .codeContent { padding: 0; }
+        .syntaxhighlighter-pre { background: #F4F5F7; padding: 16px; margin: 0; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; border: none; border-radius: 0; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
-
-<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Architecture &rsaquo; Data Flow &amp; Integration</p>
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Data Flow &amp; Integration</p>
 <p class="last-updated">Last updated: 25 March 2026</p>
-
-<h1>Data Flow &amp; Integration</h1>
-
-<h2>Table of Contents</h2>
+<h1 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-DataFlow&amp;Integration">Data Flow &amp; Integration</h1>
+<h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-TableofContents">Table of Contents</h2>
 <ul>
-    <li><a href="#e2e">End-to-End Accuracy Testing Flow</a></li>
-    <li><a href="#id-validation">ID Validation Pipeline</a></li>
-    <li><a href="#dm-validation">Decision Maker Validation Flow</a></li>
-    <li><a href="#replay">Replay Processing Flow</a></li>
-    <li><a href="#firds">FIRDS Data Flow</a></li>
-    <li><a href="#gleif">GLEIF Data Flow</a></li>
-    <li><a href="#config">Configuration Cascade</a></li>
-    <li><a href="#reference">Reference Data Loading</a></li>
+<li><a href="#e2e" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">End-to-End Accuracy Testing Flow</a></li>
+<li><a href="#id-validation" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">ID Validation Pipeline</a></li>
+<li><a href="#dm-validation" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Decision Maker Validation Flow</a></li>
+<li><a href="#replay" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Replay Processing Flow</a></li>
+<li><a href="#firds" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">FIRDS Data Flow</a></li>
+<li><a href="#gleif" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">GLEIF Data Flow</a></li>
+<li><a href="#config" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Configuration Cascade</a></li>
+<li><a href="#reference" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Reference Data Loading</a></li>
 </ul>
-
-<h2 id="e2e">End-to-End Accuracy Testing Flow</h2>
-
-<div class="info-panel">
+<span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-e2e"><span class="confluence-anchor-link" id="e2e" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-End-to-EndAccuracyTestingFlow">End-to-End Accuracy Testing Flow</h2>
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
     The complete accuracy testing workflow runs in four stages: extract generation, validation, data push, and reporting.
 </div>
-
-<pre>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
  1. EXTRACT GENERATION                    2. VALIDATION
  ┌──────────────────────┐                ┌──────────────────────┐
  │  Transaction Refs    │                │  SQL Extract CSV     │
  │  (user-provided)     │                │  (from database)     │
  └──────────┬───────────┘                └──────────┬───────────┘
-            ↓                                       ↓
+            v                                       v
  ┌──────────────────────┐                ┌──────────────────────┐
  │  generate-sql-extract │               │  validate-buyer      │
- │  • Batch: 900 refs   │                │  validate-seller     │
+ │  * Batch: 900 refs   │                │  validate-seller     │
  │    per IN clause      │               │  validate-ftbdm      │
- │  • 11 SQL templates   │               │  validate-pricing    │
+ │  * 11 SQL templates   │               │  validate-pricing    │
  └──────────┬───────────┘                │  (etc.)              │
-            ↓                            └──────────┬───────────┘
- ┌──────────────────────┐                           ↓
+            v                            └──────────┬───────────┘
+ ┌──────────────────────┐                           v
  │  .sql / .dtf files   │               ┌──────────────────────┐
  │  (ready for DB exec) │               │  Validated CSV       │
  └──────────────────────┘               │  + Errors-only CSV   │
@@ -67,24 +67,23 @@
  │  Validated CSV        │               │  Master Tracking     │
  │  (from step 2)        │               │  Files (updated)     │
  └──────────┬───────────┘                └──────────┬───────────┘
-            ↓                                       ↓
+            v                                       v
  ┌──────────────────────┐                ┌──────────────────────┐
  │  data-push            │               │  Submitted to ARM    │
- │  • Match by txn ref   │               │  (Approved Reporting │
- │  • Update corrections │               │   Mechanism)         │
+ │  * Match by txn ref   │               │  (Approved Reporting │
+ │  * Update corrections │               │   Mechanism)         │
  └──────────┬───────────┘                └──────────────────────┘
-            ↓
+            v
  ┌──────────────────────┐
  │  Master Tracking     │
  │  Files (updated)     │
  └──────────────────────┘
 </pre>
-
-<h2 id="id-validation">ID Validation Pipeline</h2>
-
+</div></div>
+<span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-id-validation"><span class="confluence-anchor-link" id="id-validation" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-IDValidationPipeline">ID Validation Pipeline</h2>
 <p>The buyer/seller ID validation is the most complex flow, processing records through four phases:</p>
-
-<pre>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
  Input CSV (Template with transaction data)
  |
  v
@@ -131,37 +130,36 @@
  |  * Write main output CSV + errors-only CSV             |
  +-------------------------------------------------------+
 </pre>
-
-<h3>Inconsistent ID Processing</h3>
-
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-InconsistentIDProcessing">Inconsistent ID Processing</h3>
 <p>For incidents 7_66 (buyer) and 16_20 (seller), a pre-processing step groups records by Person Code and checks for inconsistencies:</p>
-
-<pre>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
  Input CSV
  │
- ↓
+ v
  ┌──────────────────────────────────────────────┐
  │  Group by Person Code                        │
- │  • Sort chronologically by trade date/time   │
- │  • Extract nationality prefix from ID value  │
+ │  * Sort chronologically by trade date/time   │
+ │  * Extract nationality prefix from ID value  │
  └──────────────────┬───────────────────────────┘
-                    ↓
+                    v
  ┌──────────────────────────────────────────────┐
  │  Within each (ID Type, Prefix) group:        │
- │  • Are there different ID values?            │
- │  • Is any ID a fallback pattern?             │
- │  • Find most recent valid ID                 │
- │  • Correct earlier records to match          │
+ │  * Are there different ID values?            │
+ │  * Is any ID a fallback pattern?             │
+ │  * Find most recent valid ID                 │
+ │  * Correct earlier records to match          │
  └──────────────────┬───────────────────────────┘
-                    ↓
+                    v
  ┌──────────────────────────────────────────────┐
  │  Standard ID Validation Pipeline (above)     │
  └──────────────────────────────────────────────┘
 </pre>
-
-<h2 id="dm-validation">Decision Maker Validation Flow</h2>
-
-<pre>
+</div></div>
+<span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-dm-validation"><span class="confluence-anchor-link" id="dm-validation" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-DecisionMakerValidationFlow">Decision Maker Validation Flow</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
  SQL Extract CSV (FTBDM or FTSDM data)
  |
  v
@@ -174,7 +172,7 @@
                        v
  +------------------------------------------------+
  |  Validation Rules:                              |
- |  IF service_level == "D" (Discretionary):       |
+ |  IF service_level == &quot;D&quot; (Discretionary):       |
  |    * DM code MUST be populated                  |
  |    * DM code MUST differ from party code        |
  |    * Correction: LEI from branch lookup CSV     |
@@ -187,10 +185,10 @@
  |  Output CSV with Error and Correction columns   |
  +------------------------------------------------+
 </pre>
-
-<h2 id="replay">Replay Processing Flow</h2>
-
-<pre>
+</div></div>
+<span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-replay"><span class="confluence-anchor-link" id="replay" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-ReplayProcessingFlow">Replay Processing Flow</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
  PHASE 2: Transaction Reference Matching
  +-----------------+    +-----------------+
  |  Replay File    |    | Incident File   |
@@ -203,8 +201,8 @@
  |  Hash table index on Transaction Reference     |
  |  * O(1) lookup per record                      |
  |  * Character encoding normalisation            |
- |  * Match --> flag as found                      |
- |  * No match --> flag for Phase 3                |
+ |  * Match --&gt; flag as found                      |
+ |  * No match --&gt; flag for Phase 3                |
  +---------------------+--------------------------+
                        |
                        v
@@ -228,10 +226,10 @@
  |  UnaVista transaction source data               |
  +------------------------------------------------+
 </pre>
-
-<h2 id="firds">FIRDS Data Flow</h2>
-
-<pre>
+</div></div>
+<span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-firds"><span class="confluence-anchor-link" id="firds" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-FIRDSDataFlow">FIRDS Data Flow</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
  CACHE REFRESH (weekly full / daily delta)
  +--------------------+
  |  FCA FIRDS API     |
@@ -271,10 +269,10 @@
                                              |  * CANCELLED           |
                                              +------------------------+
 </pre>
-
-<h2 id="gleif">GLEIF Data Flow</h2>
-
-<pre>
+</div></div>
+<span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-gleif"><span class="confluence-anchor-link" id="gleif" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-GLEIFDataFlow">GLEIF Data Flow</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
  CACHE REFRESH (full rebuild + delta cycles)
  +--------------------+
  |  GLEIF API v1      |
@@ -309,91 +307,112 @@
                                              |  * NOT_IN_GLEIF          |
                                              +--------------------------+
 </pre>
-
-<h2 id="config">Configuration Cascade</h2>
-
+</div></div>
+<span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-config"><span class="confluence-anchor-link" id="config" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-ConfigurationCascade">Configuration Cascade</h2>
 <p>Configuration values are resolved in priority order (highest wins):</p>
-
-<pre>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
  Priority 1: Environment Variables (TXR_*)
-        ↓ (if not set)
+        v (if not set)
  Priority 2: YAML Configuration File
-        ↓ (if not specified)
+        v (if not specified)
  Priority 3: Hardcoded Defaults
 </pre>
-
-<table>
-    <thead>
-        <tr><th>Source</th><th>Example</th><th>When Used</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>Environment variable</td><td><code>TXR_LOG_LEVEL=DEBUG</code></td><td>CI/CD pipelines, temporary overrides, secrets</td></tr>
-        <tr><td>YAML file</td><td><code>--config config/local/buyer_id.yaml</code></td><td>Normal operation, per-user customisation</td></tr>
-        <tr><td>Default value</td><td><code>log_level = "INFO"</code></td><td>Development, quick testing</td></tr>
-    </tbody>
-</table>
-
-<h3>Accuracy Testing: Batch vs Single Mode</h3>
-
-<table>
-    <thead>
-        <tr><th>Mode</th><th>Config Key</th><th>Behaviour</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><strong>Batch</strong></td>
-            <td><code>mode: "batch"</code></td>
-            <td>Auto-discovers files matching filename patterns. Processes multiple incidents. Uses <code>incidents: "auto"</code> or <code>"all"</code> or explicit list.</td>
-        </tr>
-        <tr>
-            <td><strong>Single</strong></td>
-            <td><code>mode: "single"</code></td>
-            <td>Explicit file paths provided. Processes one incident at a time.</td>
-        </tr>
-    </tbody>
-</table>
-
-<h2 id="reference">Reference Data Loading</h2>
-
+</div></div>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Source</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Example</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">When Used</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Environment variable</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_LOG_LEVEL=DEBUG</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">CI/CD pipelines, temporary overrides, secrets</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">YAML file</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--config config/local/buyer_id.yaml</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Normal operation, per-user customisation</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Default value</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">log_level = &quot;INFO&quot;</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Development, quick testing</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-AccuracyTesting:BatchvsSingleMode">Accuracy Testing: Batch vs Single Mode</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Mode</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Config Key</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Behaviour</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Batch</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">mode: &quot;batch&quot;</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Auto-discovers files matching filename patterns. Processes multiple incidents. Uses <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">incidents: &quot;auto&quot;</code> or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">&quot;all&quot;</code> or explicit list.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Single</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">mode: &quot;single&quot;</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Explicit file paths provided. Processes one incident at a time.</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-2b.DataFlow&amp;Integration-reference"><span class="confluence-anchor-link" id="reference" /></span><h2 style="color: rgb(23,43,77);" id="id-2b.DataFlow&amp;Integration-ReferenceDataLoading">Reference Data Loading</h2>
 <p>Reference data is loaded once at module import time and cached globally via singleton managers:</p>
-
-<table>
-    <thead>
-        <tr><th>Manager</th><th>Data Source</th><th>Records</th><th>Access Pattern</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>country_manager</code></td>
-            <td>Embedded in <code>core/data/country_codes.py</code></td>
-            <td>ISO 3166-1 countries with EEA classification</td>
-            <td><code>country_manager.is_eea_country("GB")</code></td>
-        </tr>
-        <tr>
-            <td><code>id_format_manager</code></td>
-            <td>Embedded in <code>core/data/id_formats.py</code></td>
-            <td>68 regex patterns for NIDN/CCPT/CONCAT across 27 countries</td>
-            <td><code>id_format_manager.validate_format("GB", "NIDN", value)</code></td>
-        </tr>
-        <tr>
-            <td><code>INCIDENT_CODE_MATRIX</code></td>
-            <td>Embedded in <code>core/data/incident_codes.py</code></td>
-            <td>Incident metadata: type, client side, validation category</td>
-            <td><code>is_buyer_incident("7_39")</code></td>
-        </tr>
-    </tbody>
-</table>
-
-<p>Additionally, the <code>IDLogicValidator</code> embeds country-specific constants used for validation:</p>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Manager</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Data Source</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Records</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Access Pattern</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">country_manager</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Embedded in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/data/country_codes.py</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">ISO 3166-1 countries with EEA classification</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">country_manager.is_eea_country(&quot;GB&quot;)</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">id_format_manager</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Embedded in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/data/id_formats.py</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">68 regex patterns for NIDN/CCPT/CONCAT across 27 countries</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">id_format_manager.validate_format(&quot;GB&quot;, &quot;NIDN&quot;, value)</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">INCIDENT_CODE_MATRIX</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Embedded in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/data/incident_codes.py</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Incident metadata: type, client side, validation category</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">is_buyer_incident(&quot;7_39&quot;)</code></td>
+</tr>
+</tbody>
+</table></div>
+<p>Additionally, the <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDLogicValidator</code> embeds country-specific constants used for validation:</p>
 <ul>
-    <li><code>IT_MONTH_LETTERS</code> &mdash; Italian fiscal code month-letter mapping</li>
-    <li><code>FI_CENTURY_MARKERS</code> &mdash; Finnish century separator characters</li>
-    <li><code>LT_CENTURY_GENDER_CODES</code> &mdash; Lithuanian century/gender code table</li>
-    <li><code>LV_CENTURY_CODES</code> &mdash; Latvian century code mapping</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IT_MONTH_LETTERS</code> &mdash; Italian fiscal code month-letter mapping</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">FI_CENTURY_MARKERS</code> &mdash; Finnish century separator characters</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">LT_CENTURY_GENDER_CODES</code> &mdash; Lithuanian century/gender code table</li>
+<li>
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">LV_CENTURY_CODES</code> &mdash; Latvian century code mapping</li>
 </ul>
-
-<hr>
-<p><a href="02a_system_architecture.html">&laquo; Previous: System Architecture</a> | <a href="00_index.html">Documentation Index</a> | <a href="03a_migration_plan_and_status.html">Next: Migration Plan &amp; Status &raquo;</a></p>
 
 </body>
 </html>

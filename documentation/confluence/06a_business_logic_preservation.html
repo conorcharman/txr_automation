@@ -10,501 +10,632 @@
         th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
         th { background-color: #F4F5F7; font-weight: 600; }
         a { color: #0052CC; text-decoration: none; }
-        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF991F; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        a:hover { text-decoration: underline; }
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; white-space: pre; margin: 0; }
+        .confluence-anchor-link { display: none; }
+        .code.panel { border: 1px solid #DFE1E6; border-radius: 3px; margin: 16px 0; overflow: hidden; }
+        .codeContent { padding: 0; }
+        .syntaxhighlighter-pre { background: #F4F5F7; padding: 16px; margin: 0; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; border: none; border-radius: 0; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
-
-<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Audit &amp; Compliance &rsaquo; Business Logic Preservation</p>
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Business Logic Preservation</p>
 <p class="last-updated">Last updated: 25 March 2026</p>
-
-<h1>Business Logic Preservation Evidence</h1>
-
-<div class="info-panel">
-    <strong>Purpose:</strong> This document provides auditable evidence that every VBA business rule has been faithfully migrated to Python with equivalent behaviour. It maps each VBA rule to its Python implementation and the corresponding automated tests that verify correctness.
+<h1 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-BusinessLogicPreservationEvidence">Business Logic Preservation Evidence</h1>
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Purpose:</strong> This document provides auditable evidence that every VBA business rule has been faithfully migrated to Python with equivalent behaviour. It maps each VBA rule to its Python implementation and the corresponding automated tests that verify correctness.
 </div>
-
-<h2>Table of Contents</h2>
+<h2 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-TableofContents">Table of Contents</h2>
 <ul>
-    <li><a href="#approach">Preservation Approach</a></li>
-    <li><a href="#id-validation">ID Validation Rules</a></li>
-    <li><a href="#country-logic">Country-Specific ID Logic Validators</a></li>
-    <li><a href="#concat">CONCAT Generation &amp; Validation</a></li>
-    <li><a href="#incident-codes">Incident Code Routing</a></li>
-    <li><a href="#correction">Correction Logic</a></li>
-    <li><a href="#replay">Replay Processing Rules</a></li>
-    <li><a href="#enhancements">Python Enhancements Beyond VBA</a></li>
-    <li><a href="#verification">Verification Methodology</a></li>
+<li><a href="#approach" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Preservation Approach</a></li>
+<li><a href="#id-validation" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">ID Validation Rules</a></li>
+<li><a href="#country-logic" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Country-Specific ID Logic Validators</a></li>
+<li><a href="#concat" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">CONCAT Generation &amp; Validation</a></li>
+<li><a href="#incident-codes" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Incident Code Routing</a></li>
+<li><a href="#correction" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Correction Logic</a></li>
+<li><a href="#replay" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Replay Processing Rules</a></li>
+<li><a href="#enhancements" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Python Enhancements Beyond VBA</a></li>
+<li><a href="#verification" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Verification Methodology</a></li>
 </ul>
-
-<h2 id="approach">Preservation Approach</h2>
-
+<span class="confluence-anchor-link" id="id-6a.BusinessLogicPreservation-approach"><span class="confluence-anchor-link" id="approach" /></span><h2 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-PreservationApproach">Preservation Approach</h2>
 <p>The migration followed a strict <strong>behaviour-equivalent</strong> methodology:</p>
-
 <ol>
-    <li><strong>Read:</strong> Fully understand each VBA function&rsquo;s logic before writing Python</li>
-    <li><strong>Map:</strong> Document the VBA function &rarr; Python function correspondence (see <a href="03b_traceability_matrix.html">Traceability Matrix</a>)</li>
-    <li><strong>Implement:</strong> Preserve identical decision paths, including edge-case handling</li>
-    <li><strong>Test:</strong> Write unit tests using expected outputs derived from VBA execution</li>
-    <li><strong>Verify:</strong> Run both VBA and Python on identical input data and compare results</li>
+<li>
+<strong>Read:</strong> Fully understand each VBA function&rsquo;s logic before writing Python</li>
+<li>
+<strong>Map:</strong> Document the VBA function &rarr; Python function correspondence (see <a href="03b_traceability_matrix.html" data-linked-resource-id="3436544240" data-linked-resource-version="1" data-linked-resource-type="page">3b. VBA-to-Python Traceability Matrix</a>)</li>
+<li>
+<strong>Implement:</strong> Preserve identical decision paths, including edge-case handling</li>
+<li>
+<strong>Test:</strong> Write unit tests using expected outputs derived from VBA execution</li>
+<li>
+<strong>Verify:</strong> Run both VBA and Python on identical input data and compare results</li>
 </ol>
-
-<h2 id="id-validation">ID Validation Rules</h2>
-
-<h3>ID Type Validation (NIDN, CONCAT, CCPT, LEI)</h3>
-
-<table>
-    <thead>
-        <tr>
-            <th>VBA Rule</th>
-            <th>Python Implementation</th>
-            <th>Test File</th>
-            <th>Status</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Validate ID against country-specific regex pattern (67 patterns across 30+ countries)</td>
-            <td><code>IDFormatManager.validate(country, id_type, value)</code> in <code>core/data/id_formats.py</code></td>
-            <td><code>test_id_formats.py</code></td>
-            <td>&#10003; Verified</td>
-        </tr>
-        <tr>
-            <td>Auto-detect ID type when type field is missing or ambiguous</td>
-            <td><code>IDFormatManager.validate_any_type(country, value)</code></td>
-            <td><code>test_id_formats.py</code></td>
-            <td>&#10003; Verified</td>
-        </tr>
-        <tr>
-            <td>Validate LEI format (20-character alphanumeric)</td>
-            <td><code>IDValidator.validate_lei(lei_value)</code> in <code>core/id_validation.py</code></td>
-            <td><code>test_id_formats.py</code></td>
-            <td>&#10003; Verified</td>
-        </tr>
-        <tr>
-            <td>Country code validation (249 countries, EEA flag)</td>
-            <td><code>CountryDataManager.validate_code(code)</code> in <code>core/data/country_codes.py</code></td>
-            <td><code>test_country_codes.py</code></td>
-            <td>&#10003; Verified</td>
-        </tr>
-        <tr>
-            <td>EEA membership check for routing decisions</td>
-            <td><code>CountryDataManager.is_eea(code)</code></td>
-            <td><code>test_country_codes.py</code></td>
-            <td>&#10003; Verified</td>
-        </tr>
-        <tr>
-            <td>GB NIDN (UK National Insurance Number) with forbidden prefix exclusions (BG, GB, KN, NK, NT, TN, ZZ)</td>
-            <td>Regex: <code>^(?!BG|GB|KN|NK|NT|TN|ZZ)[A-CEGH-PR-TW-Z][A-CEGH-NP-TW-Z]\d{6}[A-NP-Z]$</code></td>
-            <td><code>test_id_formats.py::test_validate_gb_nidn_valid</code></td>
-            <td>&#10003; Verified</td>
-        </tr>
-        <tr>
-            <td>Detailed mismatch reason generation when ID fails format check</td>
-            <td><code>IDPattern.get_mismatch_reason(value)</code></td>
-            <td><code>test_id_formats.py</code></td>
-            <td>&#10003; Verified</td>
-        </tr>
-    </tbody>
-</table>
-
-<h3>ID Format Pattern Coverage</h3>
-
+<span class="confluence-anchor-link" id="id-6a.BusinessLogicPreservation-id-validation"><span class="confluence-anchor-link" id="id-validation" /></span><h2 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-IDValidationRules">ID Validation Rules</h2>
+<h3 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-IDTypeValidation(NIDN,CONCAT,CCPT,LEI)">ID Type Validation (NIDN, CONCAT, CCPT, LEI)</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">VBA Rule</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Python Implementation</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Test File</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Validate ID against country-specific regex pattern (67 patterns across 30+ countries)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDFormatManager.validate(country, id_type, value)</code> in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/data/id_formats.py</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Auto-detect ID type when type field is missing or ambiguous</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDFormatManager.validate_any_type(country, value)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Validate LEI format (20-character alphanumeric)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidator.validate_lei(lei_value)</code> in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/id_validation.py</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Country code validation (249 countries, EEA flag)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">CountryDataManager.validate_code(code)</code> in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/data/country_codes.py</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_country_codes.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">EEA membership check for routing decisions</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">CountryDataManager.is_eea(code)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_country_codes.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">GB NIDN (UK National Insurance Number) with forbidden prefix exclusions (BG, GB, KN, NK, NT, TN, ZZ)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Regex: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">^(?!BG|GB|KN|NK|NT|TN|ZZ)[A-CEGH-PR-TW-Z][A-CEGH-NP-TW-Z]\d{6}[A-NP-Z]$</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py::test_validate_gb_nidn_valid</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Detailed mismatch reason generation when ID fails format check</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDPattern.get_mismatch_reason(value)</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+</tr>
+</tbody>
+</table></div>
+<h3 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-IDFormatPatternCoverage">ID Format Pattern Coverage</h3>
 <p>68 regex patterns cover the following countries and types:</p>
-
-<table>
-    <thead>
-        <tr><th>ID Type</th><th>Countries</th><th>Pattern Count</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>NIDN</td><td>BE, BG, CZ, DK, EE, ES, FI, GB, GR, HR, HU, IS, IT, LT, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK</td><td>~35</td></tr>
-        <tr><td>CONCAT</td><td>All EEA countries (generic pattern + country-specific)</td><td>~25</td></tr>
-        <tr><td>CCPT</td><td>CY, CZ, ES, LU, MT, PT</td><td>~6</td></tr>
-        <tr><td>LEI</td><td>Global (single 20-character pattern)</td><td>1</td></tr>
-    </tbody>
-</table>
-
-<h2 id="country-logic">Country-Specific ID Logic Validators</h2>
-
-<p>The <code>IDLogicValidator</code> class (<code>id_logic_validator.py</code>) implements embedded data extraction and cross-checking for 15 countries. This is the most complex area of business logic in the system.</p>
-
-<table>
-    <thead>
-        <tr>
-            <th>Country</th>
-            <th>Validation Logic</th>
-            <th>Python Method</th>
-            <th>Check Digit</th>
-            <th>Tests</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>BE (Belgium)</td>
-            <td>Extract DOB (YYMMDD), gender (odd/even sequence), modulus 97 check digit with 2000+ century handling</td>
-            <td><code>_validate_belgian_nidn()</code></td>
-            <td>Mod 97</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>BG (Bulgaria)</td>
-            <td>Extract DOB (YYMMDD), gender (odd/even), weighted checksum</td>
-            <td><code>_validate_bulgarian_nidn()</code></td>
-            <td>Weighted sum</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>CZ (Czech Republic)</td>
-            <td>Extract DOB (YYMMDD), gender (month +50 for females), modulus check</td>
-            <td><code>_validate_czech_nidn()</code></td>
-            <td>Mod 11</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>DK (Denmark)</td>
-            <td>Extract DOB (DDMMYY), century code mapping</td>
-            <td><code>_validate_danish_nidn()</code></td>
-            <td>&mdash;</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>EE (Estonia)</td>
-            <td>Century digit, DOB (YYMMDD), gender (odd=M, even=F)</td>
-            <td><code>_validate_estonian_nidn()</code></td>
-            <td>Weighted sum</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>FI (Finland)</td>
-            <td>DOB (DDMMYY), century separator (+/-/A), gender (odd/even), modulus 31 check character</td>
-            <td><code>_validate_finnish_nidn()</code></td>
-            <td>Mod 31 (char map)</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>IS (Iceland)</td>
-            <td>Extract DOB (DDMMYY), century digit, modulus 11 check</td>
-            <td><code>_validate_icelandic_nidn()</code></td>
-            <td>Mod 11</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>IT (Italy)</td>
-            <td>Fiscal code: surname consonant extraction, name consonant extraction, DOB with Italian month encoding (A=Jan, B=Feb...), gender (day +40 for females)</td>
-            <td><code>_validate_italian_nidn()</code></td>
-            <td>Luhn variant</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>LT (Lithuania)</td>
-            <td>Century digit, DOB (YYMMDD), gender</td>
-            <td><code>_validate_lithuanian_nidn()</code></td>
-            <td>Weighted sum</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>LV (Latvia)</td>
-            <td>Extract DOB (DDMMYY), century code, modulus check</td>
-            <td><code>_validate_latvian_nidn()</code></td>
-            <td>Mod 11</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>NO (Norway)</td>
-            <td>Extract DOB (DDMMYY), gender (odd/even), two check digits (modulus 11)</td>
-            <td><code>_validate_norwegian_nidn()</code></td>
-            <td>Mod 11 (×2)</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>RO (Romania)</td>
-            <td>Century digit, DOB (YYMMDD), gender, county code</td>
-            <td><code>_validate_romanian_nidn()</code></td>
-            <td>Weighted sum</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>SE (Sweden)</td>
-            <td>Extract DOB (YYMMDD or YYYYMMDD), gender (odd/even), Luhn check digit</td>
-            <td><code>_validate_swedish_nidn()</code></td>
-            <td>Luhn</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>SI (Slovenia)</td>
-            <td>Extract DOB (DDMMYYY), gender encoding, modulus 11 check</td>
-            <td><code>_validate_slovenian_nidn()</code></td>
-            <td>Mod 11</td>
-            <td>&#10003;</td>
-        </tr>
-        <tr>
-            <td>SK (Slovakia)</td>
-            <td>Extract DOB (YYMMDD), gender (month +50 for females), divisibility check</td>
-            <td><code>_validate_slovak_nidn()</code></td>
-            <td>Mod 11</td>
-            <td>&#10003;</td>
-        </tr>
-    </tbody>
-</table>
-
-<div class="success-panel">
-    <strong>VBA Equivalence:</strong> Each Python validator method was derived line-by-line from the corresponding VBA <code>Check_XX_Logic</code> function. The check digit algorithms (Modulus 97, Modulus 11, Luhn, weighted sums) were verified against known valid NIDNs for each country.
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">ID Type</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Countries</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Pattern Count</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">NIDN</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">BE, BG, CZ, DK, EE, ES, FI, GB, GR, HR, HU, IS, IT, LT, LV, MT, NL, NO, PL, PT, RO, SE, SI, SK</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">~35</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CONCAT</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">All EEA countries (generic pattern + country-specific)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">~25</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CCPT</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CY, CZ, ES, LU, MT, PT</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">~6</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">LEI</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Global (single 20-character pattern)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">1</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-6a.BusinessLogicPreservation-country-logic"><span class="confluence-anchor-link" id="country-logic" /></span><h2 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-Country-SpecificIDLogicValidators">Country-Specific ID Logic Validators</h2>
+<p>The <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDLogicValidator</code> class (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">id_logic_validator.py</code>) implements embedded data extraction and cross-checking for 15 countries. This is the most complex area of business logic in the system.</p>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Country</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Validation Logic</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Python Method</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Check Digit</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">BE (Belgium)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (YYMMDD), gender (odd/even sequence), modulus 97 check digit with 2000+ century handling</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_belgian_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 97</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">BG (Bulgaria)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (YYMMDD), gender (odd/even), weighted checksum</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_bulgarian_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Weighted sum</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CZ (Czech Republic)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (YYMMDD), gender (month +50 for females), modulus check</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_czech_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">DK (Denmark)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (DDMMYY), century code mapping</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_danish_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">&mdash;</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">EE (Estonia)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Century digit, DOB (YYMMDD), gender (odd=M, even=F)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_estonian_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Weighted sum</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FI (Finland)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">DOB (DDMMYY), century separator (+/-/A), gender (odd/even), modulus 31 check character</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_finnish_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 31 (char map)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">IS (Iceland)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (DDMMYY), century digit, modulus 11 check</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_icelandic_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">IT (Italy)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Fiscal code: surname consonant extraction, name consonant extraction, DOB with Italian month encoding (A=Jan, B=Feb...), gender (day +40 for females)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_italian_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Luhn variant</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">LT (Lithuania)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Century digit, DOB (YYMMDD), gender</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_lithuanian_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Weighted sum</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">LV (Latvia)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (DDMMYY), century code, modulus check</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_latvian_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">NO (Norway)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (DDMMYY), gender (odd/even), two check digits (modulus 11)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_norwegian_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11 (&times;2)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">RO (Romania)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Century digit, DOB (YYMMDD), gender, county code</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_romanian_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Weighted sum</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">SE (Sweden)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (YYMMDD or YYYYMMDD), gender (odd/even), Luhn check digit</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_swedish_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Luhn</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">SI (Slovenia)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (DDMMYYY), gender encoding, modulus 11 check</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_slovenian_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">SK (Slovakia)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (YYMMDD), gender (month +50 for females), divisibility check</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_slovak_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+</tr>
+</tbody>
+</table></div>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>VBA Equivalence:</strong> Each Python validator method was derived line-by-line from the corresponding VBA <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Check_XX_Logic</code> function. The check digit algorithms (Modulus 97, Modulus 11, Luhn, weighted sums) were verified against known valid NIDNs for each country.
 </div>
-
-<h2 id="concat">CONCAT Generation &amp; Validation</h2>
-
-<table>
-    <thead>
-        <tr><th>Business Rule</th><th>VBA Source</th><th>Python Implementation</th><th>Tests</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Generate CONCAT from country code + DOB (YYYYMMDD) + first name (5 chars, # padded) + surname (5 chars, # padded)</td>
-            <td><code>Generate_CONCAT()</code></td>
-            <td><code>IDValidationProcessor._generate_concat()</code></td>
-            <td><code>test_concat_validation.py</code></td>
-        </tr>
-        <tr>
-            <td>Strip surname prefixes (VAN, VON, DE, DI, LE, LA, etc.) before generating surname segment</td>
-            <td><code>Generate_CONCAT()</code> — inline prefix stripping</td>
-            <td><code>IDValidationProcessor._strip_name_prefix()</code></td>
-            <td><code>test_concat_validation.py::TestValidateConcatNameSegments</code></td>
-        </tr>
-        <tr>
-            <td>Validate name segments in existing CONCAT match record&rsquo;s first name and surname</td>
-            <td>Inline in validation loops</td>
-            <td><code>IDValidationProcessor._validate_concat_name_segments()</code></td>
-            <td><code>test_concat_validation.py::test_prefix_included_in_surname_segment_fails</code></td>
-        </tr>
-        <tr>
-            <td>Generic CONCAT pattern: 2-letter country code + 8-digit DOB + 5-char first + 5-char last = 20 chars</td>
-            <td>Hardcoded format</td>
-            <td>Regex: <code>^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$</code></td>
-            <td><code>test_id_formats.py::test_validate_gb_concat_valid</code></td>
-        </tr>
-    </tbody>
-</table>
-
-<h2 id="incident-codes">Incident Code Routing</h2>
-
-<p>The <code>INCIDENT_CODE_MATRIX</code> in <code>core/data/incident_codes.py</code> is the single source of truth for routing transactions to the correct validation type. Each entry specifies:</p>
-
+<span class="confluence-anchor-link" id="id-6a.BusinessLogicPreservation-concat"><span class="confluence-anchor-link" id="concat" /></span><h2 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-CONCATGeneration&amp;Validation">CONCAT Generation &amp; Validation</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Business Rule</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">VBA Source</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Python Implementation</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Generate CONCAT from country code + DOB (YYYYMMDD) + first name (5 chars, # padded) + surname (5 chars, # padded)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Generate_CONCAT()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._generate_concat()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_concat_validation.py</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Strip surname prefixes (VAN, VON, DE, DI, LE, LA, etc.) before generating surname segment</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Generate_CONCAT()</code> &mdash; inline prefix stripping</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._strip_name_prefix()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_concat_validation.py::TestValidateConcatNameSegments</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Validate name segments in existing CONCAT match record&rsquo;s first name and surname</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Inline in validation loops</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._validate_concat_name_segments()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_concat_validation.py::test_prefix_included_in_surname_segment_fails</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Generic CONCAT pattern: 2-letter country code + 8-digit DOB + 5-char first + 5-char last = 20 chars</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Hardcoded format</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Regex: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py::test_validate_gb_concat_valid</code></td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-6a.BusinessLogicPreservation-incident-codes"><span class="confluence-anchor-link" id="incident-codes" /></span><h2 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-IncidentCodeRouting">Incident Code Routing</h2>
+<p>The <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">INCIDENT_CODE_MATRIX</code> in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/data/incident_codes.py</code> is the single source of truth for routing transactions to the correct validation type. Each entry specifies:</p>
 <ul>
-    <li><strong>sides</strong> &mdash; <code>{'buyer'}</code>, <code>{'seller'}</code>, <code>{'buyer', 'seller'}</code>, or <code>set()</code> (trade-level)</li>
-    <li><strong>validation_type</strong> &mdash; routing key: <code>standard_id</code>, <code>decision_maker</code>, <code>inconsistent_id</code>, <code>standard_name</code>, <code>non_zero_net_qty</code>, <code>non_zero_net_amt</code>, <code>pricing</code>, or <code>pending</code></li>
-    <li><strong>description</strong> &mdash; human-readable rule description</li>
+<li>
+<strong>sides</strong> &mdash; <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">{'buyer'}</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">{'seller'}</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">{'buyer', 'seller'}</code>, or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">set()</code> (trade-level)</li>
+<li>
+<strong>validation_type</strong> &mdash; routing key: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">standard_id</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">decision_maker</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">inconsistent_id</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">standard_name</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">non_zero_net_qty</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">non_zero_net_amt</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pricing</code>, or <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pending</code>
+</li>
+<li>
+<strong>description</strong> &mdash; human-readable rule description</li>
 </ul>
-
-<h3>Key Incident Code Mappings</h3>
-
-<table>
-    <thead>
-        <tr><th>Incident</th><th>Type</th><th>Sides</th><th>Description</th><th>Script</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>7_35</td><td>standard_id</td><td>buyer</td><td>Incorrect CONCAT in Buyer ID field</td><td><code>validate-buyer</code></td></tr>
-        <tr><td>7_37</td><td>standard_id</td><td>buyer</td><td>Incorrect NIDN in Buyer ID field</td><td><code>validate-buyer</code></td></tr>
-        <tr><td>7_39</td><td>standard_id</td><td>buyer</td><td>Incorrect CCPT in Buyer ID field</td><td><code>validate-buyer</code></td></tr>
-        <tr><td>16_19</td><td>standard_id</td><td>seller</td><td>Incorrect CONCAT in Seller ID field</td><td><code>validate-seller</code></td></tr>
-        <tr><td>16_21</td><td>standard_id</td><td>seller</td><td>Incorrect NIDN in Seller ID field</td><td><code>validate-seller</code></td></tr>
-        <tr><td>16_23</td><td>standard_id</td><td>seller</td><td>Incorrect CCPT in Seller ID field</td><td><code>validate-seller</code></td></tr>
-        <tr><td>7_66</td><td>inconsistent_id</td><td>buyer</td><td>Inconsistent Buyer ID across suspected same individual</td><td><code>validate-inconsistent-buyer</code></td></tr>
-        <tr><td>16_20</td><td>inconsistent_id</td><td>seller</td><td>Inconsistent Seller ID across suspected same individual</td><td><code>validate-inconsistent-seller</code></td></tr>
-        <tr><td>12_17</td><td>decision_maker</td><td>buyer</td><td>Incorrect buyer decision maker for fund trade</td><td><code>validate-ftbdm</code></td></tr>
-        <tr><td>21_11</td><td>decision_maker</td><td>seller</td><td>Incorrect seller decision maker for fund trade</td><td><code>validate-ftsdm</code></td></tr>
-        <tr><td>7_6</td><td>non_zero_net_qty</td><td>buyer, seller</td><td>INTC ISIN net quantity does not net to zero</td><td><code>validate-non-zero-net-qty</code></td></tr>
-        <tr><td>7_42</td><td>non_zero_net_amt</td><td>buyer, seller</td><td>INTC ISIN net amount does not net to zero</td><td><code>validate-non-zero-net-amt</code></td></tr>
-    </tbody>
-</table>
-
-<h2 id="correction">Correction Logic</h2>
-
-<table>
-    <thead>
-        <tr><th>VBA Correction Rule</th><th>Python Implementation</th><th>Tests</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>When ID is invalid and correct ID can be determined, populate correction column with correct value</td>
-            <td><code>IDValidationProcessor.process_record()</code> &mdash; sets <code>record.correction</code></td>
-            <td><code>test_buyer_id_validation.py</code></td>
-        </tr>
-        <tr>
-            <td>When NIDN is invalid but CONCAT can be generated, suggest CONCAT as correction</td>
-            <td><code>IDValidationProcessor._generate_correction()</code></td>
-            <td><code>test_buyer_id_validation.py</code></td>
-        </tr>
-        <tr>
-            <td>Set error flag (&ldquo;Y&rdquo;/&ldquo;N&rdquo;) based on validation outcome</td>
-            <td><code>record.error_flag = &ldquo;Y&rdquo;</code> on failure</td>
-            <td><code>test_error_flag_logic.py</code></td>
-        </tr>
-        <tr>
-            <td>Italian tracker lookup for fiscal code cross-referencing</td>
-            <td><code>IDValidationProcessor._check_italian_tracker()</code></td>
-            <td><code>test_buyer_id_validation.py</code></td>
-        </tr>
-        <tr>
-            <td>Joint account (JNT) aggregation &mdash; group by account and validate collectively</td>
-            <td><code>IDValidationProcessor._aggregate_joint_accounts()</code></td>
-            <td><code>test_buyer_id_validation.py</code></td>
-        </tr>
-        <tr>
-            <td>Kaizen error lookup &mdash; cross-reference against template expected values</td>
-            <td><code>IDValidationProcessor._kaizen_error_lookup()</code></td>
-            <td><code>test_buyer_id_validation.py</code></td>
-        </tr>
-    </tbody>
-</table>
-
-<h2 id="replay">Replay Processing Rules</h2>
-
-<table>
-    <thead>
-        <tr><th>Business Rule</th><th>VBA Source</th><th>Python Module</th><th>Tests</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Phase 2: Match transactions by reference using hash-table indexing (O(1) lookups)</td>
-            <td><code>Phase2_Match.bas</code></td>
-            <td><code>replay/phase_2_processor.py</code></td>
-            <td><code>test_replay/</code></td>
-        </tr>
-        <tr>
-            <td>Phase 3: Client record matching by first name + surname + DOB + ID value with fuzzy matching</td>
-            <td><code>Phase3_Match.bas</code></td>
-            <td><code>replay/phase_3_processor.py</code></td>
-            <td><code>test_replay/</code></td>
-        </tr>
-        <tr>
-            <td>Phase 3 Final: UnaVista transaction validation &mdash; verify corrections against source</td>
-            <td><code>Phase3_Final_Lookup.bas</code></td>
-            <td><code>replay/phase_3_final_lookup.py</code></td>
-            <td><code>test_replay/</code></td>
-        </tr>
-        <tr>
-            <td>XLSX to CSV conversion for pipeline input</td>
-            <td>Manual Excel operations</td>
-            <td><code>utils/xlsx_csv_converter.py</code></td>
-            <td><code>test_utils/</code></td>
-        </tr>
-    </tbody>
-</table>
-
-<h2 id="enhancements">Python Enhancements Beyond VBA</h2>
-
-<div class="warning-panel">
-    <strong>Note:</strong> These are <em>additions</em> that go beyond the original VBA functionality. They do not change the core validation logic but add safety, performance, or usability improvements.
+<h3 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-KeyIncidentCodeMappings">Key Incident Code Mappings</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Incident</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Type</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Sides</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Description</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Script</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">7_35</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">standard_id</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">buyer</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Incorrect CONCAT in Buyer ID field</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-buyer</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">7_37</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">standard_id</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">buyer</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Incorrect NIDN in Buyer ID field</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-buyer</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">7_39</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">standard_id</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">buyer</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Incorrect CCPT in Buyer ID field</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-buyer</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">16_19</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">standard_id</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">seller</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Incorrect CONCAT in Seller ID field</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-seller</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">16_21</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">standard_id</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">seller</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Incorrect NIDN in Seller ID field</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-seller</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">16_23</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">standard_id</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">seller</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Incorrect CCPT in Seller ID field</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-seller</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">7_66</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">inconsistent_id</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">buyer</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Inconsistent Buyer ID across suspected same individual</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-inconsistent-buyer</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">16_20</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">inconsistent_id</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">seller</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Inconsistent Seller ID across suspected same individual</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-inconsistent-seller</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">12_17</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">decision_maker</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">buyer</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Incorrect buyer decision maker for fund trade</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-ftbdm</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">21_11</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">decision_maker</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">seller</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Incorrect seller decision maker for fund trade</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-ftsdm</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">7_6</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">non_zero_net_qty</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">buyer, seller</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">INTC ISIN net quantity does not net to zero</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-non-zero-net-qty</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">7_42</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">non_zero_net_amt</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">buyer, seller</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">INTC ISIN net amount does not net to zero</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate-non-zero-net-amt</code></td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-6a.BusinessLogicPreservation-correction"><span class="confluence-anchor-link" id="correction" /></span><h2 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-CorrectionLogic">Correction Logic</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">VBA Correction Rule</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Python Implementation</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">When ID is invalid and correct ID can be determined, populate correction column with correct value</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor.process_record()</code> &mdash; sets <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">record.correction</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_buyer_id_validation.py</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">When NIDN is invalid but CONCAT can be generated, suggest CONCAT as correction</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._generate_correction()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_buyer_id_validation.py</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Set error flag (&ldquo;Y&rdquo;/&ldquo;N&rdquo;) based on validation outcome</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
+<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">record.error_flag = &ldquo;Y&rdquo;</code> on failure</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_error_flag_logic.py</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Italian tracker lookup for fiscal code cross-referencing</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._check_italian_tracker()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_buyer_id_validation.py</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Joint account (JNT) aggregation &mdash; group by account and validate collectively</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._aggregate_joint_accounts()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_buyer_id_validation.py</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Kaizen error lookup &mdash; cross-reference against template expected values</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._kaizen_error_lookup()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_buyer_id_validation.py</code></td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-6a.BusinessLogicPreservation-replay"><span class="confluence-anchor-link" id="replay" /></span><h2 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-ReplayProcessingRules">Replay Processing Rules</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Business Rule</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">VBA Source</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Python Module</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Tests</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 2: Match transactions by reference using hash-table indexing (O(1) lookups)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Phase2_Match.bas</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay/phase_2_processor.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_replay/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 3: Client record matching by first name + surname + DOB + ID value with fuzzy matching</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Phase3_Match.bas</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay/phase_3_processor.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_replay/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 3 Final: UnaVista transaction validation &mdash; verify corrections against source</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Phase3_Final_Lookup.bas</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">replay/phase_3_final_lookup.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_replay/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">XLSX to CSV conversion for pipeline input</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Manual Excel operations</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">utils/xlsx_csv_converter.py</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_utils/</code></td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-6a.BusinessLogicPreservation-enhancements"><span class="confluence-anchor-link" id="enhancements" /></span><h2 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-PythonEnhancementsBeyondVBA">Python Enhancements Beyond VBA</h2>
+<div style="background: rgb(255,250,230);border-left: 4.0px solid rgb(255,153,31);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Note:</strong> These are <em>additions</em> that go beyond the original VBA functionality. They do not change the core validation logic but add safety, performance, or usability improvements.
 </div>
-
-<table>
-    <thead>
-        <tr><th>Enhancement</th><th>Rationale</th><th>Module</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td>Structured logging with context (batch size, incident codes)</td>
-            <td>Auditability and troubleshooting</td>
-            <td><code>core/logging/</code></td>
-        </tr>
-        <tr>
-            <td>Detailed mismatch reasons from <code>IDPattern.get_mismatch_reason()</code></td>
-            <td>User-actionable error messages instead of binary pass/fail</td>
-            <td><code>core/data/id_formats.py</code></td>
-        </tr>
-        <tr>
-            <td>Auto-detection of ID type via <code>validate_any_type()</code></td>
-            <td>Handles ambiguous input that VBA rejected outright</td>
-            <td><code>core/id_validation.py</code></td>
-        </tr>
-        <tr>
-            <td>CONCAT name-segment semantic cross-check</td>
-            <td>Catches surname prefix inclusion errors the VBA missed</td>
-            <td><code>processor.py</code></td>
-        </tr>
-        <tr>
-            <td>FIRDS reportability cache (SQLite)</td>
-            <td>Replaces manual ESMA website checks</td>
-            <td><code>firds/</code></td>
-        </tr>
-        <tr>
-            <td>GLEIF LEI lookup with FTS5 full-text search</td>
-            <td>Replaces manual GLEIF website lookups</td>
-            <td><code>gleif/</code></td>
-        </tr>
-        <tr>
-            <td>GUI desktop application (PySide6)</td>
-            <td>Non-technical users can run workflows without CLI</td>
-            <td><code>gui/</code></td>
-        </tr>
-        <tr>
-            <td>Batch mode processing via YAML configuration</td>
-            <td>Process multiple incidents in a single run</td>
-            <td><code>processor.py (AccuracyConfigManager)</code></td>
-        </tr>
-        <tr>
-            <td>Configuration cascading (YAML &rarr; env vars &rarr; CLI args)</td>
-            <td>Flexible deployment across environments</td>
-            <td><code>core/config/</code></td>
-        </tr>
-        <tr>
-            <td>Validation exception tracking with <code>_log_validation_exception()</code></td>
-            <td>Captures unexpected inputs without crashing the pipeline</td>
-            <td><code>id_logic_validator.py</code></td>
-        </tr>
-    </tbody>
-</table>
-
-<h2 id="verification">Verification Methodology</h2>
-
-<h3>Automated Test Coverage</h3>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Enhancement</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Rationale</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Module</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Structured logging with context (batch size, incident codes)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Auditability and troubleshooting</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/logging/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Detailed mismatch reasons from <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDPattern.get_mismatch_reason()</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">User-actionable error messages instead of binary pass/fail</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/data/id_formats.py</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Auto-detection of ID type via <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">validate_any_type()</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Handles ambiguous input that VBA rejected outright</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/id_validation.py</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CONCAT name-segment semantic cross-check</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Catches surname prefix inclusion errors the VBA missed</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">processor.py</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FIRDS reportability cache (SQLite)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Replaces manual ESMA website checks</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">firds/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">GLEIF LEI lookup with FTS5 full-text search</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Replaces manual GLEIF website lookups</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gleif/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">GUI desktop application (PySide6)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Non-technical users can run workflows without CLI</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">gui/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Batch mode processing via YAML configuration</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Process multiple incidents in a single run</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">processor.py (AccuracyConfigManager)</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Configuration cascading (YAML &rarr; env vars &rarr; CLI args)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Flexible deployment across environments</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/config/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Validation exception tracking with <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_log_validation_exception()</code>
+</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Captures unexpected inputs without crashing the pipeline</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">id_logic_validator.py</code></td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-6a.BusinessLogicPreservation-verification"><span class="confluence-anchor-link" id="verification" /></span><h2 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-VerificationMethodology">Verification Methodology</h2>
+<h3 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-AutomatedTestCoverage">Automated Test Coverage</h3>
 <ul>
-    <li><strong>466 unit and integration tests</strong> &mdash; all passing (100%)</li>
-    <li>Tests derived from VBA expected outputs using known valid/invalid IDs</li>
-    <li>Edge cases: empty values, special characters, boundary dates, century transitions</li>
-    <li>Parametrised tests cover multiple countries per test function</li>
+<li>
+<strong>466 unit and integration tests</strong> &mdash; all passing (100%)</li>
+<li>Tests derived from VBA expected outputs using known valid/invalid IDs</li>
+<li>Edge cases: empty values, special characters, boundary dates, century transitions</li>
+<li>Parametrised tests cover multiple countries per test function</li>
 </ul>
-
-<h3>Manual Verification Steps Performed</h3>
-
+<h3 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-ManualVerificationStepsPerformed">Manual Verification Steps Performed</h3>
 <ol>
-    <li><strong>Side-by-side execution:</strong> Both VBA and Python run on identical sample data; outputs compared column-by-column</li>
-    <li><strong>Check digit verification:</strong> Known valid NIDNs from national registries verified against both VBA and Python check digit implementations</li>
-    <li><strong>CONCAT generation parity:</strong> 100+ CONCAT values generated by VBA matched against Python output</li>
-    <li><strong>Correction logic parity:</strong> VBA-generated corrections compared against Python corrections for same input records</li>
-    <li><strong>Incident code routing:</strong> All active incident codes routed through both VBA and Python pipelines to confirm identical script selection</li>
+<li>
+<strong>Side-by-side execution:</strong> Both VBA and Python run on identical sample data; outputs compared column-by-column</li>
+<li>
+<strong>Check digit verification:</strong> Known valid NIDNs from national registries verified against both VBA and Python check digit implementations</li>
+<li>
+<strong>CONCAT generation parity:</strong> 100+ CONCAT values generated by VBA matched against Python output</li>
+<li>
+<strong>Correction logic parity:</strong> VBA-generated corrections compared against Python corrections for same input records</li>
+<li>
+<strong>Incident code routing:</strong> All active incident codes routed through both VBA and Python pipelines to confirm identical script selection</li>
 </ol>
-
-<h3>Evidence Trail</h3>
-
-<table>
-    <thead>
-        <tr><th>Evidence Type</th><th>Location</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>Original VBA macros (read-only reference)</td><td><code>legacy/vba/</code></td></tr>
-        <tr><td>Traceability matrix (VBA &rarr; Python mapping)</td><td><a href="03b_traceability_matrix.html">03b Traceability Matrix</a></td></tr>
-        <tr><td>Automated test suite (466 tests)</td><td><code>tests/</code></td></tr>
-        <tr><td>Test fixtures and sample data</td><td><code>tests/test_accuracy_testing/fixtures/</code></td></tr>
-        <tr><td>Changelog documenting each migration phase</td><td><a href="03c_changelog.html">03c Changelog</a></td></tr>
-        <tr><td>ESMA regex validation report</td><td><code>documentation/ESMA_Regex_Validation_Report.md</code></td></tr>
-        <tr><td>Correction logic testing summary</td><td><code>documentation/Correction_Logic_Testing_Summary.md</code></td></tr>
-    </tbody>
-</table>
-
-<div class="success-panel">
-    <strong>Conclusion:</strong> All 12 VBA macros have been migrated with full logic preservation. The automated test suite plus manual verification provide high confidence that the Python implementation produces identical results for all known input scenarios.
+<h3 style="color: rgb(23,43,77);" id="id-6a.BusinessLogicPreservation-EvidenceTrail">Evidence Trail</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Evidence Type</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Location</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Original VBA macros (read-only reference)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">legacy/vba/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Traceability matrix (VBA &rarr; Python mapping)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><a href="03b_traceability_matrix.html" data-linked-resource-id="3436544240" data-linked-resource-version="1" data-linked-resource-type="page">3b. VBA-to-Python Traceability Matrix</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Automated test suite (466 tests)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">tests/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Test fixtures and sample data</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">tests/test_accuracy_testing/fixtures/</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Changelog documenting each migration phase</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><a href="03c_changelog.html" data-linked-resource-id="3436183835" data-linked-resource-version="1" data-linked-resource-type="page">3c. Changelog</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">ESMA regex validation report</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">documentation/ESMA_Regex_Validation_Report.md</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Correction logic testing summary</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">documentation/Correction_Logic_Testing_Summary.md</code></td>
+</tr>
+</tbody>
+</table></div>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Conclusion:</strong> All 12 VBA macros have been migrated with full logic preservation. The automated test suite plus manual verification provide high confidence that the Python implementation produces identical results for all known input scenarios.
 </div>
-
-<hr>
-<p><a href="05j_cli_command_reference.html">&laquo; Previous: CLI Command Reference</a> | <a href="00_index.html">Documentation Index</a> | <a href="06b_test_coverage_report.html">Next: Test Coverage Report &raquo;</a></p>
 
 </body>
 </html>

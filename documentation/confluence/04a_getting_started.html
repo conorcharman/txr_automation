@@ -10,58 +10,73 @@
         th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
         th { background-color: #F4F5F7; font-weight: 600; }
         a { color: #0052CC; text-decoration: none; }
-        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .success-panel { background: #E3FCEF; border-left: 4px solid #00875A; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
-        .warning-panel { background: #FFFAE6; border-left: 4px solid #FF8B00; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
+        a:hover { text-decoration: underline; }
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
-        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-size: 0.85em; font-family: 'Cascadia Mono', Consolas, 'Courier New', monospace; }
-        ol li, ul li { margin-bottom: 6px; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; white-space: pre; margin: 0; }
+        .confluence-anchor-link { display: none; }
+        .code.panel { border: 1px solid #DFE1E6; border-radius: 3px; margin: 16px 0; overflow: hidden; }
+        .codeContent { padding: 0; }
+        .syntaxhighlighter-pre { background: #F4F5F7; padding: 16px; margin: 0; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; border: none; border-radius: 0; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
-
-<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Developer Guides &rsaquo; Getting Started</p>
+<p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Getting Started</p>
 <p class="last-updated">Last updated: 25 March 2026</p>
-
-<h1>Getting Started</h1>
-
-<div class="info-panel">
-    <strong>Time to setup:</strong> ~10 minutes. This guide covers environment setup, project installation, and running your first validation script.
+<h1 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-GettingStarted">Getting Started</h1>
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Time to setup:</strong> ~10 minutes. This guide covers environment setup, project installation, and running your first validation script.
 </div>
-
-<h2>Table of Contents</h2>
+<h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-TableofContents">Table of Contents</h2>
 <ul>
-    <li><a href="#prerequisites">Prerequisites</a></li>
-    <li><a href="#setup">Environment Setup</a></li>
-    <li><a href="#structure">Project Walkthrough</a></li>
-    <li><a href="#first-run">Running Your First Script</a></li>
-    <li><a href="#config">Configuration</a></li>
-    <li><a href="#tests">Running Tests</a></li>
-    <li><a href="#gui">Launching the GUI</a></li>
-    <li><a href="#next-steps">Next Steps</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#prerequisites" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Prerequisites</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#setup" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Environment Setup</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#structure" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Project Walkthrough</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#first-run" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Running Your First Script</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#config" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Configuration</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#tests" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Running Tests</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#gui" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Launching the GUI</a></li>
+<li style="margin-bottom: 6.0px;"><a href="#next-steps" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Next Steps</a></li>
 </ul>
-
-<h2 id="prerequisites">Prerequisites</h2>
-
-<table>
-    <thead>
-        <tr><th>Requirement</th><th>Version</th><th>Notes</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>Python</td><td>&ge; 3.10</td><td>Required for <code>match</code> statements and type union syntax</td></tr>
-        <tr><td>Conda (recommended)</td><td>Any recent</td><td>Miniconda or Anaconda. Alternatively use <code>pip</code> + <code>venv</code></td></tr>
-        <tr><td>Git</td><td>Any recent</td><td>For cloning the repository</td></tr>
-        <tr><td>macOS / Windows / Linux</td><td>&mdash;</td><td>All platforms supported. macOS is the primary development platform</td></tr>
-    </tbody>
-</table>
-
-<h2 id="setup">Environment Setup</h2>
-
-<h3>Option A: Conda (Recommended)</h3>
-
-<pre>
+<span class="confluence-anchor-link" id="id-4a.GettingStarted-prerequisites"><span class="confluence-anchor-link" id="prerequisites" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-Prerequisites">Prerequisites</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Requirement</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Version</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Notes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Python</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">&ge; 3.10</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Required for <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">match</code> statements and type union syntax</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Conda (recommended)</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Any recent</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Miniconda or Anaconda. Alternatively use <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pip</code> + <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">venv</code>
+</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Git</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Any recent</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">For cloning the repository</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">macOS / Windows / Linux</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">&mdash;</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">All platforms supported. macOS is the primary development platform</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-4a.GettingStarted-setup"><span class="confluence-anchor-link" id="setup" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-EnvironmentSetup">Environment Setup</h2>
+<h3 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-OptionA:Conda(Recommended)">Option A: Conda (Recommended)</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # 1. Clone the repository
 git clone &lt;repository-url&gt; txr_automation
 cd txr_automation
@@ -75,27 +90,27 @@ conda activate txr_automation
 # 4. Install the package in editable mode
 pip install -e .
 </pre>
-
-<p>The <code>environment.yml</code> installs all dependencies:</p>
-
-<pre>
+</div></div>
+<p>The <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">environment.yml</code> installs all dependencies:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 name: txr_automation
 channels:
   - conda-forge
 dependencies:
-  - python>=3.10
-  - pyyaml>=6.0
-  - pandas>=2.0.0
-  - openpyxl>=3.1.0
-  - pyside6>=6.6
-  - pytest>=7.4.0
-  - pytest-cov>=4.1.0
+  - python&gt;=3.10
+  - pyyaml&gt;=6.0
+  - pandas&gt;=2.0.0
+  - openpyxl&gt;=3.1.0
+  - pyside6&gt;=6.6
+  - pytest&gt;=7.4.0
+  - pytest-cov&gt;=4.1.0
   - pip
 </pre>
-
-<h3>Option B: pip + venv</h3>
-
-<pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-OptionB:pip+venv">Option B: pip + venv</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # 1. Clone and enter the repository
 git clone &lt;repository-url&gt; txr_automation
 cd txr_automation
@@ -111,115 +126,115 @@ pip install -r requirements.txt
 # 4. Install the package in editable mode
 pip install -e .
 </pre>
-
-<h3>Verify Installation</h3>
-
-<pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-VerifyInstallation">Verify Installation</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Check the package is installed
-python -c "import accuracy_testing; print('accuracy_testing OK')"
-python -c "import core; print('core OK')"
+python -c &quot;import accuracy_testing; print('accuracy_testing OK')&quot;
+python -c &quot;import core; print('core OK')&quot;
 
 # Check console scripts are available
 buyer-id-validation --help
 replay-phase2 --help
 txr-gui --help
 </pre>
-
-<div class="success-panel">
+</div></div>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
     If all three commands produce output without errors, you are ready to go.
 </div>
-
-<h2 id="structure">Project Walkthrough</h2>
-
-<table>
-    <thead>
-        <tr><th>Directory</th><th>Purpose</th><th>Key Contents</th></tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td><code>src/core/</code></td>
-            <td>Shared foundation library</td>
-            <td>Configuration, logging, country data, ID format validation, date parsing, file discovery</td>
-        </tr>
-        <tr>
-            <td><code>src/accuracy_testing/</code></td>
-            <td>Main accuracy testing suite</td>
-            <td>15 CLI scripts, 5 validators, processor classes, 11 SQL templates, data models</td>
-        </tr>
-        <tr>
-            <td><code>src/replay/</code></td>
-            <td>Replay processing</td>
-            <td>Phase 2 (transaction matching), Phase 3 (client matching), Phase 3 final lookup</td>
-        </tr>
-        <tr>
-            <td><code>src/firds/</code></td>
-            <td>FCA FIRDS reportability</td>
-            <td>SQLite cache, REST API client, refresh and check scripts</td>
-        </tr>
-        <tr>
-            <td><code>src/gleif/</code></td>
-            <td>GLEIF LEI lookup</td>
-            <td>SQLite + FTS5 cache, golden copy downloads, entity search</td>
-        </tr>
-        <tr>
-            <td><code>src/gui/</code></td>
-            <td>Desktop application</td>
-            <td>PySide6 <code>QMainWindow</code> with 5 tabs (Accuracy, Replay, FIRDS, GLEIF, Settings)</td>
-        </tr>
-        <tr>
-            <td><code>config/templates/</code></td>
-            <td>Configuration templates</td>
-            <td>Copy to <code>config/local/</code> and customise for your environment. Templates are version-controlled; local files are gitignored.</td>
-        </tr>
-        <tr>
-            <td><code>legacy/vba/</code></td>
-            <td>Original VBA macros</td>
-            <td>12 VBA files. <strong>Read-only reference</strong> &mdash; do not modify.</td>
-        </tr>
-        <tr>
-            <td><code>tests/</code></td>
-            <td>Test suite</td>
-            <td>466 tests across 4 test packages. Run with <code>pytest</code>.</td>
-        </tr>
-        <tr>
-            <td><code>documentation/</code></td>
-            <td>Project documentation</td>
-            <td>Confluence HTML suite, guides, planning docs, reference data CSVs</td>
-        </tr>
-    </tbody>
-</table>
-
-<h2 id="first-run">Running Your First Script</h2>
-
-<h3>Step 1: Create Local Configuration</h3>
-
-<pre>
+<span class="confluence-anchor-link" id="id-4a.GettingStarted-structure"><span class="confluence-anchor-link" id="structure" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-ProjectWalkthrough">Project Walkthrough</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Directory</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Purpose</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Key Contents</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/core/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Shared foundation library</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Configuration, logging, country data, ID format validation, date parsing, file discovery</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/accuracy_testing/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Main accuracy testing suite</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">15 CLI scripts, 5 validators, processor classes, 11 SQL templates, data models</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/replay/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Replay processing</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Phase 2 (transaction matching), Phase 3 (client matching), Phase 3 final lookup</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/firds/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FCA FIRDS reportability</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">SQLite cache, REST API client, refresh and check scripts</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gleif/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">GLEIF LEI lookup</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">SQLite + FTS5 cache, golden copy downloads, entity search</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/gui/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Desktop application</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">PySide6 <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">QMainWindow</code> with 5 tabs (Accuracy, Replay, FIRDS, GLEIF, Settings)</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/templates/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Configuration templates</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Copy to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/local/</code> and customise for your environment. Templates are version-controlled; local files are gitignored.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">legacy/vba/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Original VBA macros</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">12 VBA files. <strong>Read-only reference</strong> &mdash; do not modify.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">tests/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Test suite</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">466 tests across 4 test packages. Run with <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">pytest</code>.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">documentation/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Project documentation</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Confluence HTML suite, guides, planning docs, reference data CSVs</td>
+</tr>
+</tbody>
+</table></div>
+<span class="confluence-anchor-link" id="id-4a.GettingStarted-first-run"><span class="confluence-anchor-link" id="first-run" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-RunningYourFirstScript">Running Your First Script</h2>
+<h3 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-Step1:CreateLocalConfiguration">Step 1: Create Local Configuration</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Copy the template configuration for buyer ID validation
 mkdir -p config/local/accuracy_testing
 cp config/templates/accuracy_testing/buyer_validation_template.yaml \
    config/local/accuracy_testing/buyer_validation.yaml
 </pre>
-
+</div></div>
 <p>Edit the copied file to set your input/output paths:</p>
-
-<pre>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # config/local/accuracy_testing/buyer_validation.yaml
 
 mode: single    # 'single' for one file, 'batch' for directory scan
 
 paths:
-  input_file: "data/test/buyer_id_sample.csv"
-  output_file: "data/output/buyer_id_results.csv"
-  log_output: "logs"
+  input_file: &quot;data/test/buyer_id_sample.csv&quot;
+  output_file: &quot;data/output/buyer_id_results.csv&quot;
+  log_output: &quot;logs&quot;
 
 processing:
-  incident_code: "7_5"
-  log_level: "INFO"
+  incident_code: &quot;7_5&quot;
+  log_level: &quot;INFO&quot;
 </pre>
-
-<h3>Step 2: Run the Validation</h3>
-
-<pre>
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-Step2:RuntheValidation">Step 2: Run the Validation</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Using the console script (registered in setup.py)
 buyer-id-validation --config config/local/accuracy_testing/buyer_validation.yaml
 
@@ -227,20 +242,22 @@ buyer-id-validation --config config/local/accuracy_testing/buyer_validation.yaml
 python -m src.accuracy_testing.scripts.buyer_id_validation \
     --config config/local/accuracy_testing/buyer_validation.yaml
 </pre>
-
-<h3>Step 3: Review Output</h3>
-
+</div></div>
+<h3 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-Step3:ReviewOutput">Step 3: Review Output</h3>
 <p>The script produces:</p>
 <ul>
-    <li><strong>Full results CSV</strong> &mdash; all records with validation columns added (Error, Error_Details, Correction, Match, etc.)</li>
-    <li><strong>Errors-only CSV</strong> &mdash; filtered to only records flagged as errors (filename suffixed <code>_errors</code>)</li>
-    <li><strong>Log file</strong> &mdash; structured JSON log in the configured log directory</li>
-    <li><strong>Console summary</strong> &mdash; statistics printed to stdout (total records, errors found, processing time)</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Full results CSV</strong> &mdash; all records with validation columns added (Error, Error_Details, Correction, Match, etc.)</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Errors-only CSV</strong> &mdash; filtered to only records flagged as errors (filename suffixed <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_errors</code>)</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Log file</strong> &mdash; structured JSON log in the configured log directory</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Console summary</strong> &mdash; statistics printed to stdout (total records, errors found, processing time)</li>
 </ul>
-
-<h3>Other Common Scripts</h3>
-
-<pre>
+<h3 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-OtherCommonScripts">Other Common Scripts</h3>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Seller ID validation
 seller-id-validation --config config/local/accuracy_testing/seller_validation.yaml
 
@@ -256,35 +273,31 @@ replay-phase2 --config config/local/replay/phase2.yaml
 # Run all validations at once
 run-all-validations --config config/local/accuracy_testing/run_all_validations.yaml
 </pre>
-
-<h2 id="config">Configuration</h2>
-
-<div class="info-panel">
-    <strong>Config templates → local copies.</strong> Templates in <code>config/templates/</code> are version-controlled.
-    Copy them to <code>config/local/</code> (gitignored) and customise. See <a href="04c_configuration_system.html">Configuration System</a> for full details.
+</div></div>
+<span class="confluence-anchor-link" id="id-4a.GettingStarted-config"><span class="confluence-anchor-link" id="config" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-Configuration">Configuration</h2>
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Config templates &rarr; local copies.</strong> Templates in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/templates/</code> are version-controlled.
+    Copy them to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">config/local/</code> (gitignored) and customise. See <a href="04c_configuration_system.html" data-linked-resource-id="3436282107" data-linked-resource-version="1" data-linked-resource-type="page">4c. Configuration System</a> for full details.
 </div>
-
-<h3>Environment Variables</h3>
-
-<p>All configuration values can be overridden with <code>TXR_</code>-prefixed environment variables:</p>
-
-<pre>
+<h3 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-EnvironmentVariables">Environment Variables</h3>
+<p>All configuration values can be overridden with <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_</code>-prefixed environment variables:</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 export TXR_LOG_LEVEL=DEBUG
 export TXR_INPUT_FILE=/path/to/data.csv
 export TXR_OUTPUT_DIR=/path/to/output/
 </pre>
-
+</div></div>
 <p>Precedence (highest to lowest):</p>
 <ol>
-    <li>Command-line arguments (<code>--config</code>, <code>--log-level</code>, etc.)</li>
-    <li>Environment variables (<code>TXR_*</code>)</li>
-    <li>Local YAML configuration file</li>
-    <li>Default values in code</li>
+<li style="margin-bottom: 6.0px;">Command-line arguments (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--config</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">--log-level</code>, etc.)</li>
+<li style="margin-bottom: 6.0px;">Environment variables (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">TXR_*</code>)</li>
+<li style="margin-bottom: 6.0px;">Local YAML configuration file</li>
+<li style="margin-bottom: 6.0px;">Default values in code</li>
 </ol>
-
-<h2 id="tests">Running Tests</h2>
-
-<pre>
+<span class="confluence-anchor-link" id="id-4a.GettingStarted-tests"><span class="confluence-anchor-link" id="tests" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-RunningTests">Running Tests</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Run the full test suite
 pytest
 
@@ -298,50 +311,70 @@ pytest tests/test_accuracy_testing/test_buyer_id_validation.py
 pytest --cov=src --cov-report=html
 
 # Run only fast unit tests (exclude integration)
-pytest -m "not integration"
+pytest -m &quot;not integration&quot;
 </pre>
-
-<div class="success-panel">
-    <strong>Current status:</strong> 466 tests, 100% pass rate. Expected run time: ~30 seconds.
+</div></div>
+<div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Current status:</strong> 466 tests, 100% pass rate. Expected run time: ~30 seconds.
 </div>
-
-<h2 id="gui">Launching the GUI</h2>
-
-<pre>
+<span class="confluence-anchor-link" id="id-4a.GettingStarted-gui"><span class="confluence-anchor-link" id="gui" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-LaunchingtheGUI">Launching the GUI</h2>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 # Using the console script
 txr-gui
 
 # Or using Python module syntax
 python -m src.gui.main
 </pre>
-
+</div></div>
 <p>The GUI provides a tabbed interface for:</p>
 <ul>
-    <li><strong>Accuracy Tab</strong> &mdash; run any of the 9 accuracy testing validations with file/config pickers</li>
-    <li><strong>Replay Tab</strong> &mdash; Phase 2/3 replay processing</li>
-    <li><strong>FIRDS Tab</strong> &mdash; refresh FIRDS cache and check instrument reportability</li>
-    <li><strong>GLEIF Tab</strong> &mdash; refresh LEI cache and perform entity lookups</li>
-    <li><strong>Settings Tab</strong> &mdash; configure paths and preferences</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Accuracy Tab</strong> &mdash; run any of the 9 accuracy testing validations with file/config pickers</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Replay Tab</strong> &mdash; Phase 2/3 replay processing</li>
+<li style="margin-bottom: 6.0px;">
+<strong>FIRDS Tab</strong> &mdash; refresh FIRDS cache and check instrument reportability</li>
+<li style="margin-bottom: 6.0px;">
+<strong>GLEIF Tab</strong> &mdash; refresh LEI cache and perform entity lookups</li>
+<li style="margin-bottom: 6.0px;">
+<strong>Settings Tab</strong> &mdash; configure paths and preferences</li>
 </ul>
-
-<h2 id="next-steps">Next Steps</h2>
-
-<table>
-    <thead>
-        <tr><th>Topic</th><th>Document</th></tr>
-    </thead>
-    <tbody>
-        <tr><td>Coding standards and conventions</td><td><a href="04b_coding_standards.html">Coding Standards</a></td></tr>
-        <tr><td>Configuration system in depth</td><td><a href="04c_configuration_system.html">Configuration System</a></td></tr>
-        <tr><td>Core library API reference</td><td><a href="04d_core_api_reference.html">Core API Reference</a></td></tr>
-        <tr><td>Writing and running tests</td><td><a href="04e_testing_guide.html">Testing Guide</a></td></tr>
-        <tr><td>All CLI commands and options</td><td><a href="05j_cli_command_reference.html">CLI Command Reference</a></td></tr>
-        <tr><td>System architecture overview</td><td><a href="02a_system_architecture.html">System Architecture</a></td></tr>
-    </tbody>
-</table>
-
-<hr>
-<p><a href="03c_changelog.html">&laquo; Previous: Changelog</a> | <a href="00_index.html">Documentation Index</a> | <a href="04b_coding_standards.html">Next: Coding Standards &raquo;</a></p>
+<span class="confluence-anchor-link" id="id-4a.GettingStarted-next-steps"><span class="confluence-anchor-link" id="next-steps" /></span><h2 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-NextSteps">Next Steps</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Topic</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Document</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Coding standards and conventions</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><a href="04b_coding_standards.html" data-linked-resource-id="3436052854" data-linked-resource-version="1" data-linked-resource-type="page">4b. Coding Standards &amp; Conventions</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Configuration system in depth</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><a href="04c_configuration_system.html" data-linked-resource-id="3436282107" data-linked-resource-version="1" data-linked-resource-type="page">4c. Configuration System</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Core library API reference</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><a href="04d_core_api_reference.html" data-linked-resource-id="3436609707" data-linked-resource-version="1" data-linked-resource-type="page">4d. Core Library API Reference</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Writing and running tests</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><a href="04e_testing_guide.html" data-linked-resource-id="3436544256" data-linked-resource-version="1" data-linked-resource-type="page">4e. Testing Guide</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">All CLI commands and options</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><a href="05j_cli_command_reference.html" data-linked-resource-id="3436314896" data-linked-resource-version="1" data-linked-resource-type="page">5j. CLI Command Reference</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">System architecture overview</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><a href="02a_system_architecture.html" data-linked-resource-id="3436151028" data-linked-resource-version="1" data-linked-resource-type="page">2a. System Architecture</a></td>
+</tr>
+</tbody>
+</table></div>
 
 </body>
 </html>

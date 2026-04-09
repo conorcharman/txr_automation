@@ -2,169 +2,193 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>TXR Automation Documentation</title>
+    <title>TXR Automation Documentation — TXR Automation</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
-        h1, h2, h3 { color: #172B4D; }
+        h1, h2, h3, h4 { color: #172B4D; }
         table { border-collapse: collapse; width: 100%; margin: 16px 0; }
-        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; }
+        th, td { border: 1px solid #DFE1E6; padding: 8px 12px; text-align: left; vertical-align: top; }
         th { background-color: #F4F5F7; font-weight: 600; }
         a { color: #0052CC; text-decoration: none; }
         a:hover { text-decoration: underline; }
-        .info-panel { background: #DEEBFF; border-left: 4px solid #0052CC; padding: 12px 16px; margin: 16px 0; border-radius: 3px; }
         .breadcrumb { color: #6B778C; font-size: 0.9em; margin-bottom: 8px; }
         .last-updated { color: #6B778C; font-size: 0.85em; font-style: italic; }
         code { background: #F4F5F7; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
+        pre { background: #F4F5F7; padding: 16px; border-radius: 3px; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; white-space: pre; margin: 0; }
+        .confluence-anchor-link { display: none; }
+        .code.panel { border: 1px solid #DFE1E6; border-radius: 3px; margin: 16px 0; overflow: hidden; }
+        .codeContent { padding: 0; }
+        .syntaxhighlighter-pre { background: #F4F5F7; padding: 16px; margin: 0; overflow-x: auto; font-family: Monaco, 'Courier New', monospace; font-size: 0.88em; border: none; border-radius: 0; }
+        .table-wrap { overflow-x: auto; margin: 16px 0; }
     </style>
 </head>
 <body>
 
 <p class="last-updated">Last updated: 25 March 2026</p>
-
-<h1>TXR Automation Documentation</h1>
-
-<div class="info-panel">
-    <strong>Transaction Reporting Automation Suite</strong> &mdash; Comprehensive documentation for the VBA-to-Python migration project.
+<h1 style="color: rgb(23,43,77);" id="TXRAutomationDocumentation-TXRAutomationDocumentation">TXR Automation Documentation</h1>
+<div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
+<strong>Transaction Reporting Automation Suite</strong> &mdash; Comprehensive documentation for the VBA-to-Python migration project.
     This documentation covers architecture, development methodology, user guides, audit evidence, and operational procedures.
 </div>
-
-<h2>Documentation Map</h2>
-
+<h2 style="color: rgb(23,43,77);" id="TXRAutomationDocumentation-DocumentationMap">Documentation Map</h2>
 <p>This documentation suite is organised as a hierarchical page tree. Click any page title to navigate.</p>
-
-<table>
-    <thead>
-        <tr>
-            <th>Section</th>
-            <th>Page</th>
-            <th>Audience</th>
-            <th>Description</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr>
-            <td rowspan="1"><strong>1. Overview</strong></td>
-            <td><a href="01_project_overview.html">Project Overview</a></td>
-            <td>All</td>
-            <td>Executive summary, scope, current status dashboard, and technology stack</td>
-        </tr>
-        <tr>
-            <td rowspan="2"><strong>2. Architecture</strong></td>
-            <td><a href="02a_system_architecture.html">System Architecture</a></td>
-            <td>Developers, Auditors</td>
-            <td>Layered architecture, module design, design patterns, dependency map</td>
-        </tr>
-        <tr>
-            <td><a href="02b_data_flow.html">Data Flow &amp; Integration</a></td>
-            <td>Developers, Auditors</td>
-            <td>End-to-end data flows, SQLite caching, configuration cascade, reference data</td>
-        </tr>
-        <tr>
-            <td rowspan="3"><strong>3. Migration</strong></td>
-            <td><a href="03a_migration_plan_and_status.html">Migration Plan &amp; Status</a></td>
-            <td>Management, Auditors</td>
-            <td>Phase-by-phase migration plan with current status and timeline</td>
-        </tr>
-        <tr>
-            <td><a href="03b_traceability_matrix.html">VBA-to-Python Traceability Matrix</a></td>
-            <td>Auditors</td>
-            <td>Complete mapping of all 12 VBA files to Python modules with business logic notes</td>
-        </tr>
-        <tr>
-            <td><a href="03c_changelog.html">Changelog</a></td>
-            <td>All</td>
-            <td>Phase-by-phase summary of deliverables, decisions, and changes</td>
-        </tr>
-        <tr>
-            <td rowspan="5"><strong>4. Developer Guide</strong></td>
-            <td><a href="04a_getting_started.html">Getting Started</a></td>
-            <td>Developers</td>
-            <td>Environment setup, project structure walkthrough, first script run</td>
-        </tr>
-        <tr>
-            <td><a href="04b_coding_standards.html">Coding Standards &amp; Conventions</a></td>
-            <td>Developers</td>
-            <td>PEP 8, type hints, docstrings, import ordering, dataclass patterns</td>
-        </tr>
-        <tr>
-            <td><a href="04c_configuration_system.html">Configuration System</a></td>
-            <td>Developers</td>
-            <td>v2.0 config architecture, batch/single modes, YAML structure, env vars</td>
-        </tr>
-        <tr>
-            <td><a href="04d_core_api_reference.html">Core Library API Reference</a></td>
-            <td>Developers</td>
-            <td>Public classes and functions in <code>src/core/</code> with signatures and examples</td>
-        </tr>
-        <tr>
-            <td><a href="04e_testing_guide.html">Testing Guide</a></td>
-            <td>Developers</td>
-            <td>pytest setup, test naming, fixture patterns, coverage, writing new tests</td>
-        </tr>
-        <tr>
-            <td rowspan="2"><strong>5. User Guides</strong></td>
-            <td><a href="05_user_guides.html">User Guides (All Modules)</a></td>
-            <td>Users, Developers</td>
-            <td>Comprehensive operational guides for accuracy testing, replay, FIRDS, GLEIF, and the GUI</td>
-        </tr>
-        <tr>
-            <td><a href="05j_cli_command_reference.html">CLI Command Reference</a></td>
-            <td>Users, Developers</td>
-            <td>All 22 console scripts with syntax, arguments, and examples</td>
-        </tr>
-        <tr>
-            <td rowspan="2"><strong>6. Audit &amp; Compliance</strong></td>
-            <td><a href="06a_business_logic_preservation.html">Business Logic Preservation</a></td>
-            <td>Auditors</td>
-            <td>Evidence that Python implementation preserves all VBA business logic</td>
-        </tr>
-        <tr>
-            <td><a href="06b_test_coverage_report.html">Test Coverage &amp; Validation Report</a></td>
-            <td>Auditors, Management</td>
-            <td>466 tests summary, per-module coverage, validation evidence</td>
-        </tr>
-        <tr>
-            <td rowspan="2"><strong>7. Operations</strong></td>
-            <td><a href="07a_deployment_plan.html">Deployment &amp; Transition Plan</a></td>
-            <td>Management, Developers</td>
-            <td>Phase 7 deployment plan, Phase 8 CLI unification, GUI roadmap</td>
-        </tr>
-        <tr>
-            <td><a href="07b_performance_benchmarks.html">Performance Benchmarks</a></td>
-            <td>Developers, Management</td>
-            <td>Processing speeds, scalability tests, memory profiling results</td>
-        </tr>
-    </tbody>
-</table>
-
-<h2>Quick Links</h2>
-
-<table>
-    <thead>
-        <tr>
-            <th>I want to&hellip;</th>
-            <th>Go to</th>
-        </tr>
-    </thead>
-    <tbody>
-        <tr><td>Understand the project at a high level</td><td><a href="01_project_overview.html">Project Overview</a></td></tr>
-        <tr><td>Set up my development environment</td><td><a href="04a_getting_started.html">Getting Started</a></td></tr>
-        <tr><td>Run a validation script</td><td><a href="05j_cli_command_reference.html">CLI Command Reference</a></td></tr>
-        <tr><td>Review the VBA-to-Python mapping for audit</td><td><a href="03b_traceability_matrix.html">Traceability Matrix</a></td></tr>
-        <tr><td>Understand the architecture</td><td><a href="02a_system_architecture.html">System Architecture</a></td></tr>
-        <tr><td>Write new code for this project</td><td><a href="04b_coding_standards.html">Coding Standards</a></td></tr>
-        <tr><td>Add or modify configuration</td><td><a href="04c_configuration_system.html">Configuration System</a></td></tr>
-        <tr><td>Review test coverage for compliance</td><td><a href="06b_test_coverage_report.html">Test Coverage Report</a></td></tr>
-    </tbody>
-</table>
-
-<h2>Document Conventions</h2>
-
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Section</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Page</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Audience</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" rowspan="1" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>1. Overview</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="01_project_overview.html" data-linked-resource-id="3436085615" data-linked-resource-version="1" data-linked-resource-type="page">1. Project Overview</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">All</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Executive summary, scope, current status dashboard, and technology stack</td>
+</tr>
+<tr>
+<td align="left" rowspan="2" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>2. Architecture</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="02a_system_architecture.html" data-linked-resource-id="3436151028" data-linked-resource-version="1" data-linked-resource-type="page">2a. System Architecture</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Developers, Auditors</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Layered architecture, module design, design patterns, dependency map</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="02b_data_flow.html" data-linked-resource-id="3436511611" data-linked-resource-version="1" data-linked-resource-type="page">2b. Data Flow &amp; Integration</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Developers, Auditors</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">End-to-end data flows, SQLite caching, configuration cascade, reference data</td>
+</tr>
+<tr>
+<td align="left" rowspan="3" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>3. Migration</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="03a_migration_plan_and_status.html" data-linked-resource-id="3436642445" data-linked-resource-version="1" data-linked-resource-type="page">3a. Migration Plan &amp; Status</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Management, Auditors</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase-by-phase migration plan with current status and timeline</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="03b_traceability_matrix.html" data-linked-resource-id="3436544240" data-linked-resource-version="1" data-linked-resource-type="page">3b. VBA-to-Python Traceability Matrix</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Auditors</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Complete mapping of all 12 VBA files to Python modules with business logic notes</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="03c_changelog.html" data-linked-resource-id="3436183835" data-linked-resource-version="1" data-linked-resource-type="page">3c. Changelog</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">All</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase-by-phase summary of deliverables, decisions, and changes</td>
+</tr>
+<tr>
+<td align="left" rowspan="5" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>4. Developer Guide</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="04a_getting_started.html" data-linked-resource-id="3436511627" data-linked-resource-version="1" data-linked-resource-type="page">4a. Getting Started</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Developers</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Environment setup, project structure walkthrough, first script run</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="04b_coding_standards.html" data-linked-resource-id="3436052854" data-linked-resource-version="1" data-linked-resource-type="page">4b. Coding Standards &amp; Conventions</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Developers</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">PEP 8, type hints, docstrings, import ordering, dataclass patterns</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="04c_configuration_system.html" data-linked-resource-id="3436282107" data-linked-resource-version="1" data-linked-resource-type="page">4c. Configuration System</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Developers</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">v2.0 config architecture, batch/single modes, YAML structure, env vars</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="04d_core_api_reference.html" data-linked-resource-id="3436609707" data-linked-resource-version="1" data-linked-resource-type="page">4d. Core Library API Reference</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Developers</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Public classes and functions in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">src/core/</code> with signatures and examples</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="04e_testing_guide.html" data-linked-resource-id="3436544256" data-linked-resource-version="1" data-linked-resource-type="page">4e. Testing Guide</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Developers</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">pytest setup, test naming, fixture patterns, coverage, writing new tests</td>
+</tr>
+<tr>
+<td align="left" rowspan="2" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>5. User Guides</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="05_user_guides.html" data-linked-resource-id="3436642461" data-linked-resource-version="1" data-linked-resource-type="page">5. User Guides</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Users, Developers</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Comprehensive operational guides for accuracy testing, replay, FIRDS, GLEIF, and the GUI</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="05j_cli_command_reference.html" data-linked-resource-id="3436314896" data-linked-resource-version="1" data-linked-resource-type="page">5j. CLI Command Reference</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Users, Developers</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">All 22 console scripts with syntax, arguments, and examples</td>
+</tr>
+<tr>
+<td align="left" rowspan="2" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>6. Audit &amp; Compliance</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="06a_business_logic_preservation.html" data-linked-resource-id="3436675223" data-linked-resource-version="1" data-linked-resource-type="page">6a. Business Logic Preservation</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Auditors</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Evidence that Python implementation preserves all VBA business logic</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="06b_test_coverage_report.html" data-linked-resource-id="3436642477" data-linked-resource-version="1" data-linked-resource-type="page">6b. Test Coverage &amp; Validation Report</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Auditors, Management</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">466 tests summary, per-module coverage, validation evidence</td>
+</tr>
+<tr>
+<td align="left" rowspan="2" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>7. Operations</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="07a_deployment_plan.html" data-linked-resource-id="3436609723" data-linked-resource-version="1" data-linked-resource-type="page">7a. Deployment &amp; Transition Plan</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Management, Developers</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Phase 7 deployment plan, Phase 8 CLI unification, GUI roadmap</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="07b_performance_benchmarks.html" data-linked-resource-id="3436642493" data-linked-resource-version="1" data-linked-resource-type="page">7b. Performance Benchmarks</a></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Developers, Management</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Processing speeds, scalability tests, memory profiling results</td>
+</tr>
+</tbody>
+</table></div>
+<h2 style="color: rgb(23,43,77);" id="TXRAutomationDocumentation-QuickLinks">Quick Links</h2>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead>
+<tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">I want to&hellip;</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh">Go to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Understand the project at a high level</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="01_project_overview.html" data-linked-resource-id="3436085615" data-linked-resource-version="1" data-linked-resource-type="page">1. Project Overview</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Set up my development environment</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="04a_getting_started.html" data-linked-resource-id="3436511627" data-linked-resource-version="1" data-linked-resource-type="page">4a. Getting Started</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Run a validation script</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="05j_cli_command_reference.html" data-linked-resource-id="3436314896" data-linked-resource-version="1" data-linked-resource-type="page">5j. CLI Command Reference</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Review the VBA-to-Python mapping for audit</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="03b_traceability_matrix.html" data-linked-resource-id="3436544240" data-linked-resource-version="1" data-linked-resource-type="page">3b. VBA-to-Python Traceability Matrix</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Understand the architecture</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="02a_system_architecture.html" data-linked-resource-id="3436151028" data-linked-resource-version="1" data-linked-resource-type="page">2a. System Architecture</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Write new code for this project</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="04b_coding_standards.html" data-linked-resource-id="3436052854" data-linked-resource-version="1" data-linked-resource-type="page">4b. Coding Standards &amp; Conventions</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Add or modify configuration</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="04c_configuration_system.html" data-linked-resource-id="3436282107" data-linked-resource-version="1" data-linked-resource-type="page">4c. Configuration System</a></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Review test coverage for compliance</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><a href="06b_test_coverage_report.html" data-linked-resource-id="3436642477" data-linked-resource-version="1" data-linked-resource-type="page">6b. Test Coverage &amp; Validation Report</a></td>
+</tr>
+</tbody>
+</table></div>
+<h2 style="color: rgb(23,43,77);" id="TXRAutomationDocumentation-DocumentConventions">Document Conventions</h2>
 <ul>
-    <li><strong>British English</strong> is used throughout (e.g., &ldquo;colour&rdquo;, &ldquo;organisation&rdquo;, &ldquo;behaviour&rdquo;)</li>
-    <li><strong>Code references</strong> use <code>monospace</code> formatting</li>
-    <li><strong>File paths</strong> are relative to the project root (<code>txr_automation/</code>)</li>
-    <li><strong>Client-specific data</strong> has been generalised throughout &mdash; no client names or confidential data appear in this documentation</li>
+<li>
+<strong>British English</strong> is used throughout (e.g., &ldquo;colour&rdquo;, &ldquo;organisation&rdquo;, &ldquo;behaviour&rdquo;)</li>
+<li>
+<strong>Code references</strong> use <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">monospace</code> formatting</li>
+<li>
+<strong>File paths</strong> are relative to the project root (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">txr_automation/</code>)</li>
+<li>
+<strong>Client-specific data</strong> has been generalised throughout &mdash; no client names or confidential data appear in this documentation</li>
 </ul>
 
 </body>
