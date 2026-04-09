@@ -101,6 +101,9 @@ temp/
 benchmarks/temp_data/
 benchmarks/**/*.csv
 
+# SQLite cache databases (can be very large)
+data/*.db
+
 # OS files
 Thumbs.db
 .DS_Store
