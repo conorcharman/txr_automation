@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { PathPickerInput } from "@/components/PathPickerInput";
+import CsvFormatHint from "@/components/CsvFormatHint";
 import LastRunBadge from "@/components/LastRunBadge";
 import { gleifRefresh, gleifCheck, gleifBackfill, gleifLookup, gleifSearch } from "@/api/gleif";
 import { cn } from "@/lib/utils";
@@ -397,6 +398,23 @@ const CheckForm: React.FC = () => {
 
       {mode === "batch" && (
         <>
+          <CsvFormatHint
+            columns={[
+              {
+                name: "lei",
+                required: true,
+                description: "Legal Entity Identifier (20-character alphanumeric code).",
+                example: "5493001KJTIIGC8Y1R12",
+              },
+              {
+                name: "trade_date",
+                required: false,
+                description: "Trade date in YYYY-MM-DD format. Used to assess LAPSED LEI status at the time of the trade.",
+                example: "2026-03-15",
+              },
+            ]}
+            notes="Columns are matched case-insensitively. All other columns in the input file are preserved unchanged in the output."
+          />
           <Field label="Input File" error={errors.inputFile?.message}>
             <PathPickerInput
               value={watch("inputFile") ?? ""}
@@ -568,6 +586,25 @@ const BackfillForm: React.FC = () => {
       <p className="text-sm text-muted-foreground">
         Backfill GLEIF LEI data onto a CSV file.
       </p>
+
+      <CsvFormatHint
+        title="Generic CSV format"
+        columns={[
+          {
+            name: "lei",
+            required: true,
+            description: "Legal Entity Identifier (20-character alphanumeric code).",
+            example: "5493001KJTIIGC8Y1R12",
+          },
+          {
+            name: "trade_date",
+            required: false,
+            description: "Trade date in YYYY-MM-DD format. Used to assess LAPSED LEI status.",
+            example: "2026-03-15",
+          },
+        ]}
+        notes={`Use format "incident" for FCA incident files, which instead use "Buyer identifier value", "Seller identifier value", and "Trading date time_Date" columns. Format auto-detects from headers by default.`}
+      />
 
       <Field label="Input File" error={errors.inputFile?.message}>
         <PathPickerInput

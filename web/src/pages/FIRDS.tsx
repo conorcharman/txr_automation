@@ -8,6 +8,7 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { PathPickerInput } from "@/components/PathPickerInput";
+import CsvFormatHint from "@/components/CsvFormatHint";
 import LastRunBadge from "@/components/LastRunBadge";
 import { firdsRefresh, firdsCheck, firdsBackfill, firdsLookup } from "@/api/firds";
 import { cn } from "@/lib/utils";
@@ -366,6 +367,29 @@ const CheckForm: React.FC = () => {
 
       {mode === "batch" && (
         <>
+          <CsvFormatHint
+            columns={[
+              {
+                name: "isin",
+                required: true,
+                description: "ISIN code for the instrument.",
+                example: "GB00B3FLWH99",
+              },
+              {
+                name: "trade_date",
+                required: false,
+                description: "Trade date in YYYY-MM-DD format. If absent, the date is extracted from the filename (pattern DD-MM-YYYY).",
+                example: "2026-03-15",
+              },
+              {
+                name: "mic",
+                required: false,
+                description: "Market Identifier Code to narrow venue matching.",
+                example: "XLON",
+              },
+            ]}
+            notes="All other columns in the input file are preserved unchanged in the output."
+          />
           <Field label="Input File" error={errors.inputFile?.message}>
             <PathPickerInput
               value={watch("inputFile") ?? ""}
@@ -511,6 +535,31 @@ const BackfillForm: React.FC = () => {
       <p className="text-sm text-muted-foreground">
         Backfill FIRDS reportability data onto a CSV file.
       </p>
+
+      <CsvFormatHint
+        title="Generic CSV format"
+        columns={[
+          {
+            name: "isin",
+            required: true,
+            description: "ISIN code for the instrument.",
+            example: "GB00B3FLWH99",
+          },
+          {
+            name: "trade_date",
+            required: true,
+            description: "Trade date in YYYY-MM-DD format.",
+            example: "2026-03-15",
+          },
+          {
+            name: "mic",
+            required: false,
+            description: "Market Identifier Code to narrow venue matching.",
+            example: "XLON",
+          },
+        ]}
+        notes={`Use format "incident" for FCA incident files, which instead use "Instrument identification code" and "Transaction Reference Number" columns. Format auto-detects from headers by default.`}
+      />
 
       <Field label="Input File" error={errors.inputFile?.message}>
         <PathPickerInput
