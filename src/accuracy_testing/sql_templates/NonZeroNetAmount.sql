@@ -26,7 +26,7 @@ children AS (
         c.GRCONT,
         c.GRSUFF,
         c.NTFIRM,
-        c.NTYEAR,
+        c.NTYEAR,  
         c.NTACCL,
         c.NTCONT,
         c.NTSUFF,
