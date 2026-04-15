@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { PathPickerInput } from "@/components/PathPickerInput";
 import LastRunBadge from "@/components/LastRunBadge";
+import Field from "@/components/Field";
 import { xlsxConvert, xmlConvert } from "@/api/utilities";
 import { cn } from "@/lib/utils";
 
@@ -42,19 +43,7 @@ const selectCls =
 // Shared sub-components
 // ---------------------------------------------------------------------------
 
-interface FieldProps {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}
 
-const Field: React.FC<FieldProps> = ({ label, error, children }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-xs font-medium text-muted-foreground">{label}</label>
-    {children}
-    {error && <p className="text-xs text-destructive">{error}</p>}
-  </div>
-);
 
 function navItemCls(active: boolean): string {
   return cn(

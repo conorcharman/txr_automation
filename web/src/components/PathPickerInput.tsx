@@ -33,6 +33,8 @@ interface PathPickerInputProps {
   className?: string;
   /** Starting directory when the dialog opens (default `/app/data`). */
   rootPath?: string;
+  /** `id` forwarded to the inner text input for label association. */
+  id?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -56,6 +58,7 @@ const PathPickerInput: React.FC<PathPickerInputProps> = ({
   disabled = false,
   className,
   rootPath = "/app/data",
+  id,
 }) => {
   const [open, setOpen] = React.useState(false);
   const [browsePath, setBrowsePath] = React.useState(rootPath);
@@ -110,6 +113,7 @@ const PathPickerInput: React.FC<PathPickerInputProps> = ({
   return (
     <div className={cn("flex gap-1.5", className)}>
       <input
+        id={id}
         type="text"
         value={value}
         onChange={(e) => onChange(e.target.value)}

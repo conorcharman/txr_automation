@@ -1,14 +1,40 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import JobCard from "@/components/JobCard";
+import { PathPickerInput } from "@/components/PathPickerInput";
 import { listJobs } from "@/api/jobs";
 import type { JobResponse } from "@/types";
+import { cn } from "@/lib/utils";
+
+const GLOBAL_LOG_KEY = "txr_global_log_output";
+
+function readGlobalLog(): string {
+  try { return localStorage.getItem(GLOBAL_LOG_KEY) || "logs"; } catch { return "logs"; }
+}
+
+interface AdvancedSectionProps { show: boolean; onToggle: () => void; children: React.ReactNode; }
+const AdvancedSection: React.FC<AdvancedSectionProps> = ({ show, onToggle, children }) => (
+  <div className="rounded-md border border-border">
+    <button type="button" onClick={onToggle}
+      className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors">
+      Settings
+      <span className={cn("transition-transform text-[10px]", show && "rotate-180")}>▾</span>
+    </button>
+    {show && <div className="space-y-3 px-3 pb-3 border-t border-border pt-3">{children}</div>}
+  </div>
+);
 
 const Jobs: React.FC = () => {
   const navigate = useNavigate();
+  const [showSettings, setShowSettings] = useState(false);
+  const [logOutput, setLogOutput] = useState<string>(readGlobalLog);
+
+  useEffect(() => {
+    try { localStorage.setItem(GLOBAL_LOG_KEY, logOutput); } catch { /* ignore */ }
+  }, [logOutput]);
 
   const { data: jobs, isLoading, isError, error } = useQuery<JobResponse[]>({
     queryKey: ["jobs"],
@@ -48,7 +74,24 @@ const Jobs: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold tracking-tight">Job History</h2>
+      <div className="flex items-center justify-between gap-4 flex-wrap">
+        <h2 className="text-2xl font-bold tracking-tight">Job History</h2>
+      </div>
+
+      <AdvancedSection show={showSettings} onToggle={() => setShowSettings((v) => !v)}>
+        <div className="flex flex-col gap-1 max-w-sm">
+          <label className="text-xs font-medium text-muted-foreground">Log Output Directory</label>
+          <PathPickerInput
+            value={logOutput}
+            onChange={setLogOutput}
+            mode="directory"
+            placeholder="logs"
+          />
+          <p className="text-[11px] text-muted-foreground">
+            Directory where all scripts write their log files. Applied globally to all runs.
+          </p>
+        </div>
+      </AdvancedSection>
 
       {jobs && jobs.length === 0 ? (
         <p className="text-muted-foreground text-sm">

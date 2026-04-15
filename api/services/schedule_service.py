@@ -70,6 +70,11 @@ def calculate_next_run(frequency: str, cron_expression: str | None = None) -> da
             return datetime(now.year + 1, 1, 1, tzinfo=timezone.utc)
         return datetime(now.year, now.month + 1, 1, tzinfo=timezone.utc)
 
+    if frequency == "quarterly":
+        from api.utils.fiscal_date import calculate_quarterly_next_run
+
+        return calculate_quarterly_next_run(now)
+
     if frequency == "custom":
         if not cron_expression:
             raise ValueError("cron_expression is required for custom frequency.")

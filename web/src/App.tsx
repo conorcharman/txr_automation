@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import AppLayout from "@/components/layout/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Jobs from "@/pages/Jobs";
@@ -11,6 +12,7 @@ import FIRDS from "@/pages/FIRDS";
 import GLEIF from "@/pages/GLEIF";
 import Utilities from "@/pages/Utilities";
 import Scheduler from "@/pages/Scheduler";
+import ReconciliationPage from "@/pages/ReconciliationPage";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -20,6 +22,7 @@ const queryClient = new QueryClient({
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <TooltipProvider delayDuration={300}>
       <BrowserRouter>
         <Routes>
           <Route element={<AppLayout />}>
@@ -30,6 +33,7 @@ export default function App() {
             <Route path="gleif" element={<GLEIF />} />
             <Route path="utilities" element={<Utilities />} />
             <Route path="scheduler" element={<Scheduler />} />
+            <Route path="reconciliation" element={<ReconciliationPage />} />
             <Route path="jobs" element={<Jobs />} />
             <Route path="jobs/:jobId" element={<JobDetail />} />
           </Route>
@@ -37,6 +41,7 @@ export default function App() {
         </Routes>
       </BrowserRouter>
       <Toaster />
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

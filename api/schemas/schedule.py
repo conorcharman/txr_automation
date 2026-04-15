@@ -23,7 +23,7 @@ from api.schemas.common import _CamelModel
 # Request schemas
 # ---------------------------------------------------------------------------
 
-_VALID_FREQUENCIES = frozenset({"hourly", "daily", "weekly", "monthly", "custom"})
+_VALID_FREQUENCIES = frozenset({"hourly", "daily", "weekly", "monthly", "quarterly", "custom"})
 
 
 class ScheduleCreate(_CamelModel):

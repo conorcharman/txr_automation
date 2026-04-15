@@ -1,4 +1,4 @@
-import type { BrowseResponse } from "@/types";
+import type { BrowseResponse, ResolvedPaths, ResolvePathsRequest } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -11,4 +11,21 @@ export async function browseDirectory(path: string): Promise<BrowseResponse> {
     throw new Error(body.detail ?? "Browse failed");
   }
   return res.json() as Promise<BrowseResponse>;
+}
+
+export async function resolvePaths(
+  req: ResolvePathsRequest,
+): Promise<ResolvedPaths> {
+  const res = await fetch(`${BASE_URL}/api/filesystem/resolve-paths`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  if (!res.ok) {
+    const body = await res
+      .json()
+      .catch(() => ({ detail: "Path resolution failed" }));
+    throw new Error(body.detail ?? "Path resolution failed");
+  }
+  return res.json() as Promise<ResolvedPaths>;
 }

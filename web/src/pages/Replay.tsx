@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PathPickerInput } from "@/components/PathPickerInput";
 import TestingPeriodSelector from "@/components/TestingPeriodSelector";
 import LastRunBadge from "@/components/LastRunBadge";
+import Field from "@/components/Field";
 import {
   runReplayPhase2,
   runReplayPhase3,
@@ -49,19 +50,7 @@ const selectCls =
 // Shared sub-components
 // ---------------------------------------------------------------------------
 
-interface FieldProps {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}
 
-const Field: React.FC<FieldProps> = ({ label, error, children }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-xs font-medium text-muted-foreground">{label}</label>
-    {children}
-    {error && <p className="text-xs text-destructive">{error}</p>}
-  </div>
-);
 
 function navItemCls(active: boolean): string {
   return cn(
@@ -70,6 +59,41 @@ function navItemCls(active: boolean): string {
       ? "bg-primary/10 text-primary font-medium"
       : "text-muted-foreground hover:bg-muted hover:text-foreground",
   );
+}
+
+interface AdvancedSectionProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}
+
+const AdvancedSection: React.FC<AdvancedSectionProps> = ({ isOpen, onToggle, children }) => (
+  <div className="rounded-md border border-border">
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+    >
+      Advanced
+      <span className={cn("transition-transform text-[10px]", isOpen && "rotate-180")}>▾</span>
+    </button>
+    {isOpen && (
+      <div className="space-y-3 px-3 pb-3 border-t border-border pt-3">{children}</div>
+    )}
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// localStorage helpers
+// ---------------------------------------------------------------------------
+
+function loadCache<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(`txr_form_${key}`);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -85,8 +109,16 @@ const phase2Schema = z.object({
 
 type Phase2FormValues = z.infer<typeof phase2Schema>;
 
+const PHASE2_DEFAULTS: Phase2FormValues = {
+  testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
+  inputFile: "",
+  outputFile: "",
+  logLevel: "INFO",
+};
+
 const Phase2Form: React.FC = () => {
   const navigate = useNavigate();
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
     control,
@@ -97,13 +129,15 @@ const Phase2Form: React.FC = () => {
     formState: { errors },
   } = useForm<Phase2FormValues>({
     resolver: zodResolver(phase2Schema),
-    defaultValues: {
-      testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
-      inputFile: "",
-      outputFile: "",
-      logLevel: "INFO",
-    },
+    defaultValues: loadCache("replay_phase2", PHASE2_DEFAULTS),
   });
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_replay_phase2", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
 
   const mutation = useMutation({
     mutationFn: runReplayPhase2,
@@ -120,6 +154,7 @@ const Phase2Form: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
+      logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
     });
   };
 
@@ -131,7 +166,18 @@ const Phase2Form: React.FC = () => {
         Process replay Phase II — initial replay processing against the input file.
       </p>
 
-      <Field label="Input File" error={errors.inputFile?.message}>
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
+        <Controller
+          name="testingPeriod"
+          control={control}
+          render={({ field }) => (
+            <TestingPeriodSelector value={field.value} onChange={field.onChange} disabled={isPending} />
+          )}
+        />
+      </div>
+
+      <Field label="Input File" hint="Directory containing the Phase II replay CSV/XLSX input files." error={errors.inputFile?.message}>
         <PathPickerInput
           value={watch("inputFile") ?? ""}
           onChange={(v) => setValue("inputFile", v)}
@@ -141,7 +187,7 @@ const Phase2Form: React.FC = () => {
         />
       </Field>
 
-      <Field label="Output File" error={errors.outputFile?.message}>
+      <Field label="Output File" hint="Directory for Phase II processed output files." error={errors.outputFile?.message}>
         <PathPickerInput
           value={watch("outputFile") ?? ""}
           onChange={(v) => setValue("outputFile", v)}
@@ -151,30 +197,13 @@ const Phase2Form: React.FC = () => {
         />
       </Field>
 
-      <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
-        <Controller
-          name="testingPeriod"
-          control={control}
-          render={({ field }) => (
-            <TestingPeriodSelector
-              value={field.value}
-              onChange={field.onChange}
-              disabled={isPending}
-            />
-          )}
-        />
-      </div>
-
-      <Field label="Log Level" error={errors.logLevel?.message}>
-        <select {...register("logLevel")} disabled={isPending} className={selectCls}>
-          {LOG_LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+          <select {...register("logLevel")} disabled={isPending} className={selectCls}>
+            {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </Field>
+      </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Running…" : "Run"}
@@ -182,9 +211,7 @@ const Phase2Form: React.FC = () => {
 
       {mutation.isError && (
         <p className="text-sm text-destructive">
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "An error occurred"}
+          {mutation.error instanceof Error ? mutation.error.message : "An error occurred"}
         </p>
       )}
     </form>
@@ -205,8 +232,17 @@ const phase3Schema = z.object({
 
 type Phase3FormValues = z.infer<typeof phase3Schema>;
 
+const PHASE3_DEFAULTS: Phase3FormValues = {
+  testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
+  inputFile: "",
+  feedbackFile: "",
+  outputFile: "",
+  logLevel: "INFO",
+};
+
 const Phase3Form: React.FC = () => {
   const navigate = useNavigate();
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
     control,
@@ -217,14 +253,15 @@ const Phase3Form: React.FC = () => {
     formState: { errors },
   } = useForm<Phase3FormValues>({
     resolver: zodResolver(phase3Schema),
-    defaultValues: {
-      testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
-      inputFile: "",
-      feedbackFile: "",
-      outputFile: "",
-      logLevel: "INFO",
-    },
+    defaultValues: loadCache("replay_phase3", PHASE3_DEFAULTS),
   });
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_replay_phase3", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
 
   const mutation = useMutation({
     mutationFn: runReplayPhase3,
@@ -242,6 +279,7 @@ const Phase3Form: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
+      logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
     });
   };
 
@@ -253,7 +291,18 @@ const Phase3Form: React.FC = () => {
         Process replay Phase III — incorporate feedback file into replay output.
       </p>
 
-      <Field label="Input File" error={errors.inputFile?.message}>
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
+        <Controller
+          name="testingPeriod"
+          control={control}
+          render={({ field }) => (
+            <TestingPeriodSelector value={field.value} onChange={field.onChange} disabled={isPending} />
+          )}
+        />
+      </div>
+
+      <Field label="Input File" hint="Directory containing the Phase III replay input files." error={errors.inputFile?.message}>
         <PathPickerInput
           value={watch("inputFile") ?? ""}
           onChange={(v) => setValue("inputFile", v)}
@@ -263,7 +312,7 @@ const Phase3Form: React.FC = () => {
         />
       </Field>
 
-      <Field label="Feedback File" error={errors.feedbackFile?.message}>
+      <Field label="Feedback File" hint="Directory containing incident code analysis CSVs." error={errors.feedbackFile?.message}>
         <PathPickerInput
           value={watch("feedbackFile") ?? ""}
           onChange={(v) => setValue("feedbackFile", v)}
@@ -273,7 +322,7 @@ const Phase3Form: React.FC = () => {
         />
       </Field>
 
-      <Field label="Output File" error={errors.outputFile?.message}>
+      <Field label="Output File" hint="Directory for Phase III processed output files." error={errors.outputFile?.message}>
         <PathPickerInput
           value={watch("outputFile") ?? ""}
           onChange={(v) => setValue("outputFile", v)}
@@ -283,30 +332,13 @@ const Phase3Form: React.FC = () => {
         />
       </Field>
 
-      <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
-        <Controller
-          name="testingPeriod"
-          control={control}
-          render={({ field }) => (
-            <TestingPeriodSelector
-              value={field.value}
-              onChange={field.onChange}
-              disabled={isPending}
-            />
-          )}
-        />
-      </div>
-
-      <Field label="Log Level" error={errors.logLevel?.message}>
-        <select {...register("logLevel")} disabled={isPending} className={selectCls}>
-          {LOG_LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+          <select {...register("logLevel")} disabled={isPending} className={selectCls}>
+            {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </Field>
+      </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Running…" : "Run"}
@@ -314,9 +346,7 @@ const Phase3Form: React.FC = () => {
 
       {mutation.isError && (
         <p className="text-sm text-destructive">
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "An error occurred"}
+          {mutation.error instanceof Error ? mutation.error.message : "An error occurred"}
         </p>
       )}
     </form>
@@ -336,8 +366,16 @@ const phase3FinalSchema = z.object({
 
 type Phase3FinalFormValues = z.infer<typeof phase3FinalSchema>;
 
+const PHASE3FINAL_DEFAULTS: Phase3FinalFormValues = {
+  testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
+  inputFile: "",
+  outputFile: "",
+  logLevel: "INFO",
+};
+
 const Phase3FinalForm: React.FC = () => {
   const navigate = useNavigate();
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
     control,
@@ -348,13 +386,15 @@ const Phase3FinalForm: React.FC = () => {
     formState: { errors },
   } = useForm<Phase3FinalFormValues>({
     resolver: zodResolver(phase3FinalSchema),
-    defaultValues: {
-      testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
-      inputFile: "",
-      outputFile: "",
-      logLevel: "INFO",
-    },
+    defaultValues: loadCache("replay_phase3final", PHASE3FINAL_DEFAULTS),
   });
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_replay_phase3final", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
 
   const mutation = useMutation({
     mutationFn: runReplayPhase3Final,
@@ -371,6 +411,7 @@ const Phase3FinalForm: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
+      logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
     });
   };
 
@@ -382,7 +423,18 @@ const Phase3FinalForm: React.FC = () => {
         Phase III final lookup — perform final ID resolution pass on the replay output.
       </p>
 
-      <Field label="Input File" error={errors.inputFile?.message}>
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
+        <Controller
+          name="testingPeriod"
+          control={control}
+          render={({ field }) => (
+            <TestingPeriodSelector value={field.value} onChange={field.onChange} disabled={isPending} />
+          )}
+        />
+      </div>
+
+      <Field label="Input File" hint="Phase III output directory containing inconsistent summary files." error={errors.inputFile?.message}>
         <PathPickerInput
           value={watch("inputFile") ?? ""}
           onChange={(v) => setValue("inputFile", v)}
@@ -392,7 +444,7 @@ const Phase3FinalForm: React.FC = () => {
         />
       </Field>
 
-      <Field label="Output File" error={errors.outputFile?.message}>
+      <Field label="Output File" hint="Directory for Phase III final lookup output files." error={errors.outputFile?.message}>
         <PathPickerInput
           value={watch("outputFile") ?? ""}
           onChange={(v) => setValue("outputFile", v)}
@@ -402,30 +454,13 @@ const Phase3FinalForm: React.FC = () => {
         />
       </Field>
 
-      <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
-        <Controller
-          name="testingPeriod"
-          control={control}
-          render={({ field }) => (
-            <TestingPeriodSelector
-              value={field.value}
-              onChange={field.onChange}
-              disabled={isPending}
-            />
-          )}
-        />
-      </div>
-
-      <Field label="Log Level" error={errors.logLevel?.message}>
-        <select {...register("logLevel")} disabled={isPending} className={selectCls}>
-          {LOG_LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+          <select {...register("logLevel")} disabled={isPending} className={selectCls}>
+            {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </Field>
+      </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Running…" : "Run"}
@@ -433,9 +468,7 @@ const Phase3FinalForm: React.FC = () => {
 
       {mutation.isError && (
         <p className="text-sm text-destructive">
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "An error occurred"}
+          {mutation.error instanceof Error ? mutation.error.message : "An error occurred"}
         </p>
       )}
     </form>
@@ -451,12 +484,22 @@ const mergeSchema = z.object({
   sellerFile: z.string().min(1, "Required"),
   outputFile: z.string().min(1, "Required"),
   logLevel: z.string(),
+  dryRun: z.boolean(),
 });
 
 type MergeFormValues = z.infer<typeof mergeSchema>;
 
+const MERGE_DEFAULTS: MergeFormValues = {
+  buyerFile: "",
+  sellerFile: "",
+  outputFile: "",
+  logLevel: "INFO",
+  dryRun: false,
+};
+
 const MergeForm: React.FC = () => {
   const navigate = useNavigate();
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
     register,
@@ -466,13 +509,15 @@ const MergeForm: React.FC = () => {
     formState: { errors },
   } = useForm<MergeFormValues>({
     resolver: zodResolver(mergeSchema),
-    defaultValues: {
-      buyerFile: "",
-      sellerFile: "",
-      outputFile: "",
-      logLevel: "INFO",
-    },
+    defaultValues: loadCache("replay_merge", MERGE_DEFAULTS),
   });
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_replay_merge", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
 
   const mutation = useMutation({
     mutationFn: runReplayMerge,
@@ -488,6 +533,7 @@ const MergeForm: React.FC = () => {
       sellerFile: values.sellerFile,
       outputFile: values.outputFile,
       logLevel: values.logLevel,
+      dryRun: values.dryRun || undefined,
     });
   };
 
@@ -499,7 +545,7 @@ const MergeForm: React.FC = () => {
         Merge buyer and seller inconsistent summary files into a single output.
       </p>
 
-      <Field label="Buyer File" error={errors.buyerFile?.message}>
+      <Field label="Buyer File" hint="Directory containing Inconsistent IDs summary CSV files." error={errors.buyerFile?.message}>
         <PathPickerInput
           value={watch("buyerFile") ?? ""}
           onChange={(v) => setValue("buyerFile", v)}
@@ -509,7 +555,7 @@ const MergeForm: React.FC = () => {
         />
       </Field>
 
-      <Field label="Seller File" error={errors.sellerFile?.message}>
+      <Field label="Seller File" hint="Directory containing Inconsistent Names summary CSV files." error={errors.sellerFile?.message}>
         <PathPickerInput
           value={watch("sellerFile") ?? ""}
           onChange={(v) => setValue("sellerFile", v)}
@@ -519,7 +565,7 @@ const MergeForm: React.FC = () => {
         />
       </Field>
 
-      <Field label="Output File" error={errors.outputFile?.message}>
+      <Field label="Output File" hint="Directory for merged output files." error={errors.outputFile?.message}>
         <PathPickerInput
           value={watch("outputFile") ?? ""}
           onChange={(v) => setValue("outputFile", v)}
@@ -529,15 +575,19 @@ const MergeForm: React.FC = () => {
         />
       </Field>
 
-      <Field label="Log Level" error={errors.logLevel?.message}>
-        <select {...register("logLevel")} disabled={isPending} className={selectCls}>
-          {LOG_LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <div className="flex flex-wrap gap-4 items-end">
+          <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+            <select {...register("logLevel")} disabled={isPending} className={selectCls}>
+              {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </Field>
+          <label className="flex items-center gap-2 cursor-pointer text-sm pb-1">
+            <input type="checkbox" {...register("dryRun")} disabled={isPending} className="accent-primary h-4 w-4" />
+            Dry Run
+          </label>
+        </div>
+      </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Running…" : "Run"}
@@ -545,9 +595,7 @@ const MergeForm: React.FC = () => {
 
       {mutation.isError && (
         <p className="text-sm text-destructive">
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "An error occurred"}
+          {mutation.error instanceof Error ? mutation.error.message : "An error occurred"}
         </p>
       )}
     </form>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -11,6 +11,8 @@ import {
   CalendarCheck,
   PowerOff,
   Power,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +34,7 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
+import TestingPeriodSelector from "@/components/TestingPeriodSelector";
 import {
   listSchedules,
   createSchedule,
@@ -40,8 +43,22 @@ import {
   triggerSchedule,
   toggleSchedule,
 } from "@/api/scheduler";
+import {
+  listPipelines,
+  createPipeline,
+  deletePipeline,
+  triggerPipeline,
+  togglePipeline,
+} from "@/api/pipeline";
 import { cn } from "@/lib/utils";
-import type { Schedule, ScheduleCreate, ScheduleUpdate, ScheduleFrequency } from "@/types";
+import type {
+  Schedule,
+  ScheduleCreate,
+  ScheduleUpdate,
+  ScheduleFrequency,
+  Pipeline,
+  PipelineCreate,
+} from "@/types";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -52,6 +69,7 @@ const FREQUENCIES: { value: ScheduleFrequency; label: string }[] = [
   { value: "daily", label: "Daily" },
   { value: "weekly", label: "Weekly (Mondays)" },
   { value: "monthly", label: "Monthly (1st)" },
+  { value: "quarterly", label: "Quarterly (fiscal)" },
   { value: "custom", label: "Custom (cron)" },
 ];
 
@@ -469,6 +487,389 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
 );
 
 // ---------------------------------------------------------------------------
+// Pipeline scripts (fixed execution order)
+// ---------------------------------------------------------------------------
+
+const PIPELINE_SCRIPTS = [
+  { key: "sql_extract_generator", label: "SQL Extract Generator", step: 1 },
+  { key: "accuracy_template_generator", label: "Accuracy Template Generator", step: 2 },
+  { key: "collate_csv_extracts", label: "Collate CSV Extracts", step: 3 },
+  { key: "buyer_id_validation", label: "Buyer ID Validation", step: 4 },
+  { key: "seller_id_validation", label: "Seller ID Validation", step: 5 },
+  { key: "inconsistent_buyer_id", label: "Inconsistent Buyer ID", step: 6 },
+  { key: "inconsistent_seller_id", label: "Inconsistent Seller ID", step: 7 },
+  { key: "fund_trade_buyer_dm", label: "Fund Trade Buyer DM", step: 8 },
+  { key: "fund_trade_seller_dm", label: "Fund Trade Seller DM", step: 9 },
+  { key: "incorrect_net_amount", label: "Incorrect Net Amount", step: 10 },
+  { key: "non_zero_net_quantity", label: "Non-Zero Net Quantity", step: 11 },
+  { key: "non_zero_net_amount", label: "Non-Zero Net Amount", step: 12 },
+  { key: "data_push", label: "Data Push", step: 13 },
+] as const;
+
+function currentFY(): string {
+  return `FY${String(new Date().getFullYear()).slice(-2)}`;
+}
+
+// ---------------------------------------------------------------------------
+// Horizontal step strip
+// ---------------------------------------------------------------------------
+
+interface StepStripProps {
+  selected: string[];
+}
+
+const StepStrip: React.FC<StepStripProps> = ({ selected }) => (
+  <div className="flex items-center gap-0.5 overflow-x-auto py-2">
+    {PIPELINE_SCRIPTS.map((s, i) => {
+      const active = selected.includes(s.key);
+      return (
+        <React.Fragment key={s.key}>
+          {i > 0 && (
+            <div
+              className={cn(
+                "h-0.5 w-4 shrink-0",
+                active && selected.includes(PIPELINE_SCRIPTS[i - 1].key)
+                  ? "bg-primary"
+                  : "bg-border",
+              )}
+            />
+          )}
+          <div
+            className={cn(
+              "flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-medium whitespace-nowrap shrink-0 transition-colors",
+              active
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "bg-muted text-muted-foreground border border-transparent",
+            )}
+            title={`Step ${s.step}: ${s.label}`}
+          >
+            {active ? (
+              <CheckCircle2 size={12} className="shrink-0" />
+            ) : (
+              <Circle size={12} className="shrink-0 opacity-40" />
+            )}
+            <span className="hidden sm:inline">{s.step}</span>
+          </div>
+        </React.Fragment>
+      );
+    })}
+  </div>
+);
+
+// ---------------------------------------------------------------------------
+// Pipeline Builder section
+// ---------------------------------------------------------------------------
+
+const PipelineBuilder: React.FC = () => {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+
+  const [selectedScripts, setSelectedScripts] = useState<string[]>(
+    PIPELINE_SCRIPTS.map((s) => s.key),
+  );
+  const [name, setName] = useState("");
+  const [fiscalYear, setFiscalYear] = useState(currentFY());
+  const [quarter, setQuarter] = useState("Q1");
+  const [frequency, setFrequency] = useState<ScheduleFrequency>("daily");
+  const [cronExpression, setCronExpression] = useState("");
+  const [stopOnError, setStopOnError] = useState(false);
+  const [showForm, setShowForm] = useState(false);
+
+  const { data: pipelines, isLoading } = useQuery<Pipeline[]>({
+    queryKey: ["pipelines"],
+    queryFn: listPipelines,
+    refetchInterval: 30_000,
+  });
+
+  const createMut = useMutation({
+    mutationFn: (req: PipelineCreate) => createPipeline(req),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pipelines"] });
+      setShowForm(false);
+      setName("");
+      toast.success("Pipeline created.");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const deleteMut = useMutation({
+    mutationFn: (id: string) => deletePipeline(id),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["pipelines"] });
+      toast.success("Pipeline deleted.");
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const triggerMut = useMutation({
+    mutationFn: (id: string) => triggerPipeline(id),
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["pipelines"] });
+      toast.success("Pipeline triggered.");
+      navigate(`/jobs/${data.jobId}`);
+    },
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const toggleMut = useMutation({
+    mutationFn: (id: string) => togglePipeline(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["pipelines"] }),
+    onError: (err: Error) => toast.error(err.message),
+  });
+
+  const toggleScript = useCallback((key: string) => {
+    setSelectedScripts((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
+  }, []);
+
+  const allSelected = selectedScripts.length === PIPELINE_SCRIPTS.length;
+
+  const handleCreate = (e: React.FormEvent) => {
+    e.preventDefault();
+    createMut.mutate({
+      name,
+      fiscalYear,
+      quarter,
+      selectedScripts,
+      frequency,
+      cronExpression: frequency === "custom" ? cronExpression : undefined,
+      stopOnError,
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Accuracy Testing Pipelines</h3>
+          <p className="text-sm text-muted-foreground">
+            Multi-step accuracy testing pipelines with configurable script selection.
+          </p>
+        </div>
+        <Button size="sm" onClick={() => setShowForm(!showForm)}>
+          <Plus size={16} />
+          New Pipeline
+        </Button>
+      </div>
+
+      {/* Create form */}
+      {showForm && (
+        <form
+          onSubmit={handleCreate}
+          className="rounded-lg border border-border p-5 space-y-4 max-w-2xl"
+        >
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">Pipeline Name</label>
+            <input
+              className={inputCls}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="e.g. FY26 Q1 Full Run"
+              required
+            />
+          </div>
+
+          <div>
+            <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
+            {frequency === "quarterly" ? (
+              <p className="text-xs text-muted-foreground italic">
+                Fiscal year and quarter are auto-calculated from the most recently
+                completed quarter at run time.
+              </p>
+            ) : (
+              <TestingPeriodSelector
+                value={{ fiscalYear, quarter }}
+                onChange={({ fiscalYear: fy, quarter: q }) => {
+                  setFiscalYear(fy);
+                  setQuarter(q);
+                }}
+              />
+            )}
+          </div>
+
+          {/* Step strip */}
+          <StepStrip selected={selectedScripts} />
+
+          {/* Script checklist */}
+          <div className="rounded-lg border border-border p-4 space-y-2">
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+                Pipeline Steps
+              </p>
+              <button
+                type="button"
+                onClick={() =>
+                  setSelectedScripts(
+                    allSelected ? [] : PIPELINE_SCRIPTS.map((s) => s.key),
+                  )
+                }
+                className="text-xs text-primary hover:underline"
+              >
+                {allSelected ? "Deselect All" : "Select All"}
+              </button>
+            </div>
+            {PIPELINE_SCRIPTS.map((s) => (
+              <label key={s.key} className="flex items-center gap-2 cursor-pointer text-sm">
+                <input
+                  type="checkbox"
+                  checked={selectedScripts.includes(s.key)}
+                  onChange={() => toggleScript(s.key)}
+                  className="accent-primary h-4 w-4"
+                />
+                <span className="text-xs text-muted-foreground w-5">{s.step}.</span>
+                {s.label}
+              </label>
+            ))}
+          </div>
+
+          {/* Frequency */}
+          <div className="flex flex-col gap-1">
+            <label className="text-xs font-medium text-muted-foreground">Frequency</label>
+            <select
+              className={selectCls}
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value as ScheduleFrequency)}
+            >
+              {FREQUENCIES.map((f) => (
+                <option key={f.value} value={f.value}>{f.label}</option>
+              ))}
+            </select>
+          </div>
+
+          {frequency === "custom" && (
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-muted-foreground">Cron Expression</label>
+              <input
+                className={inputCls}
+                value={cronExpression}
+                onChange={(e) => setCronExpression(e.target.value)}
+                placeholder="0 6 * * 1"
+                required
+              />
+            </div>
+          )}
+
+          <label className="flex items-center gap-2 cursor-pointer text-sm">
+            <input
+              type="checkbox"
+              checked={stopOnError}
+              onChange={(e) => setStopOnError(e.target.checked)}
+              className="accent-primary h-4 w-4"
+            />
+            Stop pipeline on first error
+          </label>
+
+          <div className="flex gap-2">
+            <Button type="submit" disabled={createMut.isPending || selectedScripts.length === 0}>
+              {createMut.isPending ? "Creating…" : "Create Pipeline"}
+            </Button>
+            <Button type="button" variant="outline" onClick={() => setShowForm(false)}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      )}
+
+      {/* Existing pipelines */}
+      {isLoading && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {[0, 1].map((i) => (
+            <Card key={i}>
+              <CardContent className="space-y-3 pt-4 pb-4">
+                <Skeleton className="h-5 w-40" />
+                <Skeleton className="h-4 w-56" />
+                <Skeleton className="h-3 w-24" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {!isLoading && pipelines && pipelines.length === 0 && !showForm && (
+        <div className="rounded-lg border border-dashed px-6 py-8 text-center text-muted-foreground text-sm">
+          No pipelines configured yet.{" "}
+          <button
+            className="text-primary underline-offset-2 hover:underline"
+            onClick={() => setShowForm(true)}
+          >
+            Create one
+          </button>{" "}
+          to automate accuracy testing.
+        </div>
+      )}
+
+      {!isLoading && pipelines && pipelines.length > 0 && (
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+          {pipelines.map((p) => (
+            <Card
+              key={p.id}
+              className={cn("transition-opacity", !p.isActive && "opacity-60")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CalendarCheck size={16} className="shrink-0 text-primary" />
+                  {p.name}
+                </CardTitle>
+                <CardDescription>
+                  {p.fiscalYear} {p.quarter} · {p.selectedScripts.length} step(s) ·{" "}
+                  {frequencyLabel(p.frequency)}
+                </CardDescription>
+                <CardAction>
+                  <StatusBadge status={p.lastStatus} />
+                </CardAction>
+              </CardHeader>
+
+              <CardContent className="space-y-3 text-sm">
+                <StepStrip selected={p.selectedScripts} />
+
+                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-muted-foreground">
+                  <span className="font-medium text-foreground/70">Next run</span>
+                  <span>{formatDateTime(p.nextRunAt)}</span>
+                  <span className="font-medium text-foreground/70">Last run</span>
+                  <span>{formatDateTime(p.lastRunAt)}</span>
+                </div>
+
+                <div className="flex items-center gap-2 pt-1">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => triggerMut.mutate(p.id)}
+                    disabled={triggerMut.isPending}
+                    title="Run now"
+                  >
+                    <Play size={14} /> Run now
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => toggleMut.mutate(p.id)}
+                    disabled={toggleMut.isPending}
+                    title={p.isActive ? "Disable" : "Enable"}
+                  >
+                    {p.isActive ? <PowerOff size={14} /> : <Power size={14} />}
+                    {p.isActive ? "Disable" : "Enable"}
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => deleteMut.mutate(p.id)}
+                    title="Delete"
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 size={14} />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// ---------------------------------------------------------------------------
 // Main Scheduler page
 // ---------------------------------------------------------------------------
 
@@ -603,13 +1004,27 @@ const Scheduler: React.FC = () => {
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Page header */}
+      <div>
+        <h2 className="text-2xl font-bold tracking-tight">Scheduler</h2>
+        <p className="text-sm text-muted-foreground mt-1">
+          Manage automated pipeline runs. Schedules are checked every minute.
+        </p>
+      </div>
+
+      {/* Accuracy Testing Pipelines */}
+      <PipelineBuilder />
+
+      {/* Divider */}
+      <div className="border-t border-border" />
+
+      {/* Other Schedules header */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Scheduler</h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Manage automated pipeline runs. Schedules are checked every minute.
+          <h3 className="text-lg font-semibold">Other Schedules</h3>
+          <p className="text-sm text-muted-foreground">
+            Individual script schedules for replay, FIRDS, GLEIF, and utility tasks.
           </p>
         </div>
         <Button onClick={() => setShowCreate(true)} size="sm">

@@ -18,7 +18,12 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
 
-from api.schemas.filesystem import BrowseResponse, FilesystemEntry
+from api.schemas.filesystem import (
+    BrowseResponse,
+    FilesystemEntry,
+    ResolvedPaths,
+    ResolvePathsRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -109,3 +114,82 @@ async def browse_directory(
         raise HTTPException(status_code=403, detail="Permission denied.")
 
     return BrowseResponse(current=str(resolved), parent=parent, entries=entries)
+
+
+# ---------------------------------------------------------------------------
+# Smart path resolution
+# ---------------------------------------------------------------------------
+
+_STAGE_DIRS = ("extracts", "templates", "output", "logs")
+
+
+@router.post("/resolve-paths", response_model=ResolvedPaths)
+async def resolve_paths(body: ResolvePathsRequest) -> ResolvedPaths:
+    """Derive standard directory paths from a fiscal year and quarter.
+
+    Creates the directory tree under ``/app/data/{fiscal_year}/{quarter}/``
+    if it does not already exist, then returns the resolved paths.  Any
+    per-stage overrides supplied in the request body take precedence over
+    the default layout.
+
+    Args:
+        body: Request containing ``fiscal_year``, ``quarter``, and optional
+            ``overrides`` dict.
+
+    Returns:
+        A ``ResolvedPaths`` response with the root and per-stage paths.
+
+    Raises:
+        HTTPException 400: If the fiscal year or quarter format is invalid,
+            or if override paths contain traversal sequences.
+        HTTPException 403: If any override path resolves outside allowed roots.
+    """
+    fy = body.fiscal_year.strip()
+    quarter = body.quarter.strip()
+
+    if not fy or not quarter:
+        raise HTTPException(status_code=400, detail="fiscal_year and quarter are required.")
+
+    # Reject path traversal in the FY/Q segments themselves.
+    for segment in (fy, quarter):
+        if ".." in segment or "/" in segment or "\\" in segment:
+            raise HTTPException(status_code=400, detail="Invalid fiscal year or quarter value.")
+
+    root = Path("/app/data") / fy / quarter
+    paths: dict[str, str] = {}
+
+    for stage in _STAGE_DIRS:
+        override = (body.overrides or {}).get(stage)
+        if override:
+            override_path = Path(override)
+            if not override_path.is_absolute():
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Override path for '{stage}' must be absolute.",
+                )
+            if ".." in str(override_path).split("/"):
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Path traversal not allowed in '{stage}' override.",
+                )
+            resolved_override = override_path.resolve()
+            if not _is_allowed(resolved_override):
+                raise HTTPException(
+                    status_code=403,
+                    detail=f"Override path for '{stage}' is outside allowed roots.",
+                )
+            paths[stage] = str(resolved_override)
+        else:
+            paths[stage] = str(root / stage)
+
+    # Create all directories (including the root).
+    for dir_path in paths.values():
+        Path(dir_path).mkdir(parents=True, exist_ok=True)
+
+    return ResolvedPaths(
+        root=str(root),
+        extracts=paths["extracts"],
+        templates=paths["templates"],
+        output=paths["output"],
+        logs=paths["logs"],
+    )

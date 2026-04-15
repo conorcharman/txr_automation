@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PathPickerInput } from "@/components/PathPickerInput";
 import CsvFormatHint from "@/components/CsvFormatHint";
 import LastRunBadge from "@/components/LastRunBadge";
+import Field from "@/components/Field";
 import { firdsRefresh, firdsCheck, firdsBackfill, firdsLookup } from "@/api/firds";
 import { cn } from "@/lib/utils";
 import type { FirdsLookupResponse } from "@/types";
@@ -45,19 +46,7 @@ const selectCls =
 // Shared sub-components
 // ---------------------------------------------------------------------------
 
-interface FieldProps {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}
 
-const Field: React.FC<FieldProps> = ({ label, error, children }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-xs font-medium text-muted-foreground">{label}</label>
-    {children}
-    {error && <p className="text-xs text-destructive">{error}</p>}
-  </div>
-);
 
 function navItemCls(active: boolean): string {
   return cn(
@@ -68,14 +57,43 @@ function navItemCls(active: boolean): string {
   );
 }
 
+interface AdvancedSectionProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
+}
+
+const AdvancedSection: React.FC<AdvancedSectionProps> = ({ isOpen, onToggle, children }) => (
+  <div className="rounded-md border border-border">
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+    >
+      Advanced
+      <span className={cn("transition-transform text-[10px]", isOpen && "rotate-180")}>▾</span>
+    </button>
+    {isOpen && (
+      <div className="space-y-3 px-3 pb-3 border-t border-border pt-3">{children}</div>
+    )}
+  </div>
+);
+
+function loadCache<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(`txr_form_${key}`);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Refresh Form
 // ---------------------------------------------------------------------------
 
 const refreshSchema = z.object({
   refreshType: z.enum(["full", "delta", "auto"]),
-  publicationDate: z.string().optional(),
-  dbPath: z.string().optional(),
   logLevel: z.string(),
 });
 
@@ -83,26 +101,27 @@ type RefreshFormValues = z.infer<typeof refreshSchema>;
 
 const RefreshForm: React.FC = () => {
   const navigate = useNavigate();
-  const [showDbPath, setShowDbPath] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
     register,
     handleSubmit,
     watch,
-    setValue,
     formState: { errors },
   } = useForm<RefreshFormValues>({
     resolver: zodResolver(refreshSchema),
-    defaultValues: {
-      refreshType: "auto",
-      publicationDate: "",
-      dbPath: "",
+    defaultValues: loadCache("firds_refresh", {
+      refreshType: "auto" as const,
       logLevel: "INFO",
-    },
+    }),
   });
 
-  const refreshType = watch("refreshType");
-  const isSaturday = new Date().getDay() === 6;
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_firds_refresh", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
 
   const mutation = useMutation({
     mutationFn: firdsRefresh,
@@ -115,8 +134,6 @@ const RefreshForm: React.FC = () => {
   const onSubmit = (values: RefreshFormValues) => {
     mutation.mutate({
       refreshType: values.refreshType,
-      publicationDate: values.publicationDate || undefined,
-      dbPath: (showDbPath && values.dbPath) ? values.dbPath : undefined,
       logLevel: values.logLevel,
     });
   };
@@ -129,15 +146,8 @@ const RefreshForm: React.FC = () => {
         Refresh the local FIRDS database from the FCA FIRDS API.
       </p>
 
-      {isSaturday && refreshType === "full" && (
-        <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-sm text-amber-800 dark:border-amber-700 dark:bg-amber-900/20 dark:text-amber-300">
-          <strong>Warning:</strong> Full refreshes on Saturdays may fail because the FCA FIRDS
-          API does not publish data on weekends. Consider using a delta refresh instead.
-        </div>
-      )}
-
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Refresh Type</label>
+        <label className="text-xs font-medium text-muted-foreground" title="Type of cache refresh. Auto selects the best method; Full downloads the complete FIRDS dataset; Delta applies incremental updates.">Refresh Type</label>
         <div className="flex gap-4">
           {(["auto", "full", "delta"] as const).map((val) => (
             <label key={val} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -156,52 +166,13 @@ const RefreshForm: React.FC = () => {
         )}
       </div>
 
-      {refreshType === "delta" && (
-        <Field label="Publication Date (YYYY-MM-DD)" error={errors.publicationDate?.message}>
-          <input
-            type="date"
-            {...register("publicationDate")}
-            disabled={isPending}
-            className={inputCls}
-          />
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+          <select {...register("logLevel")} disabled={isPending} className={selectCls}>
+            {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
         </Field>
-      )}
-
-      <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={showDbPath}
-          onChange={(e) => {
-            setShowDbPath(e.target.checked);
-            if (!e.target.checked) setValue("dbPath", "");
-          }}
-          disabled={isPending}
-          className="rounded border-input"
-        />
-        Custom database file path
-      </label>
-
-      {showDbPath && (
-        <Field label="Database File Path" error={errors.dbPath?.message}>
-          <PathPickerInput
-            value={watch("dbPath") ?? ""}
-            onChange={(v) => setValue("dbPath", v)}
-            mode="file"
-            placeholder="/app/data/firds_cache.db"
-            disabled={isPending}
-          />
-        </Field>
-      )}
-
-      <Field label="Log Level" error={errors.logLevel?.message}>
-        <select {...register("logLevel")} disabled={isPending} className={selectCls}>
-          {LOG_LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </Field>
+      </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Running…" : "Run Refresh"}
@@ -253,6 +224,7 @@ type CheckFormValues = z.infer<typeof checkSchema>;
 
 const CheckForm: React.FC = () => {
   const navigate = useNavigate();
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [lookupResult, setLookupResult] = useState<FirdsLookupResponse | null>(null);
 
   const {
@@ -263,16 +235,23 @@ const CheckForm: React.FC = () => {
     formState: { errors },
   } = useForm<CheckFormValues>({
     resolver: zodResolver(checkSchema),
-    defaultValues: {
-      mode: "single",
+    defaultValues: loadCache("firds_check", {
+      mode: "single" as const,
       isin: "",
       date: "",
       mic: "",
       inputFile: "",
       outputFile: "",
       logLevel: "INFO",
-    },
+    }),
   });
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_firds_check", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
 
   const mode = watch("mode");
 
@@ -320,7 +299,7 @@ const CheckForm: React.FC = () => {
       </p>
 
       <div className="flex flex-col gap-1">
-        <label className="text-xs font-medium text-muted-foreground">Mode</label>
+        <label className="text-xs font-medium text-muted-foreground" title="Single: check one ISIN interactively. Batch: process a CSV file of ISINs.">Mode</label>
         <div className="flex gap-4">
           {(["single", "batch"] as const).map((val) => (
             <label key={val} className="flex items-center gap-2 text-sm cursor-pointer">
@@ -338,7 +317,7 @@ const CheckForm: React.FC = () => {
 
       {mode === "single" && (
         <>
-          <Field label="ISIN" error={errors.isin?.message}>
+          <Field label="ISIN" hint="12-character International Securities Identification Number." error={errors.isin?.message}>
             <input
               {...register("isin")}
               disabled={isPending}
@@ -346,7 +325,7 @@ const CheckForm: React.FC = () => {
               placeholder="e.g. GB00B3FLWH99"
             />
           </Field>
-          <Field label="Trade Date" error={errors.date?.message}>
+          <Field label="Trade Date" hint="Date of the trade to check reportability for." error={errors.date?.message}>
             <input
               type="date"
               {...register("date")}
@@ -354,7 +333,7 @@ const CheckForm: React.FC = () => {
               className={inputCls}
             />
           </Field>
-          <Field label="MIC (optional)" error={errors.mic?.message}>
+          <Field label="MIC (optional)" hint="Market Identifier Code to narrow venue matching, e.g. XLON." error={errors.mic?.message}>
             <input
               {...register("mic")}
               disabled={isPending}
@@ -378,7 +357,7 @@ const CheckForm: React.FC = () => {
               {
                 name: "trade_date",
                 required: false,
-                description: "Trade date in YYYY-MM-DD format. If absent, the date is extracted from the filename (pattern DD-MM-YYYY).",
+                description: "Trade date in YYYY-MM-DD or DD/MM/YYYY format. If absent, the date is extracted from the filename (pattern DD-MM-YYYY).",
                 example: "2026-03-15",
               },
               {
@@ -390,7 +369,7 @@ const CheckForm: React.FC = () => {
             ]}
             notes="All other columns in the input file are preserved unchanged in the output."
           />
-          <Field label="Input File" error={errors.inputFile?.message}>
+          <Field label="Input File" hint="CSV file containing ISIN column for batch reportability checking." error={errors.inputFile?.message}>
             <PathPickerInput
               value={watch("inputFile") ?? ""}
               onChange={(v) => setValue("inputFile", v)}
@@ -399,7 +378,7 @@ const CheckForm: React.FC = () => {
               disabled={isPending}
             />
           </Field>
-          <Field label="Output File" error={errors.outputFile?.message}>
+          <Field label="Output File" hint="Output CSV with reportability results appended." error={errors.outputFile?.message}>
             <PathPickerInput
               value={watch("outputFile") ?? ""}
               onChange={(v) => setValue("outputFile", v)}
@@ -411,15 +390,13 @@ const CheckForm: React.FC = () => {
         </>
       )}
 
-      <Field label="Log Level" error={errors.logLevel?.message}>
-        <select {...register("logLevel")} disabled={isPending} className={selectCls}>
-          {LOG_LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </Field>
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+          <select {...register("logLevel")} disabled={isPending} className={selectCls}>
+            {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </Field>
+      </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Running…" : "Check"}
@@ -480,7 +457,6 @@ const backfillSchema = z.object({
   inputFile: z.string().min(1, "Required"),
   outputFile: z.string().min(1, "Required"),
   format: z.enum(["auto", "incident", "generic"]),
-  dbPath: z.string().optional(),
   skipRefresh: z.boolean(),
   logLevel: z.string(),
 });
@@ -489,7 +465,7 @@ type BackfillFormValues = z.infer<typeof backfillSchema>;
 
 const BackfillForm: React.FC = () => {
   const navigate = useNavigate();
-  const [showDbPath, setShowDbPath] = useState(false);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
     register,
@@ -499,15 +475,21 @@ const BackfillForm: React.FC = () => {
     formState: { errors },
   } = useForm<BackfillFormValues>({
     resolver: zodResolver(backfillSchema),
-    defaultValues: {
+    defaultValues: loadCache("firds_backfill", {
       inputFile: "",
       outputFile: "",
-      format: "auto",
-      dbPath: "",
+      format: "auto" as const,
       skipRefresh: false,
       logLevel: "INFO",
-    },
+    }),
   });
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_firds_backfill", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
 
   const mutation = useMutation({
     mutationFn: firdsBackfill,
@@ -522,7 +504,6 @@ const BackfillForm: React.FC = () => {
       inputFile: values.inputFile,
       outputFile: values.outputFile,
       format: values.format,
-      dbPath: (showDbPath && values.dbPath) ? values.dbPath : undefined,
       skipRefresh: values.skipRefresh || undefined,
       logLevel: values.logLevel,
     });
@@ -548,7 +529,7 @@ const BackfillForm: React.FC = () => {
           {
             name: "trade_date",
             required: true,
-            description: "Trade date in YYYY-MM-DD format.",
+            description: "Trade date in YYYY-MM-DD or DD/MM/YYYY format.",
             example: "2026-03-15",
           },
           {
@@ -561,7 +542,7 @@ const BackfillForm: React.FC = () => {
         notes={`Use format "incident" for FCA incident files, which instead use "Instrument identification code" and "Transaction Reference Number" columns. Format auto-detects from headers by default.`}
       />
 
-      <Field label="Input File" error={errors.inputFile?.message}>
+      <Field label="Input File" hint="CSV file containing transactions to backfill FIRDS reportability data for." error={errors.inputFile?.message}>
         <PathPickerInput
           value={watch("inputFile")}
           onChange={(v) => setValue("inputFile", v)}
@@ -571,7 +552,7 @@ const BackfillForm: React.FC = () => {
         />
       </Field>
 
-      <Field label="Output File" error={errors.outputFile?.message}>
+      <Field label="Output File" hint="Where to write the backfilled output CSV." error={errors.outputFile?.message}>
         <PathPickerInput
           value={watch("outputFile")}
           onChange={(v) => setValue("outputFile", v)}
@@ -581,7 +562,7 @@ const BackfillForm: React.FC = () => {
         />
       </Field>
 
-      <Field label="CSV Format" error={errors.format?.message}>
+      <Field label="CSV Format" hint="Auto-detects from column headers. Use Incident for FCA incident files; Generic for standard CSV." error={errors.format?.message}>
         <select {...register("format")} disabled={isPending} className={selectCls}>
           <option value="auto">Auto-detect</option>
           <option value="incident">Incident</option>
@@ -599,41 +580,13 @@ const BackfillForm: React.FC = () => {
         Skip cache refresh before backfill
       </label>
 
-      <label className="flex items-center gap-2 text-sm cursor-pointer select-none">
-        <input
-          type="checkbox"
-          checked={showDbPath}
-          onChange={(e) => {
-            setShowDbPath(e.target.checked);
-            if (!e.target.checked) setValue("dbPath", "");
-          }}
-          disabled={isPending}
-          className="rounded border-input"
-        />
-        Custom database file path
-      </label>
-
-      {showDbPath && (
-        <Field label="Database File Path" error={errors.dbPath?.message}>
-          <PathPickerInput
-            value={watch("dbPath") ?? ""}
-            onChange={(v) => setValue("dbPath", v)}
-            mode="file"
-            placeholder="/app/data/firds_cache.db"
-            disabled={isPending}
-          />
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+          <select {...register("logLevel")} disabled={isPending} className={selectCls}>
+            {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
         </Field>
-      )}
-
-      <Field label="Log Level" error={errors.logLevel?.message}>
-        <select {...register("logLevel")} disabled={isPending} className={selectCls}>
-          {LOG_LEVELS.map((l) => (
-            <option key={l} value={l}>
-              {l}
-            </option>
-          ))}
-        </select>
-      </Field>
+      </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Running…" : "Backfill"}

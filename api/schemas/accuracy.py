@@ -32,18 +32,13 @@ class BatchModeConfig(_CamelModel):
         output_directory: Path to the directory for validated output files.
         template_directory: Path to the directory containing Kaizen template files.
         log_output: Directory for log output (default: ``"logs"``).
-        tracker_files: Optional list of tracker CSV file paths.
-        italian_tracker: Optional path to the Italian fiscal code tracker CSV.
-        main_tracker: Optional path to the main ID cross-reference tracker CSV.
+
     """
 
     input_directory: str
     output_directory: str
     template_directory: str
     log_output: str = "logs"
-    tracker_files: list[str] = []
-    italian_tracker: str | None = None
-    main_tracker: str | None = None
 
 
 class SingleModeConfig(_CamelModel):
@@ -57,7 +52,7 @@ class SingleModeConfig(_CamelModel):
         template_id_column: Column name for the identification code in the template.
         template_type_column: Column name for the identification code type in the template.
         log_output: Directory for log output (default: ``"logs"``).
-        tracker_files: Optional list of tracker CSV file paths.
+
     """
 
     incident_code: str
@@ -67,7 +62,6 @@ class SingleModeConfig(_CamelModel):
     template_id_column: str = "Buyer identification code"
     template_type_column: str = "Type of buyer identification code"
     log_output: str = "logs"
-    tracker_files: list[str] = []
 
 
 class RunValidationRequest(_CamelModel):
@@ -103,9 +97,14 @@ class RunAllRequest(_CamelModel):
         output_directory: Path to the directory for validated output files.
         template_directory: Path to the directory containing Kaizen template files.
         log_level: Logging verbosity (default: ``"INFO"``).
+        log_output: Directory for log files (default: ``"logs"``).
         dry_run: If ``True``, validate without executing the scripts (default: ``False``).
         stop_on_error: If ``True``, stop execution on first validation failure
             (default: ``False``).
+        selected_scripts: Optional subset of ``validation_types`` to execute.
+            When provided, only these scripts are included in the run; the
+            order is preserved from ``validation_types``.  When ``None`` or
+            empty, all ``validation_types`` are executed.
     """
 
     testing_period: TestingPeriod
@@ -114,8 +113,10 @@ class RunAllRequest(_CamelModel):
     output_directory: str
     template_directory: str
     log_level: str = "INFO"
+    log_output: str = "logs"
     dry_run: bool = False
     stop_on_error: bool = False
+    selected_scripts: list[str] | None = None
 
 
 class DiscoveryRequest(_CamelModel):

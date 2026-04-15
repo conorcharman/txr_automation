@@ -34,8 +34,15 @@ const LastRunBadge: React.FC<LastRunBadgeProps> = ({ scriptName, className }) =>
 
   const isSuccess = info.status === "success";
 
+  const relativeTime = info.completedAt ? formatRelativeTime(info.completedAt) : null;
+  const ariaLabel = isSuccess
+    ? `Last run passed${relativeTime ? `, ${relativeTime}` : ""}`
+    : `Last run failed${relativeTime ? `, ${relativeTime}` : ""}`;
+
   return (
     <span
+      role="status"
+      aria-label={ariaLabel}
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium",
         isSuccess
@@ -45,15 +52,16 @@ const LastRunBadge: React.FC<LastRunBadgeProps> = ({ scriptName, className }) =>
       )}
     >
       <span
+        aria-hidden="true"
         className={cn(
           "h-1.5 w-1.5 rounded-full",
           isSuccess ? "bg-green-500" : "bg-red-500",
         )}
       />
       {isSuccess ? "Passed" : "Failed"}
-      {info.completedAt && (
-        <span className="text-[10px] opacity-70">
-          {formatRelativeTime(info.completedAt)}
+      {relativeTime && (
+        <span className="text-xs">
+          {relativeTime}
         </span>
       )}
     </span>

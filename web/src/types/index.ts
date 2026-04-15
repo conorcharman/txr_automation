@@ -19,6 +19,24 @@ export interface BrowseResponse {
   entries: FilesystemEntry[];
 }
 
+// ---------------------------------------------------------------------------
+// Smart path resolution
+// ---------------------------------------------------------------------------
+
+export interface ResolvePathsRequest {
+  fiscalYear: string;
+  quarter: string;
+  overrides?: Record<string, string> | null;
+}
+
+export interface ResolvedPaths {
+  root: string;
+  extracts: string;
+  templates: string;
+  output: string;
+  logs: string;
+}
+
 export type JobStatus = "pending" | "running" | "success" | "failed" | "cancelled";
 
 export interface Job {
@@ -96,9 +114,6 @@ export interface BatchModeConfig {
   outputDirectory: string;
   templateDirectory: string;
   logOutput?: string;
-  trackerFiles?: string[];
-  italianTracker?: string;
-  mainTracker?: string;
 }
 
 export interface SingleModeConfig {
@@ -127,9 +142,11 @@ export interface RunAllRequest {
   inputDirectory: string;
   outputDirectory: string;
   templateDirectory: string;
+  logOutput?: string;
   logLevel?: string;
   dryRun?: boolean;
   stopOnError?: boolean;
+  selectedScripts?: string[] | null;
 }
 
 // Accuracy Testing - Discovery
@@ -162,6 +179,7 @@ export interface ReplayPhase2Request {
   fiscalYear: string;
   quarter: string;
   logLevel?: string;
+  logOutput?: string;
 }
 
 export interface ReplayPhase3Request {
@@ -171,6 +189,7 @@ export interface ReplayPhase3Request {
   fiscalYear: string;
   quarter: string;
   logLevel?: string;
+  logOutput?: string;
 }
 
 export interface ReplayPhase3FinalRequest {
@@ -179,6 +198,7 @@ export interface ReplayPhase3FinalRequest {
   fiscalYear: string;
   quarter: string;
   logLevel?: string;
+  logOutput?: string;
 }
 
 export interface ReplayMergeRequest {
@@ -186,6 +206,7 @@ export interface ReplayMergeRequest {
   sellerFile: string;
   outputFile: string;
   logLevel?: string;
+  dryRun?: boolean;
 }
 
 // FIRDS
@@ -227,7 +248,7 @@ export interface FirdsLookupResponse {
 // GLEIF
 export interface GleifRefreshRequest {
   refreshType: "full" | "delta" | "auto";
-  deltaType?: "monthly" | "weekly" | "daily";
+  deltaType?: "24h" | "7d" | "31d";
   dbPath?: string;
   skipIsinMap?: boolean;
   logLevel?: string;
@@ -282,7 +303,7 @@ export interface GleifSearchResponse {
 // Scheduler
 // ---------------------------------------------------------------------------
 
-export type ScheduleFrequency = "hourly" | "daily" | "weekly" | "monthly" | "custom";
+export type ScheduleFrequency = "hourly" | "daily" | "weekly" | "monthly" | "quarterly" | "custom";
 
 export interface Schedule {
   id: string;
@@ -342,4 +363,96 @@ export interface XmlConverterRequest {
   parentDir?: string;
   outputDir?: string;
   logLevel?: string;
+}
+
+// ---------------------------------------------------------------------------
+// Pipelines
+// ---------------------------------------------------------------------------
+
+export interface Pipeline {
+  id: string;
+  name: string;
+  fiscalYear: string;
+  quarter: string;
+  selectedScripts: string[];
+  frequency: ScheduleFrequency;
+  cronExpression: string | null;
+  configOverrides: Record<string, string> | null;
+  stopOnError: boolean;
+  isActive: boolean;
+  nextRunAt: string | null;
+  lastRunAt: string | null;
+  lastStatus: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface PipelineCreate {
+  name: string;
+  fiscalYear: string;
+  quarter: string;
+  selectedScripts: string[];
+  frequency: ScheduleFrequency;
+  cronExpression?: string | null;
+  configOverrides?: Record<string, string> | null;
+  stopOnError?: boolean;
+  isActive?: boolean;
+}
+
+export interface PipelineUpdate {
+  name?: string;
+  fiscalYear?: string;
+  quarter?: string;
+  selectedScripts?: string[];
+  frequency?: ScheduleFrequency;
+  cronExpression?: string | null;
+  configOverrides?: Record<string, string> | null;
+  stopOnError?: boolean;
+  isActive?: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Reconciliation Schedules
+// ---------------------------------------------------------------------------
+
+export interface ReconciliationSchedule {
+  id: string;
+  name: string;
+  recPeriodDays: number;
+  lookbackDays: number;
+  selectedScripts: string[];
+  frequency: string;
+  cronExpression: string | null;
+  configOverrides: Record<string, string> | null;
+  stopOnError: boolean;
+  isActive: boolean;
+  nextRunAt: string | null;
+  lastRunAt: string | null;
+  lastStatus: string | null;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface ReconciliationScheduleCreate {
+  name: string;
+  recPeriodDays?: number;
+  lookbackDays?: number;
+  selectedScripts: string[];
+  frequency: string;
+  cronExpression?: string | null;
+  configOverrides?: Record<string, string> | null;
+  stopOnError?: boolean;
+  isActive?: boolean;
+}
+
+export interface ReconciliationScheduleUpdate {
+  name?: string;
+  recPeriodDays?: number;
+  lookbackDays?: number;
+  selectedScripts?: string[];
+  frequency?: string;
+  cronExpression?: string | null;
+  configOverrides?: Record<string, string> | null;
+  stopOnError?: boolean;
+  isActive?: boolean;
 }

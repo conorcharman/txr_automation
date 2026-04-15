@@ -22,6 +22,10 @@ Usage:
         --output-dir data/extracts/automated/ \\
         --dry-run
 
+Version 1.1 Changes:
+- Add --start-date / --end-date for arbitrary date ranges
+- Make --fiscal-year / --quarter optional when explicit dates are given
+
 Version 1.0 Changes:
 - Initial implementation for Phase 4 period-based extraction
 """
@@ -133,13 +137,19 @@ def main() -> None:
     )
     parser.add_argument(
         "--fiscal-year",
-        required=True,
-        help="Fiscal year label, e.g. FY26",
+        help="Fiscal year label, e.g. FY26 (required unless --start-date/--end-date given)",
     )
     parser.add_argument(
         "--quarter",
-        required=True,
-        help="Quarter label, e.g. Q2",
+        help="Quarter label, e.g. Q2 (required unless --start-date/--end-date given)",
+    )
+    parser.add_argument(
+        "--start-date",
+        help="Explicit start date (ISO format YYYY-MM-DD). Overrides --fiscal-year/--quarter.",
+    )
+    parser.add_argument(
+        "--end-date",
+        help="Explicit end date (ISO format YYYY-MM-DD). Overrides --fiscal-year/--quarter.",
     )
     parser.add_argument(
         "--output-dir",
@@ -159,6 +169,15 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    # Validate: either explicit dates or fiscal-year/quarter must be provided.
+    has_explicit_dates = args.start_date and args.end_date
+    has_fiscal_period = args.fiscal_year and args.quarter
+    if not has_explicit_dates and not has_fiscal_period:
+        parser.error(
+            "Either --start-date and --end-date, or --fiscal-year and --quarter, "
+            "must be provided."
+        )
+
     logging.basicConfig(
         level=getattr(logging, args.log_level),
         format="%(asctime)s %(levelname)s %(message)s",
@@ -166,12 +185,28 @@ def main() -> None:
     logger = logging.getLogger(__name__)
 
     vtype = VALIDATION_TYPE_MAP[args.validation_type]
-    period = SchedulePeriod(
-        period_type=PeriodType.FISCAL_QUARTER,
-        fiscal_year=args.fiscal_year,
-        quarter=args.quarter,
-    )
-    start_date, end_date = period.to_date_range()
+
+    if has_explicit_dates:
+        start_date = date.fromisoformat(args.start_date)
+        end_date = date.fromisoformat(args.end_date)
+        # Build a nominal period for file naming; use fiscal_year/quarter if
+        # provided alongside explicit dates, otherwise derive a label.
+        fy_label = args.fiscal_year or "CUSTOM"
+        q_label = args.quarter or "CUSTOM"
+        period = SchedulePeriod(
+            period_type=PeriodType.FISCAL_QUARTER,
+            fiscal_year=fy_label,
+            quarter=q_label,
+        )
+    else:
+        period = SchedulePeriod(
+            period_type=PeriodType.FISCAL_QUARTER,
+            fiscal_year=args.fiscal_year,
+            quarter=args.quarter,
+        )
+        start_date, end_date = period.to_date_range()
+        fy_label = args.fiscal_year
+        q_label = args.quarter
 
     timestamp = datetime.now()
     output_dir = Path(args.output_dir)
@@ -184,8 +219,8 @@ def main() -> None:
     logger.info(
         "Generating period extract for %s %s %s",
         vtype.display_name,
-        args.fiscal_year,
-        args.quarter,
+        fy_label,
+        q_label,
     )
     logger.info("Date range: %s to %s", start_date, end_date)
     logger.info("SQL template: %s", sql_template_path)

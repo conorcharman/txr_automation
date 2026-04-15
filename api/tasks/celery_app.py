@@ -46,11 +46,19 @@ celery_app.conf.update(
     enable_utc=True,
     task_track_started=True,
     # Explicitly include task modules so the worker registers them on startup.
-    include=["api.tasks.script_tasks", "api.tasks.scheduler_tasks"],
+    include=["api.tasks.script_tasks", "api.tasks.scheduler_tasks", "api.tasks.pipeline_tasks", "api.tasks.reconciliation_tasks"],
     # Celery beat periodic tasks.
     beat_schedule={
         "check-and-run-schedules-every-minute": {
             "task": "api.tasks.scheduler_tasks.check_and_run_schedules",
+            "schedule": 60.0,  # seconds
+        },
+        "check-and-run-pipelines-every-minute": {
+            "task": "api.tasks.scheduler_tasks.check_and_run_pipelines",
+            "schedule": 60.0,  # seconds
+        },
+        "check-and-run-reconciliations-every-minute": {
+            "task": "api.tasks.scheduler_tasks.check_and_run_reconciliations",
             "schedule": 60.0,  # seconds
         },
     },

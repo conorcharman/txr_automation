@@ -527,10 +527,12 @@ def _print_result(result: ReportabilityResult) -> None:
 
 
 def _parse_date(value: str) -> date:
-    """Parse a YYYY-MM-DD string into a :class:`~datetime.date`.
+    """Parse a date string into a :class:`~datetime.date`.
+
+    Accepts both ``YYYY-MM-DD`` and ``DD/MM/YYYY`` formats.
 
     Args:
-        value: Date string in YYYY-MM-DD format.
+        value: Date string in YYYY-MM-DD or DD/MM/YYYY format.
 
     Returns:
         Parsed :class:`~datetime.date`.
@@ -541,8 +543,12 @@ def _parse_date(value: str) -> date:
     try:
         return date.fromisoformat(value)
     except ValueError:
+        pass
+    try:
+        return datetime.strptime(value, "%d/%m/%Y").date()
+    except ValueError:
         raise argparse.ArgumentTypeError(
-            f"Invalid date '{value}'. Use YYYY-MM-DD format."
+            f"Invalid date '{value}'. Use YYYY-MM-DD or DD/MM/YYYY format."
         )
 
 

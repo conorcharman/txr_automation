@@ -272,6 +272,29 @@ class ScriptRunnerService:
 
         module_path = _resolve_module(req.script_name)
 
+        # accuracy_template_generator has a different YAML structure from all
+        # other accuracy validation scripts — it generates templates from
+        # consolidated CSV files rather than running ID validation.
+        if req.script_name == "accuracy_template_generator":
+            batch = req.batch_config
+            tpl_config: dict = {
+                "testing_period": {
+                    "fiscal_year": req.testing_period.fiscal_year,
+                    "quarter": req.testing_period.quarter,
+                },
+            }
+            if batch is not None:
+                tpl_config["paths"] = {
+                    "input": {"directory": batch.input_directory},
+                    "output": {"directory": batch.output_directory},
+                }
+            tmp_path = _write_temp_yaml(tpl_config)
+            argv = ["--config", tmp_path, "--log-level", req.log_level]
+            logger.debug(
+                "Wrote template generator config to %s.", tmp_path
+            )
+            return module_path, argv, tpl_config
+
         config: dict = {
             "mode": req.mode,
             "testing_period": {
@@ -287,9 +310,6 @@ class ScriptRunnerService:
                     "output_directory": req.batch_config.output_directory,
                     "template_directory": req.batch_config.template_directory,
                     "log_output": req.batch_config.log_output,
-                    "tracker_files": req.batch_config.tracker_files,
-                    "italian_tracker": req.batch_config.italian_tracker,
-                    "main_tracker": req.batch_config.main_tracker,
                 }
             }
         elif req.mode == "single" and req.single_config is not None:
@@ -302,7 +322,6 @@ class ScriptRunnerService:
                     "template_id_column": req.single_config.template_id_column,
                     "template_type_column": req.single_config.template_type_column,
                     "log_output": req.single_config.log_output,
-                    "tracker_files": req.single_config.tracker_files,
                 },
             }
 
@@ -331,8 +350,14 @@ class ScriptRunnerService:
         """
         module_path = _resolve_module("run_all_validations")
 
+        # Apply selected_scripts filter if provided.
+        effective_types = req.validation_types
+        if req.selected_scripts:
+            allowed = set(req.selected_scripts)
+            effective_types = [v for v in req.validation_types if v in allowed]
+
         validations: list[dict] = []
-        for script_name in req.validation_types:
+        for script_name in effective_types:
             script_module = _SCRIPT_MODULES.get(script_name)
             if script_module is None:
                 logger.warning(
@@ -351,8 +376,7 @@ class ScriptRunnerService:
                         "input_directory": req.input_directory,
                         "output_directory": req.output_directory,
                         "template_directory": req.template_directory,
-                        "log_output": "logs",
-                        "tracker_files": [],
+                        "log_output": req.log_output,
                     }
                 },
             }
@@ -414,7 +438,7 @@ class ScriptRunnerService:
                 "paths": {
                     "replay_input": req.input_file,
                     "replay_output": req.output_file,
-                    "log_output": "logs",
+                    "log_output": req.log_output,
                 },
                 "files": {
                     "replay_patterns": ["*.csv"],
@@ -432,7 +456,7 @@ class ScriptRunnerService:
                     "replay_input": req.input_file,
                     "incident_files": req.feedback_file,
                     "replay_output": req.output_file,
-                    "log_output": "logs",
+                    "log_output": req.log_output,
                 },
                 "files": {
                     "replay_patterns": [
@@ -452,7 +476,7 @@ class ScriptRunnerService:
                 "paths": {
                     "replay_input": req.input_file,
                     "replay_output": req.output_file,
-                    "log_output": "logs",
+                    "log_output": req.log_output,
                 },
                 "files": {
                     "replay_ids_pattern": "Replay_*_Inconsistent_IDs_Summary_*.csv",
@@ -480,6 +504,8 @@ class ScriptRunnerService:
 
         tmp_path = _write_temp_yaml(config)
         argv = ["--config", tmp_path, "--log-level", req.log_level]
+        if isinstance(req, ReplayMergeRequest) and req.dry_run:
+            argv.append("--dry-run")
 
         logger.debug("Wrote replay config to %s for script %s.", tmp_path, script_name)
         return module_path, argv, config

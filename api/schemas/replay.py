@@ -21,6 +21,7 @@ class ReplayPhase2Request(_CamelModel):
         fiscal_year: Fiscal year string, e.g. ``"FY26"``.
         quarter: Quarter string, e.g. ``"Q1"``.
         log_level: Logging verbosity (default: ``"INFO"``).
+        log_output: Directory for log files (default: ``"logs"``)
     """
 
     input_file: str
@@ -28,6 +29,7 @@ class ReplayPhase2Request(_CamelModel):
     fiscal_year: str
     quarter: str
     log_level: str = "INFO"
+    log_output: str = "logs"
 
 
 class ReplayPhase3Request(_CamelModel):
@@ -40,6 +42,7 @@ class ReplayPhase3Request(_CamelModel):
         fiscal_year: Fiscal year string, e.g. ``"FY26"``.
         quarter: Quarter string, e.g. ``"Q1"``.
         log_level: Logging verbosity (default: ``"INFO"``).
+        log_output: Directory for log files (default: ``"logs"``)
     """
 
     input_file: str
@@ -48,6 +51,7 @@ class ReplayPhase3Request(_CamelModel):
     fiscal_year: str
     quarter: str
     log_level: str = "INFO"
+    log_output: str = "logs"
 
 
 class ReplayPhase3FinalRequest(_CamelModel):
@@ -59,6 +63,7 @@ class ReplayPhase3FinalRequest(_CamelModel):
         fiscal_year: Fiscal year string, e.g. ``"FY26"``.
         quarter: Quarter string, e.g. ``"Q1"``.
         log_level: Logging verbosity (default: ``"INFO"``).
+        log_output: Directory for log files (default: ``"logs"``)
     """
 
     input_file: str
@@ -66,6 +71,7 @@ class ReplayPhase3FinalRequest(_CamelModel):
     fiscal_year: str
     quarter: str
     log_level: str = "INFO"
+    log_output: str = "logs"
 
 
 class ReplayMergeRequest(_CamelModel):
@@ -82,3 +88,4 @@ class ReplayMergeRequest(_CamelModel):
     seller_file: str
     output_file: str
     log_level: str = "INFO"
+    dry_run: bool = False

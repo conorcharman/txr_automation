@@ -73,6 +73,12 @@ Template Formats:
     )
     
     parser.add_argument(
+        '--input',
+        type=str,
+        help='Directory containing consolidated CSV files; discovers consolidated_errors.csv and consolidated_queries.csv automatically (overrides config)'
+    )
+
+    parser.add_argument(
         '--errors',
         type=str,
         help='Path to consolidated errors CSV file (overrides config)'
@@ -113,7 +119,14 @@ Template Formats:
         action='store_true',
         help=argparse.SUPPRESS,
     )
-    
+
+    parser.add_argument(
+        '--log-level',
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+        default='INFO',
+        help=argparse.SUPPRESS,
+    )
+
     return parser.parse_args()
 
 
@@ -201,12 +214,32 @@ def main():
         paths = config.get('paths', {})
         input_paths = paths.get('input', {})
         output_paths = paths.get('output', {})
-        
-        errors_path = input_paths.get('errors_file')
-        queries_path = input_paths.get('queries_file')
+
+        # Support both directory-based discovery and explicit file paths in config
+        input_dir_from_config = input_paths.get('directory')
+        if input_dir_from_config:
+            input_dir = Path(input_dir_from_config)
+            candidate_errors = input_dir / 'consolidated_errors.csv'
+            candidate_queries = input_dir / 'consolidated_queries.csv'
+            if candidate_errors.exists():
+                errors_path = str(candidate_errors)
+            if candidate_queries.exists():
+                queries_path = str(candidate_queries)
+        else:
+            errors_path = input_paths.get('errors_file')
+            queries_path = input_paths.get('queries_file')
+
         output_dir = output_paths.get('directory')
-    
-    # CLI args override config
+
+    # --input directory overrides config (discovers files automatically)
+    if args.input:
+        input_dir = Path(args.input)
+        candidate_errors = input_dir / 'consolidated_errors.csv'
+        candidate_queries = input_dir / 'consolidated_queries.csv'
+        errors_path = str(candidate_errors) if candidate_errors.exists() else errors_path
+        queries_path = str(candidate_queries) if candidate_queries.exists() else queries_path
+
+    # Explicit file args override everything
     if args.errors:
         errors_path = args.errors
     if args.queries:

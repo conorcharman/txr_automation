@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import TestingPeriodSelector from "@/components/TestingPeriodSelector";
 import ConfigLoader from "@/components/ConfigLoader";
 import { PathPickerInput } from "@/components/PathPickerInput";
+import SmartPathConfig from "@/components/SmartPathConfig";
 import LastRunBadge from "@/components/LastRunBadge";
+import Field from "@/components/Field";
 import { runValidation, runAllValidations, discoverIncidents } from "@/api/accuracy";
 import { cn } from "@/lib/utils";
-import type { DiscoveryResponse } from "@/types";
+import type { DiscoveryResponse, ResolvedPaths } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -33,8 +35,6 @@ const VALIDATION_SCRIPTS = [
   { key: "non_zero_net_amount", label: "Non-Zero Net Amount" },
 ] as const;
 
-type ValidationScriptKey = (typeof VALIDATION_SCRIPTS)[number]["key"];
-type SelectedScript = ValidationScriptKey | "run-all";
 type ActiveTab = "validation" | "utilities";
 
 function currentFY(): string {
@@ -58,19 +58,7 @@ const selectCls =
 // Field wrapper
 // ---------------------------------------------------------------------------
 
-interface FieldProps {
-  label: string;
-  error?: string;
-  children: React.ReactNode;
-}
 
-const Field: React.FC<FieldProps> = ({ label, error, children }) => (
-  <div className="flex flex-col gap-1">
-    <label className="text-xs font-medium text-muted-foreground">{label}</label>
-    {children}
-    {error && <p className="text-xs text-destructive">{error}</p>}
-  </div>
-);
 
 // ---------------------------------------------------------------------------
 // Sidebar nav item
@@ -86,65 +74,56 @@ function navItemCls(active: boolean): string {
 }
 
 // ---------------------------------------------------------------------------
-// Log level + dry run row (shared between forms)
+// Advanced collapsible (log level + dry run + optional ConfigLoader slot)
 // ---------------------------------------------------------------------------
 
-interface LogRowProps {
-  registerLogLevel: React.InputHTMLAttributes<HTMLSelectElement> &
-    React.RefAttributes<HTMLSelectElement>;
-  registerDryRun: React.InputHTMLAttributes<HTMLInputElement> &
-    React.RefAttributes<HTMLInputElement>;
-  disabled: boolean;
-  logLevelError?: string;
+interface AdvancedSectionProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  children: React.ReactNode;
 }
 
-const LogRow: React.FC<LogRowProps> = ({
-  registerLogLevel,
-  registerDryRun,
-  disabled,
-  logLevelError,
-}) => (
-  <div className="flex items-end gap-4">
-    <Field label="Log Level" error={logLevelError}>
-      <select
-        {...registerLogLevel}
-        disabled={disabled}
-        className={cn(selectCls, "w-40")}
-      >
-        {LOG_LEVELS.map((l) => (
-          <option key={l} value={l}>
-            {l}
-          </option>
-        ))}
-      </select>
-    </Field>
-    <label className="flex items-center gap-2 cursor-pointer text-sm pb-1">
-      <input
-        type="checkbox"
-        {...registerDryRun}
-        disabled={disabled}
-        className="accent-primary h-4 w-4"
-      />
-      Dry Run
-    </label>
+const AdvancedSection: React.FC<AdvancedSectionProps> = ({ isOpen, onToggle, children }) => (
+  <div className="rounded-md border border-border">
+    <button
+      type="button"
+      onClick={onToggle}
+      className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+    >
+      Advanced
+      <span className={cn("transition-transform text-[10px]", isOpen && "rotate-180")}>▾</span>
+    </button>
+    {isOpen && (
+      <div className="space-y-3 px-3 pb-3 border-t border-border pt-3">{children}</div>
+    )}
   </div>
 );
 
 // ---------------------------------------------------------------------------
-// Validation Script Form
+// localStorage helpers
 // ---------------------------------------------------------------------------
 
-const validationSchema = z.object({
+function loadCache<T>(key: string, fallback: T): T {
+  try {
+    const raw = localStorage.getItem(`txr_form_${key}`);
+    return raw ? (JSON.parse(raw) as T) : fallback;
+  } catch {
+    return fallback;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Unified Validation Form
+// ---------------------------------------------------------------------------
+
+const unifiedSchema = z.object({
   testingPeriod: z.object({ fiscalYear: z.string(), quarter: z.string() }),
   mode: z.enum(["batch", "single"]),
-  // Batch fields
+  // Batch fields (auto-filled by SmartPathConfig)
   inputDirectory: z.string().optional(),
   outputDirectory: z.string().optional(),
   templateDirectory: z.string().optional(),
-  logOutput: z.string().optional(),
-  italianTracker: z.string().optional(),
-  mainTracker: z.string().optional(),
-  // Single fields
+  // Single fields (only when exactly 1 incident selected + single mode)
   incidentCode: z.string().optional(),
   inputFile: z.string().optional(),
   templateFile: z.string().optional(),
@@ -152,17 +131,18 @@ const validationSchema = z.object({
   // Common
   logLevel: z.string(),
   dryRun: z.boolean(),
+  stopOnError: z.boolean(),
 });
 
-type ValidationFormValues = z.infer<typeof validationSchema>;
+type UnifiedFormValues = z.infer<typeof unifiedSchema>;
 
-interface ValidationScriptFormProps {
-  scriptName: string;
-}
-
-const ValidationScriptForm: React.FC<ValidationScriptFormProps> = ({ scriptName }) => {
+const UnifiedValidationForm: React.FC = () => {
   const navigate = useNavigate();
-  const [showTrackers, setShowTrackers] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState<string[]>(
+    VALIDATION_SCRIPTS.map((s) => s.key),
+  );
+  const [discoveryResult, setDiscoveryResult] = useState<DiscoveryResponse | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   const {
     control,
@@ -173,81 +153,143 @@ const ValidationScriptForm: React.FC<ValidationScriptFormProps> = ({ scriptName 
     getValues,
     reset,
     formState: { errors },
-  } = useForm<ValidationFormValues>({
-    resolver: zodResolver(validationSchema),
-    defaultValues: {
+  } = useForm<UnifiedFormValues>({
+    resolver: zodResolver(unifiedSchema),
+    defaultValues: loadCache("accuracy_validation_unified", {
       testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
-      mode: "batch",
+      mode: "batch" as const,
       inputDirectory: "",
       outputDirectory: "",
       templateDirectory: "",
-      logOutput: "logs",
-      italianTracker: "",
-      mainTracker: "",
       incidentCode: "",
       inputFile: "",
       templateFile: "",
       outputFile: "",
       logLevel: "INFO",
       dryRun: false,
-    },
+      stopOnError: false,
+    }),
   });
 
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_accuracy_validation_unified", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
+
+  const testingPeriod = watch("testingPeriod");
   const mode = watch("mode");
+  const inputDirectory = watch("inputDirectory");
+  const outputDirectory = watch("outputDirectory");
+
+  // Auto-switch to batch when >1 incident selected.
+  useEffect(() => {
+    if (selectedTypes.length > 1 && mode === "single") {
+      setValue("mode", "batch");
+    }
+  }, [selectedTypes.length, mode, setValue]);
+
+  // Auto-fill incident code when single mode + exactly 1 incident.
+  useEffect(() => {
+    if (mode === "single" && selectedTypes.length === 1) {
+      const incidentLabel = VALIDATION_SCRIPTS.find((s) => s.key === selectedTypes[0])?.label ?? "";
+      setValue("incidentCode", incidentLabel);
+    }
+  }, [mode, selectedTypes, setValue]);
+
+  const singleModeAllowed = selectedTypes.length === 1;
+
+  const handlePathsResolved = useCallback(
+    (paths: ResolvedPaths) => {
+      setValue("inputDirectory", paths.extracts);
+      setValue("outputDirectory", paths.output);
+      setValue("templateDirectory", paths.templates);
+    },
+    [setValue],
+  );
+
+  const outputFilenamePreview = useMemo(() => {
+    const { fiscalYear, quarter } = testingPeriod;
+    const today = new Date();
+    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
+    return `${fiscalYear}_${quarter}_all_validations_${dateStr}.csv`;
+  }, [testingPeriod]);
 
   const mutation = useMutation({
-    mutationFn: runValidation,
-    onSuccess: (job) => {
-      navigate(`/jobs/${job.id}`);
+    mutationFn: (args: { isBatch: boolean; values: UnifiedFormValues }) => {
+      if (args.isBatch) {
+        return runAllValidations({
+          testingPeriod: args.values.testingPeriod,
+          validationTypes: selectedTypes,
+          selectedScripts: selectedTypes,
+          inputDirectory: args.values.inputDirectory ?? "",
+          outputDirectory: args.values.outputDirectory ?? "",
+          templateDirectory: args.values.templateDirectory ?? "",
+          logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
+          logLevel: args.values.logLevel,
+          dryRun: args.values.dryRun,
+          stopOnError: args.values.stopOnError || undefined,
+        });
+      }
+      // Single incident + single mode
+      return runValidation({
+        scriptName: selectedTypes[0],
+        testingPeriod: args.values.testingPeriod,
+        mode: "single",
+        singleConfig: {
+          incidentCode: args.values.incidentCode ?? "",
+          inputFile: args.values.inputFile ?? "",
+          templateFile: args.values.templateFile ?? "",
+          outputFile: args.values.outputFile ?? "",
+        },
+        logLevel: args.values.logLevel,
+        dryRun: args.values.dryRun,
+      });
     },
+    onSuccess: (job) => navigate(`/jobs/${job.id}`),
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : "Failed to start job");
     },
   });
 
-  const onSubmit = (values: ValidationFormValues) => {
-    const req =
-      values.mode === "batch"
-        ? {
-            scriptName,
-            testingPeriod: values.testingPeriod,
-            mode: "batch" as const,
-            batchConfig: {
-              inputDirectory: values.inputDirectory ?? "",
-              outputDirectory: values.outputDirectory ?? "",
-              templateDirectory: values.templateDirectory ?? "",
-              logOutput: values.logOutput ?? "logs",
-              italianTracker: values.italianTracker || undefined,
-              mainTracker: values.mainTracker || undefined,
-            },
-            logLevel: values.logLevel,
-            dryRun: values.dryRun,
-          }
-        : {
-            scriptName,
-            testingPeriod: values.testingPeriod,
-            mode: "single" as const,
-            singleConfig: {
-              incidentCode: values.incidentCode ?? "",
-              inputFile: values.inputFile ?? "",
-              templateFile: values.templateFile ?? "",
-              outputFile: values.outputFile ?? "",
-            },
-            logLevel: values.logLevel,
-            dryRun: values.dryRun,
-          };
+  const discoveryMutation = useMutation({
+    mutationFn: discoverIncidents,
+    onSuccess: (result) => {
+      setDiscoveryResult(result);
+      const foundTypes = result.results
+        .filter((r) => r.foundFiles.length > 0)
+        .map((r) => r.scriptName);
+      if (foundTypes.length > 0) {
+        setSelectedTypes(foundTypes);
+      }
+      toast.success(`Found ${result.totalFound} file(s) across ${foundTypes.length} script(s)`);
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Discovery failed");
+    },
+  });
 
-    mutation.mutate(req);
+  const onSubmit = (values: UnifiedFormValues) => {
+    const isBatch = values.mode === "batch" || selectedTypes.length > 1;
+    mutation.mutate({ isBatch, values });
   };
 
-  const handleLoadConfig = (config: Record<string, unknown>) => {
-    reset(config as unknown as ValidationFormValues);
+  const toggleType = (key: string) => {
+    setSelectedTypes((prev) =>
+      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
+    );
   };
 
+  const allSelected = selectedTypes.length === VALIDATION_SCRIPTS.length;
   const isPending = mutation.isPending;
 
+  const handleLoadConfig = (config: Record<string, unknown>) => {
+    reset(config as unknown as UnifiedFormValues);
+  };
+
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-2xl">
       {/* Testing Period */}
       <div>
         <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
@@ -264,291 +306,19 @@ const ValidationScriptForm: React.FC<ValidationScriptFormProps> = ({ scriptName 
         />
       </div>
 
-      {/* Mode selector */}
-      <div className="flex flex-col gap-1">
-        <p className="text-xs font-medium text-muted-foreground">Mode</p>
-        <div className="flex gap-4">
-          {(["batch", "single"] as const).map((m) => (
-            <label key={m} className="flex items-center gap-2 cursor-pointer text-sm">
-              <input
-                type="radio"
-                value={m}
-                {...register("mode")}
-                disabled={isPending}
-                className="accent-primary"
-              />
-              {m.charAt(0).toUpperCase() + m.slice(1)}
-            </label>
-          ))}
-        </div>
-      </div>
-
-      {/* Batch fields */}
-      {mode === "batch" && (
-        <div className="space-y-3 rounded-lg border border-border p-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Batch Config
-          </p>
-          <Field label="Input Directory" error={errors.inputDirectory?.message}>
-            <PathPickerInput
-              value={watch("inputDirectory") ?? ""}
-              onChange={(v) => setValue("inputDirectory", v)}
-              mode="directory"
-              placeholder="/path/to/input"
-              disabled={isPending}
-            />
-          </Field>
-          <Field label="Output Directory" error={errors.outputDirectory?.message}>
-            <PathPickerInput
-              value={watch("outputDirectory") ?? ""}
-              onChange={(v) => setValue("outputDirectory", v)}
-              mode="directory"
-              placeholder="/path/to/output"
-              disabled={isPending}
-            />
-          </Field>
-          <Field label="Template Directory" error={errors.templateDirectory?.message}>
-            <PathPickerInput
-              value={watch("templateDirectory") ?? ""}
-              onChange={(v) => setValue("templateDirectory", v)}
-              mode="directory"
-              placeholder="/path/to/templates"
-              disabled={isPending}
-            />
-          </Field>
-          <Field label="Log Output" error={errors.logOutput?.message}>
-            <PathPickerInput
-              value={watch("logOutput") ?? ""}
-              onChange={(v) => setValue("logOutput", v)}
-              mode="directory"
-              placeholder="logs"
-              disabled={isPending}
-            />
-          </Field>
-
-          {/* Collapsible tracker files */}
-          <div className="rounded-md border border-border">
-            <button
-              type="button"
-              onClick={() => setShowTrackers(!showTrackers)}
-              className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
-            >
-              Advanced — Tracker Files
-              <span className={cn("transition-transform text-[10px]", showTrackers && "rotate-180")}>▾</span>
-            </button>
-            {showTrackers && (
-              <div className="space-y-3 px-3 pb-3 border-t border-border pt-3">
-                <Field label="Italian Fiscal Code Tracker">
-                  <PathPickerInput
-                    value={watch("italianTracker") ?? ""}
-                    onChange={(v) => setValue("italianTracker", v)}
-                    mode="file"
-                    placeholder="/path/to/italian_tracker.csv"
-                    disabled={isPending}
-                  />
-                </Field>
-                <Field label="Main ID Cross-Reference Tracker">
-                  <PathPickerInput
-                    value={watch("mainTracker") ?? ""}
-                    onChange={(v) => setValue("mainTracker", v)}
-                    mode="file"
-                    placeholder="/path/to/main_tracker.csv"
-                    disabled={isPending}
-                  />
-                </Field>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Single fields */}
-      {mode === "single" && (
-        <div className="space-y-3 rounded-lg border border-border p-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Single Config
-          </p>
-          <Field label="Incident Code" error={errors.incidentCode?.message}>
-            <input
-              {...register("incidentCode")}
-              disabled={isPending}
-              className={inputCls}
-              placeholder="e.g. 7_39"
-            />
-          </Field>
-          <Field label="Input File" error={errors.inputFile?.message}>
-            <PathPickerInput
-              value={watch("inputFile") ?? ""}
-              onChange={(v) => setValue("inputFile", v)}
-              mode="file"
-              placeholder="/path/to/input.csv"
-              disabled={isPending}
-            />
-          </Field>
-          <Field label="Template File" error={errors.templateFile?.message}>
-            <PathPickerInput
-              value={watch("templateFile") ?? ""}
-              onChange={(v) => setValue("templateFile", v)}
-              mode="file"
-              placeholder="/path/to/template.csv"
-              disabled={isPending}
-            />
-          </Field>
-          <Field label="Output File" error={errors.outputFile?.message}>
-            <PathPickerInput
-              value={watch("outputFile") ?? ""}
-              onChange={(v) => setValue("outputFile", v)}
-              mode="file"
-              placeholder="/path/to/output.csv"
-              disabled={isPending}
-            />
-          </Field>
-        </div>
-      )}
-
-      <LogRow
-        registerLogLevel={register("logLevel")}
-        registerDryRun={register("dryRun")}
+      {/* Smart Path Config */}
+      <SmartPathConfig
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+        onChange={handlePathsResolved}
         disabled={isPending}
-        logLevelError={errors.logLevel?.message}
       />
-
-      <ConfigLoader
-        scriptName={scriptName}
-        currentConfig={getValues() as unknown as Record<string, unknown>}
-        onLoad={handleLoadConfig}
-      />
-
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
-      </Button>
-
-      {mutation.isError && (
-        <p className="text-sm text-destructive">
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "An error occurred"}
-        </p>
-      )}
-    </form>
-  );
-};
-
-// ---------------------------------------------------------------------------
-// Run All Form
-// ---------------------------------------------------------------------------
-
-const runAllSchema = z.object({
-  testingPeriod: z.object({ fiscalYear: z.string(), quarter: z.string() }),
-  inputDirectory: z.string().min(1, "Required"),
-  outputDirectory: z.string().min(1, "Required"),
-  templateDirectory: z.string().min(1, "Required"),
-  logLevel: z.string(),
-  dryRun: z.boolean(),
-  stopOnError: z.boolean(),
-});
-
-type RunAllFormValues = z.infer<typeof runAllSchema>;
-
-const RunAllForm: React.FC = () => {
-  const navigate = useNavigate();
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(
-    VALIDATION_SCRIPTS.map((s) => s.key),
-  );
-  const [discoveryResult, setDiscoveryResult] = useState<DiscoveryResponse | null>(null);
-
-  const {
-    control,
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<RunAllFormValues>({
-    resolver: zodResolver(runAllSchema),
-    defaultValues: {
-      testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
-      inputDirectory: "",
-      outputDirectory: "",
-      templateDirectory: "",
-      logLevel: "INFO",
-      dryRun: false,
-      stopOnError: false,
-    },
-  });
-
-  const inputDirectory = watch("inputDirectory");
-
-  const mutation = useMutation({
-    mutationFn: runAllValidations,
-    onSuccess: (job) => navigate(`/jobs/${job.id}`),
-    onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : "Failed to start job");
-    },
-  });
-
-  const discoveryMutation = useMutation({
-    mutationFn: discoverIncidents,
-    onSuccess: (result) => {
-      setDiscoveryResult(result);
-      // Auto-select types that have found files
-      const foundTypes = result.results
-        .filter((r) => r.foundFiles.length > 0)
-        .map((r) => r.scriptName);
-      if (foundTypes.length > 0) {
-        setSelectedTypes(foundTypes);
-      }
-      toast.success(`Found ${result.totalFound} file(s) across ${foundTypes.length} script(s)`);
-    },
-    onError: (err: unknown) => {
-      toast.error(err instanceof Error ? err.message : "Discovery failed");
-    },
-  });
-
-  const onSubmit = (values: RunAllFormValues) => {
-    mutation.mutate({
-      testingPeriod: values.testingPeriod,
-      validationTypes: selectedTypes,
-      inputDirectory: values.inputDirectory,
-      outputDirectory: values.outputDirectory,
-      templateDirectory: values.templateDirectory,
-      logLevel: values.logLevel,
-      dryRun: values.dryRun,
-      stopOnError: values.stopOnError || undefined,
-    });
-  };
-
-  const toggleType = (key: string) => {
-    setSelectedTypes((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    );
-  };
-
-  const allSelected = selectedTypes.length === VALIDATION_SCRIPTS.length;
-  const isPending = mutation.isPending;
-
-  return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <div>
-        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
-        <Controller
-          name="testingPeriod"
-          control={control}
-          render={({ field }) => (
-            <TestingPeriodSelector
-              value={field.value}
-              onChange={field.onChange}
-              disabled={isPending}
-            />
-          )}
-        />
-      </div>
 
       {/* Validation type checklist */}
       <div className="rounded-lg border border-border p-4 space-y-2">
         <div className="flex items-center justify-between mb-1">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Validation Types
+            Validation Scripts
           </p>
           <button
             type="button"
@@ -576,22 +346,12 @@ const RunAllForm: React.FC = () => {
         ))}
       </div>
 
-      <Field label="Input Directory" error={errors.inputDirectory?.message}>
-        <PathPickerInput
-          value={watch("inputDirectory") ?? ""}
-          onChange={(v) => setValue("inputDirectory", v)}
-          mode="directory"
-          placeholder="/path/to/input"
-          disabled={isPending}
-        />
-      </Field>
-
-      {/* Autodiscovery */}
+      {/* Discover Files */}
       <Button
         type="button"
         variant="outline"
         disabled={!inputDirectory || discoveryMutation.isPending}
-        onClick={() => discoveryMutation.mutate({ inputDirectory })}
+        onClick={() => discoveryMutation.mutate({ inputDirectory: inputDirectory ?? "" })}
         className="w-full"
       >
         {discoveryMutation.isPending ? "Scanning…" : "Discover Files"}
@@ -621,31 +381,122 @@ const RunAllForm: React.FC = () => {
         </div>
       )}
 
-      <Field label="Output Directory" error={errors.outputDirectory?.message}>
-        <PathPickerInput
-          value={watch("outputDirectory") ?? ""}
-          onChange={(v) => setValue("outputDirectory", v)}
-          mode="directory"
-          placeholder="/path/to/output"
-          disabled={isPending}
-        />
-      </Field>
-      <Field label="Template Directory" error={errors.templateDirectory?.message}>
-        <PathPickerInput
-          value={watch("templateDirectory") ?? ""}
-          onChange={(v) => setValue("templateDirectory", v)}
-          mode="directory"
-          placeholder="/path/to/templates"
-          disabled={isPending}
-        />
-      </Field>
+      {/* Mode selector */}
+      <div className="flex flex-col gap-1">
+        <p className="text-xs font-medium text-muted-foreground">Mode</p>
+        <div className="flex gap-4">
+          {(["batch", "single"] as const).map((m) => (
+            <label
+              key={m}
+              className={cn(
+                "flex items-center gap-2 cursor-pointer text-sm",
+                m === "single" && !singleModeAllowed && "opacity-50 cursor-not-allowed",
+              )}
+            >
+              <input
+                type="radio"
+                value={m}
+                {...register("mode")}
+                disabled={isPending || (m === "single" && !singleModeAllowed)}
+                className="accent-primary"
+              />
+              {m.charAt(0).toUpperCase() + m.slice(1)}
+            </label>
+          ))}
+        </div>
+        {!singleModeAllowed && (
+          <p className="text-[11px] text-muted-foreground">
+            Single mode is only available when exactly one validation script is selected.
+          </p>
+        )}
+      </div>
 
-      <LogRow
-        registerLogLevel={register("logLevel")}
-        registerDryRun={register("dryRun")}
-        disabled={isPending}
-        logLevelError={errors.logLevel?.message}
-      />
+      {/* Batch fields */}
+      {(mode === "batch" || selectedTypes.length > 1) && (
+        <div className="space-y-3 rounded-lg border border-border p-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Batch Config
+          </p>
+          <Field label="Input Directory" hint="Directory containing per-incident extract CSVs." error={errors.inputDirectory?.message}>
+            <PathPickerInput
+              value={watch("inputDirectory") ?? ""}
+              onChange={(v) => setValue("inputDirectory", v)}
+              mode="directory"
+              placeholder="/path/to/input"
+              disabled={isPending}
+            />
+          </Field>
+          <Field label="Output Directory" hint="Directory for validated output CSVs." error={errors.outputDirectory?.message}>
+            <PathPickerInput
+              value={watch("outputDirectory") ?? ""}
+              onChange={(v) => setValue("outputDirectory", v)}
+              mode="directory"
+              placeholder="/path/to/output"
+              disabled={isPending}
+            />
+          </Field>
+          <Field label="Template Directory" hint="Directory containing Kaizen template CSVs." error={errors.templateDirectory?.message}>
+            <PathPickerInput
+              value={watch("templateDirectory") ?? ""}
+              onChange={(v) => setValue("templateDirectory", v)}
+              mode="directory"
+              placeholder="/path/to/templates"
+              disabled={isPending}
+            />
+          </Field>
+
+          {outputDirectory && (
+            <p className="text-xs text-muted-foreground">
+              Output file:{" "}
+              <code className="font-mono bg-muted px-1 py-0.5 rounded">{outputFilenamePreview}</code>
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* Single fields */}
+      {mode === "single" && singleModeAllowed && (
+        <div className="space-y-3 rounded-lg border border-border p-4">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Single Config
+          </p>
+          <Field label="Incident Code" hint="Incident code to validate, e.g. 7_39." error={errors.incidentCode?.message}>
+            <input
+              {...register("incidentCode")}
+              disabled={isPending}
+              className={inputCls}
+              placeholder="e.g. 7_39"
+            />
+          </Field>
+          <Field label="Input File" hint="Path to the extract CSV file for this incident." error={errors.inputFile?.message}>
+            <PathPickerInput
+              value={watch("inputFile") ?? ""}
+              onChange={(v) => setValue("inputFile", v)}
+              mode="file"
+              placeholder="/path/to/input.csv"
+              disabled={isPending}
+            />
+          </Field>
+          <Field label="Template File" hint="Path to the Kaizen template CSV file." error={errors.templateFile?.message}>
+            <PathPickerInput
+              value={watch("templateFile") ?? ""}
+              onChange={(v) => setValue("templateFile", v)}
+              mode="file"
+              placeholder="/path/to/template.csv"
+              disabled={isPending}
+            />
+          </Field>
+          <Field label="Output File" hint="Path for the validation results output file." error={errors.outputFile?.message}>
+            <PathPickerInput
+              value={watch("outputFile") ?? ""}
+              onChange={(v) => setValue("outputFile", v)}
+              mode="file"
+              placeholder="/path/to/output.csv"
+              disabled={isPending}
+            />
+          </Field>
+        </div>
+      )}
 
       <label className="flex items-center gap-2 cursor-pointer text-sm">
         <input
@@ -657,13 +508,40 @@ const RunAllForm: React.FC = () => {
         Stop on first error
       </label>
 
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <div className="flex flex-wrap gap-4 items-end">
+          <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+            <select {...register("logLevel")} disabled={isPending} className={cn(selectCls, "w-40")}>
+              {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </Field>
+          <label className="flex items-center gap-2 cursor-pointer text-sm pb-1">
+            <input type="checkbox" {...register("dryRun")} disabled={isPending} className="accent-primary h-4 w-4" />
+            Dry Run
+          </label>
+        </div>
+        <ConfigLoader
+          scriptName="unified_validation"
+          currentConfig={getValues() as unknown as Record<string, unknown>}
+          onLoad={handleLoadConfig}
+        />
+      </AdvancedSection>
+
       <Button
         type="submit"
         disabled={isPending || selectedTypes.length === 0}
         className="w-full"
       >
-        {isPending ? "Running…" : "Run All"}
+        {isPending ? "Running…" : selectedTypes.length > 1 ? "Run Selected" : "Run"}
       </Button>
+
+      {mutation.isError && (
+        <p className="text-sm text-destructive">
+          {mutation.error instanceof Error
+            ? mutation.error.message
+            : "An error occurred"}
+        </p>
+      )}
     </form>
   );
 };
@@ -700,18 +578,18 @@ const UTILITY_CONFIGS: UtilityConfig[] = [
   {
     key: "accuracy_template_generator",
     label: "Accuracy Template Generator",
-    description: "Generate accuracy testing template files.",
+    description: "Generate accuracy testing template files. The input directory must contain consolidated_errors.csv and/or consolidated_queries.csv.",
     fields: [
+      {
+        name: "inputDirectory",
+        label: "Input Directory",
+        placeholder: "/path/to/consolidated",
+        type: "directory",
+      },
       {
         name: "outputDirectory",
         label: "Output Directory",
         placeholder: "/path/to/output",
-        type: "directory",
-      },
-      {
-        name: "templateDirectory",
-        label: "Template Directory",
-        placeholder: "/path/to/templates",
         type: "directory",
       },
     ],
@@ -771,6 +649,9 @@ interface UtilityScriptFormProps {
 
 const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
   const navigate = useNavigate();
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const cacheKey = `accuracy_utility_${config.key}`;
 
   const {
     control,
@@ -781,7 +662,7 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
     formState: { errors },
   } = useForm<UtilityFormValues>({
     resolver: zodResolver(utilitySchema),
-    defaultValues: {
+    defaultValues: loadCache(cacheKey, {
       testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
       inputDirectory: "",
       outputDirectory: "",
@@ -789,8 +670,15 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
       outputFile: "",
       logLevel: "INFO",
       dryRun: false,
-    },
+    }),
   });
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem(`txr_form_${cacheKey}`, JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch, cacheKey]);
 
   const mutation = useMutation({
     mutationFn: runValidation,
@@ -809,7 +697,7 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
         inputDirectory: values.inputDirectory ?? "",
         outputDirectory: values.outputDirectory ?? "",
         templateDirectory: values.templateDirectory ?? "",
-        logOutput: "logs",
+        logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
       },
       logLevel: values.logLevel,
       dryRun: values.dryRun,
@@ -852,12 +740,19 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
         </Field>
       ))}
 
-      <LogRow
-        registerLogLevel={register("logLevel")}
-        registerDryRun={register("dryRun")}
-        disabled={isPending}
-        logLevelError={errors.logLevel?.message}
-      />
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <div className="flex flex-wrap gap-4 items-end">
+          <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+            <select {...register("logLevel")} disabled={isPending} className={cn(selectCls, "w-40")}>
+              {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </Field>
+          <label className="flex items-center gap-2 cursor-pointer text-sm pb-1">
+            <input type="checkbox" {...register("dryRun")} disabled={isPending} className="accent-primary h-4 w-4" />
+            Dry Run
+          </label>
+        </div>
+      </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Running…" : "Run"}
@@ -880,15 +775,7 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
 
 const AccuracyTesting: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("validation");
-  const [selectedScript, setSelectedScript] = useState<SelectedScript>(
-    VALIDATION_SCRIPTS[0].key,
-  );
   const [selectedUtility, setSelectedUtility] = useState<string>(UTILITY_CONFIGS[0].key);
-
-  const selectedScriptLabel =
-    selectedScript === "run-all"
-      ? "Run All"
-      : (VALIDATION_SCRIPTS.find((s) => s.key === selectedScript)?.label ?? selectedScript);
 
   const selectedUtilityConfig =
     UTILITY_CONFIGS.find((u) => u.key === selectedUtility) ?? UTILITY_CONFIGS[0];
@@ -924,46 +811,12 @@ const AccuracyTesting: React.FC = () => {
 
       {/* Validation Scripts tab */}
       {activeTab === "validation" && (
-        <div className="flex gap-6 min-h-[600px]">
-          {/* Sidebar */}
-          <nav className="w-60 shrink-0 space-y-1">
-            <button
-              type="button"
-              onClick={() => setSelectedScript("run-all")}
-              className={navItemCls(selectedScript === "run-all")}
-            >
-              Run All
-            </button>
-            <div className="border-t border-border my-2" />
-            {VALIDATION_SCRIPTS.map((s) => (
-              <button
-                key={s.key}
-                type="button"
-                onClick={() => setSelectedScript(s.key)}
-                className={navItemCls(selectedScript === s.key)}
-              >
-                {s.label}
-              </button>
-            ))}
-          </nav>
-
-          {/* Panel */}
-          <div className="flex-1 min-w-0 rounded-lg border border-border p-6">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-semibold">{selectedScriptLabel}</h2>
-              {selectedScript !== "run-all" && (
-                <LastRunBadge scriptName={selectedScript} />
-              )}
-              {selectedScript === "run-all" && (
-                <LastRunBadge scriptName="run_all_validations" />
-              )}
-            </div>
-            {selectedScript === "run-all" ? (
-              <RunAllForm />
-            ) : (
-              <ValidationScriptForm key={selectedScript} scriptName={selectedScript} />
-            )}
+        <div className="rounded-lg border border-border p-6">
+          <div className="flex items-center justify-between mb-5">
+            <h2 className="text-lg font-semibold">Validation Scripts</h2>
+            <LastRunBadge scriptName="run_all_validations" />
           </div>
+          <UnifiedValidationForm />
         </div>
       )}
 

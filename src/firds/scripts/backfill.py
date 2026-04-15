@@ -42,7 +42,7 @@ import argparse
 import csv
 import logging
 import sys
-from datetime import date
+from datetime import date, datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -78,12 +78,29 @@ _COL_MATCHED_MICS = "matched_mics"
 
 
 def _parse_date(value: str) -> date:
-    """Parse YYYY-MM-DD string to date."""
+    """Parse a date string into a :class:`~datetime.date`.
+
+    Accepts both ``YYYY-MM-DD`` and ``DD/MM/YYYY`` formats.
+
+    Args:
+        value: Date string in YYYY-MM-DD or DD/MM/YYYY format.
+
+    Returns:
+        Parsed :class:`~datetime.date`.
+
+    Raises:
+        argparse.ArgumentTypeError: If the string cannot be parsed.
+    """
+    stripped = value.strip()
     try:
-        return date.fromisoformat(value.strip())
+        return date.fromisoformat(stripped)
+    except ValueError:
+        pass
+    try:
+        return datetime.strptime(stripped, "%d/%m/%Y").date()
     except ValueError:
         raise argparse.ArgumentTypeError(
-            f"Invalid date '{value}' — expected YYYY-MM-DD format."
+            f"Invalid date '{value}' — expected YYYY-MM-DD or DD/MM/YYYY format."
         )
 
 
