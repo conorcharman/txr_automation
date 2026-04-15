@@ -37,7 +37,7 @@ import yaml
 from fastapi import HTTPException
 
 from api.config import get_settings
-from api.schemas.accuracy import RunAllRequest, RunValidationRequest
+from api.schemas.accuracy import RunAllRequest, RunIncidentsRequest, RunValidationRequest
 from api.schemas.firds import FirdsBackfillRequest, FirdsCheckRequest, FirdsRefreshRequest
 from api.schemas.gleif import GleifBackfillRequest, GleifCheckRequest, GleifRefreshRequest
 from api.schemas.replay import (
@@ -769,6 +769,71 @@ class ScriptRunnerService:
             "Built utilities argv %s for script %s.", argv, script_name
         )
         return module_path, argv, config
+
+    def build_run_incidents_argv(
+        self,
+        req: RunIncidentsRequest,
+    ) -> list[tuple[str, list[str], dict]]:
+        """Build argv tuples for each incident in a run-incidents request.
+
+        Each incident is configured for single-mode execution against its
+        corresponding validation script.  A temporary YAML config file is
+        written per incident.
+
+        Args:
+            req: Validated ``RunIncidentsRequest`` from the HTTP request body.
+
+        Returns:
+            A list of ``(module_path, argv, config_snapshot)`` tuples, one per
+            incident.
+
+        Raises:
+            HTTPException: 400 if any ``script_name`` in the request is not a
+                registered accuracy validation script.
+        """
+        results: list[tuple[str, list[str], dict]] = []
+
+        for incident in req.incidents:
+            if incident.script_name not in ACCURACY_VALIDATION_SCRIPTS:
+                raise HTTPException(
+                    status_code=400,
+                    detail=(
+                        f"'{incident.script_name}' is not a valid "
+                        "accuracy validation script."
+                    ),
+                )
+
+            module_path = _resolve_module(incident.script_name)
+
+            config: dict = {
+                "mode": "single",
+                "testing_period": {
+                    "fiscal_year": req.testing_period.fiscal_year,
+                    "quarter": req.testing_period.quarter,
+                },
+                "single": {
+                    "incident_code": incident.incident_code,
+                    "paths": {
+                        "input_file": incident.input_file,
+                        "template_file": incident.template_file,
+                        "output_file": incident.output_file,
+                        "log_output": "logs",
+                    },
+                },
+            }
+
+            tmp_path = _write_temp_yaml(config)
+            argv = ["--config", tmp_path, "--log-level", req.log_level]
+
+            logger.debug(
+                "Wrote incident config to %s for %s / %s.",
+                tmp_path,
+                incident.script_name,
+                incident.incident_code,
+            )
+            results.append((module_path, argv, config))
+
+        return results
 
 
 #: Module-level singleton for use in routers via direct import.

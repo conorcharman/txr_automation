@@ -69,6 +69,7 @@ class ResolvedPaths(_CamelModel):
     """
 
     root: str
+    kaizen: str
     extracts: str
     templates: str
     output: str

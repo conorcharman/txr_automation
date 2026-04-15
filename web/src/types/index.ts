@@ -31,13 +31,14 @@ export interface ResolvePathsRequest {
 
 export interface ResolvedPaths {
   root: string;
+  kaizen: string;
   extracts: string;
   templates: string;
   output: string;
   logs: string;
 }
 
-export type JobStatus = "pending" | "running" | "success" | "failed" | "cancelled";
+export type JobStatus = "pending" | "running" | "waiting" | "success" | "failed" | "cancelled";
 
 export interface Job {
   id: string;
@@ -72,7 +73,7 @@ export interface PaginatedJobs {
 }
 
 export interface WsMessage {
-  type: "log" | "status";
+  type: "log" | "status" | "waiting";
   data: string;
 }
 
@@ -147,6 +148,28 @@ export interface RunAllRequest {
   dryRun?: boolean;
   stopOnError?: boolean;
   selectedScripts?: string[] | null;
+}
+
+// Accuracy Testing - Incident-level
+export interface IncidentSelection {
+  scriptKey: string;
+  incidentCode: string;
+}
+
+export interface IncidentRunConfig {
+  scriptKey: string;
+  incidentCode: string;
+  inputFile: string;
+  templateFile: string;
+  outputFile: string;
+}
+
+export interface RunIncidentsRequest {
+  testingPeriod: TestingPeriod;
+  incidents: IncidentRunConfig[];
+  logLevel: string;
+  dryRun: boolean;
+  stopOnError: boolean;
 }
 
 // Accuracy Testing - Discovery

@@ -23,6 +23,7 @@ import json
 import logging
 import sys
 import threading
+import time
 from pathlib import Path
 from typing import Any
 
@@ -43,8 +44,8 @@ _argv_lock = threading.Lock()
 # ---------------------------------------------------------------------------
 
 _PIPELINE_SCRIPT_MODULES: dict[str, str] = {
-    "sql_extract_generator":             "src.accuracy_testing.scripts.sql_extract_generator",
     "accuracy_template_generator":       "src.accuracy_testing.scripts.accuracy_template_generator",
+    "sql_extract_generator":             "src.accuracy_testing.scripts.sql_extract_generator",
     "collate_csv_extracts":              "src.accuracy_testing.scripts.collate_csv_extracts",
     "buyer_id_validation":               "src.accuracy_testing.scripts.buyer_id_validation",
     "seller_id_validation":              "src.accuracy_testing.scripts.seller_id_validation",
@@ -315,8 +316,64 @@ def run_pipeline(
     full_output = io.StringIO()
     results: list[dict] = []
     failed = False
+    extract_gen_just_ran = False
 
     for idx, script_name in enumerate(selected_scripts, 1):
+        # ── Pause after Extract Generator, before Collate ───────────────────
+        if extract_gen_just_ran and script_name != "sql_extract_generator":
+            extract_gen_just_ran = False
+            # Determine expected extract CSVs from all incident-related scripts
+            # that appear later in the pipeline (i.e. validation scripts + collate).
+            _INCIDENT_CODES: dict[str, list[str]] = {
+                "buyer_id_validation":               ["7_35", "7_37", "7_39"],
+                "seller_id_validation":              ["16_19", "16_21", "16_23"],
+                "inconsistent_buyer_id_validation":  ["7_66"],
+                "inconsistent_seller_id_validation": ["16_20"],
+                "validate_ftbdm":                    ["12_17"],
+                "validate_ftsdm":                    ["21_17"],
+                "incorrect_net_amount_validation":    ["35_3"],
+                "non_zero_net_quantity":              ["7_6"],
+                "non_zero_net_amount":               ["7_42"],
+            }
+            expected_codes: list[str] = []
+            for future_script in selected_scripts[idx - 1 :]:
+                for code in _INCIDENT_CODES.get(future_script, []):
+                    if code not in expected_codes:
+                        expected_codes.append(code)
+
+            if expected_codes:
+                expected_files = [
+                    Path(extracts_dir)
+                    / f"{code}_{fiscal_year}_{quarter}_extract.csv"
+                    for code in expected_codes
+                ]
+
+                wait_msg = (
+                    f"Waiting for {len(expected_files)} System i CSV extract(s) "
+                    f"in {extracts_dir}…"
+                )
+                _publish({"type": "log", "data": wait_msg})
+                full_output.write(wait_msg + "\n")
+                _sync_update_status(job_id, "waiting")
+                _publish({"type": "waiting", "data": wait_msg})
+
+                while True:
+                    missing = [f for f in expected_files if not f.exists()]
+                    if not missing:
+                        found_msg = "All expected extract CSVs detected — resuming pipeline."
+                        _publish({"type": "log", "data": found_msg})
+                        full_output.write(found_msg + "\n")
+                        _sync_update_status(job_id, "running")
+                        _publish({"type": "status", "data": "running"})
+                        break
+
+                    heartbeat = (
+                        f"Waiting for System i CSV extracts… "
+                        f"{len(missing)}/{len(expected_files)} still missing."
+                    )
+                    _publish({"type": "waiting", "data": heartbeat})
+                    time.sleep(60)
+
         module_path = _PIPELINE_SCRIPT_MODULES.get(script_name)
         if module_path is None:
             msg = f"[{idx}/{len(selected_scripts)}] Unknown script '{script_name}' — skipping."
@@ -368,11 +425,17 @@ def run_pipeline(
             _publish({"type": "log", "data": f"  ✓ {script_name} completed."})
             full_output.write(f"  ✓ {script_name} completed.\n")
 
+            if script_name == "sql_extract_generator":
+                extract_gen_just_ran = True
+
         except SystemExit as exc:
             if exc.code in (None, 0):
                 results.append({"script": script_name, "status": "success"})
                 _publish({"type": "log", "data": f"  ✓ {script_name} completed."})
                 full_output.write(f"  ✓ {script_name} completed.\n")
+
+                if script_name == "sql_extract_generator":
+                    extract_gen_just_ran = True
             else:
                 error_msg = f"  ✗ {script_name} exited with code {exc.code}."
                 _publish({"type": "log", "data": error_msg})

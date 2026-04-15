@@ -9,6 +9,8 @@ React frontend convention, whilst still accepting snake_case attribute
 names in Python code.
 """
 
+from typing import Literal
+
 from api.schemas.common import _CamelModel
 
 
@@ -153,3 +155,62 @@ class DiscoveryResponse(_CamelModel):
 
     results: list[DiscoveryResult]
     total_found: int
+
+
+class IncidentRunConfig(_CamelModel):
+    """Configuration for running a single incident through a validation script.
+
+    Attributes:
+        script_name: Registered script identifier, e.g. ``"buyer_id_validation"``.
+        incident_code: Incident code, e.g. ``"7_35"``.
+        input_file: Path to the extract CSV file for this incident.
+        template_file: Path to the Kaizen template CSV file.
+        output_file: Path for the validation results output file.
+    """
+
+    script_name: str
+    incident_code: str
+    input_file: str
+    template_file: str
+    output_file: str
+
+
+class RunIncidentsRequest(_CamelModel):
+    """Request body for running multiple incidents through their validation scripts.
+
+    Each incident is run sequentially in single mode. Execution stops on the
+    first failure when ``stop_on_error`` is ``True``.
+
+    Attributes:
+        testing_period: Fiscal year and quarter for the testing run.
+        incidents: List of per-incident configurations to execute.
+        log_level: Logging verbosity (default: ``"INFO"``).
+        dry_run: If ``True``, validate without executing (default: ``False``).
+        stop_on_error: If ``True``, stop on first failure (default: ``False``).
+    """
+
+    testing_period: TestingPeriod
+    incidents: list[IncidentRunConfig]
+    log_level: str = "INFO"
+    dry_run: bool = False
+    stop_on_error: bool = False
+
+
+class ExtractGeneratorConfig(_CamelModel):
+    """Extended configuration for the SQL/DTF Extract Generator.
+
+    Attributes:
+        batch_size: Number of transaction references per SQL batch (default: 900).
+        column: Column name containing transaction references.
+        output_format: Output format — ``"sql"``, ``"dtf"``, or ``"both"``
+            (default: ``"both"``).
+        dtf_template: Optional path to a custom DTF template file.
+        csv_output_dir: Directory path embedded in DTF files where System i
+            will write CSV output.  Auto-filled from SmartPathConfig extracts dir.
+    """
+
+    batch_size: int = 900
+    column: str | None = None
+    output_format: Literal["sql", "dtf", "both"] = "both"
+    dtf_template: str | None = None
+    csv_output_dir: str | None = None

@@ -120,7 +120,7 @@ async def browse_directory(
 # Smart path resolution
 # ---------------------------------------------------------------------------
 
-_STAGE_DIRS = ("extracts", "templates", "output", "logs")
+_STAGE_DIRS = ("kaizen", "extracts", "templates", "output", "logs")
 
 
 @router.post("/resolve-paths", response_model=ResolvedPaths)
@@ -188,6 +188,7 @@ async def resolve_paths(body: ResolvePathsRequest) -> ResolvedPaths:
 
     return ResolvedPaths(
         root=str(root),
+        kaizen=paths["kaizen"],
         extracts=paths["extracts"],
         templates=paths["templates"],
         output=paths["output"],

@@ -273,3 +273,134 @@ def run_script(
             redis_client.close()
         except Exception:  # noqa: BLE001
             pass
+
+
+# ---------------------------------------------------------------------------
+# Incidents Celery task
+# ---------------------------------------------------------------------------
+
+
+@celery_app.task(bind=True, name="api.tasks.script_tasks.run_incidents")
+def run_incidents(
+    self: Task,
+    job_id: str,
+    incident_configs: list[dict[str, Any]],
+    stop_on_error: bool = False,
+) -> dict[str, Any]:
+    """Run multiple incidents sequentially, each in single mode.
+
+    Each entry in ``incident_configs`` is a dict with keys
+    ``module_path``, ``argv``, and ``config_snapshot``.  The task imports
+    the module and calls ``module.main()`` for each incident, streaming
+    logs to Redis and respecting ``stop_on_error``.
+
+    Args:
+        job_id: UUID string of the parent job.
+        incident_configs: List of per-incident dicts with ``module_path``,
+            ``argv``, and ``config_snapshot`` keys.
+        stop_on_error: If ``True``, abort on first failure.
+
+    Returns:
+        A dict with ``"status"`` and ``"results"`` keys.
+    """
+    settings = get_settings()
+    redis_client = redis_lib.from_url(settings.redis_url)
+    channel = f"job:{job_id}:logs"
+
+    def _publish(message: dict) -> None:
+        try:
+            redis_client.publish(channel, json.dumps(message))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Redis publish failed for job %s: %s", job_id, exc)
+
+    _sync_update_status(job_id, "running")
+    _publish({"type": "status", "data": "running"})
+
+    full_output = io.StringIO()
+    results: list[dict] = []
+    failed = False
+    total = len(incident_configs)
+    temp_files: list[str] = []
+
+    for idx, ic in enumerate(incident_configs, 1):
+        module_path = ic["module_path"]
+        argv: list[str] = ic["argv"]
+        snapshot = ic.get("config_snapshot", {})
+        incident_code = snapshot.get("single", {}).get("incident_code", "unknown")
+
+        # Track temp files for cleanup.
+        temp_files.extend(
+            arg for arg in argv
+            if arg.endswith(".yaml") and os.sep + "tmp" in arg.lower()
+        )
+
+        header = f"[{idx}/{total}] Running {incident_code}..."
+        _publish({"type": "log", "data": header})
+        full_output.write(header + "\n")
+
+        try:
+            module = importlib.import_module(module_path)
+            script_buffer = io.StringIO()
+
+            with _argv_lock:
+                old_argv = sys.argv
+                sys.argv = [module_path] + argv
+            try:
+                with contextlib.redirect_stdout(script_buffer), \
+                     contextlib.redirect_stderr(script_buffer):
+                    module.main()
+            except SystemExit as exc:
+                exit_code = exc.code if isinstance(exc.code, int) else 1
+                if exit_code != 0:
+                    raise RuntimeError(
+                        f"Script exited with code {exit_code}"
+                    ) from exc
+            finally:
+                with _argv_lock:
+                    sys.argv = old_argv
+
+            output_text = script_buffer.getvalue()
+            for line in output_text.splitlines():
+                if line.strip():
+                    _publish({"type": "log", "data": line})
+            full_output.write(output_text)
+
+            results.append({"incident": incident_code, "status": "success"})
+            done_msg = f"  ✓ {incident_code} completed."
+            _publish({"type": "log", "data": done_msg})
+            full_output.write(done_msg + "\n")
+
+        except Exception as exc:  # noqa: BLE001
+            error_msg = f"  ✗ {incident_code} failed: {exc}"
+            _publish({"type": "log", "data": error_msg})
+            full_output.write(error_msg + "\n")
+            results.append({
+                "incident": incident_code,
+                "status": "failed",
+                "error": str(exc),
+            })
+            failed = True
+            if stop_on_error:
+                break
+
+    final_status = "failed" if failed else "success"
+    _publish({"type": "status", "data": final_status})
+    _sync_update_status(
+        job_id,
+        final_status,
+        error_message="Incident run completed with failures." if failed else None,
+        log_output=full_output.getvalue(),
+    )
+
+    # Clean up temp YAML files.
+    for tmp in temp_files:
+        try:
+            os.unlink(tmp)
+        except OSError:
+            pass
+    try:
+        redis_client.close()
+    except Exception:  # noqa: BLE001
+        pass
+
+    return {"status": final_status, "results": results}

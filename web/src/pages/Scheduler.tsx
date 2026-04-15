@@ -135,6 +135,7 @@ function StatusBadge({ status }: { status: string | null }) {
     success: "default",
     pending: "secondary",
     running: "secondary",
+    waiting: "secondary",
     failed: "destructive",
     cancelled: "outline",
   };
@@ -491,16 +492,16 @@ const ConfirmDeleteDialog: React.FC<ConfirmDeleteDialogProps> = ({
 // ---------------------------------------------------------------------------
 
 const PIPELINE_SCRIPTS = [
-  { key: "sql_extract_generator", label: "SQL Extract Generator", step: 1 },
-  { key: "accuracy_template_generator", label: "Accuracy Template Generator", step: 2 },
+  { key: "accuracy_template_generator", label: "Template Generator", step: 1 },
+  { key: "sql_extract_generator", label: "Extract Generator", step: 2 },
   { key: "collate_csv_extracts", label: "Collate CSV Extracts", step: 3 },
-  { key: "buyer_id_validation", label: "Buyer ID Validation", step: 4 },
-  { key: "seller_id_validation", label: "Seller ID Validation", step: 5 },
-  { key: "inconsistent_buyer_id", label: "Inconsistent Buyer ID", step: 6 },
-  { key: "inconsistent_seller_id", label: "Inconsistent Seller ID", step: 7 },
-  { key: "fund_trade_buyer_dm", label: "Fund Trade Buyer DM", step: 8 },
-  { key: "fund_trade_seller_dm", label: "Fund Trade Seller DM", step: 9 },
-  { key: "incorrect_net_amount", label: "Incorrect Net Amount", step: 10 },
+  { key: "buyer_id_validation", label: "Incorrect Buyer ID", step: 4 },
+  { key: "seller_id_validation", label: "Incorrect Seller ID", step: 5 },
+  { key: "inconsistent_buyer_id_validation", label: "Inconsistent Buyer ID", step: 6 },
+  { key: "inconsistent_seller_id_validation", label: "Inconsistent Seller ID", step: 7 },
+  { key: "validate_ftbdm", label: "Incorrect FT Buyer Decision Maker", step: 8 },
+  { key: "validate_ftsdm", label: "Incorrect FT Seller Decision Maker", step: 9 },
+  { key: "incorrect_net_amount_validation", label: "Incorrect Net Amount", step: 10 },
   { key: "non_zero_net_quantity", label: "Non-Zero Net Quantity", step: 11 },
   { key: "non_zero_net_amount", label: "Non-Zero Net Amount", step: 12 },
   { key: "data_push", label: "Data Push", step: 13 },

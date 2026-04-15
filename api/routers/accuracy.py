@@ -5,9 +5,10 @@ Accuracy Testing Router
 REST endpoints for triggering accuracy validation scripts as background jobs.
 
 Endpoints:
-    GET  /api/accuracy/scripts    — List all registered accuracy validation script names
-    POST /api/accuracy/run        — Run a single accuracy validation script
-    POST /api/accuracy/run-all    — Run the run_all_validations orchestrator
+    GET  /api/accuracy/scripts        — List all registered accuracy validation script names
+    POST /api/accuracy/run            — Run a single accuracy validation script
+    POST /api/accuracy/run-all        — Run the run_all_validations orchestrator
+    POST /api/accuracy/run-incidents  — Run multiple incidents sequentially in single mode
 """
 
 import logging
@@ -21,13 +22,14 @@ from api.schemas.accuracy import (
     DiscoveryResponse,
     DiscoveryResult,
     RunAllRequest,
+    RunIncidentsRequest,
     RunValidationRequest,
 )
 from api.schemas.jobs import JobResponse
 from api.services.discovery import INCIDENT_CODE_PATTERNS, discover_incidents
 from api.services.job_service import job_service
 from api.services.script_runner import ACCURACY_VALIDATION_SCRIPTS, script_runner_service
-from api.tasks.script_tasks import run_script
+from api.tasks.script_tasks import run_incidents, run_script
 
 logger = logging.getLogger(__name__)
 
@@ -108,6 +110,56 @@ async def run_all_validations(
         "Dispatched run_all_validations task for job %s (%d validation type(s)).",
         job.id,
         len(body.validation_types),
+    )
+
+    return JobResponse.from_orm_job(job)
+
+
+@router.post("/accuracy/run-incidents", response_model=JobResponse)
+async def run_incident_validations(
+    body: RunIncidentsRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JobResponse:
+    """Run multiple incidents sequentially, each in single mode.
+
+    Each incident in the request is configured as an individual single-mode
+    validation run.  The task dispatches them sequentially, optionally stopping
+    on the first failure.
+
+    Args:
+        body: Validated ``RunIncidentsRequest`` from the request body.
+        db: Async database session injected by FastAPI.
+
+    Returns:
+        A ``JobResponse`` for the newly created pending job.
+    """
+    incident_tuples = script_runner_service.build_run_incidents_argv(body)
+    incident_dicts = [
+        {
+            "module_path": module_path,
+            "argv": argv,
+            "config_snapshot": snapshot,
+        }
+        for module_path, argv, snapshot in incident_tuples
+    ]
+
+    script_label = (
+        f"run_incidents ({len(body.incidents)} incident(s))"
+    )
+    config_snapshot = {
+        "testing_period": body.testing_period.model_dump(),
+        "incidents": [inc.model_dump() for inc in body.incidents],
+        "log_level": body.log_level,
+        "dry_run": body.dry_run,
+        "stop_on_error": body.stop_on_error,
+    }
+    job = await job_service.create_job(db, script_label, config_snapshot)
+
+    run_incidents.delay(str(job.id), incident_dicts, body.stop_on_error)
+    logger.info(
+        "Dispatched run_incidents task for job %s (%d incident(s)).",
+        job.id,
+        len(body.incidents),
     )
 
     return JobResponse.from_orm_job(job)

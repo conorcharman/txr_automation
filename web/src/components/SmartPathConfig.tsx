@@ -105,6 +105,7 @@ const SmartPathConfig: React.FC<SmartPathConfigProps> = ({
         )}
         {resolved && (
           <div className="space-y-0.5">
+            <Label text="Kaizen" value={overrides.kaizen || resolved.kaizen} />
             <Label text="Extracts" value={overrides.extracts || resolved.extracts} />
             <Label text="Templates" value={overrides.templates || resolved.templates} />
             <Label text="Output" value={overrides.output || resolved.output} />
@@ -130,7 +131,7 @@ const SmartPathConfig: React.FC<SmartPathConfigProps> = ({
         </button>
         {overridesOpen && (
           <div className="space-y-3 px-3 pb-3">
-            {(["extracts", "templates", "output", "logs"] as const).map(
+            {(["kaizen", "extracts", "templates", "output", "logs"] as const).map(
               (stage) => (
                 <div key={stage} className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-muted-foreground capitalize">

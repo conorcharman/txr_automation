@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -13,9 +13,19 @@ import { PathPickerInput } from "@/components/PathPickerInput";
 import SmartPathConfig from "@/components/SmartPathConfig";
 import LastRunBadge from "@/components/LastRunBadge";
 import Field from "@/components/Field";
-import { runValidation, runAllValidations, discoverIncidents } from "@/api/accuracy";
+import IncidentChecklist from "@/components/IncidentChecklist";
+import type { IncidentScriptDef } from "@/components/IncidentChecklist";
+import IncidentFileTable from "@/components/IncidentFileTable";
+import IncidentPreview from "@/components/IncidentPreview";
+import { runValidation, runIncidents, discoverIncidents } from "@/api/accuracy";
+import { browseDirectory } from "@/api/filesystem";
 import { cn } from "@/lib/utils";
-import type { DiscoveryResponse, ResolvedPaths } from "@/types";
+import type {
+  DiscoveryResponse,
+  IncidentRunConfig,
+  IncidentSelection,
+  ResolvedPaths,
+} from "@/types";
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -23,17 +33,61 @@ import type { DiscoveryResponse, ResolvedPaths } from "@/types";
 
 const LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"] as const;
 
-const VALIDATION_SCRIPTS = [
-  { key: "buyer_id_validation", label: "Buyer ID Validation" },
-  { key: "seller_id_validation", label: "Seller ID Validation" },
-  { key: "inconsistent_buyer_id", label: "Inconsistent Buyer ID" },
-  { key: "inconsistent_seller_id", label: "Inconsistent Seller ID" },
-  { key: "fund_trade_buyer_dm", label: "Fund Trade Buyer DM" },
-  { key: "fund_trade_seller_dm", label: "Fund Trade Seller DM" },
-  { key: "incorrect_net_amount", label: "Incorrect Net Amount" },
-  { key: "non_zero_net_quantity", label: "Non-Zero Net Quantity" },
-  { key: "non_zero_net_amount", label: "Non-Zero Net Amount" },
-] as const;
+const INCIDENT_SCRIPTS: IncidentScriptDef[] = [
+  {
+    scriptKey: "buyer_id_validation",
+    displayLabel: "Incorrect Buyer ID",
+    incidents: [
+      { code: "7_35", label: "Incorrect Buyer ID" },
+      { code: "7_37", label: "Incorrect Buyer ID" },
+      { code: "7_39", label: "Incorrect Buyer ID" },
+    ],
+  },
+  {
+    scriptKey: "seller_id_validation",
+    displayLabel: "Incorrect Seller ID",
+    incidents: [
+      { code: "16_19", label: "Incorrect Seller ID" },
+      { code: "16_21", label: "Incorrect Seller ID" },
+      { code: "16_23", label: "Incorrect Seller ID" },
+    ],
+  },
+  {
+    scriptKey: "inconsistent_buyer_id_validation",
+    displayLabel: "Inconsistent Buyer ID",
+    incidents: [{ code: "7_66", label: "Inconsistent Buyer ID" }],
+  },
+  {
+    scriptKey: "inconsistent_seller_id_validation",
+    displayLabel: "Inconsistent Seller ID",
+    incidents: [{ code: "16_20", label: "Inconsistent Seller ID" }],
+  },
+  {
+    scriptKey: "validate_ftbdm",
+    displayLabel: "Incorrect FT Buyer Decision Maker",
+    incidents: [{ code: "12_17", label: "FT Buyer Decision Maker" }],
+  },
+  {
+    scriptKey: "validate_ftsdm",
+    displayLabel: "Incorrect FT Seller Decision Maker",
+    incidents: [{ code: "21_17", label: "FT Seller Decision Maker" }],
+  },
+  {
+    scriptKey: "incorrect_net_amount_validation",
+    displayLabel: "Incorrect Net Amount",
+    incidents: [{ code: "35_3", label: "Incorrect Net Amount" }],
+  },
+  {
+    scriptKey: "non_zero_net_quantity",
+    displayLabel: "Non-Zero Net Quantity",
+    incidents: [{ code: "7_6", label: "Non-Zero Net Quantity" }],
+  },
+  {
+    scriptKey: "non_zero_net_amount",
+    displayLabel: "Non-Zero Net Amount",
+    incidents: [{ code: "7_42", label: "Non-Zero Net Amount" }],
+  },
+];
 
 type ActiveTab = "validation" | "utilities";
 
@@ -44,11 +98,6 @@ function currentFY(): string {
 // ---------------------------------------------------------------------------
 // Shared styles
 // ---------------------------------------------------------------------------
-
-const inputCls =
-  "h-9 w-full rounded-md border border-input bg-background px-3 text-sm shadow-sm " +
-  "focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 " +
-  "placeholder:text-muted-foreground";
 
 const selectCls =
   "h-9 rounded-md border border-input bg-background px-3 text-sm " +
@@ -113,22 +162,16 @@ function loadCache<T>(key: string, fallback: T): T {
 }
 
 // ---------------------------------------------------------------------------
-// Unified Validation Form
+// Unified Validation Form (incident-level)
 // ---------------------------------------------------------------------------
+
+/** All incidents from INCIDENT_SCRIPTS, used as the default selection. */
+const ALL_INCIDENTS: IncidentSelection[] = INCIDENT_SCRIPTS.flatMap((s) =>
+  s.incidents.map((i) => ({ scriptKey: s.scriptKey, incidentCode: i.code })),
+);
 
 const unifiedSchema = z.object({
   testingPeriod: z.object({ fiscalYear: z.string(), quarter: z.string() }),
-  mode: z.enum(["batch", "single"]),
-  // Batch fields (auto-filled by SmartPathConfig)
-  inputDirectory: z.string().optional(),
-  outputDirectory: z.string().optional(),
-  templateDirectory: z.string().optional(),
-  // Single fields (only when exactly 1 incident selected + single mode)
-  incidentCode: z.string().optional(),
-  inputFile: z.string().optional(),
-  templateFile: z.string().optional(),
-  outputFile: z.string().optional(),
-  // Common
   logLevel: z.string(),
   dryRun: z.boolean(),
   stopOnError: z.boolean(),
@@ -138,9 +181,9 @@ type UnifiedFormValues = z.infer<typeof unifiedSchema>;
 
 const UnifiedValidationForm: React.FC = () => {
   const navigate = useNavigate();
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(
-    VALIDATION_SCRIPTS.map((s) => s.key),
-  );
+  const [selectedIncidents, setSelectedIncidents] = useState<IncidentSelection[]>(ALL_INCIDENTS);
+  const [incidentConfigs, setIncidentConfigs] = useState<IncidentRunConfig[]>([]);
+  const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
   const [discoveryResult, setDiscoveryResult] = useState<DiscoveryResponse | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
@@ -149,7 +192,6 @@ const UnifiedValidationForm: React.FC = () => {
     register,
     handleSubmit,
     watch,
-    setValue,
     getValues,
     reset,
     formState: { errors },
@@ -157,14 +199,6 @@ const UnifiedValidationForm: React.FC = () => {
     resolver: zodResolver(unifiedSchema),
     defaultValues: loadCache("accuracy_validation_unified", {
       testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
-      mode: "batch" as const,
-      inputDirectory: "",
-      outputDirectory: "",
-      templateDirectory: "",
-      incidentCode: "",
-      inputFile: "",
-      templateFile: "",
-      outputFile: "",
       logLevel: "INFO",
       dryRun: false,
       stopOnError: false,
@@ -179,74 +213,29 @@ const UnifiedValidationForm: React.FC = () => {
   }, [watch]);
 
   const testingPeriod = watch("testingPeriod");
-  const mode = watch("mode");
-  const inputDirectory = watch("inputDirectory");
-  const outputDirectory = watch("outputDirectory");
-
-  // Auto-switch to batch when >1 incident selected.
-  useEffect(() => {
-    if (selectedTypes.length > 1 && mode === "single") {
-      setValue("mode", "batch");
-    }
-  }, [selectedTypes.length, mode, setValue]);
-
-  // Auto-fill incident code when single mode + exactly 1 incident.
-  useEffect(() => {
-    if (mode === "single" && selectedTypes.length === 1) {
-      const incidentLabel = VALIDATION_SCRIPTS.find((s) => s.key === selectedTypes[0])?.label ?? "";
-      setValue("incidentCode", incidentLabel);
-    }
-  }, [mode, selectedTypes, setValue]);
-
-  const singleModeAllowed = selectedTypes.length === 1;
 
   const handlePathsResolved = useCallback(
     (paths: ResolvedPaths) => {
-      setValue("inputDirectory", paths.extracts);
-      setValue("outputDirectory", paths.output);
-      setValue("templateDirectory", paths.templates);
+      setResolvedPaths(paths);
     },
-    [setValue],
+    [],
   );
 
-  const outputFilenamePreview = useMemo(() => {
-    const { fiscalYear, quarter } = testingPeriod;
-    const today = new Date();
-    const dateStr = today.toISOString().slice(0, 10).replace(/-/g, "");
-    return `${fiscalYear}_${quarter}_all_validations_${dateStr}.csv`;
-  }, [testingPeriod]);
-
   const mutation = useMutation({
-    mutationFn: (args: { isBatch: boolean; values: UnifiedFormValues }) => {
-      if (args.isBatch) {
-        return runAllValidations({
-          testingPeriod: args.values.testingPeriod,
-          validationTypes: selectedTypes,
-          selectedScripts: selectedTypes,
-          inputDirectory: args.values.inputDirectory ?? "",
-          outputDirectory: args.values.outputDirectory ?? "",
-          templateDirectory: args.values.templateDirectory ?? "",
-          logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
-          logLevel: args.values.logLevel,
-          dryRun: args.values.dryRun,
-          stopOnError: args.values.stopOnError || undefined,
-        });
-      }
-      // Single incident + single mode
-      return runValidation({
-        scriptName: selectedTypes[0],
-        testingPeriod: args.values.testingPeriod,
-        mode: "single",
-        singleConfig: {
-          incidentCode: args.values.incidentCode ?? "",
-          inputFile: args.values.inputFile ?? "",
-          templateFile: args.values.templateFile ?? "",
-          outputFile: args.values.outputFile ?? "",
-        },
-        logLevel: args.values.logLevel,
-        dryRun: args.values.dryRun,
-      });
-    },
+    mutationFn: (values: UnifiedFormValues) =>
+      runIncidents({
+        testingPeriod: values.testingPeriod,
+        incidents: incidentConfigs.map((c) => ({
+          scriptKey: c.scriptKey,
+          incidentCode: c.incidentCode,
+          inputFile: c.inputFile,
+          templateFile: c.templateFile,
+          outputFile: c.outputFile,
+        })),
+        logLevel: values.logLevel,
+        dryRun: values.dryRun,
+        stopOnError: values.stopOnError,
+      }),
     onSuccess: (job) => navigate(`/jobs/${job.id}`),
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : "Failed to start job");
@@ -257,13 +246,23 @@ const UnifiedValidationForm: React.FC = () => {
     mutationFn: discoverIncidents,
     onSuccess: (result) => {
       setDiscoveryResult(result);
-      const foundTypes = result.results
-        .filter((r) => r.foundFiles.length > 0)
-        .map((r) => r.scriptName);
-      if (foundTypes.length > 0) {
-        setSelectedTypes(foundTypes);
+      // Match discovered files to incident configs by code.
+      const foundFilesByCode = new Map<string, string>();
+      for (const r of result.results) {
+        for (const code of r.codes) {
+          const match = r.foundFiles.find((f) => f.includes(code));
+          if (match) foundFilesByCode.set(code, match);
+        }
       }
-      toast.success(`Found ${result.totalFound} file(s) across ${foundTypes.length} script(s)`);
+      if (foundFilesByCode.size > 0) {
+        setIncidentConfigs((prev) =>
+          prev.map((c) => {
+            const found = foundFilesByCode.get(c.incidentCode);
+            return found ? { ...c, inputFile: found } : c;
+          }),
+        );
+      }
+      toast.success(`Found ${result.totalFound} file(s)`);
     },
     onError: (err: unknown) => {
       toast.error(err instanceof Error ? err.message : "Discovery failed");
@@ -271,17 +270,9 @@ const UnifiedValidationForm: React.FC = () => {
   });
 
   const onSubmit = (values: UnifiedFormValues) => {
-    const isBatch = values.mode === "batch" || selectedTypes.length > 1;
-    mutation.mutate({ isBatch, values });
+    mutation.mutate(values);
   };
 
-  const toggleType = (key: string) => {
-    setSelectedTypes((prev) =>
-      prev.includes(key) ? prev.filter((k) => k !== key) : [...prev, key],
-    );
-  };
-
-  const allSelected = selectedTypes.length === VALIDATION_SCRIPTS.length;
   const isPending = mutation.isPending;
 
   const handleLoadConfig = (config: Record<string, unknown>) => {
@@ -314,44 +305,22 @@ const UnifiedValidationForm: React.FC = () => {
         disabled={isPending}
       />
 
-      {/* Validation type checklist */}
-      <div className="rounded-lg border border-border p-4 space-y-2">
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Validation Scripts
-          </p>
-          <button
-            type="button"
-            onClick={() =>
-              setSelectedTypes(
-                allSelected ? [] : VALIDATION_SCRIPTS.map((s) => s.key),
-              )
-            }
-            className="text-xs text-primary hover:underline"
-          >
-            {allSelected ? "Deselect All" : "Select All"}
-          </button>
-        </div>
-        {VALIDATION_SCRIPTS.map((s) => (
-          <label key={s.key} className="flex items-center gap-2 cursor-pointer text-sm">
-            <input
-              type="checkbox"
-              checked={selectedTypes.includes(s.key)}
-              onChange={() => toggleType(s.key)}
-              disabled={isPending}
-              className="accent-primary h-4 w-4"
-            />
-            {s.label}
-          </label>
-        ))}
-      </div>
+      {/* Incident Checklist */}
+      <IncidentChecklist
+        scripts={INCIDENT_SCRIPTS}
+        selected={selectedIncidents}
+        onChange={setSelectedIncidents}
+        disabled={isPending}
+      />
 
       {/* Discover Files */}
       <Button
         type="button"
         variant="outline"
-        disabled={!inputDirectory || discoveryMutation.isPending}
-        onClick={() => discoveryMutation.mutate({ inputDirectory: inputDirectory ?? "" })}
+        disabled={!resolvedPaths?.extracts || discoveryMutation.isPending}
+        onClick={() =>
+          discoveryMutation.mutate({ inputDirectory: resolvedPaths?.extracts ?? "" })
+        }
         className="w-full"
       >
         {discoveryMutation.isPending ? "Scanning…" : "Discover Files"}
@@ -371,7 +340,7 @@ const UnifiedValidationForm: React.FC = () => {
                 )}
               />
               <span className="truncate">
-                {VALIDATION_SCRIPTS.find((s) => s.key === r.scriptName)?.label ?? r.scriptName}
+                {INCIDENT_SCRIPTS.find((s) => s.scriptKey === r.scriptName)?.displayLabel ?? r.scriptName}
               </span>
               <span className="ml-auto text-xs text-muted-foreground">
                 {r.foundFiles.length} file(s)
@@ -381,123 +350,26 @@ const UnifiedValidationForm: React.FC = () => {
         </div>
       )}
 
-      {/* Mode selector */}
-      <div className="flex flex-col gap-1">
-        <p className="text-xs font-medium text-muted-foreground">Mode</p>
-        <div className="flex gap-4">
-          {(["batch", "single"] as const).map((m) => (
-            <label
-              key={m}
-              className={cn(
-                "flex items-center gap-2 cursor-pointer text-sm",
-                m === "single" && !singleModeAllowed && "opacity-50 cursor-not-allowed",
-              )}
-            >
-              <input
-                type="radio"
-                value={m}
-                {...register("mode")}
-                disabled={isPending || (m === "single" && !singleModeAllowed)}
-                className="accent-primary"
-              />
-              {m.charAt(0).toUpperCase() + m.slice(1)}
-            </label>
-          ))}
-        </div>
-        {!singleModeAllowed && (
-          <p className="text-[11px] text-muted-foreground">
-            Single mode is only available when exactly one validation script is selected.
-          </p>
-        )}
-      </div>
+      {/* Incident File Table */}
+      <IncidentFileTable
+        incidents={selectedIncidents}
+        resolvedPaths={resolvedPaths}
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+        value={incidentConfigs}
+        onChange={setIncidentConfigs}
+        columns={["input", "template", "output"]}
+        disabled={isPending}
+      />
 
-      {/* Batch fields */}
-      {(mode === "batch" || selectedTypes.length > 1) && (
-        <div className="space-y-3 rounded-lg border border-border p-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Batch Config
-          </p>
-          <Field label="Input Directory" hint="Directory containing per-incident extract CSVs." error={errors.inputDirectory?.message}>
-            <PathPickerInput
-              value={watch("inputDirectory") ?? ""}
-              onChange={(v) => setValue("inputDirectory", v)}
-              mode="directory"
-              placeholder="/path/to/input"
-              disabled={isPending}
-            />
-          </Field>
-          <Field label="Output Directory" hint="Directory for validated output CSVs." error={errors.outputDirectory?.message}>
-            <PathPickerInput
-              value={watch("outputDirectory") ?? ""}
-              onChange={(v) => setValue("outputDirectory", v)}
-              mode="directory"
-              placeholder="/path/to/output"
-              disabled={isPending}
-            />
-          </Field>
-          <Field label="Template Directory" hint="Directory containing Kaizen template CSVs." error={errors.templateDirectory?.message}>
-            <PathPickerInput
-              value={watch("templateDirectory") ?? ""}
-              onChange={(v) => setValue("templateDirectory", v)}
-              mode="directory"
-              placeholder="/path/to/templates"
-              disabled={isPending}
-            />
-          </Field>
+      {/* Preview Selected */}
+      <IncidentPreview
+        configs={incidentConfigs}
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+      />
 
-          {outputDirectory && (
-            <p className="text-xs text-muted-foreground">
-              Output file:{" "}
-              <code className="font-mono bg-muted px-1 py-0.5 rounded">{outputFilenamePreview}</code>
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* Single fields */}
-      {mode === "single" && singleModeAllowed && (
-        <div className="space-y-3 rounded-lg border border-border p-4">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Single Config
-          </p>
-          <Field label="Incident Code" hint="Incident code to validate, e.g. 7_39." error={errors.incidentCode?.message}>
-            <input
-              {...register("incidentCode")}
-              disabled={isPending}
-              className={inputCls}
-              placeholder="e.g. 7_39"
-            />
-          </Field>
-          <Field label="Input File" hint="Path to the extract CSV file for this incident." error={errors.inputFile?.message}>
-            <PathPickerInput
-              value={watch("inputFile") ?? ""}
-              onChange={(v) => setValue("inputFile", v)}
-              mode="file"
-              placeholder="/path/to/input.csv"
-              disabled={isPending}
-            />
-          </Field>
-          <Field label="Template File" hint="Path to the Kaizen template CSV file." error={errors.templateFile?.message}>
-            <PathPickerInput
-              value={watch("templateFile") ?? ""}
-              onChange={(v) => setValue("templateFile", v)}
-              mode="file"
-              placeholder="/path/to/template.csv"
-              disabled={isPending}
-            />
-          </Field>
-          <Field label="Output File" hint="Path for the validation results output file." error={errors.outputFile?.message}>
-            <PathPickerInput
-              value={watch("outputFile") ?? ""}
-              onChange={(v) => setValue("outputFile", v)}
-              mode="file"
-              placeholder="/path/to/output.csv"
-              disabled={isPending}
-            />
-          </Field>
-        </div>
-      )}
-
+      {/* Stop on error */}
       <label className="flex items-center gap-2 cursor-pointer text-sm">
         <input
           type="checkbox"
@@ -529,10 +401,10 @@ const UnifiedValidationForm: React.FC = () => {
 
       <Button
         type="submit"
-        disabled={isPending || selectedTypes.length === 0}
+        disabled={isPending || selectedIncidents.length === 0}
         className="w-full"
       >
-        {isPending ? "Running…" : selectedTypes.length > 1 ? "Run Selected" : "Run"}
+        {isPending ? "Running…" : selectedIncidents.length > 1 ? "Run Selected" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -547,127 +419,49 @@ const UnifiedValidationForm: React.FC = () => {
 };
 
 // ---------------------------------------------------------------------------
-// Utility Script Form
+// Utility sidebar config (display only — each form is a distinct component)
 // ---------------------------------------------------------------------------
 
-interface UtilityFieldConfig {
-  name: "inputDirectory" | "outputDirectory" | "templateDirectory" | "outputFile";
-  label: string;
-  placeholder: string;
-  type: "file" | "directory";
-}
-
-interface UtilityConfig {
+interface UtilityNavItem {
   key: string;
   label: string;
-  description: string;
-  fields: UtilityFieldConfig[];
-  needsPeriod: boolean;
 }
 
-const UTILITY_CONFIGS: UtilityConfig[] = [
-  {
-    key: "sql_extract_generator",
-    label: "SQL Extract Generator",
-    description: "Generate SQL extract scripts for a given testing period.",
-    fields: [
-      { name: "outputDirectory", label: "Output Directory", placeholder: "/path/to/output", type: "directory" },
-    ],
-    needsPeriod: true,
-  },
-  {
-    key: "accuracy_template_generator",
-    label: "Accuracy Template Generator",
-    description: "Generate accuracy testing template files. The input directory must contain consolidated_errors.csv and/or consolidated_queries.csv.",
-    fields: [
-      {
-        name: "inputDirectory",
-        label: "Input Directory",
-        placeholder: "/path/to/consolidated",
-        type: "directory",
-      },
-      {
-        name: "outputDirectory",
-        label: "Output Directory",
-        placeholder: "/path/to/output",
-        type: "directory",
-      },
-    ],
-    needsPeriod: true,
-  },
-  {
-    key: "collate_csv_extracts",
-    label: "Collate CSV Extracts",
-    description: "Collate CSV extract files from an input directory into a single output file.",
-    fields: [
-      {
-        name: "inputDirectory",
-        label: "Input Directory",
-        placeholder: "/path/to/input",
-        type: "directory",
-      },
-      {
-        name: "outputFile",
-        label: "Output File",
-        placeholder: "/path/to/output.csv",
-        type: "file",
-      },
-    ],
-    needsPeriod: false,
-  },
-  {
-    key: "data_push",
-    label: "Data Push",
-    description: "Push data files from an input directory to downstream destinations.",
-    fields: [
-      {
-        name: "inputDirectory",
-        label: "Input Directory",
-        placeholder: "/path/to/input",
-        type: "directory",
-      },
-    ],
-    needsPeriod: false,
-  },
+const UTILITY_NAV: UtilityNavItem[] = [
+  { key: "accuracy_template_generator", label: "Template Generator" },
+  { key: "sql_extract_generator", label: "Extract Generator" },
+  { key: "collate_csv_extracts", label: "Collate CSV Extracts" },
+  { key: "data_push", label: "Data Push" },
 ];
 
-const utilitySchema = z.object({
+// ---------------------------------------------------------------------------
+// Shared utility form schema (testing period + log level + dry run)
+// ---------------------------------------------------------------------------
+
+const utilityBaseSchema = z.object({
   testingPeriod: z.object({ fiscalYear: z.string(), quarter: z.string() }),
-  inputDirectory: z.string().optional(),
-  outputDirectory: z.string().optional(),
-  templateDirectory: z.string().optional(),
-  outputFile: z.string().optional(),
   logLevel: z.string(),
   dryRun: z.boolean(),
 });
 
-type UtilityFormValues = z.infer<typeof utilitySchema>;
+type UtilityBaseValues = z.infer<typeof utilityBaseSchema>;
 
-interface UtilityScriptFormProps {
-  config: UtilityConfig;
-}
+// ---------------------------------------------------------------------------
+// Template Generator Form
+// ---------------------------------------------------------------------------
 
-const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
+const TemplateGeneratorForm: React.FC = () => {
   const navigate = useNavigate();
+  const [selectedIncidents, setSelectedIncidents] = useState<IncidentSelection[]>(ALL_INCIDENTS);
+  const [incidentConfigs, setIncidentConfigs] = useState<IncidentRunConfig[]>([]);
+  const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
+  const [kaizenFiles, setKaizenFiles] = useState<{ errors: string; queries: string } | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  const cacheKey = `accuracy_utility_${config.key}`;
-
-  const {
-    control,
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    formState: { errors },
-  } = useForm<UtilityFormValues>({
-    resolver: zodResolver(utilitySchema),
-    defaultValues: loadCache(cacheKey, {
+  const { control, register, handleSubmit, watch, formState: { errors } } = useForm<UtilityBaseValues>({
+    resolver: zodResolver(utilityBaseSchema),
+    defaultValues: loadCache("accuracy_utility_template_gen", {
       testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
-      inputDirectory: "",
-      outputDirectory: "",
-      templateDirectory: "",
-      outputFile: "",
       logLevel: "INFO",
       dryRun: false,
     }),
@@ -675,10 +469,26 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
 
   useEffect(() => {
     const sub = watch((values) => {
-      try { localStorage.setItem(`txr_form_${cacheKey}`, JSON.stringify(values)); } catch { /* ignore */ }
+      try { localStorage.setItem("txr_form_accuracy_utility_template_gen", JSON.stringify(values)); } catch { /* ignore */ }
     });
     return () => sub.unsubscribe();
-  }, [watch, cacheKey]);
+  }, [watch]);
+
+  const testingPeriod = watch("testingPeriod");
+
+  // Auto-discover consolidated CSVs from kaizen dir whenever paths resolve.
+  const handlePathsResolved = useCallback((paths: ResolvedPaths) => {
+    setResolvedPaths(paths);
+    if (!paths.kaizen) return;
+    browseDirectory(paths.kaizen)
+      .then((res) => {
+        const files = res.entries.filter((e) => !e.isDir).map((e) => e.path);
+        const errorsFile = files.find((f) => /Consolidated.Errors.Data/i.test(f)) ?? "";
+        const queriesFile = files.find((f) => /Consolidated.Queries.Data/i.test(f)) ?? "";
+        setKaizenFiles({ errors: errorsFile, queries: queriesFile });
+      })
+      .catch(() => setKaizenFiles(null));
+  }, []);
 
   const mutation = useMutation({
     mutationFn: runValidation,
@@ -688,15 +498,15 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
     },
   });
 
-  const onSubmit = (values: UtilityFormValues) => {
+  const onSubmit = (values: UtilityBaseValues) => {
     mutation.mutate({
-      scriptName: config.key,
+      scriptName: "accuracy_template_generator",
       testingPeriod: values.testingPeriod,
       mode: "batch",
       batchConfig: {
-        inputDirectory: values.inputDirectory ?? "",
-        outputDirectory: values.outputDirectory ?? "",
-        templateDirectory: values.templateDirectory ?? "",
+        inputDirectory: resolvedPaths?.kaizen ?? "",
+        outputDirectory: resolvedPaths?.templates ?? "",
+        templateDirectory: "",
         logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
       },
       logLevel: values.logLevel,
@@ -705,40 +515,96 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
   };
 
   const isPending = mutation.isPending;
-  const fieldErrors: Partial<Record<UtilityFieldConfig["name"], { message?: string }>> = errors;
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
-      <p className="text-sm text-muted-foreground">{config.description}</p>
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-2xl">
+      <p className="text-sm text-muted-foreground">
+        Generate accuracy testing template files for selected incidents.
+      </p>
 
-      {config.needsPeriod && (
-        <div>
-          <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
-          <Controller
-            name="testingPeriod"
-            control={control}
-            render={({ field }) => (
-              <TestingPeriodSelector
-                value={field.value}
-                onChange={field.onChange}
-                disabled={isPending}
+      {/* Testing Period */}
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
+        <Controller
+          name="testingPeriod"
+          control={control}
+          render={({ field }) => (
+            <TestingPeriodSelector value={field.value} onChange={field.onChange} disabled={isPending} />
+          )}
+        />
+      </div>
+
+      {/* Smart Path Config — includes Kaizen dir */}
+      <SmartPathConfig
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+        onChange={handlePathsResolved}
+        disabled={isPending}
+      />
+
+      {/* Auto-discovered consolidated CSVs from Kaizen dir */}
+      {kaizenFiles !== null && (
+        <div className="rounded-md border border-border px-3 py-3 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Consolidated Source Files (Kaizen)
+          </p>
+          <div className="space-y-1 text-xs font-mono">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full shrink-0",
+                  kaizenFiles.errors ? "bg-green-500" : "bg-orange-400",
+                )}
               />
-            )}
-          />
+              <span className="text-muted-foreground shrink-0">Errors</span>
+              <span className="truncate text-foreground/80">
+                {kaizenFiles.errors || "not found"}
+              </span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full shrink-0",
+                  kaizenFiles.queries ? "bg-green-500" : "bg-orange-400",
+                )}
+              />
+              <span className="text-muted-foreground shrink-0">Queries</span>
+              <span className="truncate text-foreground/80">
+                {kaizenFiles.queries || "not found"}
+              </span>
+            </div>
+          </div>
         </div>
       )}
 
-      {config.fields.map((f) => (
-        <Field key={f.name} label={f.label} error={fieldErrors[f.name]?.message}>
-          <PathPickerInput
-            value={watch(f.name) ?? ""}
-            onChange={(v) => setValue(f.name, v)}
-            mode={f.type}
-            placeholder={f.placeholder}
-            disabled={isPending}
-          />
-        </Field>
-      ))}
+      {/* Incident Checklist */}
+      <IncidentChecklist
+        scripts={INCIDENT_SCRIPTS}
+        selected={selectedIncidents}
+        onChange={setSelectedIncidents}
+        disabled={isPending}
+      />
+
+      {/* Incident File Table — output only, collapsible */}
+      <IncidentFileTable
+        incidents={selectedIncidents}
+        resolvedPaths={resolvedPaths}
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+        value={incidentConfigs}
+        onChange={setIncidentConfigs}
+        columns={["output"]}
+        outputDirKey="templates"
+        outputFileSuffix="template.csv"
+        disabled={isPending}
+      />
+
+      {/* Preview */}
+      <IncidentPreview
+        configs={incidentConfigs}
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+      />
 
       <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
         <div className="flex flex-wrap gap-4 items-end">
@@ -757,14 +623,492 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
       <Button type="submit" disabled={isPending} className="w-full">
         {isPending ? "Running…" : "Run"}
       </Button>
+    </form>
+  );
+};
 
-      {mutation.isError && (
-        <p className="text-sm text-destructive">
-          {mutation.error instanceof Error
-            ? mutation.error.message
-            : "An error occurred"}
-        </p>
+// ---------------------------------------------------------------------------
+// Extract Generator Form
+// ---------------------------------------------------------------------------
+
+const extractGenSchema = z.object({
+  testingPeriod: z.object({ fiscalYear: z.string(), quarter: z.string() }),
+  logLevel: z.string(),
+  dryRun: z.boolean(),
+  batchSize: z.coerce.number().int().min(1),
+  column: z.string().optional(),
+  outputFormat: z.enum(["sql", "dtf", "both"]),
+  dtfTemplate: z.string().optional(),
+  sqlOutputDir: z.string().optional(),
+  dtfOutputDir: z.string().optional(),
+  csvOutputDir: z.string().optional(),
+});
+
+type ExtractGenValues = z.infer<typeof extractGenSchema>;
+
+/** Build the three extract output subdirectory paths from a base extracts dir. */
+function buildExtractDirs(extractsBase: string): { sql: string; dtf: string; csv: string } {
+  const base = extractsBase.replace(/\/+$/, "");
+  return { sql: `${base}/sql`, dtf: `${base}/dtf`, csv: `${base}/csv` };
+}
+
+const ExtractGeneratorForm: React.FC = () => {
+  const navigate = useNavigate();
+  const [selectedIncidents, setSelectedIncidents] = useState<IncidentSelection[]>(ALL_INCIDENTS);
+  const [incidentConfigs, setIncidentConfigs] = useState<IncidentRunConfig[]>([]);
+  const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
+  const [derivedDirs, setDerivedDirs] = useState<{ sql: string; dtf: string; csv: string } | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { control, register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ExtractGenValues>({
+    resolver: zodResolver(extractGenSchema) as any,
+    defaultValues: loadCache("accuracy_utility_extract_gen", {
+      testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
+      logLevel: "INFO",
+      dryRun: false,
+      batchSize: 900,
+      column: "",
+      outputFormat: "both" as const,
+      dtfTemplate: "",
+      sqlOutputDir: "",
+      dtfOutputDir: "",
+      csvOutputDir: "",
+    }),
+  });
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_accuracy_utility_extract_gen", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
+
+  const testingPeriod = watch("testingPeriod");
+
+  // Auto-fill sql/dtf/csv output dirs from SmartPathConfig extracts dir.
+  const handlePathsResolved = useCallback(
+    (paths: ResolvedPaths) => {
+      setResolvedPaths(paths);
+      if (paths.extracts) {
+        const dirs = buildExtractDirs(paths.extracts);
+        setDerivedDirs(dirs);
+        if (!watch("sqlOutputDir")) setValue("sqlOutputDir", dirs.sql);
+        if (!watch("dtfOutputDir")) setValue("dtfOutputDir", dirs.dtf);
+        if (!watch("csvOutputDir")) setValue("csvOutputDir", dirs.csv);
+      }
+    },
+    [setValue, watch],
+  );
+
+  const mutation = useMutation({
+    mutationFn: runValidation,
+    onSuccess: (job) => navigate(`/jobs/${job.id}`),
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Failed to start job");
+    },
+  });
+
+  const onSubmit = (values: ExtractGenValues) => {
+    mutation.mutate({
+      scriptName: "sql_extract_generator",
+      testingPeriod: values.testingPeriod,
+      mode: "batch",
+      batchConfig: {
+        inputDirectory: resolvedPaths?.extracts ?? "",
+        outputDirectory: values.sqlOutputDir ?? derivedDirs?.sql ?? "",
+        templateDirectory: "",
+        logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
+      },
+      logLevel: values.logLevel,
+      dryRun: values.dryRun,
+    });
+  };
+
+  const isPending = mutation.isPending;
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-2xl">
+      <p className="text-sm text-muted-foreground">
+        Generate SQL/DTF extract scripts for selected incidents.
+      </p>
+
+      {/* Testing Period */}
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
+        <Controller
+          name="testingPeriod"
+          control={control}
+          render={({ field }) => (
+            <TestingPeriodSelector value={field.value} onChange={field.onChange} disabled={isPending} />
+          )}
+        />
+      </div>
+
+      {/* Smart Path Config */}
+      <SmartPathConfig
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+        onChange={handlePathsResolved}
+        disabled={isPending}
+      />
+
+      {/* Derived extract output subdirectories */}
+      {derivedDirs && (
+        <div className="rounded-md border border-border px-3 py-3 space-y-2">
+          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+            Extract Output Directories
+          </p>
+          <div className="space-y-0.5">
+            {(["sql", "dtf", "csv"] as const).map((fmt) => (
+              <div key={fmt} className="flex items-center justify-between gap-2">
+                <span className="text-xs font-medium text-muted-foreground uppercase w-8 shrink-0">
+                  {fmt}
+                </span>
+                <span className="truncate text-xs text-foreground/80 font-mono">
+                  {watch(`${fmt}OutputDir` as keyof ExtractGenValues) as string || derivedDirs[fmt]}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
       )}
+
+      {/* Incident Checklist */}
+      <IncidentChecklist
+        scripts={INCIDENT_SCRIPTS}
+        selected={selectedIncidents}
+        onChange={setSelectedIncidents}
+        disabled={isPending}
+      />
+
+      {/* Incident File Table — input only, collapsible */}
+      <IncidentFileTable
+        incidents={selectedIncidents}
+        resolvedPaths={resolvedPaths}
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+        value={incidentConfigs}
+        onChange={setIncidentConfigs}
+        columns={["input"]}
+        disabled={isPending}
+        showValuesBadge
+      />
+
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <div className="flex flex-wrap gap-4 items-end">
+          <Field label="Batch Size" hint="Max transaction refs per SQL file." error={errors.batchSize?.message}>
+            <input
+              type="number"
+              {...register("batchSize", { valueAsNumber: true })}
+              disabled={isPending}
+              className={cn(selectCls, "w-28")}
+            />
+          </Field>
+          <Field label="Column" hint="Transaction ref column name (optional)." error={errors.column?.message}>
+            <input
+              type="text"
+              {...register("column")}
+              disabled={isPending}
+              className={cn(selectCls, "w-44")}
+              placeholder="auto-detect"
+            />
+          </Field>
+          <Field label="Output Format" error={errors.outputFormat?.message}>
+            <select {...register("outputFormat")} disabled={isPending} className={cn(selectCls, "w-32")}>
+              <option value="both">Both</option>
+              <option value="sql">SQL only</option>
+              <option value="dtf">DTF only</option>
+            </select>
+          </Field>
+          <Field label="DTF Template" hint="Path to DTF template file." error={errors.dtfTemplate?.message}>
+            <PathPickerInput
+              value={watch("dtfTemplate") ?? ""}
+              onChange={(v) => setValue("dtfTemplate", v)}
+              mode="file"
+              placeholder="optional"
+              disabled={isPending}
+            />
+          </Field>
+          <Field label="SQL Output Dir" hint="Override auto-derived sql/ subdirectory." error={errors.sqlOutputDir?.message}>
+            <PathPickerInput
+              value={watch("sqlOutputDir") ?? ""}
+              onChange={(v) => setValue("sqlOutputDir", v)}
+              mode="directory"
+              placeholder={derivedDirs?.sql ?? "auto"}
+              disabled={isPending}
+            />
+          </Field>
+          <Field label="DTF Output Dir" hint="Override auto-derived dtf/ subdirectory." error={errors.dtfOutputDir?.message}>
+            <PathPickerInput
+              value={watch("dtfOutputDir") ?? ""}
+              onChange={(v) => setValue("dtfOutputDir", v)}
+              mode="directory"
+              placeholder={derivedDirs?.dtf ?? "auto"}
+              disabled={isPending}
+            />
+          </Field>
+          <Field label="CSV Output Dir" hint="System i output path (embedded in DTF)." error={errors.csvOutputDir?.message}>
+            <PathPickerInput
+              value={watch("csvOutputDir") ?? ""}
+              onChange={(v) => setValue("csvOutputDir", v)}
+              mode="directory"
+              placeholder={derivedDirs?.csv ?? "auto"}
+              disabled={isPending}
+            />
+          </Field>
+          <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+            <select {...register("logLevel")} disabled={isPending} className={cn(selectCls, "w-40")}>
+              {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </Field>
+          <label className="flex items-center gap-2 cursor-pointer text-sm pb-1">
+            <input type="checkbox" {...register("dryRun")} disabled={isPending} className="accent-primary h-4 w-4" />
+            Dry Run
+          </label>
+        </div>
+      </AdvancedSection>
+
+      <Button type="submit" disabled={isPending} className="w-full">
+        {isPending ? "Running…" : "Run"}
+      </Button>
+    </form>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Collate CSV Extracts Form
+// ---------------------------------------------------------------------------
+
+const CollateExtractsForm: React.FC = () => {
+  const navigate = useNavigate();
+  const [incidentConfigs, setIncidentConfigs] = useState<IncidentRunConfig[]>([]);
+  const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const { control, register, handleSubmit, watch, formState: { errors } } = useForm<UtilityBaseValues>({
+    resolver: zodResolver(utilityBaseSchema),
+    defaultValues: loadCache("accuracy_utility_collate", {
+      testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
+      logLevel: "INFO",
+      dryRun: false,
+    }),
+  });
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_accuracy_utility_collate", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
+
+  const testingPeriod = watch("testingPeriod");
+
+  const mutation = useMutation({
+    mutationFn: runValidation,
+    onSuccess: (job) => navigate(`/jobs/${job.id}`),
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Failed to start job");
+    },
+  });
+
+  const onSubmit = (values: UtilityBaseValues) => {
+    mutation.mutate({
+      scriptName: "collate_csv_extracts",
+      testingPeriod: values.testingPeriod,
+      mode: "batch",
+      batchConfig: {
+        inputDirectory: resolvedPaths?.extracts ?? "",
+        outputDirectory: resolvedPaths?.extracts ?? "",
+        templateDirectory: "",
+        logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
+      },
+      logLevel: values.logLevel,
+      dryRun: values.dryRun,
+    });
+  };
+
+  const isPending = mutation.isPending;
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-2xl">
+      <p className="text-sm text-muted-foreground">
+        Collate split CSV extract files per incident. Auto-discovers split files by incident code.
+      </p>
+
+      {/* Testing Period */}
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
+        <Controller
+          name="testingPeriod"
+          control={control}
+          render={({ field }) => (
+            <TestingPeriodSelector value={field.value} onChange={field.onChange} disabled={isPending} />
+          )}
+        />
+      </div>
+
+      {/* Smart Path Config */}
+      <SmartPathConfig
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+        onChange={setResolvedPaths}
+        disabled={isPending}
+      />
+
+      {/* Incident File Table — output only, collated files go back to Extracts */}
+      <IncidentFileTable
+        incidents={ALL_INCIDENTS}
+        resolvedPaths={resolvedPaths}
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+        value={incidentConfigs}
+        onChange={setIncidentConfigs}
+        columns={["output"]}
+        outputDirKey="extracts"
+        outputFileSuffix="extract.csv"
+        disabled={isPending}
+      />
+
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <div className="flex flex-wrap gap-4 items-end">
+          <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+            <select {...register("logLevel")} disabled={isPending} className={cn(selectCls, "w-40")}>
+              {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </Field>
+          <label className="flex items-center gap-2 cursor-pointer text-sm pb-1">
+            <input type="checkbox" {...register("dryRun")} disabled={isPending} className="accent-primary h-4 w-4" />
+            Dry Run
+          </label>
+        </div>
+      </AdvancedSection>
+
+      <Button type="submit" disabled={isPending} className="w-full">
+        {isPending ? "Running…" : "Run"}
+      </Button>
+    </form>
+  );
+};
+
+// ---------------------------------------------------------------------------
+// Data Push Form
+// ---------------------------------------------------------------------------
+
+const DataPushForm: React.FC = () => {
+  const navigate = useNavigate();
+  const [selectedIncidents, setSelectedIncidents] = useState<IncidentSelection[]>(ALL_INCIDENTS);
+  const [incidentConfigs, setIncidentConfigs] = useState<IncidentRunConfig[]>([]);
+  const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
+  const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const { control, register, handleSubmit, watch, formState: { errors } } = useForm<UtilityBaseValues>({
+    resolver: zodResolver(utilityBaseSchema),
+    defaultValues: loadCache("accuracy_utility_data_push", {
+      testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
+      logLevel: "INFO",
+      dryRun: false,
+    }),
+  });
+
+  useEffect(() => {
+    const sub = watch((values) => {
+      try { localStorage.setItem("txr_form_accuracy_utility_data_push", JSON.stringify(values)); } catch { /* ignore */ }
+    });
+    return () => sub.unsubscribe();
+  }, [watch]);
+
+  const testingPeriod = watch("testingPeriod");
+
+  const mutation = useMutation({
+    mutationFn: runValidation,
+    onSuccess: (job) => navigate(`/jobs/${job.id}`),
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Failed to start job");
+    },
+  });
+
+  const onSubmit = (values: UtilityBaseValues) => {
+    mutation.mutate({
+      scriptName: "data_push",
+      testingPeriod: values.testingPeriod,
+      mode: "batch",
+      batchConfig: {
+        inputDirectory: resolvedPaths?.output ?? "",
+        outputDirectory: resolvedPaths?.templates ?? "",
+        templateDirectory: "",
+        logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
+      },
+      logLevel: values.logLevel,
+      dryRun: values.dryRun,
+    });
+  };
+
+  const isPending = mutation.isPending;
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-2xl">
+      <p className="text-sm text-muted-foreground">
+        Push validated data back into template files for selected incidents.
+      </p>
+
+      {/* Testing Period */}
+      <div>
+        <p className="text-xs font-medium text-muted-foreground mb-2">Testing Period</p>
+        <Controller
+          name="testingPeriod"
+          control={control}
+          render={({ field }) => (
+            <TestingPeriodSelector value={field.value} onChange={field.onChange} disabled={isPending} />
+          )}
+        />
+      </div>
+
+      {/* Smart Path Config */}
+      <SmartPathConfig
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+        onChange={setResolvedPaths}
+        disabled={isPending}
+      />
+
+      {/* Incident Checklist */}
+      <IncidentChecklist
+        scripts={INCIDENT_SCRIPTS}
+        selected={selectedIncidents}
+        onChange={setSelectedIncidents}
+        disabled={isPending}
+      />
+
+      {/* Incident File Table — input (validated CSV) + output (template overwritten) */}
+      <IncidentFileTable
+        incidents={selectedIncidents}
+        resolvedPaths={resolvedPaths}
+        fiscalYear={testingPeriod.fiscalYear}
+        quarter={testingPeriod.quarter}
+        value={incidentConfigs}
+        onChange={setIncidentConfigs}
+        columns={["input", "output"]}
+        disabled={isPending}
+      />
+
+      <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
+        <div className="flex flex-wrap gap-4 items-end">
+          <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
+            <select {...register("logLevel")} disabled={isPending} className={cn(selectCls, "w-40")}>
+              {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
+            </select>
+          </Field>
+          <label className="flex items-center gap-2 cursor-pointer text-sm pb-1">
+            <input type="checkbox" {...register("dryRun")} disabled={isPending} className="accent-primary h-4 w-4" />
+            Dry Run
+          </label>
+        </div>
+      </AdvancedSection>
+
+      <Button type="submit" disabled={isPending} className="w-full">
+        {isPending ? "Running…" : "Run"}
+      </Button>
     </form>
   );
 };
@@ -773,12 +1117,19 @@ const UtilityScriptForm: React.FC<UtilityScriptFormProps> = ({ config }) => {
 // Main AccuracyTesting page
 // ---------------------------------------------------------------------------
 
+const UTILITY_FORM_MAP: Record<string, React.FC> = {
+  accuracy_template_generator: TemplateGeneratorForm,
+  sql_extract_generator: ExtractGeneratorForm,
+  collate_csv_extracts: CollateExtractsForm,
+  data_push: DataPushForm,
+};
+
 const AccuracyTesting: React.FC = () => {
   const [activeTab, setActiveTab] = useState<ActiveTab>("validation");
-  const [selectedUtility, setSelectedUtility] = useState<string>(UTILITY_CONFIGS[0].key);
+  const [selectedUtility, setSelectedUtility] = useState<string>(UTILITY_NAV[0].key);
 
-  const selectedUtilityConfig =
-    UTILITY_CONFIGS.find((u) => u.key === selectedUtility) ?? UTILITY_CONFIGS[0];
+  const selectedNav = UTILITY_NAV.find((u) => u.key === selectedUtility) ?? UTILITY_NAV[0];
+  const UtilityForm = UTILITY_FORM_MAP[selectedNav.key];
 
   return (
     <div className="space-y-6">
@@ -825,7 +1176,7 @@ const AccuracyTesting: React.FC = () => {
         <div className="flex gap-6 min-h-[400px]">
           {/* Sidebar */}
           <nav className="w-60 shrink-0 space-y-1">
-            {UTILITY_CONFIGS.map((u) => (
+            {UTILITY_NAV.map((u) => (
               <button
                 key={u.key}
                 type="button"
@@ -840,10 +1191,10 @@ const AccuracyTesting: React.FC = () => {
           {/* Panel */}
           <div className="flex-1 min-w-0 rounded-lg border border-border p-6">
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-semibold">{selectedUtilityConfig.label}</h2>
-              <LastRunBadge scriptName={selectedUtilityConfig.key} />
+              <h2 className="text-lg font-semibold">{selectedNav.label}</h2>
+              <LastRunBadge scriptName={selectedNav.key} />
             </div>
-            <UtilityScriptForm key={selectedUtility} config={selectedUtilityConfig} />
+            {UtilityForm && <UtilityForm key={selectedUtility} />}
           </div>
         </div>
       )}
