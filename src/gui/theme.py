@@ -503,6 +503,84 @@ QLabel[lastrun="true"] {{
     font-size: 9pt;
 }}
 
+/* ── Status badges ──────────────────────────────────────────────────────── */
+QLabel#badge-success {{
+    background-color: #10B981;
+    color: {COLOUR_WHITE};
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 9pt;
+    font-weight: 600;
+}}
+
+QLabel#badge-failed {{
+    background-color: #EF4444;
+    color: {COLOUR_WHITE};
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 9pt;
+    font-weight: 600;
+}}
+
+QLabel#badge-running {{
+    background-color: #3B82F6;
+    color: {COLOUR_WHITE};
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 9pt;
+    font-weight: 600;
+}}
+
+QLabel#badge-waiting {{
+    background-color: #F59E0B;
+    color: {COLOUR_WHITE};
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 9pt;
+    font-weight: 600;
+}}
+
+QLabel#badge-pending {{
+    background-color: {COLOUR_BORDER};
+    color: {COLOUR_GREY};
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 9pt;
+    font-weight: 600;
+}}
+
+QLabel#badge-cancelled {{
+    background-color: {COLOUR_SURFACE};
+    color: {COLOUR_GREY};
+    border: 1px solid {COLOUR_BORDER};
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 9pt;
+    font-weight: 600;
+}}
+
+QLabel#badge-never_run {{
+    background-color: {COLOUR_SURFACE};
+    color: {COLOUR_GREY};
+    border: 1px solid {COLOUR_BORDER};
+    border-radius: 4px;
+    padding: 2px 8px;
+    font-size: 9pt;
+}}
+
+/* ── Connection indicator ───────────────────────────────────────────────── */
+QLabel#api-connected {{
+    color: #10B981;
+    font-size: 9pt;
+    font-weight: 600;
+}}
+
+QLabel#api-offline {{
+    color: #EF4444;
+    font-size: 9pt;
+    font-weight: 600;
+}}
+
 /* ── Tool tips ──────────────────────────────────────────────────────────── */
 QToolTip {{
     background-color: #1A1A1A;

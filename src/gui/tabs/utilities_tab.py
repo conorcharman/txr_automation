@@ -7,8 +7,6 @@ Utility script panels:
 - XLSX-to-CSV Converter (with conditional mode visibility)
 """
 
-import importlib
-from types import ModuleType
 from typing import Any, Dict, List, Optional
 
 from PySide6.QtWidgets import (
@@ -23,6 +21,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.api.client import ApiClient
 from gui.constants import CSV_FILTER, LOG_LEVELS, XML_FILTER
 from gui.widgets import (
     ConfigLoaderWidget,
@@ -32,15 +31,7 @@ from gui.widgets import (
     RunControlsWidget,
 )
 from gui.utils.settings import settings
-from gui.workers import ScriptRunnerWorker
-
-
-def _import_script(module_path: str) -> Optional[ModuleType]:
-    """Safely import a script module."""
-    try:
-        return importlib.import_module(module_path)
-    except ImportError:
-        return None
+from gui.workers import ApiWorker
 
 
 class XlsxConverterPanel(QWidget):
@@ -50,9 +41,10 @@ class XlsxConverterPanel(QWidget):
     Mode 2 (Single directory) shows input-dir and output-dir.
     """
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
+        self._client = api_client
+        self._worker: Optional[ApiWorker] = None
         pfx = "utils.xlsx_converter"
 
         layout = QVBoxLayout(self)
@@ -227,39 +219,43 @@ class XlsxConverterPanel(QWidget):
         self._execute(dry_run=True)
 
     def _execute(self, dry_run: bool = False) -> None:
-        module = _import_script("utils.xlsx_csv_converter")
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import utils.xlsx_csv_converter"
-            )
-            return
-        argv = self.build_argv()
-        if dry_run and "--dry-run" not in argv:
-            argv.append("--dry-run")
+        mode_str = self.mode.get_value()
+        mode_num = "1" if str(mode_str).startswith("1") else "2"
+        payload: Dict[str, Any] = {
+            "config": self.config_loader.get_last_path(),
+            "mode": mode_num,
+            "recursive": bool(self.recursive.get_value()),
+            "filterYear": self.filter_year.get_value(),
+            "filterQuarter": self.filter_quarter.get_value(),
+            "filterPhases": self.filter_phases.get_value().split() if self.filter_phases.get_value() else [],
+            "logLevel": self.log_level.get_value(),
+            "dryRun": dry_run or bool(self.dry_run.get_value()),
+            "force": bool(self.force.get_value()),
+        }
+        if mode_num == "1":
+            payload["parentDir"] = self.parent_dir.get_path()
+        else:
+            payload["inputDir"] = self.input_dir.get_path()
+            payload["outputDir"] = self.output_dir.get_path()
         self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: xlsx_csv_converter {' '.join(argv)}"
-        )
+        self.log_viewer.append_line("[GUI] Running: xlsx-convert")
         self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
+        self._worker = ApiWorker("/api/utilities/xlsx-convert", payload, self._client)
         self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
     def _on_cancel(self) -> None:
         if self._worker and self._worker.isRunning():
-            self._worker.cancel()
+            self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, exit_code: int) -> None:
+    def _on_finished(self, success: bool) -> None:
         self.run_controls.set_running(False)
-        if exit_code == 0:
+        if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
+            self.log_viewer.append_error("[GUI] Failed")
         self._worker = None
 
 
@@ -271,9 +267,10 @@ class XmlConverterPanel(QWidget):
     defaults to writing the CSV alongside each source XML file.
     """
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
+        self._client = api_client
+        self._worker: Optional[ApiWorker] = None
         pfx = "utils.xml_converter"
 
         layout = QVBoxLayout(self)
@@ -395,39 +392,38 @@ class XmlConverterPanel(QWidget):
         self._execute(force_dry_run=True)
 
     def _execute(self, force_dry_run: bool = False) -> None:
-        module = _import_script("utils.xml_csv_converter")
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import utils.xml_csv_converter"
-            )
-            return
-        argv = self.build_argv()
-        if force_dry_run and "--dry-run" not in argv:
-            argv.append("--dry-run")
+        mode_str = str(self.mode.get_value())
+        payload: Dict[str, Any] = {
+            "outputDir": self.output_dir.get_path(),
+            "dryRun": force_dry_run or bool(self.dry_run.get_value()),
+            "logLevel": self.log_level.get_value(),
+        }
+        if mode_str == "Single file":
+            payload["input"] = self.input_file.get_path()
+            payload["mode"] = "file"
+        else:
+            payload["input"] = self.input_dir.get_path()
+            payload["mode"] = "directory"
+            payload["recursive"] = bool(self.recursive.get_value())
         self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: xml_csv_converter {' '.join(argv)}"
-        )
+        self.log_viewer.append_line("[GUI] Running: xml-convert")
         self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
+        self._worker = ApiWorker("/api/utilities/xml-convert", payload, self._client)
         self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
     def _on_cancel(self) -> None:
         if self._worker and self._worker.isRunning():
-            self._worker.cancel()
+            self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, exit_code: int) -> None:
+    def _on_finished(self, success: bool) -> None:
         self.run_controls.set_running(False)
-        if exit_code == 0:
+        if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
+            self.log_viewer.append_error("[GUI] Failed")
         self._worker = None
 
 
@@ -524,9 +520,10 @@ class CsvRecordFinderPanel(QWidget):
     Matches are written to a single output CSV.
     """
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
+        self._client = api_client
+        self._worker: Optional[ApiWorker] = None
         pfx = "utils.csv_record_finder"
 
         layout = QVBoxLayout(self)
@@ -727,45 +724,55 @@ class CsvRecordFinderPanel(QWidget):
         self._execute()
 
     def _execute(self) -> None:
-        module = _import_script("utils.csv_record_finder")
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import utils.csv_record_finder"
-            )
-            return
-        argv = self.build_argv()
+        file_types: List[str] = []
+        if self.ft_csv.get_value():
+            file_types.append("csv")
+        if self.ft_xlsx.get_value():
+            file_types.append("xlsx")
+        if self.ft_xml.get_value():
+            file_types.append("xml")
+        payload: Dict[str, Any] = {
+            "inputDir": self.input_dir.get_path(),
+            "outputFile": self.output_file.get_path(),
+            "column": self.column.get_value(),
+            "terms": self._terms_widget.get_terms(),
+            "fileTypes": file_types,
+            "recursive": bool(self.recursive.get_value()),
+            "sortBy": [s.strip() for s in self.sort_by.get_value().split(",") if s.strip()],
+            "sourceColumn": self.source_column.get_value(),
+            "matchMode": self.match_mode.get_value(),
+            "caseSensitive": bool(self.case_sensitive.get_value()),
+            "encoding": self.encoding.get_value(),
+            "logLevel": self.log_level.get_value(),
+        }
         self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: csv_record_finder {' '.join(argv)}"
-        )
+        self.log_viewer.append_line("[GUI] Running: csv-finder")
         self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
+        self._worker = ApiWorker("/api/utilities/csv-finder", payload, self._client)
         self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
     def _on_cancel(self) -> None:
         if self._worker and self._worker.isRunning():
-            self._worker.cancel()
+            self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, exit_code: int) -> None:
+    def _on_finished(self, success: bool) -> None:
         self.run_controls.set_running(False)
-        if exit_code == 0:
+        if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
+            self.log_viewer.append_error("[GUI] Failed")
         self._worker = None
 
 
 class UtilitiesTab(QWidget):
     """Utilities tab with sidebar navigation."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
+        self._client = api_client or ApiClient()
 
         layout = QHBoxLayout(self)
 
@@ -778,9 +785,9 @@ class UtilitiesTab(QWidget):
         layout.addWidget(self._stack, stretch=1)
 
         panels = [
-            ("XLSX to CSV", XlsxConverterPanel()),
-            ("XML to CSV", XmlConverterPanel()),
-            ("Bulk Record Finder", CsvRecordFinderPanel()),
+            ("XLSX to CSV", XlsxConverterPanel(self._client)),
+            ("XML to CSV", XmlConverterPanel(self._client)),
+            ("Bulk Record Finder", CsvRecordFinderPanel(self._client)),
         ]
 
         for label, panel in panels:

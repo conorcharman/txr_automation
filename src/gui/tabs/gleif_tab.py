@@ -11,8 +11,6 @@ Three GLEIF reference data script panels:
 Architecture mirrors the FIRDS tab exactly.
 """
 
-import importlib
-from types import ModuleType
 from typing import Any, Dict, List, Optional
 
 from PySide6.QtWidgets import (
@@ -29,6 +27,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QDate
 
+from gui.api.client import ApiClient
 from gui.constants import LOG_LEVELS, CSV_FILTER, SQLITE_FILTER
 from gui.widgets import (
     ConfigLoaderWidget,
@@ -37,15 +36,7 @@ from gui.widgets import (
     LogViewerWidget,
     RunControlsWidget,
 )
-from gui.workers import ScriptRunnerWorker
-
-
-def _import_script(module_path: str) -> Optional[ModuleType]:
-    """Safely import a script module."""
-    try:
-        return importlib.import_module(module_path)
-    except ImportError:
-        return None
+from gui.workers import ApiWorker
 
 
 # ---------------------------------------------------------------------------
@@ -55,9 +46,10 @@ def _import_script(module_path: str) -> Optional[ModuleType]:
 class GleifCacheRefreshPanel(QWidget):
     """Panel for the GLEIF cache refresh script."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, api_client: ApiClient, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
+        self._client = api_client
+        self._worker: Optional[ApiWorker] = None
         pfx = "gleif.cache_refresh"
 
         layout = QVBoxLayout(self)
@@ -173,37 +165,38 @@ class GleifCacheRefreshPanel(QWidget):
         return argv
 
     def _on_run(self) -> None:
-        module = _import_script("gleif.scripts.refresh_cache")
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import gleif.scripts.refresh_cache"
-            )
-            return
-        argv = self.build_argv()
+        rtype = self.refresh_type.get_value()
+        payload: Dict[str, Any] = {
+            "type": rtype,
+            "dbPath": self.db_path.get_path(),
+            "stagingDir": self.staging_dir.get_path(),
+            "config": self.config_loader.get_last_path(),
+            "logLevel": self.log_level.get_value(),
+        }
+        if rtype == "delta":
+            payload["deltaType"] = self.delta_type.get_value()
+        if rtype == "full":
+            payload["skipIsinMap"] = bool(self.skip_isin_map.get_value())
+            payload["goldenCopyUrl"] = self.golden_copy_url.get_value()
         self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: gleif-refresh {' '.join(argv)}"
-        )
+        self.log_viewer.append_line("[GUI] Running: gleif-refresh")
         self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
+        self._worker = ApiWorker("/api/gleif/refresh", payload, self._client)
         self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
     def _on_cancel(self) -> None:
         if self._worker and self._worker.isRunning():
-            self._worker.cancel()
+            self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, exit_code: int) -> None:
+    def _on_finished(self, success: bool) -> None:
         self.run_controls.set_running(False)
-        if exit_code == 0:
+        if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
+            self.log_viewer.append_error("[GUI] Failed")
         self._worker = None
 
 
@@ -220,9 +213,10 @@ class LeiCheckPanel(QWidget):
     - Batch: process CSV files with LEI columns
     """
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, api_client: ApiClient, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
+        self._client = api_client
+        self._worker: Optional[ApiWorker] = None
 
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("<b>GLEIF LEI Check</b>"))
@@ -449,21 +443,41 @@ class LeiCheckPanel(QWidget):
             self._run_single_to_file()
             return
 
-        module = _import_script("gleif.scripts.check_lei")
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import gleif.scripts.check_lei"
-            )
-            return
-        argv = self.build_argv()
+        if self._single_radio.isChecked():
+            payload: Dict[str, Any] = {
+                "mode": "single",
+                "lei": self.lei.get_value(),
+                "dbPath": self.db_path.get_path(),
+                "config": self.config_loader.get_last_path(),
+                "logLevel": self.log_level.get_value(),
+            }
+            if self._use_date.get_value():
+                payload["tradeDate"] = self._trade_date.date().toString("yyyy-MM-dd")
+        elif self._name_radio.isChecked():
+            payload = {
+                "mode": "name",
+                "name": self.name_query.get_value(),
+                "limit": self.name_limit.get_value(),
+                "dbPath": self.db_path.get_path(),
+                "config": self.config_loader.get_last_path(),
+                "logLevel": self.log_level.get_value(),
+            }
+        else:
+            payload = {
+                "mode": "batch",
+                "inputFile": self.input_files.get_path(),
+                "inputDir": self.input_dir.get_path(),
+                "pattern": self.glob_pattern.get_value(),
+                "outputFile": self.output_file.get_path(),
+                "dbPath": self.db_path.get_path(),
+                "config": self.config_loader.get_last_path(),
+                "logLevel": self.log_level.get_value(),
+            }
         self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: gleif-check {' '.join(argv)}"
-        )
+        self.log_viewer.append_line("[GUI] Running: gleif-check")
         self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
+        self._worker = ApiWorker("/api/gleif/check", payload, self._client)
         self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -589,20 +603,15 @@ class LeiCheckPanel(QWidget):
 
     def _on_cancel(self) -> None:
         if self._worker and self._worker.isRunning():
-            self._worker.cancel()
+            self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, exit_code: int) -> None:
+    def _on_finished(self, success: bool) -> None:
         self.run_controls.set_running(False)
-        if exit_code == 0:
+        if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
-        elif exit_code == 1 and self._single_radio.isChecked():
-            # Exit code 1 in single mode = invalid LEI (normal result)
-            self.log_viewer.append_line("[GUI] Lookup complete (LEI invalid)")
         else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
+            self.log_viewer.append_error("[GUI] Failed")
         self._worker = None
 
 
@@ -613,9 +622,10 @@ class LeiCheckPanel(QWidget):
 class GleifBackfillPanel(QWidget):
     """Panel for the GLEIF backfill script."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, api_client: ApiClient, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
+        self._client = api_client
+        self._worker: Optional[ApiWorker] = None
 
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("<b>GLEIF Backfill</b>"))
@@ -704,37 +714,33 @@ class GleifBackfillPanel(QWidget):
         return argv
 
     def _on_run(self) -> None:
-        module = _import_script("gleif.scripts.backfill")
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import gleif.scripts.backfill"
-            )
-            return
-        argv = self.build_argv()
+        payload = {
+            "inputCsv": self.input_csv.get_path(),
+            "outputCsv": self.output_csv.get_path(),
+            "format": self.format.get_value(),
+            "dbPath": self.db_path.get_path(),
+            "skipRefresh": bool(self.skip_refresh.get_value()),
+            "logLevel": self.log_level.get_value(),
+        }
         self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: gleif-backfill {' '.join(argv)}"
-        )
+        self.log_viewer.append_line("[GUI] Running: gleif-backfill")
         self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
+        self._worker = ApiWorker("/api/gleif/backfill", payload, self._client)
         self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
     def _on_cancel(self) -> None:
         if self._worker and self._worker.isRunning():
-            self._worker.cancel()
+            self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, exit_code: int) -> None:
+    def _on_finished(self, success: bool) -> None:
         self.run_controls.set_running(False)
-        if exit_code == 0:
+        if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
+            self.log_viewer.append_error("[GUI] Failed")
         self._worker = None
 
 
@@ -745,8 +751,9 @@ class GleifBackfillPanel(QWidget):
 class GleifTab(QWidget):
     """GLEIF Reference Data tab with sidebar navigation."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
+        self._client = api_client or ApiClient()
 
         layout = QHBoxLayout(self)
 
@@ -759,9 +766,9 @@ class GleifTab(QWidget):
         layout.addWidget(self._stack, stretch=1)
 
         panels = [
-            ("Cache Refresh", GleifCacheRefreshPanel()),
-            ("LEI Check", LeiCheckPanel()),
-            ("Backfill", GleifBackfillPanel()),
+            ("Cache Refresh", GleifCacheRefreshPanel(self._client)),
+            ("LEI Check", LeiCheckPanel(self._client)),
+            ("Backfill", GleifBackfillPanel(self._client)),
         ]
 
         for label, panel in panels:

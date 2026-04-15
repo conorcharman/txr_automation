@@ -9,6 +9,12 @@ Contains all data-transfer objects used across store, engine, and pipeline
 components — enums for frequency/step/status/type, and dataclasses for
 schedule configuration, run records, and pipeline presets.
 
+Version 2.0 Changes:
+- Added QUARTERLY to ScheduleFrequency
+- PipelineStep kept for backwards compatibility but is now legacy;
+  the 13-step pipeline list lives in gui.constants.PIPELINE_STEPS
+- Removed PIPELINE_PRESETS (replaced by API pipeline concept)
+
 Version 1.0 Changes:
 - Initial implementation for Phase 1 scheduler foundation
 """
@@ -32,6 +38,7 @@ class ScheduleFrequency(enum.Enum):
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
+    QUARTERLY = "quarterly"
     CUSTOM = "custom"
 
 
@@ -87,11 +94,12 @@ class PeriodType(enum.Enum):
 
 #: Default relative-day windows suggested per frequency.
 FREQUENCY_PERIOD_DEFAULTS: dict[str, tuple[PeriodType, int]] = {
-    "hourly":  (PeriodType.RELATIVE, 1),
-    "daily":   (PeriodType.RELATIVE, 1),
-    "weekly":  (PeriodType.RELATIVE, 7),
-    "monthly": (PeriodType.RELATIVE, 30),
-    "custom":  (PeriodType.FISCAL_QUARTER, 0),
+    "hourly":    (PeriodType.RELATIVE, 1),
+    "daily":     (PeriodType.RELATIVE, 1),
+    "weekly":    (PeriodType.RELATIVE, 7),
+    "monthly":   (PeriodType.RELATIVE, 30),
+    "quarterly": (PeriodType.FISCAL_QUARTER, 0),
+    "custom":    (PeriodType.FISCAL_QUARTER, 0),
 }
 
 
@@ -599,6 +607,10 @@ class RunRecord:
 class PipelinePreset:
     """A named, pre-configured set of validation types and pipeline steps.
 
+    .. deprecated::
+        Use the API pipeline concept instead (``gui.api.pipeline``).
+        Kept for backwards compatibility with existing QSettings data.
+
     Attributes:
         key: Machine-readable identifier for the preset.
         display_name: Human-readable name shown in the UI.
@@ -614,63 +626,5 @@ class PipelinePreset:
     pipeline_steps: list[PipelineStep]
 
 
-# ---------------------------------------------------------------------------
-# Built-in pipeline presets
-# ---------------------------------------------------------------------------
-
-PIPELINE_PRESETS: list[PipelinePreset] = [
-    PipelinePreset(
-        key="full_buyer",
-        display_name="Full Buyer Validation",
-        description=(
-            "Extract, collate, validate buyer ID and inconsistent buyer ID, then push"
-        ),
-        validation_types=[
-            ValidationType.BUYER_ID,
-            ValidationType.INCONSISTENT_BUYER_ID,
-        ],
-        pipeline_steps=list(PipelineStep),
-    ),
-    PipelinePreset(
-        key="full_seller",
-        display_name="Full Seller Validation",
-        description=(
-            "Extract, collate, validate seller ID and inconsistent seller ID, then push"
-        ),
-        validation_types=[
-            ValidationType.SELLER_ID,
-            ValidationType.INCONSISTENT_SELLER_ID,
-        ],
-        pipeline_steps=list(PipelineStep),
-    ),
-    PipelinePreset(
-        key="all_validations",
-        display_name="All Validations",
-        description="Run all validation types end-to-end",
-        validation_types=list(ValidationType),
-        pipeline_steps=list(PipelineStep),
-    ),
-    PipelinePreset(
-        key="decision_maker_only",
-        display_name="Decision Maker Only",
-        description="Fund trade buyer and seller decision maker validation",
-        validation_types=[
-            ValidationType.FUND_TRADE_BUYER_DM,
-            ValidationType.FUND_TRADE_SELLER_DM,
-        ],
-        pipeline_steps=[PipelineStep.VALIDATE],
-    ),
-    PipelinePreset(
-        key="net_amount_qty",
-        display_name="Net Amount & Quantity",
-        description=(
-            "Non-zero net quantity, non-zero net amount, and incorrect net amount"
-        ),
-        validation_types=[
-            ValidationType.NON_ZERO_NET_QTY,
-            ValidationType.NON_ZERO_NET_AMT,
-            ValidationType.INCORRECT_NET_AMOUNT,
-        ],
-        pipeline_steps=[PipelineStep.VALIDATE],
-    ),
-]
+# Built-in presets removed in v2.0 — use API pipelines instead.
+PIPELINE_PRESETS: list[PipelinePreset] = []

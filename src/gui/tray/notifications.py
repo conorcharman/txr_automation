@@ -109,6 +109,56 @@ class NotificationManager:
             message=truncated or "An unknown error occurred.",
         )
 
+    def notify_reconciliation_started(self, schedule_name: str) -> None:
+        """Notify that a reconciliation job has started.
+
+        Args:
+            schedule_name: Human-readable name of the reconciliation schedule.
+        """
+        self._send(
+            title=f"Reconciliation started — {schedule_name}",
+            message="Running reconciliation…",
+        )
+
+    def notify_reconciliation_success(
+        self,
+        schedule_name: str,
+        duration_seconds: float,
+        summary: str = "",
+    ) -> None:
+        """Notify successful reconciliation completion.
+
+        Args:
+            schedule_name: Human-readable name of the reconciliation schedule.
+            duration_seconds: Wall-clock seconds the job took.
+            summary: Optional short summary of the results.
+        """
+        duration_str = _format_duration(duration_seconds)
+        message = f"Completed in {duration_str}."
+        if summary:
+            message = f"{summary}  [{duration_str}]"
+        self._send(
+            title=f"Reconciliation succeeded — {schedule_name}",
+            message=message,
+        )
+
+    def notify_reconciliation_failure(
+        self,
+        schedule_name: str,
+        error_message: str,
+    ) -> None:
+        """Notify reconciliation failure.
+
+        Args:
+            schedule_name: Human-readable name of the reconciliation schedule.
+            error_message: Short description of the error that occurred.
+        """
+        truncated = error_message[:120] + "…" if len(error_message) > 120 else error_message
+        self._send(
+            title=f"Reconciliation FAILED — {schedule_name}",
+            message=truncated or "An unknown error occurred.",
+        )
+
     # ------------------------------------------------------------------
     # Internal helpers
     # ------------------------------------------------------------------

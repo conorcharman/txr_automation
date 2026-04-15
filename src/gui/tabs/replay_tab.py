@@ -13,12 +13,10 @@ Uses a sidebar list + stacked widget layout with per-panel log viewers.
 Panels persist field values across sessions via QSettings caching.
 """
 
-import importlib
 import os
 import tempfile
 from datetime import datetime
 from pathlib import Path
-from types import ModuleType
 from typing import Any, Dict, List, Optional
 
 import yaml
@@ -33,6 +31,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from gui.api.client import ApiClient
 from gui.constants import FISCAL_YEARS, LOG_LEVELS, QUARTERS
 from gui.utils.settings import settings
 from gui.widgets import (
@@ -42,15 +41,7 @@ from gui.widgets import (
     LogViewerWidget,
     RunControlsWidget,
 )
-from gui.workers import ScriptRunnerWorker
-
-
-def _import_script(module_path: str) -> Optional[ModuleType]:
-    """Safely import a script module."""
-    try:
-        return importlib.import_module(module_path)
-    except ImportError:
-        return None
+from gui.workers import ApiWorker
 
 
 def _subtitle(text: str) -> QLabel:
@@ -143,18 +134,20 @@ class BaseReplayPanel(QWidget):
 
     def __init__(
         self,
-        script_module_path: str,
+        api_endpoint: str,
         title: str,
         subtitle: str = "",
         extra_paths: Optional[List[Dict[str, str]]] = None,
         extra_file_patterns: Optional[List[Dict[str, Any]]] = None,
         default_incident_columns: Optional[Dict[str, str]] = None,
         settings_prefix: str = "",
+        api_client: Optional[ApiClient] = None,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
-        self._module_path = script_module_path
-        self._worker: Optional[ScriptRunnerWorker] = None
+        self._api_endpoint = api_endpoint
+        self._client = api_client
+        self._worker: Optional[ApiWorker] = None
         self._temp_config_path: Optional[str] = None
         self._loaded_config: Optional[Dict[str, Any]] = None
         self._file_pattern_fields: Dict[str, FormFieldWidget] = {}
@@ -419,40 +412,27 @@ class BaseReplayPanel(QWidget):
     # -- Run / Cancel / Finished ------------------------------------------
 
     def _on_run(self) -> None:
-        module = _import_script(self._module_path)
-        if module is None:
-            self.log_viewer.append_error(
-                f"Failed to import {self._module_path}"
-            )
-            return
-        argv = self.build_argv()
+        payload = self._build_config_dict()
         self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: {self._module_path} {' '.join(argv)}"
-        )
+        self.log_viewer.append_line(f"[GUI] Running: {self._api_endpoint}")
         self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
+        self._worker = ApiWorker(self._api_endpoint, payload, self._client)
         self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
     def _on_cancel(self) -> None:
         if self._worker and self._worker.isRunning():
-            self._worker.cancel()
+            self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, exit_code: int) -> None:
+    def _on_finished(self, success: bool) -> None:
         self.run_controls.set_running(False)
-        success = exit_code == 0
         if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
+            self.log_viewer.append_error("[GUI] Failed")
         _update_last_run(self._last_run, self._pfx, success)
-        self._cleanup_temp_config()
         self._worker = None
 
 
@@ -463,10 +443,10 @@ class BaseReplayPanel(QWidget):
 class MergeInconsistentPanel(QWidget):
     """Panel for the merge-inconsistent-summaries script."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, api_client: Optional[ApiClient] = None, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
-        self._temp_config_path: Optional[str] = None
+        self._client = api_client
+        self._worker: Optional[ApiWorker] = None
         self._loaded_config: Optional[Dict[str, Any]] = None
         pfx = "replay.merge_inconsistent"
         self._pfx = pfx
@@ -687,42 +667,29 @@ class MergeInconsistentPanel(QWidget):
         self._execute(dry_run=True)
 
     def _execute(self, dry_run: bool = False) -> None:
-        module = _import_script("replay.merge_inconsistent_ids")
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import merge_inconsistent_ids"
-            )
-            return
-        argv = self.build_argv()
-        if dry_run and "--dry-run" not in argv:
-            argv.append("--dry-run")
+        payload = self._build_config_dict()
+        if dry_run:
+            payload.setdefault("options", {})["dry_run"] = True
         self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: merge_inconsistent_ids {' '.join(argv)}"
-        )
+        self.log_viewer.append_line("[GUI] Running: replay-merge")
         self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
+        self._worker = ApiWorker("/api/replay/merge", payload, self._client)
         self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
     def _on_cancel(self) -> None:
         if self._worker and self._worker.isRunning():
-            self._worker.cancel()
+            self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, exit_code: int) -> None:
+    def _on_finished(self, success: bool) -> None:
         self.run_controls.set_running(False)
-        success = exit_code == 0
         if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
+            self.log_viewer.append_error("[GUI] Failed")
         _update_last_run(self._last_run, self._pfx, success)
-        self._cleanup_temp_config()
         self._worker = None
 
 
@@ -733,8 +700,9 @@ class MergeInconsistentPanel(QWidget):
 class ReplayTab(QWidget):
     """Replay Processing tab with sidebar navigation."""
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
+        self._client = api_client or ApiClient()
 
         layout = QHBoxLayout(self)
 
@@ -750,10 +718,11 @@ class ReplayTab(QWidget):
 
         panels = [
             ("Phase II", BaseReplayPanel(
-                "replay.phase_2_processor",
+                "/api/replay/phase2",
                 "Phase II Processor",
                 subtitle="Transaction reference lookup and correction matching",
                 settings_prefix="phase2",
+                api_client=self._client,
                 extra_paths=[
                     {"label": "Input directory:", "key": "replay_input",
                      "tooltip": "Directory containing replay CSV/XLSX files."},
@@ -776,10 +745,11 @@ class ReplayTab(QWidget):
                 default_incident_columns=_PHASE2_INCIDENT_COLUMNS,
             )),
             ("Phase III - Feedback", BaseReplayPanel(
-                "replay.phase_3_processor",
+                "/api/replay/phase3",
                 "Phase III - Feedback Processor",
                 subtitle="Inconsistent ID and name matching processor",
                 settings_prefix="phase3",
+                api_client=self._client,
                 extra_paths=[
                     {"label": "Input directory:", "key": "replay_input",
                      "tooltip": "Directory containing Phase III replay files."},
@@ -810,10 +780,11 @@ class ReplayTab(QWidget):
                 default_incident_columns=_PHASE3_INCIDENT_COLUMNS,
             )),
             ("Phase III - Final Lookup", BaseReplayPanel(
-                "replay.phase_3_final_lookup",
+                "/api/replay/phase3-final",
                 "Phase III - Final Lookup Processor",
                 subtitle="UnaVista manual corrections final lookup",
                 settings_prefix="phase3_final",
+                api_client=self._client,
                 extra_paths=[
                     {"label": "Input directory:", "key": "replay_input",
                      "tooltip": "Directory containing Phase III output files."},
@@ -825,7 +796,7 @@ class ReplayTab(QWidget):
                      "tooltip": "Directory for processing log files."},
                 ],
             )),
-            ("Merge Summaries", MergeInconsistentPanel()),
+            ("Merge Summaries", MergeInconsistentPanel(api_client=self._client)),
         ]
 
         for label, panel in panels:

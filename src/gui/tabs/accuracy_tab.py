@@ -3,73 +3,72 @@
 Accuracy Testing Tab
 ====================
 
-Tabbed interface for the accuracy testing scripts:
-- 9 validation scripts (buyer, seller, inconsistent variants, FTBDM,
-  FTSDM, pricing, non-zero-qty, non-zero-amt)
-- Run All orchestrator with batch directory + autodiscovery
-- 4 utility scripts (SQL extract, template generator, CSV collation,
-  data push)
+API-backed accuracy testing interface with:
 
-Uses a sidebar list + stacked widget layout with per-panel log viewers.
-Panels persist field values across sessions via QSettings caching.
+- **Validation Scripts** panel — unified incident-driven UI with
+  testing period selector, smart path config, hierarchical incident
+  checklist, auto-discovery, per-incident file table, and run via
+  the FastAPI backend.
+- **Utilities** section with four panels (Template Generator,
+  Extract Generator, CSV Collation, Data Push), each calling the
+  API with an ``ApiWorker``.
+
+Mirrors the web app's ``AccuracyTesting`` page within PySide6
+constraints.
+
+Version 2.0 Changes:
+- Replaced direct script execution with API-backed ``ApiWorker``
+- Replaced 9 individual validation panels + Run All with a single
+  unified ``ValidationScriptsPanel``
+- Added hierarchical incident selector with tree view
+- Added ``IncidentFileTableWidget`` for per-incident path editing
+- Added auto-discovery button that calls the API
 """
 
-import importlib
-import os
-import re
-import tempfile
-from datetime import datetime
-from pathlib import Path
-from types import ModuleType
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
-import yaml
-from PySide6.QtCore import Qt, Signal as _QSignal, QThread as _QThread
+from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
+    QCheckBox,
+    QComboBox,
     QGroupBox,
     QHBoxLayout,
     QLabel,
     QListWidget,
     QListWidgetItem,
+    QMessageBox,
     QPushButton,
-    QRadioButton,
     QScrollArea,
     QStackedWidget,
     QVBoxLayout,
     QWidget,
 )
 
+from gui.api.client import ApiClient
 from gui.constants import (
-    ACCURACY_INCIDENTS,
     CSV_FILTER,
     FISCAL_YEARS,
-    INCIDENT_CODE_PATTERNS,
-    INCIDENT_SCRIPT_MODULES,
-    INCIDENT_SETTINGS_PREFIX,
+    INCIDENT_SCRIPTS,
     LOG_LEVELS,
     QUARTERS,
-    SQL_FILTER,
-    YAML_FILTER,
 )
 from gui.utils.settings import settings
 from gui.widgets import (
-    ConfigLoaderWidget,
     FilePickerWidget,
     FormFieldWidget,
     IncidentSelectorWidget,
     LogViewerWidget,
     RunControlsWidget,
 )
-from gui.workers import ScriptRunnerWorker
+from gui.widgets.incident_file_table import IncidentFileTableWidget
+from gui.widgets.status_badge import StatusBadgeWidget
+from gui.workers import ApiWorker
 
 
-def _import_script(module_path: str) -> Optional[ModuleType]:
-    """Safely import a script module, returning None on failure."""
-    try:
-        return importlib.import_module(module_path)
-    except ImportError:
-        return None
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 
 def _scrollable(inner: QWidget) -> QScrollArea:
@@ -88,2617 +87,303 @@ def _subtitle(text: str) -> QLabel:
     return lbl
 
 
-def _last_run_label() -> QLabel:
-    """Create the last-run status indicator label."""
-    lbl = QLabel("")
-    lbl.setStyleSheet("color: grey; font-size: 11px;")
+def _section_header(text: str) -> QLabel:
+    """Create a bold section header label."""
+    lbl = QLabel(text)
+    font = lbl.font()
+    font.setBold(True)
+    font.setPointSize(font.pointSize() + 1)
+    lbl.setFont(font)
     return lbl
 
 
-def _update_last_run(label: QLabel, settings_key: str, success: bool) -> None:
-    """Update a last-run label with current timestamp and persist it."""
-    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    icon = "\u2713" if success else "\u2717"
-    label.setText(f"Last run: {now} {icon}")
-    settings.save(f"{settings_key}.last_run_time", now)
-    settings.save(f"{settings_key}.last_run_ok", success)
+def _current_fy() -> str:
+    """Return the current fiscal year string, e.g. ``'FY26'``."""
+    from datetime import datetime
 
-
-def _restore_last_run(label: QLabel, settings_key: str) -> None:
-    """Restore last-run indicator from QSettings."""
-    ts = settings.load(f"{settings_key}.last_run_time")
-    ok = settings.load(f"{settings_key}.last_run_ok")
-    if ts:
-        icon = "\u2713" if str(ok).lower() == "true" else "\u2717"
-        label.setText(f"Last run: {ts} {icon}")
+    return f"FY{datetime.now().year % 100}"
 
 
 # ---------------------------------------------------------------------------
-# Base panel for validation scripts
+# Testing Period Selector (reusable across panels)
 # ---------------------------------------------------------------------------
 
-class BaseValidationPanel(QWidget):
-    """Base class for validation script panels.
 
-    Supports single-file mode for all scripts and optional batch-directory
-    mode for scripts that handle multiple incidents (e.g. buyer, seller).
+class _TestingPeriodSelector(QWidget):
+    """Fiscal year + quarter selector with QSettings persistence."""
 
-    Constructor keyword arguments control which sections appear:
-        incidents       – list of incident codes this panel handles.
-                          If len > 1, a Single/Batch mode toggle is shown.
-        needs_template  – show a Kaizen template file picker.
-        needs_tracker   – show Italian/main tracker pickers in Advanced.
+    def __init__(
+        self, settings_prefix: str = "accuracy", parent: Optional[QWidget] = None
+    ) -> None:
+        super().__init__(parent)
+        self._prefix = settings_prefix
+
+        layout = QHBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        layout.addWidget(QLabel("Fiscal Year:"))
+        self._fy = QComboBox()
+        self._fy.addItems(FISCAL_YEARS)
+        saved_fy = settings.load(f"{self._prefix}.fiscal_year", _current_fy())
+        idx = self._fy.findText(str(saved_fy))
+        if idx >= 0:
+            self._fy.setCurrentIndex(idx)
+        self._fy.currentTextChanged.connect(
+            lambda t: settings.save(f"{self._prefix}.fiscal_year", t)
+        )
+        layout.addWidget(self._fy)
+
+        layout.addWidget(QLabel("Quarter:"))
+        self._q = QComboBox()
+        self._q.addItems(QUARTERS)
+        saved_q = settings.load(f"{self._prefix}.quarter", "Q1")
+        idx = self._q.findText(str(saved_q))
+        if idx >= 0:
+            self._q.setCurrentIndex(idx)
+        self._q.currentTextChanged.connect(
+            lambda t: settings.save(f"{self._prefix}.quarter", t)
+        )
+        layout.addWidget(self._q)
+
+        layout.addStretch()
+
+    @property
+    def fiscal_year(self) -> str:
+        """Currently selected fiscal year."""
+        return self._fy.currentText()
+
+    @property
+    def quarter(self) -> str:
+        """Currently selected quarter."""
+        return self._q.currentText()
+
+
+# ---------------------------------------------------------------------------
+# Smart Path Config (base dir → derived paths)
+# ---------------------------------------------------------------------------
+
+
+class _SmartPathConfig(QWidget):
+    """Base directory selector that derives extract/template/output paths.
+
+    Mirrors the web app's ``SmartPathConfig`` component.
     """
 
     def __init__(
-        self,
-        script_module_path: str,
-        title: str,
-        subtitle: str = "",
-        settings_prefix: str = "",
-        incidents: Optional[List[str]] = None,
-        needs_template: bool = False,
-        needs_tracker: bool = False,
-        parent: Optional[QWidget] = None,
+        self, settings_prefix: str = "accuracy", parent: Optional[QWidget] = None
     ) -> None:
         super().__init__(parent)
-        self._module_path = script_module_path
-        self._worker: Optional[ScriptRunnerWorker] = None
-        self._temp_config_path: Optional[str] = None
-        self._settings_prefix = settings_prefix or title.lower().replace(" ", "_")
-        self._incidents = incidents or []
-        self._needs_template = needs_template
-        self._needs_tracker = needs_tracker
-        self._has_batch = len(self._incidents) > 1
-        pfx = f"accuracy.{self._settings_prefix}"
+        self._prefix = settings_prefix
 
-        inner = QWidget()
-        layout = QVBoxLayout(inner)
-        layout.addWidget(QLabel(f"<b>{title}</b>"))
-        if subtitle:
-            layout.addWidget(_subtitle(subtitle))
+        layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
 
-        self._last_run = _last_run_label()
-        _restore_last_run(self._last_run, pfx)
-        layout.addWidget(self._last_run)
-
-        # Config loader (YAML file)
-        self.config_loader = ConfigLoaderWidget()
-        self.config_loader.config_loaded.connect(self.populate_from_config)
-        layout.addWidget(self.config_loader)
-
-        # --- Testing period (shown when incidents or template are relevant) ---
-        if self._incidents or needs_template:
-            period_group = QGroupBox("Testing Period")
-            period_layout = QHBoxLayout(period_group)
-
-            self.fiscal_year = FormFieldWidget(
-                "Fiscal Year:", field_type="dropdown",
-                choices=[""] + FISCAL_YEARS,
-                tooltip="Reporting fiscal year, e.g. FY26",
-                settings_key=f"{pfx}.fiscal_year",
-            )
-            period_layout.addWidget(self.fiscal_year)
-
-            self.quarter = FormFieldWidget(
-                "Quarter:", field_type="dropdown",
-                choices=[""] + QUARTERS,
-                tooltip="Reporting quarter, e.g. Q1",
-                settings_key=f"{pfx}.quarter",
-            )
-            period_layout.addWidget(self.quarter)
-            layout.addWidget(period_group)
-
-        # --- Mode toggle (multi-incident scripts only) ---
-        if self._has_batch:
-            mode_row = QHBoxLayout()
-            mode_row.addWidget(QLabel("Mode:"))
-            self._single_radio = QRadioButton("Single Incident")
-            self._batch_radio = QRadioButton("Batch (All Incidents)")
-            self._single_radio.setChecked(True)
-            self._single_radio.toggled.connect(self._on_mode_changed)
-            mode_row.addWidget(self._single_radio)
-            mode_row.addWidget(self._batch_radio)
-            mode_row.addStretch()
-            layout.addLayout(mode_row)
-
-        # --- Single-file section ---
-        self._single_group = QGroupBox("Input / Output")
-        single_layout = QVBoxLayout(self._single_group)
-
-        if self._has_batch:
-            self.incident_code = FormFieldWidget(
-                "Incident Code:", field_type="dropdown",
-                choices=self._incidents,
-                tooltip="Select which incident to validate.",
-                settings_key=f"{pfx}.incident_code",
-            )
-            single_layout.addWidget(self.incident_code)
-
-        self.input_file = FilePickerWidget(
-            "Input transactions CSV:",
-            mode="file",
-            tooltip=(
-                "The raw transactions CSV file to validate.\n"
-                "Example: 7_35_FY26_Q1.csv"
-            ),
-            settings_key=f"{pfx}.input_file",
-        )
-        single_layout.addWidget(self.input_file)
-
-        if needs_template:
-            self.template_file = FilePickerWidget(
-                "Kaizen template CSV:",
-                mode="file",
-                tooltip=(
-                    "Kaizen expected values template file.\n"
-                    "Example: FY26 Q1 7_35.csv"
-                ),
-                settings_key=f"{pfx}.template_file",
-            )
-            single_layout.addWidget(self.template_file)
-
-        self.output_dir = FilePickerWidget(
-            "Output directory:",
+        self._base_dir = FilePickerWidget(
+            "Base directory:",
             mode="directory",
-            tooltip=(
-                "Directory where the output CSV will be created.\n"
-                "The filename is generated automatically from the\n"
-                "incident code and testing period."
-            ),
-            settings_key=f"{pfx}.output_dir",
+            tooltip="Root directory containing extracts/, templates/, output/ sub-folders.",
+            settings_key=f"{self._prefix}.base_dir",
         )
-        single_layout.addWidget(self.output_dir)
+        layout.addWidget(self._base_dir)
 
-        # Auto-generated filename preview
-        self._output_preview = QLabel("")
-        self._output_preview.setStyleSheet(
-            "color: grey; font-size: 11px; margin-left: 4px;"
-        )
-        self._output_preview.setWordWrap(True)
-        single_layout.addWidget(self._output_preview)
+        # Derived path labels
+        self._extracts_lbl = QLabel("Extracts: —")
+        self._templates_lbl = QLabel("Templates: —")
+        self._output_lbl = QLabel("Output: —")
+        for lbl in (self._extracts_lbl, self._templates_lbl, self._output_lbl):
+            lbl.setStyleSheet("color: grey; font-size: 11px; margin-left: 8px;")
+            layout.addWidget(lbl)
 
-        # Connect signals that affect the preview
-        self.output_dir.path_changed.connect(lambda _: self._refresh_output_preview())
-        if self._has_batch and hasattr(self, "incident_code"):
-            self.incident_code.value_changed.connect(lambda _: self._refresh_output_preview())
-        if hasattr(self, "fiscal_year"):
-            self.fiscal_year.value_changed.connect(lambda _: self._refresh_output_preview())
-        if hasattr(self, "quarter"):
-            self.quarter.value_changed.connect(lambda _: self._refresh_output_preview())
-        self._refresh_output_preview()
+        self._base_dir.path_changed.connect(self._on_base_changed)
 
-        layout.addWidget(self._single_group)
+        # Initialise from saved value
+        if self._base_dir.get_path():
+            self._on_base_changed(self._base_dir.get_path())
 
-        # --- Batch-directory section (multi-incident scripts only) ---
-        if self._has_batch:
-            self._batch_group = QGroupBox("Batch Directories")
-            batch_layout = QVBoxLayout(self._batch_group)
-            batch_layout.addWidget(QLabel(
-                "Set base directories — files are discovered by incident code pattern."
-            ))
-
-            self.extract_dir = FilePickerWidget(
-                "Extract directory:",
-                mode="directory",
-                tooltip="Directory containing per-incident extract CSVs.",
-                settings_key=f"{pfx}.extract_dir",
-            )
-            batch_layout.addWidget(self.extract_dir)
-
-            if needs_template:
-                self.template_dir = FilePickerWidget(
-                    "Template directory:",
-                    mode="directory",
-                    tooltip="Directory containing Kaizen template CSVs.",
-                    settings_key=f"{pfx}.template_dir",
-                )
-                batch_layout.addWidget(self.template_dir)
-
-            self.batch_output_dir = FilePickerWidget(
-                "Output directory:",
-                mode="directory",
-                tooltip="Directory for validated output CSVs.",
-                settings_key=f"{pfx}.batch_output_dir",
-            )
-            batch_layout.addWidget(self.batch_output_dir)
-
-            self._batch_group.setVisible(False)
-            layout.addWidget(self._batch_group)
-
-        # --- Hook: extra fields from subclasses ---
-        self._extra_fields_layout = QVBoxLayout()
-        layout.addLayout(self._extra_fields_layout)
-
-        # --- Options ---
-        self.log_level = FormFieldWidget(
-            "Log Level:", field_type="dropdown",
-            choices=LOG_LEVELS, default="INFO",
-            tooltip="Logging verbosity level.",
-            settings_key=f"{pfx}.log_level",
-        )
-        layout.addWidget(self.log_level)
-
-        self.dry_run = FormFieldWidget(
-            "Dry Run", field_type="checkbox",
-            tooltip="Simulate the run without writing output files.",
-            settings_key=f"{pfx}.dry_run",
-        )
-        layout.addWidget(self.dry_run)
-
-        self.progress = FormFieldWidget(
-            "Progress Bar", field_type="checkbox",
-            tooltip="Show a progress bar during processing.",
-            settings_key=f"{pfx}.progress",
-        )
-        layout.addWidget(self.progress)
-
-        self.verbose = FormFieldWidget(
-            "Verbose", field_type="checkbox",
-            tooltip="Enable verbose output for debugging.",
-            settings_key=f"{pfx}.verbose",
-        )
-        layout.addWidget(self.verbose)
-
-        # --- Advanced section (tracker files) ---
-        if needs_tracker:
-            self._advanced_btn = QPushButton("\u25b6 Advanced")
-            self._advanced_btn.setFlat(True)
-            self._advanced_btn.setStyleSheet(
-                "text-align: left; padding: 2px;"
-            )
-            self._advanced_btn.clicked.connect(self._toggle_advanced)
-            layout.addWidget(self._advanced_btn)
-
-            self._advanced_widget = QWidget()
-            adv_layout = QVBoxLayout(self._advanced_widget)
-            adv_layout.setContentsMargins(10, 0, 0, 0)
-
-            self.italian_tracker = FilePickerWidget(
-                "Italian tracker CSV:",
-                mode="file",
-                tooltip=(
-                    "Italian fiscal code tracker file (optional).\n"
-                    "Used for Italian ID cross-referencing."
-                ),
-                settings_key=f"{pfx}.italian_tracker",
-            )
-            adv_layout.addWidget(self.italian_tracker)
-
-            self.main_tracker = FilePickerWidget(
-                "Main tracker CSV:",
-                mode="file",
-                tooltip=(
-                    "Main tracker file (optional).\n"
-                    "Used for cross-referencing known IDs."
-                ),
-                settings_key=f"{pfx}.main_tracker",
-            )
-            adv_layout.addWidget(self.main_tracker)
-
-            self._advanced_widget.setVisible(False)
-            layout.addWidget(self._advanced_widget)
-
-        # Run controls
-        self.run_controls = RunControlsWidget()
-        self.run_controls.run_clicked.connect(self._on_run)
-        self.run_controls.dry_run_clicked.connect(self._on_dry_run)
-        self.run_controls.cancel_clicked.connect(self._on_cancel)
-        layout.addWidget(self.run_controls)
-
-        # Log viewer
-        self.log_viewer = LogViewerWidget()
-        layout.addWidget(self.log_viewer, stretch=1)
-
-        # Wrap in scroll area
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(_scrollable(inner))
-
-    # ---- UI toggles ----
-
-    def _on_mode_changed(self, single_checked: bool) -> None:
-        """Toggle between single-file and batch-directory sections."""
-        self._single_group.setVisible(single_checked)
-        self._batch_group.setVisible(not single_checked)
-
-    def _toggle_advanced(self) -> None:
-        visible = not self._advanced_widget.isVisible()
-        self._advanced_widget.setVisible(visible)
-        self._advanced_btn.setText(
-            "\u25bc Advanced" if visible else "\u25b6 Advanced"
-        )
-
-    # ---- Output path resolution ----
-
-    def _resolve_output_filename(self) -> str:
-        """Generate the output filename from incident code + testing period."""
-        parts: List[str] = ["validated"]
-        if hasattr(self, "fiscal_year"):
-            fy = self.fiscal_year.get_value()
-            if fy:
-                parts.append(fy)
-        if hasattr(self, "quarter"):
-            qtr = self.quarter.get_value()
-            if qtr:
-                parts.append(qtr)
-        if self._has_batch and hasattr(self, "incident_code"):
-            code = self.incident_code.get_value()
-            if code:
-                parts.append(code)
-        elif self._incidents:
-            parts.append(self._incidents[0])
-        return "_".join(parts) + ".csv"
-
-    def _resolve_output_path(self) -> str:
-        """Return the full output filepath (directory + auto-generated name)."""
-        out_dir = self.output_dir.get_path()
-        if not out_dir:
-            return ""
-        return os.path.join(out_dir, self._resolve_output_filename())
-
-    def _refresh_output_preview(self) -> None:
-        """Update the output filename preview label."""
-        path = self._resolve_output_path()
-        if path:
-            self._output_preview.setText(f"\u2192 {path}")
-        else:
-            self._output_preview.setText("")
-
-    # ---- Config generation ----
-
-    def _uses_config_mode(self) -> bool:
-        """True when GUI fields require a temp YAML config."""
-        if self._has_batch and self._batch_radio.isChecked():
-            return True
-        if self._needs_template and hasattr(self, "template_file") and self.template_file.get_path():
-            return True
-        if hasattr(self, "fiscal_year") and self.fiscal_year.get_value():
-            return True
-        if self._needs_tracker:
-            if hasattr(self, "italian_tracker") and self.italian_tracker.get_path():
-                return True
-            if hasattr(self, "main_tracker") and self.main_tracker.get_path():
-                return True
-        return False
-
-    def _build_config_dict(self) -> Dict[str, Any]:
-        """Build a config dict mirroring the YAML structure the script expects."""
-        config: Dict[str, Any] = {}
-
-        # Testing period
-        if hasattr(self, "fiscal_year"):
-            fy = self.fiscal_year.get_value()
-            qtr = self.quarter.get_value() if hasattr(self, "quarter") else ""
-            if fy or qtr:
-                config["testing_period"] = {}
-                if fy:
-                    config["testing_period"]["fiscal_year"] = fy
-                if qtr:
-                    config["testing_period"]["quarter"] = qtr
-
-        # Mode & paths
-        if self._has_batch and self._batch_radio.isChecked():
-            config["mode"] = "batch"
-            batch_paths: Dict[str, str] = {}
-            if hasattr(self, "extract_dir"):
-                val = self.extract_dir.get_path()
-                if val:
-                    batch_paths["extract_dir"] = val
-            if hasattr(self, "template_dir"):
-                val = self.template_dir.get_path()
-                if val:
-                    batch_paths["template_dir"] = val
-            if hasattr(self, "batch_output_dir"):
-                val = self.batch_output_dir.get_path()
-                if val:
-                    batch_paths["output_dir"] = val
-            batch: Dict[str, Any] = {"incidents": "auto", "paths": batch_paths}
-            if self._incidents:
-                batch["auto_incidents"] = list(self._incidents)
-            config["batch"] = batch
-        else:
-            config["mode"] = "single"
-            paths: Dict[str, str] = {}
-            input_path = self.input_file.get_path()
-            if input_path:
-                paths["input_file"] = input_path
-            output_path = self._resolve_output_path()
-            if output_path:
-                paths["output_file"] = output_path
-            if self._needs_template and hasattr(self, "template_file"):
-                tmpl = self.template_file.get_path()
-                if tmpl:
-                    paths["template_file"] = tmpl
-            if self._needs_tracker:
-                if hasattr(self, "italian_tracker"):
-                    val = self.italian_tracker.get_path()
-                    if val:
-                        paths["italian_tracker"] = val
-                if hasattr(self, "main_tracker"):
-                    val = self.main_tracker.get_path()
-                    if val:
-                        paths["main_tracker"] = val
-
-            single: Dict[str, Any] = {"paths": paths}
-            if self._has_batch and hasattr(self, "incident_code"):
-                single["incident_code"] = self.incident_code.get_value()
-            elif self._incidents:
-                single["incident_code"] = self._incidents[0]
-            config["single"] = single
-
-        # Processor / options
-        config["processor"] = {
-            "log_level": self.log_level.get_value() or "INFO",
-        }
-        if self.verbose.get_value():
-            config["processor"]["verbose"] = True
-        config["options"] = {
-            "dry_run": bool(self.dry_run.get_value()),
-            "show_progress": bool(self.progress.get_value()),
-        }
-
-        # Subclass hook
-        self._extend_config_dict(config)
-        return config
-
-    def _extend_config_dict(self, config: Dict[str, Any]) -> None:
-        """Hook for subclasses to inject extra config entries."""
-
-    @staticmethod
-    def _write_temp_config(config: Dict[str, Any]) -> str:
-        """Write config dict to a temporary YAML file, return the path."""
-        fd, path = tempfile.mkstemp(suffix=".yaml", prefix="gui_config_")
-        with os.fdopen(fd, "w", encoding="utf-8") as fh:
-            yaml.safe_dump(config, fh, default_flow_style=False)
-        return path
-
-    def _cleanup_temp_config(self) -> None:
-        if self._temp_config_path:
-            try:
-                os.unlink(self._temp_config_path)
-            except OSError:
-                pass
-            self._temp_config_path = None
-
-    # ---- argv construction ----
-
-    def _build_simple_argv(self) -> List[str]:
-        """Fallback: positional input/output args (no YAML config)."""
-        argv: List[str] = ["--gui-mode"]
-        input_path = self.input_file.get_path()
-        output_path = self._resolve_output_path()
-        if input_path:
-            argv.append(input_path)
-        if output_path:
-            argv.append(output_path)
-        return argv
-
-    def build_argv(self) -> List[str]:
-        """Build sys.argv from current form state."""
-        # Priority 1: user-loaded YAML config
-        config_path = self.config_loader.get_last_path()
-        if config_path:
-            argv = ["--gui-mode", "--config", config_path]
-        # Priority 2: generate temp config when advanced fields are used
-        elif self._uses_config_mode():
-            config = self._build_config_dict()
-            self._temp_config_path = self._write_temp_config(config)
-            argv = ["--gui-mode", "--config", self._temp_config_path]
-        # Priority 3: simple positional args
-        else:
-            argv = self._build_simple_argv()
-
-        # Common CLI flags (override values in config)
-        log_level = self.log_level.get_value()
-        if log_level:
-            argv.extend(["--log-level", log_level])
-        if self.dry_run.get_value():
-            argv.append("--dry-run")
-        if self.progress.get_value():
-            argv.append("--progress")
-        return argv
-
-    # ---- Config loader callback ----
-
-    def populate_from_config(self, config: Dict[str, Any]) -> None:
-        """Fill form fields from a parsed YAML config dict."""
-        # Testing period
-        period = config.get("testing_period", {})
-        if hasattr(self, "fiscal_year") and period.get("fiscal_year"):
-            self.fiscal_year.set_value(period["fiscal_year"])
-        if hasattr(self, "quarter") and period.get("quarter"):
-            self.quarter.set_value(period["quarter"])
-
-        mode = config.get("mode", "single")
-
-        if mode == "batch" and self._has_batch:
-            self._batch_radio.setChecked(True)
-            bp = config.get("batch", {}).get("paths", {})
-            if hasattr(self, "extract_dir"):
-                self.extract_dir.set_path(bp.get("extract_dir", ""))
-            if hasattr(self, "template_dir"):
-                self.template_dir.set_path(bp.get("template_dir", ""))
-            if hasattr(self, "batch_output_dir"):
-                self.batch_output_dir.set_path(bp.get("output_dir", ""))
-        else:
-            if self._has_batch:
-                self._single_radio.setChecked(True)
-            # Support both single.paths and flat paths structures
-            paths = config.get("single", {}).get("paths", {})
-            if not paths:
-                paths = config.get("paths", {})
-            self.input_file.set_path(paths.get("input_file", ""))
-            # Extract directory from output_file if it's a full path
-            output = paths.get("output_file", "")
-            if output and not os.path.isdir(output):
-                self.output_dir.set_path(str(Path(output).parent))
-            else:
-                self.output_dir.set_path(output)
-            if self._needs_template and hasattr(self, "template_file"):
-                self.template_file.set_path(paths.get("template_file", ""))
-            if self._needs_tracker:
-                if hasattr(self, "italian_tracker"):
-                    self.italian_tracker.set_path(
-                        paths.get("italian_tracker", "")
-                    )
-                if hasattr(self, "main_tracker"):
-                    self.main_tracker.set_path(
-                        paths.get("main_tracker", "")
-                    )
-            incident = config.get("single", {}).get("incident_code", "")
-            if incident and self._has_batch and hasattr(self, "incident_code"):
-                self.incident_code.set_value(incident)
-
-        # Processor settings
-        processor = config.get("processor", {})
-        self.log_level.set_value(processor.get("log_level", "INFO"))
-        if processor.get("verbose"):
-            self.verbose.set_value("true")
-
-    # ---- Execution ----
-
-    def _on_run(self) -> None:
-        self._execute(dry_run=False)
-
-    def _on_dry_run(self) -> None:
-        self._execute(dry_run=True)
-
-    def _execute(self, dry_run: bool = False) -> None:
-        """Import the script module and run main() in a worker thread."""
-        module = _import_script(self._module_path)
-        if module is None:
-            self.log_viewer.append_error(
-                f"Failed to import {self._module_path}"
-            )
+    def _on_base_changed(self, base: str) -> None:
+        """Derive sub-directory paths from the base."""
+        if not base:
+            self._extracts_lbl.setText("Extracts: —")
+            self._templates_lbl.setText("Templates: —")
+            self._output_lbl.setText("Output: —")
             return
 
-        argv = self.build_argv()
-        if dry_run and "--dry-run" not in argv:
-            argv.append("--dry-run")
+        self._extracts_lbl.setText(f"Extracts: {base}/extracts")
+        self._templates_lbl.setText(f"Templates: {base}/templates")
+        self._output_lbl.setText(f"Output: {base}/output")
 
-        self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: {self._module_path} {' '.join(argv)}"
-        )
-        self.run_controls.set_running(True)
+    @property
+    def extracts_dir(self) -> str:
+        """Path to the extracts sub-directory."""
+        base = self._base_dir.get_path()
+        return f"{base}/extracts" if base else ""
 
-        self._worker = ScriptRunnerWorker(module, argv)
-        self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
-        self._worker.finished_signal.connect(self._on_finished)
-        self._worker.start()
+    @property
+    def templates_dir(self) -> str:
+        """Path to the templates sub-directory."""
+        base = self._base_dir.get_path()
+        return f"{base}/templates" if base else ""
 
-    def _on_cancel(self) -> None:
-        if self._worker and self._worker.isRunning():
-            self._worker.cancel()
-            self.log_viewer.append_error("[GUI] Cancelled by user")
+    @property
+    def output_dir(self) -> str:
+        """Path to the output sub-directory."""
+        base = self._base_dir.get_path()
+        return f"{base}/output" if base else ""
 
-    def _on_finished(self, exit_code: int) -> None:
-        self.run_controls.set_running(False)
-        pfx = f"accuracy.{self._settings_prefix}"
-        if exit_code == 0:
-            self.log_viewer.append_line("[GUI] Completed successfully")
-            _update_last_run(self._last_run, pfx, True)
-        else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
-            _update_last_run(self._last_run, pfx, False)
-        self._worker = None
-        self._cleanup_temp_config()
+    @property
+    def kaizen_dir(self) -> str:
+        """Path to the kaizen sub-directory (for template generator)."""
+        base = self._base_dir.get_path()
+        return f"{base}/kaizen" if base else ""
+
+    @property
+    def base_dir(self) -> str:
+        """The raw base directory path."""
+        return self._base_dir.get_path()
 
 
 # ---------------------------------------------------------------------------
-# FTBDM / FTSDM panels (extra fields for LEI data)
+# Validation Scripts Panel (unified incident-driven)
 # ---------------------------------------------------------------------------
 
-class DecisionMakerPanel(BaseValidationPanel):
-    """Panel for FTBDM/FTSDM validation scripts with extra file fields."""
+
+class ValidationScriptsPanel(QWidget):
+    """Unified validation scripts panel mirroring the web app.
+
+    Features:
+    - Testing period selector (FY + quarter)
+    - Smart path configuration
+    - Hierarchical incident checklist (grouped by script)
+    - Auto-discovery button
+    - Per-incident file table with Browse buttons
+    - Stop on error checkbox
+    - Advanced section (log level, dry run)
+    - Run via ``ApiWorker`` → FastAPI → Celery
+    """
 
     def __init__(
         self,
-        script_module_path: str,
-        title: str,
-        subtitle: str = "",
-        settings_prefix: str = "",
-        incidents: Optional[List[str]] = None,
+        api_client: ApiClient,
         parent: Optional[QWidget] = None,
     ) -> None:
-        super().__init__(
-            script_module_path, title,
-            subtitle=subtitle,
-            settings_prefix=settings_prefix,
-            incidents=incidents,
-            needs_template=True,
-            needs_tracker=False,
-            parent=parent,
-        )
-        pfx = f"accuracy.{self._settings_prefix}"
-
-        # Insert LEI data and ID formats into the extra-fields hook area
-        self.lei_data_file = FilePickerWidget(
-            "LEI reference data CSV:",
-            mode="file", file_filter=CSV_FILTER,
-            tooltip=(
-                "Branch Code \u2192 LEI mapping file for decision maker lookups.\n"
-                "Example: lei_data_2025.csv"
-            ),
-            settings_key=f"{pfx}.lei_data_file",
-        )
-        self._extra_fields_layout.addWidget(self.lei_data_file)
-
-        self.id_formats_file = FilePickerWidget(
-            "ID format definitions CSV:",
-            mode="file", file_filter=CSV_FILTER,
-            tooltip="CSV defining valid ID formats per country (optional).\nExample: id_formats.csv",
-            settings_key=f"{pfx}.id_formats_file",
-        )
-        self._extra_fields_layout.addWidget(self.id_formats_file)
-
-    def _extend_config_dict(self, config: Dict[str, Any]) -> None:
-        """Add LEI data and ID formats to the generated config."""
-        paths = config.setdefault("single", {}).setdefault("paths", {})
-        lei = self.lei_data_file.get_path()
-        if lei:
-            paths["lei_data_file"] = lei
-        id_fmt = self.id_formats_file.get_path()
-        if id_fmt:
-            paths["id_formats_file"] = id_fmt
-
-    def _build_simple_argv(self) -> List[str]:
-        """FTBDM/FTSDM use named args (--input / --lei-data), not positional."""
-        argv: List[str] = ["--gui-mode"]
-        input_path = self.input_file.get_path()
-        output_path = self._resolve_output_path()
-        lei_path = self.lei_data_file.get_path()
-        id_fmt_path = self.id_formats_file.get_path()
-
-        if input_path:
-            argv.extend(["--input", input_path])
-        if output_path:
-            argv.extend(["--output", output_path])
-        if lei_path:
-            argv.extend(["--lei-data", lei_path])
-        if id_fmt_path:
-            argv.extend(["--id-formats", id_fmt_path])
-        if self.verbose.get_value():
-            argv.append("--verbose")
-        return argv
-
-    def populate_from_config(self, config: Dict[str, Any]) -> None:
-        """Extend base populate to fill LEI / ID-formats fields."""
-        super().populate_from_config(config)
-        paths = config.get("single", {}).get("paths", {})
-        if not paths:
-            paths = config.get("paths", {})
-        self.lei_data_file.set_path(paths.get("lei_data_file", ""))
-        self.id_formats_file.set_path(paths.get("id_formats_file", ""))
-
-
-# ---------------------------------------------------------------------------
-# Helper: build a per-script config dict from QSettings cache
-# ---------------------------------------------------------------------------
-
-def _build_cached_config(
-    incident_name: str,
-    input_path: str,
-    output_path: str,
-    log_level: str = "INFO",
-) -> Dict[str, Any]:
-    """Build a YAML-compatible config dict by reading the QSettings cache
-    that was persisted by the individual panel for *incident_name*.
-
-    This lets Run All reuse template paths, tracker files, LEI data, etc.
-    that the user configured in each tile at any point in the past.
-    """
-    pfx = INCIDENT_SETTINGS_PREFIX.get(incident_name, "")
-    if not pfx:
-        # Fallback: bare input / output only
-        return {
-            "mode": "single",
-            "single": {"paths": {"input_file": input_path, "output_file": output_path}},
-            "processor": {"log_level": log_level},
-        }
-
-    config: Dict[str, Any] = {"mode": "single"}
-
-    # Testing period
-    fy = settings.load(f"{pfx}.fiscal_year", "")
-    qtr = settings.load(f"{pfx}.quarter", "")
-    if fy or qtr:
-        config["testing_period"] = {}
-        if fy:
-            config["testing_period"]["fiscal_year"] = fy
-        if qtr:
-            config["testing_period"]["quarter"] = qtr
-
-    # Single-mode paths (override input/output with discovered files)
-    paths: Dict[str, str] = {
-        "input_file": input_path,
-        "output_file": output_path,
-    }
-
-    # Template file (buyer, seller, inconsistent, decision-maker panels)
-    tmpl = settings.load(f"{pfx}.template_file", "")
-    if tmpl:
-        paths["template_file"] = tmpl
-
-    # Tracker files (buyer, seller, inconsistent panels)
-    it = settings.load(f"{pfx}.italian_tracker", "")
-    if it:
-        paths["italian_tracker"] = it
-    mt = settings.load(f"{pfx}.main_tracker", "")
-    if mt:
-        paths["main_tracker"] = mt
-
-    # LEI data (FTBDM / FTSDM panels)
-    lei = settings.load(f"{pfx}.lei_data_file", "")
-    if lei:
-        paths["lei_data_file"] = lei
-    id_fmt = settings.load(f"{pfx}.id_formats_file", "")
-    if id_fmt:
-        paths["id_formats_file"] = id_fmt
-
-    # Incident code
-    incident_code = settings.load(f"{pfx}.incident_code", "")
-    single: Dict[str, Any] = {"paths": paths}
-    if incident_code:
-        single["incident_code"] = incident_code
-    config["single"] = single
-
-    # Processor
-    cached_level = settings.load(f"{pfx}.log_level", "")
-    config["processor"] = {
-        "log_level": log_level or cached_level or "INFO",
-    }
-    if settings.load(f"{pfx}.verbose", ""):
-        config["processor"]["verbose"] = True
-
-    # Options
-    config["options"] = {
-        "dry_run": False,
-        "show_progress": bool(settings.load(f"{pfx}.progress", "")),
-    }
-
-    return config
-
-
-# ---------------------------------------------------------------------------
-# Run All Validations panel — with batch directory + autodiscovery
-# ---------------------------------------------------------------------------
-
-class RunAllPanel(QWidget):
-    """Panel for the run-all-validations orchestrator.
-
-    Supports two modes:
-    - Config mode: delegates to run_all_validations.py with a YAML config
-    - Batch directory mode: discovers input CSVs from a base directory and
-      runs each selected validation individually
-    """
-
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
-        self._run_queue: List[Dict[str, str]] = []
-        self._temp_config_files: List[str] = []
-        pfx = "accuracy.run_all"
+        self._api_client = api_client
+        self._worker: Optional[ApiWorker] = None
 
         inner = QWidget()
         layout = QVBoxLayout(inner)
-        layout.addWidget(QLabel("<b>Run All Validations</b>"))
-        layout.addWidget(_subtitle(
-            "Run multiple validation scripts in sequence with shared settings"
-        ))
 
-        self._last_run = _last_run_label()
-        _restore_last_run(self._last_run, pfx)
-        layout.addWidget(self._last_run)
-
-        # Config loader
-        self.config_loader = ConfigLoaderWidget()
-        layout.addWidget(self.config_loader)
-
-        # --- Batch directory section ---
-        batch_group = QGroupBox("Batch Directory (optional)")
-        batch_layout = QVBoxLayout(batch_group)
-        batch_layout.addWidget(QLabel(
-            "Set base directories to autodiscover input files by incident code."
-        ))
-
-        self.base_input_dir = FilePickerWidget(
-            "Base input directory:",
-            mode="directory",
-            tooltip="Root folder containing per-incident input CSVs.\nFiles are matched by incident code (e.g. 7_5, 7_37).",
-            settings_key=f"{pfx}.base_input_dir",
+        # Title
+        layout.addWidget(_section_header("Validation Scripts"))
+        layout.addWidget(
+            _subtitle(
+                "Run selected incident validations against extract CSVs. "
+                "Uses the FastAPI backend for execution."
+            )
         )
-        batch_layout.addWidget(self.base_input_dir)
 
-        self.base_output_dir = FilePickerWidget(
-            "Base output directory:",
-            mode="directory",
-            tooltip="Root folder where per-incident output CSVs will be written.",
-            settings_key=f"{pfx}.base_output_dir",
+        # --- Testing Period ---
+        self._period = _TestingPeriodSelector(
+            settings_prefix="accuracy.validation", parent=self
         )
-        batch_layout.addWidget(self.base_output_dir)
+        layout.addWidget(self._period)
 
+        # --- Smart Path Config ---
+        self._paths = _SmartPathConfig(
+            settings_prefix="accuracy.validation", parent=self
+        )
+        layout.addWidget(self._paths)
+
+        # --- Incident Checklist (hierarchical) ---
+        self._incident_selector = IncidentSelectorWidget(
+            incidents=[],
+            settings_key="accuracy.validation.selected_incidents",
+            hierarchical=True,
+            parent=self,
+        )
+        self._incident_selector.set_scripts(INCIDENT_SCRIPTS)
+        self._incident_selector.selection_changed.connect(self._on_selection_changed)
+        layout.addWidget(self._incident_selector)
+
+        # --- Discover Files button ---
         discover_row = QHBoxLayout()
         self._discover_btn = QPushButton("Discover Files")
-        self._discover_btn.setFixedWidth(120)
+        self._discover_btn.setToolTip(
+            "Scan the extracts directory for matching incident files."
+        )
         self._discover_btn.clicked.connect(self._on_discover)
         discover_row.addWidget(self._discover_btn)
+
         self._discover_status = QLabel("")
         self._discover_status.setStyleSheet("color: grey; font-size: 11px;")
-        discover_row.addWidget(self._discover_status, stretch=1)
-        batch_layout.addLayout(discover_row)
+        discover_row.addWidget(self._discover_status)
+        discover_row.addStretch()
+        layout.addLayout(discover_row)
 
-        self._discovery_results = QLabel("")
-        self._discovery_results.setWordWrap(True)
-        self._discovery_results.setStyleSheet("font-size: 11px;")
-        batch_layout.addWidget(self._discovery_results)
-
-        layout.addWidget(batch_group)
-
-        # --- Incident selector ---
-        self.incident_selector = IncidentSelectorWidget(
-            ACCURACY_INCIDENTS,
-            settings_key=f"{pfx}.selected_incidents",
+        # --- Incident File Table ---
+        self._file_table = IncidentFileTableWidget(
+            show_template=True,
+            collapsible=True,
+            parent=self,
         )
-        layout.addWidget(self.incident_selector)
+        layout.addWidget(self._file_table)
 
-        # --- Options ---
-        options_group = QGroupBox("Options")
-        options_layout = QVBoxLayout(options_group)
+        # Populate table from current selection
+        self._on_selection_changed()
 
-        self.log_level = FormFieldWidget(
-            "Log Level:", field_type="dropdown",
-            choices=LOG_LEVELS, default="INFO",
-            tooltip="Logging verbosity level.",
-            settings_key=f"{pfx}.log_level",
+        # --- Stop on error ---
+        self._stop_on_error = QCheckBox("Stop on first error")
+        saved_stop = settings.load("accuracy.validation.stop_on_error", False)
+        self._stop_on_error.setChecked(bool(saved_stop))
+        self._stop_on_error.stateChanged.connect(
+            lambda s: settings.save("accuracy.validation.stop_on_error", bool(s))
         )
-        options_layout.addWidget(self.log_level)
+        layout.addWidget(self._stop_on_error)
 
-        self.stop_on_error = FormFieldWidget(
-            "Stop on Error", field_type="checkbox",
-            tooltip="Stop the batch if any validation script fails.",
-            settings_key=f"{pfx}.stop_on_error",
+        # --- Advanced (collapsible) ---
+        advanced_group = QGroupBox("Advanced")
+        advanced_group.setCheckable(True)
+        advanced_group.setChecked(False)
+        adv_layout = QVBoxLayout(advanced_group)
+
+        log_row = QHBoxLayout()
+        log_row.addWidget(QLabel("Log Level:"))
+        self._log_level = QComboBox()
+        self._log_level.addItems(LOG_LEVELS)
+        self._log_level.setCurrentText(
+            str(settings.load("accuracy.validation.log_level", "INFO"))
         )
-        options_layout.addWidget(self.stop_on_error)
-
-        self.verbose = FormFieldWidget(
-            "Verbose", field_type="checkbox",
-            tooltip="Enable verbose output.",
-            settings_key=f"{pfx}.verbose",
+        self._log_level.currentTextChanged.connect(
+            lambda t: settings.save("accuracy.validation.log_level", t)
         )
-        options_layout.addWidget(self.verbose)
+        log_row.addWidget(self._log_level)
+        log_row.addStretch()
+        adv_layout.addLayout(log_row)
 
-        self.list_only = FormFieldWidget(
-            "List Only", field_type="checkbox",
-            tooltip="List validations that would run without executing them.",
-            settings_key=f"{pfx}.list_only",
+        self._dry_run = QCheckBox("Dry Run")
+        self._dry_run.setChecked(
+            bool(settings.load("accuracy.validation.dry_run", False))
         )
-        options_layout.addWidget(self.list_only)
-
-        self.dry_run = FormFieldWidget(
-            "Dry Run", field_type="checkbox",
-            tooltip="Simulate the run without writing output files.",
-            settings_key=f"{pfx}.dry_run",
+        self._dry_run.stateChanged.connect(
+            lambda s: settings.save("accuracy.validation.dry_run", bool(s))
         )
-        options_layout.addWidget(self.dry_run)
+        adv_layout.addWidget(self._dry_run)
 
-        self.progress = FormFieldWidget(
-            "Progress Bar", field_type="checkbox",
-            tooltip="Show a progress bar during processing.",
-            settings_key=f"{pfx}.progress",
-        )
-        options_layout.addWidget(self.progress)
+        layout.addWidget(advanced_group)
 
-        layout.addWidget(options_group)
+        # --- Run Controls ---
+        self._run_controls = RunControlsWidget()
+        self._run_controls.run_clicked.connect(self._on_run)
+        self._run_controls.cancel_clicked.connect(self._on_cancel)
+        layout.addWidget(self._run_controls)
 
-        # Run controls
-        self.run_controls = RunControlsWidget()
-        self.run_controls.run_clicked.connect(self._on_run)
-        self.run_controls.dry_run_clicked.connect(self._on_dry_run)
-        self.run_controls.cancel_clicked.connect(self._on_cancel)
-        layout.addWidget(self.run_controls)
-
-        # Log viewer
-        self.log_viewer = LogViewerWidget()
-        layout.addWidget(self.log_viewer, stretch=1)
-
-        # Wrap in scroll area
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(_scrollable(inner))
-
-        # Internal state for autodiscovery
-        self._discovered_files: Dict[str, str] = {}
-
-    # ---- Autodiscovery ----
-
-    def _on_discover(self) -> None:
-        """Scan base input directory for files matching incident codes."""
-        base_dir = self.base_input_dir.get_path()
-        if not base_dir or not os.path.isdir(base_dir):
-            self._discover_status.setText("Please select a valid base input directory.")
-            return
-
-        selected = self.incident_selector.get_selected()
-        if not selected:
-            self._discover_status.setText("No incidents selected.")
-            return
-
-        self._discovered_files.clear()
-        results_lines: List[str] = []
-        files_in_dir = os.listdir(base_dir)
-
-        for name in selected:
-            patterns = INCIDENT_CODE_PATTERNS.get(name, [])
-            matched = ""
-            for fname in files_in_dir:
-                lower = fname.lower()
-                if not lower.endswith(".csv"):
-                    continue
-                for pattern in patterns:
-                    if pattern in fname:
-                        matched = os.path.join(base_dir, fname)
-                        break
-                if matched:
-                    break
-
-            if matched:
-                self._discovered_files[name] = matched
-                results_lines.append(
-                    f'<span style="color:green;">\u2713 {name}: {os.path.basename(matched)}</span>'
-                )
-            else:
-                results_lines.append(
-                    f'<span style="color:orange;">\u2717 {name}: not found</span>'
-                )
-
-        found = len(self._discovered_files)
-        total = len(selected)
-        self._discover_status.setText(f"Discovered {found}/{total} files.")
-        self._discovery_results.setText("<br>".join(results_lines))
-
-    # ---- Execution ----
-
-    def _on_run(self) -> None:
-        self._execute(dry_run=False)
-
-    def _on_dry_run(self) -> None:
-        self._execute(dry_run=True)
-
-    def _execute(self, dry_run: bool = False) -> None:
-        """Run validations — batch mode if base dirs set, else config mode."""
-        base_in = self.base_input_dir.get_path()
-        base_out = self.base_output_dir.get_path()
-
-        if base_in and base_out and self._discovered_files:
-            self._execute_batch(dry_run)
-        else:
-            self._execute_config(dry_run)
-
-    def _execute_config(self, dry_run: bool = False) -> None:
-        """Delegate to run_all_validations.py with a config file."""
-        module = _import_script("accuracy_testing.scripts.run_all_validations")
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import run_all_validations"
-            )
-            return
-
-        argv = self._build_config_argv()
-        if dry_run and "--dry-run" not in argv:
-            argv.append("--dry-run")
-
-        selected = self.incident_selector.get_selected()
-        if selected:
-            argv.extend(["--validations"] + selected)
-
-        self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: run_all_validations {' '.join(argv)}"
-        )
-        self.run_controls.set_running(True)
-
-        self._worker = ScriptRunnerWorker(module, argv)
-        self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
-        self._worker.finished_signal.connect(self._on_finished)
-        self._worker.start()
-
-    def _build_config_argv(self) -> List[str]:
-        argv: List[str] = ["--gui-mode"]
-        config_path = self.config_loader.get_last_path()
-        if config_path:
-            argv.extend(["--config", config_path])
-        log_level = self.log_level.get_value()
-        if log_level:
-            argv.extend(["--log-level", log_level])
-        if self.stop_on_error.get_value():
-            argv.append("--stop-on-error")
-        if self.verbose.get_value():
-            argv.append("--verbose")
-        if self.list_only.get_value():
-            argv.append("--list")
-        return argv
-
-    def _execute_batch(self, dry_run: bool = False) -> None:
-        """Run each discovered script one at a time in sequence.
-
-        For each incident, reads the per-tile QSettings cache to build a
-        full YAML config (including template, tracker, LEI data, etc.)
-        so the script gets the same parameters as if run from its own tile.
-        """
-        base_out = self.base_output_dir.get_path()
-        selected = self.incident_selector.get_selected()
-        log_level = self.log_level.get_value() or "INFO"
-
-        self._run_queue = []
-        self._cleanup_temp_configs()
-
-        for name in selected:
-            input_path = self._discovered_files.get(name)
-            if not input_path:
-                continue
-            module_path = INCIDENT_SCRIPT_MODULES.get(name)
-            if not module_path:
-                continue
-            output_name = f"{Path(input_path).stem}_results.csv"
-            output_path = os.path.join(base_out, output_name)
-
-            # Build a config from the tile's cached settings
-            config = _build_cached_config(
-                name, input_path, output_path, log_level
-            )
-            if dry_run:
-                config.setdefault("options", {})["dry_run"] = True
-            if self.progress.get_value():
-                config.setdefault("options", {})["show_progress"] = True
-
-            # Write to a temp YAML file
-            fd, config_path = tempfile.mkstemp(
-                suffix=".yaml", prefix=f"gui_runall_{name}_"
-            )
-            with os.fdopen(fd, "w", encoding="utf-8") as fh:
-                yaml.safe_dump(config, fh, default_flow_style=False)
-            self._temp_config_files.append(config_path)
-
-            self._run_queue.append({
-                "name": name,
-                "module": module_path,
-                "config": config_path,
-                "dry_run": str(dry_run),
-            })
-
-        if not self._run_queue:
-            self.log_viewer.append_error(
-                "[GUI] No matching files discovered for selected incidents."
-            )
-            return
-
-        self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Batch mode: running {len(self._run_queue)} validation(s) "
-            f"sequentially (using per-tile cached settings)"
-        )
-        self.run_controls.set_running(True)
-        self._run_next_in_queue()
-
-    def _run_next_in_queue(self) -> None:
-        """Pop the next job from the queue and run it."""
-        if not self._run_queue:
-            self.run_controls.set_running(False)
-            self.log_viewer.append_line("[GUI] Batch complete.")
-            pfx = "accuracy.run_all"
-            _update_last_run(self._last_run, pfx, True)
-            self._cleanup_temp_configs()
-            return
-
-        job = self._run_queue.pop(0)
-        module_path = job["module"]
-        module = _import_script(module_path)
-        if module is None:
-            self.log_viewer.append_error(
-                f"[GUI] Failed to import {module_path}, skipping."
-            )
-            self._run_next_in_queue()
-            return
-
-        argv = ["--gui-mode", "--config", job["config"]]
-        log_level = self.log_level.get_value()
-        if log_level:
-            argv.extend(["--log-level", log_level])
-        if job.get("dry_run") == "True":
-            argv.append("--dry-run")
-        if self.progress.get_value():
-            argv.append("--progress")
-
-        self.log_viewer.append_line(
-            f"\n[GUI] === {job['name']} ===\n"
-            f"[GUI] Running: {module_path} {' '.join(argv)}"
-        )
-
-        self._worker = ScriptRunnerWorker(module, argv)
-        self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
-        self._worker.finished_signal.connect(self._on_batch_step_finished)
-        self._worker.start()
-
-    def _on_batch_step_finished(self, exit_code: int) -> None:
-        """Handle completion of one batch step."""
-        if exit_code == 0:
-            self.log_viewer.append_line("[GUI] Step completed successfully")
-        else:
-            self.log_viewer.append_error(
-                f"[GUI] Step finished with exit code {exit_code}"
-            )
-            if self.stop_on_error.get_value():
-                self._run_queue.clear()
-                self.run_controls.set_running(False)
-                self.log_viewer.append_error(
-                    "[GUI] Batch stopped due to error."
-                )
-                pfx = "accuracy.run_all"
-                _update_last_run(self._last_run, pfx, False)
-                self._cleanup_temp_configs()
-                return
-        self._worker = None
-        self._run_next_in_queue()
-
-    def _cleanup_temp_configs(self) -> None:
-        """Remove any temp YAML config files created during this batch."""
-        for path in self._temp_config_files:
-            try:
-                os.unlink(path)
-            except OSError:
-                pass
-        self._temp_config_files.clear()
-
-    def _on_cancel(self) -> None:
-        self._run_queue.clear()
-        if self._worker and self._worker.isRunning():
-            self._worker.cancel()
-            self.log_viewer.append_error("[GUI] Cancelled by user")
-        self.run_controls.set_running(False)
-        self._cleanup_temp_configs()
-
-    def _on_finished(self, exit_code: int) -> None:
-        """Handle completion for config mode."""
-        self.run_controls.set_running(False)
-        pfx = "accuracy.run_all"
-        if exit_code == 0:
-            self.log_viewer.append_line("[GUI] Completed successfully")
-            _update_last_run(self._last_run, pfx, True)
-        else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
-            _update_last_run(self._last_run, pfx, False)
-        self._worker = None
-
-
-# ---------------------------------------------------------------------------
-# SQL Extract Generator panel — single file + batch directory modes
-# ---------------------------------------------------------------------------
-
-class SQLExtractPanel(QWidget):
-    """Panel for the SQL extract generator script."""
-
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
-        self._batch_queue: List[Dict[str, str]] = []
-        pfx = "accuracy.sql_extract"
-
-        inner = QWidget()
-        layout = QVBoxLayout(inner)
-        layout.addWidget(QLabel("<b>Extract Generator</b>"))
-        layout.addWidget(_subtitle(
-            "Generate batched SQL extract files from a template and input CSV of IDs"
-        ))
-
-        self._last_run = _last_run_label()
-        _restore_last_run(self._last_run, pfx)
+        # --- Last Run badge ---
+        self._last_run = StatusBadgeWidget()
         layout.addWidget(self._last_run)
 
-        self.config_loader = ConfigLoaderWidget()
-        self.config_loader.config_loaded.connect(self.populate_from_config)
-        layout.addWidget(self.config_loader)
-
-        # --- Mode selector ---
-        mode_row = QHBoxLayout()
-        mode_row.addWidget(QLabel("Mode:"))
-        self._single_radio = QRadioButton("Single file")
-        self._batch_radio = QRadioButton("Batch directory")
-        self._single_radio.setChecked(True)
-        self._single_radio.toggled.connect(self._on_mode_changed)
-        mode_row.addWidget(self._single_radio)
-        mode_row.addWidget(self._batch_radio)
-        mode_row.addStretch()
-        layout.addLayout(mode_row)
-
-        # --- Single-file fields ---
-        self._single_group = QGroupBox("Input Files")
-        single_layout = QVBoxLayout(self._single_group)
-
-        self.sql_template = FilePickerWidget(
-            "SQL template file:",
-            mode="file", file_filter=SQL_FILTER,
-            tooltip="The SQL template with a placeholder token to fill.\nExample: 7_5_extract_template.sql",
-            settings_key=f"{pfx}.sql_template",
-        )
-        single_layout.addWidget(self.sql_template)
-
-        self.input_csv = FilePickerWidget(
-            "Input IDs CSV:",
-            mode="file",
-            tooltip="CSV containing the IDs to splice into the SQL template.\nExample: 7_5_ids.csv",
-            settings_key=f"{pfx}.input_csv",
-        )
-        single_layout.addWidget(self.input_csv)
-
-        layout.addWidget(self._single_group)
-
-        # --- Batch directory fields ---
-        self._batch_group = QGroupBox("Batch Directories")
-        batch_layout = QVBoxLayout(self._batch_group)
-
-        self.templates_dir = FilePickerWidget(
-            "SQL templates directory:",
-            mode="directory",
-            tooltip="Directory containing .sql template files.\nAll .sql files will be listed.",
-            settings_key=f"{pfx}.templates_dir",
-        )
-        batch_layout.addWidget(self.templates_dir)
-
-        self.input_csvs_dir = FilePickerWidget(
-            "Input CSVs directory:",
-            mode="directory",
-            tooltip="Directory containing input .csv files.\nAll .csv files will be listed.",
-            settings_key=f"{pfx}.input_csvs_dir",
-        )
-        batch_layout.addWidget(self.input_csvs_dir)
-
-        discover_row = QHBoxLayout()
-        self._batch_discover_btn = QPushButton("Discover Files")
-        self._batch_discover_btn.setFixedWidth(120)
-        self._batch_discover_btn.clicked.connect(self._on_batch_discover)
-        discover_row.addWidget(self._batch_discover_btn)
-        self._batch_discover_status = QLabel("")
-        self._batch_discover_status.setStyleSheet("color: grey; font-size: 11px;")
-        discover_row.addWidget(self._batch_discover_status, stretch=1)
-        batch_layout.addLayout(discover_row)
-
-        self._sql_file_list = QListWidget()
-        self._sql_file_list.setMaximumHeight(120)
-        batch_layout.addWidget(QLabel("Discovered SQL templates:"))
-        batch_layout.addWidget(self._sql_file_list)
-
-        self._csv_file_list = QListWidget()
-        self._csv_file_list.setMaximumHeight(120)
-        batch_layout.addWidget(QLabel("Discovered CSV files:"))
-        batch_layout.addWidget(self._csv_file_list)
-
-        layout.addWidget(self._batch_group)
-        self._batch_group.setVisible(False)
-
-        # --- Shared fields ---
-        shared_group = QGroupBox("Output & Parameters")
-        shared_layout = QVBoxLayout(shared_group)
-
-        self.output_dir = FilePickerWidget(
-            "Output directory:",
-            mode="directory",
-            tooltip="Directory where generated SQL/DTF files will be saved.",
-            settings_key=f"{pfx}.output_dir",
-        )
-        shared_layout.addWidget(self.output_dir)
-
-        self.batch_size = FormFieldWidget(
-            "Batch size:", field_type="spinbox", default=900,
-            tooltip="Number of IDs per SQL batch.\nExample: 900",
-            settings_key=f"{pfx}.batch_size",
-        )
-        shared_layout.addWidget(self.batch_size)
-
-        self.column = FormFieldWidget(
-            "ID column name:", field_type="text",
-            tooltip="Name of the CSV column containing IDs.\nExample: TransactionRef",
-            placeholder="TransactionRef",
-            settings_key=f"{pfx}.column",
-        )
-        shared_layout.addWidget(self.column)
-
-        self.output_format = FormFieldWidget(
-            "Output format:", field_type="dropdown",
-            choices=["sql", "dtf", "both"], default="both",
-            tooltip="Output file format: SQL only, DTF only, or both.",
-            settings_key=f"{pfx}.output_format",
-        )
-        shared_layout.addWidget(self.output_format)
-
-        self.incident_code = FormFieldWidget(
-            "Incident batch code:", field_type="text",
-            tooltip="Short code used for labelling output files.\nExample: 7_5",
-            placeholder="7_5",
-            settings_key=f"{pfx}.incident_code",
-        )
-        shared_layout.addWidget(self.incident_code)
-
-        self.dtf_template = FilePickerWidget(
-            "DTF template file:",
-            mode="file",
-            tooltip="Optional DTF template file for DTF output mode.\nExample: dtf_template.csv",
-            settings_key=f"{pfx}.dtf_template",
-        )
-        shared_layout.addWidget(self.dtf_template)
-
-        layout.addWidget(shared_group)
-
-        # --- Options ---
-        self.dry_run = FormFieldWidget(
-            "Dry Run", field_type="checkbox",
-            tooltip="Simulate the run without writing output files.",
-            settings_key=f"{pfx}.dry_run",
-        )
-        layout.addWidget(self.dry_run)
-
-        self.verbose = FormFieldWidget(
-            "Verbose", field_type="checkbox",
-            tooltip="Enable verbose output.",
-            settings_key=f"{pfx}.verbose",
-        )
-        layout.addWidget(self.verbose)
-
-        self.run_controls = RunControlsWidget()
-        self.run_controls.run_clicked.connect(self._on_run)
-        self.run_controls.dry_run_clicked.connect(self._on_dry_run)
-        self.run_controls.cancel_clicked.connect(self._on_cancel)
-        layout.addWidget(self.run_controls)
-
-        self.log_viewer = LogViewerWidget()
-        layout.addWidget(self.log_viewer, stretch=1)
-
-        # Wrap in scroll area
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(_scrollable(inner))
-
-    # ---- Mode toggle ----
-
-    def _on_mode_changed(self, single_checked: bool) -> None:
-        self._single_group.setVisible(single_checked)
-        self._batch_group.setVisible(not single_checked)
-
-    # ---- Batch discover ----
-
-    def _on_batch_discover(self) -> None:
-        """Populate the SQL and CSV file lists from their directories."""
-        self._sql_file_list.clear()
-        self._csv_file_list.clear()
-
-        sql_dir = self.templates_dir.get_path()
-        csv_dir = self.input_csvs_dir.get_path()
-
-        sql_count = 0
-        if sql_dir and os.path.isdir(sql_dir):
-            for fname in sorted(os.listdir(sql_dir)):
-                if fname.lower().endswith(".sql"):
-                    item = QListWidgetItem(fname)
-                    item.setData(Qt.ItemDataRole.UserRole, os.path.join(sql_dir, fname))
-                    item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-                    item.setCheckState(Qt.CheckState.Checked)
-                    self._sql_file_list.addItem(item)
-                    sql_count += 1
-
-        csv_count = 0
-        if csv_dir and os.path.isdir(csv_dir):
-            for fname in sorted(os.listdir(csv_dir)):
-                if fname.lower().endswith(".csv"):
-                    item = QListWidgetItem(fname)
-                    item.setData(Qt.ItemDataRole.UserRole, os.path.join(csv_dir, fname))
-                    item.setFlags(item.flags() | Qt.ItemFlag.ItemIsUserCheckable)
-                    item.setCheckState(Qt.CheckState.Checked)
-                    self._csv_file_list.addItem(item)
-                    csv_count += 1
-
-        self._batch_discover_status.setText(
-            f"Found {sql_count} SQL template(s), {csv_count} CSV file(s)."
-        )
-
-    # ---- Build argv ----
-
-    def build_argv(self) -> List[str]:
-        """Build argv for a single-file run."""
-        argv: List[str] = ["--gui-mode"]
-        config_path = self.config_loader.get_last_path()
-        if config_path:
-            argv.extend(["--config", config_path])
-
-        template = self.sql_template.get_path()
-        if template:
-            argv.extend(["--template", template])
-
-        input_path = self.input_csv.get_path()
-        if input_path:
-            argv.extend(["--input", input_path])
-
-        output_dir = self.output_dir.get_path()
-        if output_dir:
-            argv.extend(["--output", output_dir])
-
-        batch_size = self.batch_size.get_value()
-        if batch_size and batch_size != 900:
-            argv.extend(["--batch-size", str(batch_size)])
-
-        col = self.column.get_value()
-        if col:
-            argv.extend(["--column", col])
-
-        fmt = self.output_format.get_value()
-        if fmt and fmt != "both":
-            argv.extend(["--output-format", fmt])
-
-        incident = self.incident_code.get_value()
-        if incident:
-            argv.extend(["--incident-code", incident])
-
-        dtf = self.dtf_template.get_path()
-        if dtf:
-            argv.extend(["--dtf-template", dtf])
-
-        if self.dry_run.get_value():
-            argv.append("--dry-run")
-        if self.verbose.get_value():
-            argv.append("--verbose")
-        return argv
-
-    def populate_from_config(self, config: Dict[str, Any]) -> None:
-        paths = config.get("paths", {})
-        self.input_csv.set_path(paths.get("input_file", ""))
-        self.output_dir.set_path(paths.get("output_dir", ""))
-        self.sql_template.set_path(paths.get("sql_template", ""))
-
-    # ---- Execution ----
-
-    def _on_run(self) -> None:
-        if self._batch_radio.isChecked():
-            self._execute_batch(dry_run=False)
-        else:
-            self._execute_single(dry_run=False)
-
-    def _on_dry_run(self) -> None:
-        if self._batch_radio.isChecked():
-            self._execute_batch(dry_run=True)
-        else:
-            self._execute_single(dry_run=True)
-
-    def _execute_single(self, dry_run: bool = False) -> None:
-        module = _import_script(
-            "accuracy_testing.scripts.sql_extract_generator"
-        )
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import sql_extract_generator"
-            )
-            return
-        argv = self.build_argv()
-        if dry_run and "--dry-run" not in argv:
-            argv.append("--dry-run")
-        self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: sql_extract_generator {' '.join(argv)}"
-        )
-        self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
-        self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
-        self._worker.finished_signal.connect(self._on_finished)
-        self._worker.start()
-
-    def _execute_batch(self, dry_run: bool = False) -> None:
-        """Run sql_extract_generator for each incident CSV, auto-selecting
-        the correct SQL template based on the incident code in the filename."""
-        checked_csv = self._get_checked_items(self._csv_file_list)
-
-        if not checked_csv:
-            self.log_viewer.append_error(
-                "[GUI] Select at least one CSV file."
-            )
-            return
-
-        sql_dir = self.templates_dir.get_path()
-        if not sql_dir or not os.path.isdir(sql_dir):
-            self.log_viewer.append_error(
-                "[GUI] SQL templates directory is required for batch mode."
-            )
-            return
-
-        # Import the script to access get_sql_template_for_incident()
-        module = _import_script(
-            "accuracy_testing.scripts.sql_extract_generator"
-        )
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import sql_extract_generator"
-            )
-            return
-
-        self._batch_queue = []
-        skipped: List[str] = []
-
-        for csv_path in checked_csv:
-            csv_stem = Path(csv_path).stem
-            # Extract incident code (e.g. "7_37") from end of filename
-            match = re.search(r'(\d+_\d+)\s*$', csv_stem)
-            if not match:
-                skipped.append(Path(csv_path).name)
-                continue
-
-            incident_code = match.group(1)
-
-            try:
-                sql_template = str(
-                    module.get_sql_template_for_incident(
-                        incident_code, Path(sql_dir)
-                    )
-                )
-            except (ValueError, FileNotFoundError) as exc:
-                self.log_viewer.append_line(
-                    f"[GUI] Skipping {Path(csv_path).name}: {exc}"
-                )
-                skipped.append(Path(csv_path).name)
-                continue
-
-            self._batch_queue.append({
-                "template": sql_template,
-                "input": csv_path,
-                "incident_code": incident_code,
-                "dry_run": str(dry_run),
-            })
-
-        self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Batch mode: {len(self._batch_queue)} incident(s) "
-            f"matched from {len(checked_csv)} CSV file(s)"
-        )
-        if skipped:
-            preview = ", ".join(skipped[:5])
-            extra = f" (+ {len(skipped) - 5} more)" if len(skipped) > 5 else ""
-            self.log_viewer.append_line(
-                f"[GUI] Skipped {len(skipped)} file(s) with no matching "
-                f"template: {preview}{extra}"
-            )
-
-        if not self._batch_queue:
-            self.log_viewer.append_error(
-                "[GUI] No valid incident/template pairs found."
-            )
-            return
-
-        self.run_controls.set_running(True)
-        self._run_next_batch()
-
-    def _get_checked_items(self, list_widget: QListWidget) -> List[str]:
-        paths: List[str] = []
-        for i in range(list_widget.count()):
-            item = list_widget.item(i)
-            if item.checkState() == Qt.CheckState.Checked:
-                paths.append(item.data(Qt.ItemDataRole.UserRole))
-        return paths
-
-    def _run_next_batch(self) -> None:
-        if not self._batch_queue:
-            self.run_controls.set_running(False)
-            self.log_viewer.append_line("[GUI] Batch complete.")
-            _update_last_run(self._last_run, "accuracy.sql_extract", True)
-            return
-
-        job = self._batch_queue.pop(0)
-        module = _import_script(
-            "accuracy_testing.scripts.sql_extract_generator"
-        )
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import sql_extract_generator, skipping."
-            )
-            self._run_next_batch()
-            return
-
-        argv: List[str] = ["--gui-mode"]
-        argv.extend(["--template", job["template"]])
-        argv.extend(["--input", job["input"]])
-
-        if job.get("incident_code"):
-            argv.extend(["--incident-code", job["incident_code"]])
-
-        output_dir = self.output_dir.get_path()
-        if output_dir:
-            argv.extend(["--output", output_dir])
-
-        batch_size = self.batch_size.get_value()
-        if batch_size and batch_size != 900:
-            argv.extend(["--batch-size", str(batch_size)])
-
-        col = self.column.get_value()
-        if col:
-            argv.extend(["--column", col])
-
-        fmt = self.output_format.get_value()
-        if fmt and fmt != "both":
-            argv.extend(["--output-format", fmt])
-
-        if job.get("dry_run") == "True":
-            argv.append("--dry-run")
-        if self.verbose.get_value():
-            argv.append("--verbose")
-
-        incident_label = job.get("incident_code", "?")
-        self.log_viewer.append_line(
-            f"\n[GUI] === Incident {incident_label}: "
-            f"{Path(job['template']).name} + "
-            f"{Path(job['input']).name} ===\n"
-            f"[GUI] Running: sql_extract_generator {' '.join(argv)}"
-        )
-
-        self._worker = ScriptRunnerWorker(module, argv)
-        self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
-        self._worker.finished_signal.connect(self._on_batch_step_finished)
-        self._worker.start()
-
-    def _on_batch_step_finished(self, exit_code: int) -> None:
-        if exit_code == 0:
-            self.log_viewer.append_line("[GUI] Step completed successfully")
-        else:
-            self.log_viewer.append_error(
-                f"[GUI] Step finished with exit code {exit_code}"
-            )
-        self._worker = None
-        self._run_next_batch()
-
-    def _on_cancel(self) -> None:
-        self._batch_queue.clear()
-        if self._worker and self._worker.isRunning():
-            self._worker.cancel()
-            self.log_viewer.append_error("[GUI] Cancelled by user")
-        self.run_controls.set_running(False)
-
-    def _on_finished(self, exit_code: int) -> None:
-        self.run_controls.set_running(False)
-        pfx = "accuracy.sql_extract"
-        if exit_code == 0:
-            self.log_viewer.append_line("[GUI] Completed successfully")
-            _update_last_run(self._last_run, pfx, True)
-        else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
-            _update_last_run(self._last_run, pfx, False)
-        self._worker = None
-
-
-# ---------------------------------------------------------------------------
-# Accuracy Template Generator panel
-# ---------------------------------------------------------------------------
-
-class TemplateGeneratorPanel(QWidget):
-    """Panel for the accuracy template generator script."""
-
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
-        pfx = "accuracy.template_gen"
-
-        inner = QWidget()
-        layout = QVBoxLayout(inner)
-        layout.addWidget(QLabel("<b>Template Generator</b>"))
-        layout.addWidget(_subtitle(
-            "Generate accuracy testing template files from error and query CSVs"
-        ))
-
-        self._last_run = _last_run_label()
-        _restore_last_run(self._last_run, pfx)
-        layout.addWidget(self._last_run)
-
-        self.config_loader = ConfigLoaderWidget()
-        layout.addWidget(self.config_loader)
-
-        # Testing period
-        period_group = QGroupBox("Testing Period")
-        period_layout = QHBoxLayout(period_group)
-        self.fiscal_year = FormFieldWidget(
-            "Fiscal Year:", field_type="dropdown",
-            choices=[""] + FISCAL_YEARS,
-            tooltip="Reporting fiscal year, e.g. FY26",
-            settings_key=f"{pfx}.fiscal_year",
-        )
-        period_layout.addWidget(self.fiscal_year)
-        self.quarter = FormFieldWidget(
-            "Quarter:", field_type="dropdown",
-            choices=[""] + QUARTERS,
-            tooltip="Reporting quarter, e.g. Q1",
-            settings_key=f"{pfx}.quarter",
-        )
-        period_layout.addWidget(self.quarter)
-        layout.addWidget(period_group)
-
-        # Input files group
-        files_group = QGroupBox("Input Files")
-        files_layout = QVBoxLayout(files_group)
-
-        self.errors_csv = FilePickerWidget(
-            "Validation errors CSV:",
-            mode="file",
-            tooltip="CSV containing validation errors to generate templates from.\nExample: buyer_errors_Q4_2025.csv",
-            settings_key=f"{pfx}.errors_csv",
-        )
-        files_layout.addWidget(self.errors_csv)
-
-        self.queries_csv = FilePickerWidget(
-            "Accuracy query results CSV:",
-            mode="file",
-            tooltip="CSV containing accuracy query results.\nExample: buyer_queries_Q4_2025.csv",
-            settings_key=f"{pfx}.queries_csv",
-        )
-        files_layout.addWidget(self.queries_csv)
-
-        self.output_dir = FilePickerWidget(
-            "Output directory:",
-            mode="directory",
-            tooltip="Directory where generated template files will be saved.",
-            settings_key=f"{pfx}.output_dir",
-        )
-        files_layout.addWidget(self.output_dir)
-
-        layout.addWidget(files_group)
-
-        self.dry_run = FormFieldWidget(
-            "Dry Run", field_type="checkbox",
-            tooltip="Simulate the run without writing output files.",
-            settings_key=f"{pfx}.dry_run",
-        )
-        layout.addWidget(self.dry_run)
-
-        self.run_controls = RunControlsWidget()
-        self.run_controls.run_clicked.connect(self._on_run)
-        self.run_controls.dry_run_clicked.connect(self._on_dry_run)
-        self.run_controls.cancel_clicked.connect(self._on_cancel)
-        layout.addWidget(self.run_controls)
-
-        self.log_viewer = LogViewerWidget()
-        layout.addWidget(self.log_viewer, stretch=1)
-
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(_scrollable(inner))
-
-    def build_argv(self) -> List[str]:
-        argv: List[str] = ["--gui-mode"]
-        config_path = self.config_loader.get_last_path()
-        if config_path:
-            argv.extend(["--config", config_path])
-
-        fy = self.fiscal_year.get_value()
-        if fy:
-            argv.extend(["--fiscal-year", fy])
-        qtr = self.quarter.get_value()
-        if qtr:
-            argv.extend(["--quarter", qtr])
-
-        errors = self.errors_csv.get_path()
-        if errors:
-            argv.extend(["--errors", errors])
-        queries = self.queries_csv.get_path()
-        if queries:
-            argv.extend(["--queries", queries])
-        output = self.output_dir.get_path()
-        if output:
-            argv.extend(["--output", output])
-        if self.dry_run.get_value():
-            argv.append("--dry-run")
-        return argv
-
-    def _on_run(self) -> None:
-        self._execute(dry_run=False)
-
-    def _on_dry_run(self) -> None:
-        self._execute(dry_run=True)
-
-    def _execute(self, dry_run: bool = False) -> None:
-        module = _import_script(
-            "accuracy_testing.scripts.accuracy_template_generator"
-        )
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import accuracy_template_generator"
-            )
-            return
-        argv = self.build_argv()
-        if dry_run and "--dry-run" not in argv:
-            argv.append("--dry-run")
-        self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: accuracy_template_generator {' '.join(argv)}"
-        )
-        self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
-        self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
-        self._worker.finished_signal.connect(self._on_finished)
-        self._worker.start()
-
-    def _on_cancel(self) -> None:
-        if self._worker and self._worker.isRunning():
-            self._worker.cancel()
-            self.log_viewer.append_error("[GUI] Cancelled by user")
-
-    def _on_finished(self, exit_code: int) -> None:
-        self.run_controls.set_running(False)
-        pfx = "accuracy.template_gen"
-        if exit_code == 0:
-            self.log_viewer.append_line("[GUI] Completed successfully")
-            _update_last_run(self._last_run, pfx, True)
-        else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
-            _update_last_run(self._last_run, pfx, False)
-        self._worker = None
-
-
-# ---------------------------------------------------------------------------
-# CSV Collation panel
-# ---------------------------------------------------------------------------
-
-class CollationPanel(QWidget):
-    """Panel for the CSV collation script."""
-
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
-        pfx = "accuracy.collation"
-
-        inner = QWidget()
-        layout = QVBoxLayout(inner)
-        layout.addWidget(QLabel("<b>CSV Collation</b>"))
-        layout.addWidget(_subtitle(
-            "Collate per-incident CSV extract files into a single output"
-        ))
-
-        self._last_run = _last_run_label()
-        _restore_last_run(self._last_run, pfx)
-        layout.addWidget(self._last_run)
-
-        self.config_loader = ConfigLoaderWidget()
-        layout.addWidget(self.config_loader)
-
-        # Input files group
-        files_group = QGroupBox("Directories & Output")
-        files_layout = QVBoxLayout(files_group)
-
-        self.input_dir = FilePickerWidget(
-            "Input directory:",
-            mode="directory",
-            tooltip="Directory containing individual incident CSV extracts.\nExample: data/extracts/",
-            settings_key=f"{pfx}.input_dir",
-        )
-        files_layout.addWidget(self.input_dir)
-
-        self.output_dir = FilePickerWidget(
-            "Output directory:",
-            mode="directory",
-            tooltip="Directory for writing collated outputs.",
-            settings_key=f"{pfx}.output_dir",
-        )
-        files_layout.addWidget(self.output_dir)
-
-        self.output_file = FilePickerWidget(
-            "Output file:",
-            mode="save",
-            tooltip="Single output CSV file path.\nExample: collated_Q4_2025.csv",
-            settings_key=f"{pfx}.output_file",
-        )
-        files_layout.addWidget(self.output_file)
-
-        layout.addWidget(files_group)
-
-        # Incident selector (replaces free-text incidents field)
-        self.incident_selector = IncidentSelectorWidget(
-            ACCURACY_INCIDENTS,
-            settings_key=f"{pfx}.selected_incidents",
-        )
-        layout.addWidget(self.incident_selector)
-
-        self.incident = FormFieldWidget(
-            "Single incident code:", field_type="text",
-            tooltip="Run collation for a single incident only.\nExample: 7_5",
-            placeholder="7_5",
-            settings_key=f"{pfx}.incident",
-        )
-        layout.addWidget(self.incident)
-
-        self.all_incidents = FormFieldWidget(
-            "All Incidents", field_type="checkbox",
-            tooltip="Collate all incidents regardless of selection.",
-            settings_key=f"{pfx}.all_incidents",
-        )
-        layout.addWidget(self.all_incidents)
-
-        # Period fields
-        period_group = QGroupBox("Reporting Period")
-        period_layout = QVBoxLayout(period_group)
-
-        self.fiscal_year = FormFieldWidget(
-            "Fiscal year:", field_type="text",
-            tooltip="Fiscal year for filtering.\nExample: 2025",
-            placeholder="2025",
-            settings_key=f"{pfx}.fiscal_year",
-        )
-        period_layout.addWidget(self.fiscal_year)
-
-        self.quarter = FormFieldWidget(
-            "Quarter:", field_type="text",
-            tooltip="Quarter for filtering.\nExample: Q4",
-            placeholder="Q4",
-            settings_key=f"{pfx}.quarter",
-        )
-        period_layout.addWidget(self.quarter)
-
-        layout.addWidget(period_group)
-
-        # Options
-        options_group = QGroupBox("Options")
-        options_layout = QVBoxLayout(options_group)
-
-        self.log_level = FormFieldWidget(
-            "Log Level:", field_type="dropdown",
-            choices=LOG_LEVELS, default="INFO",
-            tooltip="Logging verbosity level.",
-            settings_key=f"{pfx}.log_level",
-        )
-        options_layout.addWidget(self.log_level)
-
-        self.dry_run = FormFieldWidget(
-            "Dry Run", field_type="checkbox",
-            tooltip="Simulate the run without writing output files.",
-            settings_key=f"{pfx}.dry_run",
-        )
-        options_layout.addWidget(self.dry_run)
-
-        self.verbose = FormFieldWidget(
-            "Verbose", field_type="checkbox",
-            tooltip="Enable verbose output.",
-            settings_key=f"{pfx}.verbose",
-        )
-        options_layout.addWidget(self.verbose)
-
-        layout.addWidget(options_group)
-
-        # Advanced (collapsible)
-        self._advanced_btn = QPushButton("\u25b6 Advanced")
-        self._advanced_btn.setFlat(True)
-        self._advanced_btn.setStyleSheet("text-align: left; padding: 2px;")
-        self._advanced_btn.clicked.connect(self._toggle_advanced)
-        layout.addWidget(self._advanced_btn)
-
-        self._advanced_widget = QWidget()
-        adv_layout = QVBoxLayout(self._advanced_widget)
-        adv_layout.setContentsMargins(10, 0, 0, 0)
-
-        self.force = FormFieldWidget(
-            "Force Overwrite", field_type="checkbox",
-            tooltip="Overwrite output files without confirmation.",
-            settings_key=f"{pfx}.force",
-        )
-        adv_layout.addWidget(self.force)
-
-        self.delete_originals = FormFieldWidget(
-            "Delete Originals", field_type="checkbox",
-            tooltip="Delete source CSV files after successful collation.",
-            settings_key=f"{pfx}.delete_originals",
-        )
-        adv_layout.addWidget(self.delete_originals)
-
-        self._advanced_widget.setVisible(False)
-        layout.addWidget(self._advanced_widget)
-
-        self.run_controls = RunControlsWidget()
-        self.run_controls.run_clicked.connect(self._on_run)
-        self.run_controls.dry_run_clicked.connect(self._on_dry_run)
-        self.run_controls.cancel_clicked.connect(self._on_cancel)
-        layout.addWidget(self.run_controls)
-
-        self.log_viewer = LogViewerWidget()
-        layout.addWidget(self.log_viewer, stretch=1)
-
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(_scrollable(inner))
-
-    def _toggle_advanced(self) -> None:
-        visible = not self._advanced_widget.isVisible()
-        self._advanced_widget.setVisible(visible)
-        self._advanced_btn.setText(
-            "\u25bc Advanced" if visible else "\u25b6 Advanced"
-        )
-
-    def build_argv(self) -> List[str]:
-        argv: List[str] = ["--gui-mode"]
-        config_path = self.config_loader.get_last_path()
-        if config_path:
-            argv.extend(["--config", config_path])
-
-        for field, flag in [
-            (self.input_dir, "--input-dir"),
-            (self.output_dir, "--output-dir"),
-            (self.output_file, "--output"),
-        ]:
-            val = field.get_path()
-            if val:
-                argv.extend([flag, val])
-
-        # Incident selection
-        incident_val = self.incident.get_value()
-        if incident_val:
-            argv.extend(["--incident", incident_val])
-        else:
-            selected = self.incident_selector.get_selected()
-            if selected:
-                argv.extend(["--incidents", ",".join(selected)])
-
-        for field, flag in [
-            (self.fiscal_year, "--fiscal-year"),
-            (self.quarter, "--quarter"),
-        ]:
-            val = field.get_value()
-            if val:
-                argv.extend([flag, val])
-
-        log_level = self.log_level.get_value()
-        if log_level:
-            argv.extend(["--log-level", log_level])
-        if self.all_incidents.get_value():
-            argv.append("--all-incidents")
-        if self.dry_run.get_value():
-            argv.append("--dry-run")
-        if self.force.get_value():
-            argv.append("--force")
-        if self.delete_originals.get_value():
-            argv.append("--delete-originals")
-        if self.verbose.get_value():
-            argv.append("--verbose")
-        return argv
-
-    def _on_run(self) -> None:
-        self._execute(dry_run=False)
-
-    def _on_dry_run(self) -> None:
-        self._execute(dry_run=True)
-
-    def _execute(self, dry_run: bool = False) -> None:
-        module = _import_script(
-            "accuracy_testing.scripts.collate_csv_extracts"
-        )
-        if module is None:
-            self.log_viewer.append_error(
-                "Failed to import collate_csv_extracts"
-            )
-            return
-        argv = self.build_argv()
-        if dry_run and "--dry-run" not in argv:
-            argv.append("--dry-run")
-        self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: collate_csv_extracts {' '.join(argv)}"
-        )
-        self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
-        self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
-        self._worker.finished_signal.connect(self._on_finished)
-        self._worker.start()
-
-    def _on_cancel(self) -> None:
-        if self._worker and self._worker.isRunning():
-            self._worker.cancel()
-            self.log_viewer.append_error("[GUI] Cancelled by user")
-
-    def _on_finished(self, exit_code: int) -> None:
-        self.run_controls.set_running(False)
-        pfx = "accuracy.collation"
-        if exit_code == 0:
-            self.log_viewer.append_line("[GUI] Completed successfully")
-            _update_last_run(self._last_run, pfx, True)
-        else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
-            _update_last_run(self._last_run, pfx, False)
-        self._worker = None
-
-
-# ---------------------------------------------------------------------------
-# Data Push panel
-# ---------------------------------------------------------------------------
-
-class DataPushPanel(QWidget):
-    """Panel for the data push script."""
-
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self._worker: Optional[ScriptRunnerWorker] = None
-        pfx = "accuracy.data_push"
-
-        inner = QWidget()
-        layout = QVBoxLayout(inner)
-        layout.addWidget(QLabel("<b>Data Push</b>"))
-        layout.addWidget(_subtitle(
-            "Push validated accuracy data from source CSVs into target files"
-        ))
-
-        self._last_run = _last_run_label()
-        _restore_last_run(self._last_run, pfx)
-        layout.addWidget(self._last_run)
-
-        self.config_loader = ConfigLoaderWidget()
-        layout.addWidget(self.config_loader)
-
-        # Single-file fields
-        single_group = QGroupBox("Single File Mode")
-        single_layout = QVBoxLayout(single_group)
-
-        self.source_file = FilePickerWidget(
-            "Source data CSV:",
-            mode="file",
-            tooltip="The validated source CSV to push from.\nExample: 7_5_buyer_results.csv",
-            settings_key=f"{pfx}.source_file",
-        )
-        single_layout.addWidget(self.source_file)
-
-        self.target_file = FilePickerWidget(
-            "Target/accuracy CSV:",
-            mode="file",
-            tooltip="The target accuracy CSV to push data into.\nExample: accuracy_buyer_Q4.csv",
-            settings_key=f"{pfx}.target_file",
-        )
-        single_layout.addWidget(self.target_file)
-
-        self.output_file = FilePickerWidget(
-            "Output file:",
-            mode="save",
-            tooltip="Where to write the merged output.\nExample: accuracy_buyer_Q4_updated.csv",
-            settings_key=f"{pfx}.output_file",
-        )
-        single_layout.addWidget(self.output_file)
-
-        self.incident = FormFieldWidget(
-            "Single incident code:", field_type="text",
-            tooltip="Incident code for single-file mode.\nExample: 7_5",
-            placeholder="7_5",
-            settings_key=f"{pfx}.incident",
-        )
-        single_layout.addWidget(self.incident)
-
-        layout.addWidget(single_group)
-
-        # Batch mode fields
-        batch_group = QGroupBox("Batch Mode")
-        batch_layout = QVBoxLayout(batch_group)
-
-        self.batch_mode = FormFieldWidget(
-            "Enable Batch Mode", field_type="checkbox",
-            tooltip="Process multiple incidents by directory.",
-            settings_key=f"{pfx}.batch_mode",
-        )
-        batch_layout.addWidget(self.batch_mode)
-
-        self.source_dir = FilePickerWidget(
-            "Source directory:",
-            mode="directory",
-            tooltip="Directory containing per-incident source CSV files.",
-            settings_key=f"{pfx}.source_dir",
-        )
-        batch_layout.addWidget(self.source_dir)
-
-        self.target_dir = FilePickerWidget(
-            "Target directory:",
-            mode="directory",
-            tooltip="Directory containing per-incident target CSV files.",
-            settings_key=f"{pfx}.target_dir",
-        )
-        batch_layout.addWidget(self.target_dir)
-
-        self.incident_selector = IncidentSelectorWidget(
-            ACCURACY_INCIDENTS,
-            settings_key=f"{pfx}.selected_incidents",
-        )
-        batch_layout.addWidget(self.incident_selector)
-
-        layout.addWidget(batch_group)
-
-        # Period fields
-        period_group = QGroupBox("Reporting Period")
-        period_layout = QVBoxLayout(period_group)
-
-        self.fiscal_year = FormFieldWidget(
-            "Fiscal year:", field_type="text",
-            tooltip="Fiscal year for naming.\nExample: 2025",
-            placeholder="2025",
-            settings_key=f"{pfx}.fiscal_year",
-        )
-        period_layout.addWidget(self.fiscal_year)
-
-        self.quarter = FormFieldWidget(
-            "Quarter:", field_type="text",
-            tooltip="Quarter for naming.\nExample: Q4",
-            placeholder="Q4",
-            settings_key=f"{pfx}.quarter",
-        )
-        period_layout.addWidget(self.quarter)
-
-        layout.addWidget(period_group)
-
-        # Options
-        options_group = QGroupBox("Options")
-        options_layout = QVBoxLayout(options_group)
-
-        self.log_level = FormFieldWidget(
-            "Log Level:", field_type="dropdown",
-            choices=LOG_LEVELS, default="INFO",
-            tooltip="Logging verbosity level.",
-            settings_key=f"{pfx}.log_level",
-        )
-        options_layout.addWidget(self.log_level)
-
-        self.dry_run = FormFieldWidget(
-            "Dry Run", field_type="checkbox",
-            tooltip="Simulate the run without writing output files.",
-            settings_key=f"{pfx}.dry_run",
-        )
-        options_layout.addWidget(self.dry_run)
-
-        self.verbose = FormFieldWidget(
-            "Verbose", field_type="checkbox",
-            tooltip="Enable verbose output.",
-            settings_key=f"{pfx}.verbose",
-        )
-        options_layout.addWidget(self.verbose)
-
-        layout.addWidget(options_group)
-
-        # Advanced (collapsible)
-        self._advanced_btn = QPushButton("\u25b6 Advanced")
-        self._advanced_btn.setFlat(True)
-        self._advanced_btn.setStyleSheet("text-align: left; padding: 2px;")
-        self._advanced_btn.clicked.connect(self._toggle_advanced)
-        layout.addWidget(self._advanced_btn)
-
-        self._advanced_widget = QWidget()
-        adv_layout = QVBoxLayout(self._advanced_widget)
-        adv_layout.setContentsMargins(10, 0, 0, 0)
-
-        self.no_backup = FormFieldWidget(
-            "No Backup", field_type="checkbox",
-            tooltip="Skip creating a backup of the target file before overwriting.",
-            settings_key=f"{pfx}.no_backup",
-        )
-        adv_layout.addWidget(self.no_backup)
-
-        self._advanced_widget.setVisible(False)
-        layout.addWidget(self._advanced_widget)
-
-        self.run_controls = RunControlsWidget()
-        self.run_controls.run_clicked.connect(self._on_run)
-        self.run_controls.dry_run_clicked.connect(self._on_dry_run)
-        self.run_controls.cancel_clicked.connect(self._on_cancel)
-        layout.addWidget(self.run_controls)
-
-        self.log_viewer = LogViewerWidget()
-        layout.addWidget(self.log_viewer, stretch=1)
-
-        main_layout = QVBoxLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 0)
-        main_layout.addWidget(_scrollable(inner))
-
-    def _toggle_advanced(self) -> None:
-        visible = not self._advanced_widget.isVisible()
-        self._advanced_widget.setVisible(visible)
-        self._advanced_btn.setText(
-            "\u25bc Advanced" if visible else "\u25b6 Advanced"
-        )
-
-    def build_argv(self) -> List[str]:
-        argv: List[str] = ["--gui-mode"]
-        config_path = self.config_loader.get_last_path()
-        if config_path:
-            argv.extend(["--config", config_path])
-
-        is_batch = self.batch_mode.get_value()
-        if is_batch:
-            argv.append("--batch")
-
-        for picker, flag in [
-            (self.source_file, "--source"),
-            (self.target_file, "--target"),
-            (self.output_file, "--output"),
-        ]:
-            if is_batch:
-                continue
-            val = picker.get_path()
-            if val:
-                argv.extend([flag, val])
-
-        for picker, flag in [
-            (self.source_dir, "--source-dir"),
-            (self.target_dir, "--target-dir"),
-        ]:
-            val = picker.get_path()
-            if val:
-                argv.extend([flag, val])
-
-        incident_val = self.incident.get_value()
-        if incident_val:
-            argv.extend(["--incident", incident_val])
-
-        if is_batch:
-            selected = self.incident_selector.get_selected()
-            if selected:
-                # Translate incident names to their numeric codes using INCIDENT_CODE_PATTERNS.
-                # e.g. "non-zero-qty" → "7_6", "buyer" → "7_35,7_37,7_39"
-                codes: List[str] = []
-                for name in selected:
-                    codes.extend(INCIDENT_CODE_PATTERNS.get(name, [name]))
-                argv.extend(["--incidents", ",".join(codes)])
-
-        for field, flag in [
-            (self.fiscal_year, "--fiscal-year"),
-            (self.quarter, "--quarter"),
-        ]:
-            val = field.get_value()
-            if val:
-                argv.extend([flag, val])
-
-        log_level = self.log_level.get_value()
-        if log_level:
-            argv.extend(["--log-level", log_level])
-        if self.dry_run.get_value():
-            argv.append("--dry-run")
-        if self.no_backup.get_value():
-            argv.append("--no-backup")
-        if self.verbose.get_value():
-            argv.append("--verbose")
-        return argv
-
-    def _on_run(self) -> None:
-        self._execute(dry_run=False)
-
-    def _on_dry_run(self) -> None:
-        self._execute(dry_run=True)
-
-    def _execute(self, dry_run: bool = False) -> None:
-        module = _import_script("accuracy_testing.scripts.data_push")
-        if module is None:
-            self.log_viewer.append_error("Failed to import data_push")
-            return
-        argv = self.build_argv()
-        if dry_run and "--dry-run" not in argv:
-            argv.append("--dry-run")
-        self.log_viewer.clear()
-        self.log_viewer.append_line(
-            f"[GUI] Running: data_push {' '.join(argv)}"
-        )
-        self.run_controls.set_running(True)
-        self._worker = ScriptRunnerWorker(module, argv)
-        self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.error.connect(self.log_viewer.append_error)
-        self._worker.finished_signal.connect(self._on_finished)
-        self._worker.start()
-
-    def _on_cancel(self) -> None:
-        if self._worker and self._worker.isRunning():
-            self._worker.cancel()
-            self.log_viewer.append_error("[GUI] Cancelled by user")
-
-    def _on_finished(self, exit_code: int) -> None:
-        self.run_controls.set_running(False)
-        pfx = "accuracy.data_push"
-        if exit_code == 0:
-            self.log_viewer.append_line("[GUI] Completed successfully")
-            _update_last_run(self._last_run, pfx, True)
-        else:
-            self.log_viewer.append_error(
-                f"[GUI] Finished with exit code {exit_code}"
-            )
-            _update_last_run(self._last_run, pfx, False)
-        self._worker = None
-
-
-# ---------------------------------------------------------------------------
-# Pipeline Panel — End-to-end transaction-reference pipeline
-# ---------------------------------------------------------------------------
-
-
-class PipelinePanel(QWidget):
-    """End-to-end pipeline: Generate → Execute DTF → Collate → Validate → Push.
-
-    Orchestrates the full accuracy testing workflow for transaction-reference
-    extracts.  The user selects a validation type and input CSV; the panel
-    chains every downstream step automatically.
-
-    Set *Auto-execute DTF* to have ``cwbodtfx.exe`` run the data transfers
-    automatically, or leave it unchecked to pause after generation so the
-    user can execute them manually and then click *Resume*.
-    """
-
-    # Step display names in pipeline order.
-    _STEPS = ["Generate", "Execute DTF", "Collate", "Validate", "Push"]
-
-    # Validation type label → (ValidationType.value, default SQL template filename)
-    _VALIDATION_TYPES: list[tuple[str, str, str]] = [
-        ("Buyer ID", "buyer", "BuyerID.sql"),
-        ("Seller ID", "seller", "SellerID.sql"),
-        ("Inconsistent Buyer ID", "inconsistent-buyer", "InconsistentBuyerID.sql"),
-        ("Inconsistent Seller ID", "inconsistent-seller", "InconsistentSellerID.sql"),
-        ("Fund Trade Buyer DM", "ftbdm", "FTBDM.sql"),
-        ("Fund Trade Seller DM", "ftsdm", "FTSDM.sql"),
-        ("Non-Zero Net Quantity", "non-zero-qty", "NonZeroNetQuantity.sql"),
-        ("Non-Zero Net Amount", "non-zero-amt", "NonZeroNetAmount.sql"),
-        ("Incorrect Net Amount", "incorrect_net_amount", "InconsistentNetAmount.sql"),
-    ]
-
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super().__init__(parent)
-        self._worker: Optional[_PipelineWorker] = None
-        self._partial_result = None
-        pfx = "accuracy.pipeline"
-
-        inner = QWidget()
-        layout = QVBoxLayout(inner)
-        layout.addWidget(QLabel("<b>Pipeline</b>"))
-        layout.addWidget(_subtitle(
-            "End-to-end: extract generation → DTF execution → "
-            "collation → validation → data push"
-        ))
-
-        self._last_run = _last_run_label()
-        _restore_last_run(self._last_run, pfx)
-        layout.addWidget(self._last_run)
-
-        # --- Validation type ---
-        from PySide6.QtWidgets import QComboBox
-
-        vtype_row = QHBoxLayout()
-        vtype_row.addWidget(QLabel("Validation type:"))
-        self._vtype_combo = QComboBox()
-        for label, _val, _tpl in self._VALIDATION_TYPES:
-            self._vtype_combo.addItem(label)
-        self._vtype_combo.currentIndexChanged.connect(self._on_vtype_changed)
-        vtype_row.addWidget(self._vtype_combo, stretch=1)
-        layout.addLayout(vtype_row)
-
-        # Persist last selection.
-        saved_idx = settings.load(f"{pfx}.vtype_index", 0)
-        if isinstance(saved_idx, int) and 0 <= saved_idx < len(self._VALIDATION_TYPES):
-            self._vtype_combo.setCurrentIndex(saved_idx)
-
-        # --- Input CSV ---
-        self.input_csv = FilePickerWidget(
-            "Transaction references CSV:",
-            mode="file", file_filter=CSV_FILTER,
-            tooltip="CSV containing the transaction references to extract.",
-            settings_key=f"{pfx}.input_csv",
-        )
-        layout.addWidget(self.input_csv)
-
-        # --- SQL template ---
-        self.sql_template = FilePickerWidget(
-            "SQL template:",
-            mode="file", file_filter=SQL_FILTER,
-            tooltip="SQL template with transaction-reference placeholder.\n"
-                    "Auto-populated when you select a validation type.",
-            settings_key=f"{pfx}.sql_template",
-        )
-        layout.addWidget(self.sql_template)
-
-        # --- Output directory ---
-        self.output_dir = FilePickerWidget(
-            "Output directory:",
-            mode="directory",
-            tooltip="Base directory for generated SQL, DTF and CSV output files.",
-            settings_key=f"{pfx}.output_dir",
-        )
-        layout.addWidget(self.output_dir)
-
-        # --- Parameters ---
-        params_group = QGroupBox("Parameters")
-        params_layout = QVBoxLayout(params_group)
-
-        self.batch_size = FormFieldWidget(
-            "Batch size:", field_type="spinbox", default=900,
-            tooltip="Transaction references per SQL batch (default 900).",
-            settings_key=f"{pfx}.batch_size",
-        )
-        params_layout.addWidget(self.batch_size)
-
-        self.incident_code = FormFieldWidget(
-            "Incident code:", field_type="text",
-            tooltip="Code used for file naming (e.g. 7_37).\n"
-                    "Leave blank to use the validation type key.",
-            placeholder="e.g. 7_37",
-            settings_key=f"{pfx}.incident_code",
-        )
-        params_layout.addWidget(self.incident_code)
-
-        self.auto_execute = FormFieldWidget(
-            "Auto-execute DTF (requires IBM i Access):",
-            field_type="checkbox", default=False,
-            tooltip="When checked, DTF files are launched automatically via "
-                    "cwbodtfx.exe.\nWhen unchecked, the pipeline pauses after "
-                    "generation so you can execute them manually.",
-            settings_key=f"{pfx}.auto_execute",
-        )
-        params_layout.addWidget(self.auto_execute)
-
-        layout.addWidget(params_group)
-
-        # --- Step progress strip ---
-        progress_group = QGroupBox("Pipeline Progress")
-        progress_layout = QHBoxLayout(progress_group)
-        self._step_labels: list[QLabel] = []
-        for i, step_name in enumerate(self._STEPS):
-            if i > 0:
-                arrow = QLabel(" → ")
-                arrow.setStyleSheet("color: grey;")
-                progress_layout.addWidget(arrow)
-            lbl = QLabel(step_name)
-            lbl.setStyleSheet(
-                "padding: 2px 8px; border: 1px solid #ccc; border-radius: 3px; "
-                "background: #f5f5f5; color: grey;"
-            )
-            self._step_labels.append(lbl)
-            progress_layout.addWidget(lbl)
-        progress_layout.addStretch()
-        layout.addWidget(progress_group)
-
-        # --- Controls ---
-        self.run_controls = RunControlsWidget()
-        self.run_controls.run_clicked.connect(lambda: self._on_run(dry_run=False))
-        self.run_controls.dry_run_clicked.connect(lambda: self._on_run(dry_run=True))
-        self.run_controls.cancel_clicked.connect(self._on_cancel)
-        layout.addWidget(self.run_controls)
-
-        # Resume button (shown when EXECUTE_DTF pauses for manual execution).
-        self._resume_btn = QPushButton("Resume (DTF files executed)")
-        self._resume_btn.setVisible(False)
-        self._resume_btn.clicked.connect(self._on_resume)
-        layout.addWidget(self._resume_btn)
-
-        # --- Log ---
-        self.log_viewer = LogViewerWidget()
-        layout.addWidget(self.log_viewer, stretch=1)
+        # --- Log Viewer ---
+        self._log_viewer = LogViewerWidget()
+        layout.addWidget(self._log_viewer, stretch=1)
 
         layout.addStretch()
 
@@ -2706,287 +391,546 @@ class PipelinePanel(QWidget):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().addWidget(_scrollable(inner))
 
-        # Auto-populate SQL template.
-        self._on_vtype_changed()
-
     # ------------------------------------------------------------------
     # Slots
     # ------------------------------------------------------------------
 
-    def _on_vtype_changed(self) -> None:
-        """Auto-populate the SQL template path when validation type changes."""
-        idx = self._vtype_combo.currentIndex()
-        if 0 <= idx < len(self._VALIDATION_TYPES):
-            _label, _val, tpl_name = self._VALIDATION_TYPES[idx]
-            tpl_dir = (
-                Path(__file__).parent.parent.parent
-                / "accuracy_testing" / "sql_templates"
+    def _on_selection_changed(self) -> None:
+        """Rebuild the file table when incident selection changes."""
+        selected = self._incident_selector.get_selected_incidents()
+        incidents: List[Tuple[str, str]] = [
+            (s["incidentCode"], s["scriptKey"]) for s in selected
+        ]
+        self._file_table.set_incidents(
+            incidents,
+            extracts_dir=self._paths.extracts_dir,
+            templates_dir=self._paths.templates_dir,
+            output_dir=self._paths.output_dir,
+            fiscal_year=self._period.fiscal_year,
+            quarter=self._period.quarter,
+        )
+
+    def _on_discover(self) -> None:
+        """Call the API to auto-discover files in the extracts directory."""
+        extracts = self._paths.extracts_dir
+        if not extracts:
+            QMessageBox.warning(
+                self, "Validation",
+                "Set a base directory first so extracts path is known.",
             )
-            tpl_path = tpl_dir / tpl_name
-            if tpl_path.exists():
-                self.sql_template.set_path(str(tpl_path))
-        settings.save("accuracy.pipeline.vtype_index", idx)
-
-    def _on_run(self, *, dry_run: bool = False) -> None:
-        """Validate form and launch the pipeline in a background thread."""
-        input_csv = self.input_csv.get_path()
-        if not input_csv:
-            from PySide6.QtWidgets import QMessageBox
-
-            QMessageBox.warning(self, "Validation", "Input CSV is required.")
             return
 
-        sql_tpl = self.sql_template.get_path()
-        if not sql_tpl:
-            from PySide6.QtWidgets import QMessageBox
+        self._discover_btn.setEnabled(False)
+        self._discover_status.setText("Scanning…")
 
-            QMessageBox.warning(self, "Validation", "SQL template is required.")
+        try:
+            from gui.api.accuracy import discover_incidents
+
+            result = discover_incidents(self._api_client, extracts)
+            total = result.get("totalFound", 0)
+            self._discover_status.setText(f"Found {total} file(s)")
+
+            # Build a code → filePath map from results
+            script_key_map: Dict[str, str] = {}
+            for s in INCIDENT_SCRIPTS:
+                for inc in s["incidents"]:
+                    script_key_map[inc["code"]] = s["scriptKey"]
+
+            self._file_table.populate_from_discovery(
+                result.get("results", []),
+                script_key_map,
+            )
+        except Exception as exc:
+            self._discover_status.setText(f"Error: {exc}")
+        finally:
+            self._discover_btn.setEnabled(True)
+
+    def _on_run(self) -> None:
+        """Validate and submit validation run to the API."""
+        selected = self._incident_selector.get_selected_incidents()
+        if not selected:
+            QMessageBox.warning(
+                self, "Validation", "Select at least one incident."
+            )
             return
 
-        output = self.output_dir.get_path()
-        if not output:
-            from PySide6.QtWidgets import QMessageBox
-
-            QMessageBox.warning(self, "Validation", "Output directory is required.")
+        configs = self._file_table.get_configs()
+        # Ensure all selected incidents have an input file
+        missing = [c["incidentCode"] for c in configs if not c.get("inputFile")]
+        if missing:
+            QMessageBox.warning(
+                self, "Validation",
+                f"Input file missing for: {', '.join(missing)}",
+            )
             return
 
-        idx = self._vtype_combo.currentIndex()
-        _label, vtype_val, _tpl = self._VALIDATION_TYPES[idx]
+        payload = {
+            "testingPeriod": {
+                "fiscalYear": self._period.fiscal_year,
+                "quarter": self._period.quarter,
+            },
+            "incidents": [
+                {
+                    "scriptKey": c["scriptKey"],
+                    "incidentCode": c["incidentCode"],
+                    "inputFile": c["inputFile"],
+                    "templateFile": c.get("templateFile", ""),
+                    "outputFile": c.get("outputFile", ""),
+                }
+                for c in configs
+            ],
+            "logLevel": self._log_level.currentText(),
+            "dryRun": self._dry_run.isChecked(),
+            "stopOnError": self._stop_on_error.isChecked(),
+        }
 
-        from src.accuracy_testing.core.txn_ref_pipeline import (
-            TransactionRefPipelineConfig,
+        self._log_viewer.clear()
+        self._run_controls.set_running(True)
+
+        self._worker = ApiWorker(
+            client=self._api_client,
+            endpoint="/api/accuracy/run-incidents",
+            payload=payload,
         )
-
-        config = TransactionRefPipelineConfig(
-            input_csv=Path(input_csv),
-            validation_type=vtype_val,
-            sql_template_path=Path(sql_tpl),
-            output_dir=Path(output),
-            batch_size=int(self.batch_size.value()),
-            auto_execute_dtf=bool(self.auto_execute.value()),
-            dry_run=dry_run,
-            incident_code=str(self.incident_code.value() or ""),
-            script_module_path=INCIDENT_SCRIPT_MODULES.get(vtype_val, ""),
-        )
-
-        self.log_viewer.clear()
-        self._reset_step_labels()
-        self.run_controls.set_running(True)
-        self._resume_btn.setVisible(False)
-
-        self._worker = _PipelineWorker(config)
-        self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.step_update.connect(self._on_step_update)
-        self._worker.pipeline_done.connect(self._on_pipeline_done)
+        self._worker.output_line.connect(self._log_viewer.append_line)
+        self._worker.error.connect(self._log_viewer.append_error)
+        self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
     def _on_cancel(self) -> None:
-        """Cancel a running pipeline (best-effort)."""
-        if self._worker and self._worker.isRunning():
-            self._worker.terminate()
-            self._worker = None
-        self.run_controls.set_running(False)
-        self._resume_btn.setVisible(False)
-        self.log_viewer.append_error("[GUI] Pipeline cancelled.")
+        """Cancel a running job."""
+        if self._worker:
+            self._worker.cancel()
+        self._run_controls.set_running(False)
+        self._log_viewer.append_error("[GUI] Cancelled.")
 
-    def _on_resume(self) -> None:
-        """Resume after manual DTF execution."""
-        if self._worker is None:
-            return
-
-        partial_result = self._worker.partial_result
-        if partial_result is None:
-            return
-
-        config = self._worker.config
-        self._resume_btn.setVisible(False)
-        self.run_controls.set_running(True)
-
-        self._worker = _PipelineResumeWorker(config, partial_result)
-        self._worker.output_line.connect(self.log_viewer.append_line)
-        self._worker.step_update.connect(self._on_step_update)
-        self._worker.pipeline_done.connect(self._on_pipeline_done)
-        self._worker.start()
-
-    def _on_step_update(self, step_name: str, status: str, message: str) -> None:
-        """Update the step progress strip."""
-        step_index_map = {
-            "generate": 0,
-            "execute_dtf": 1,
-            "collate": 2,
-            "validate": 3,
-            "push": 4,
-        }
-        idx = step_index_map.get(step_name)
-        if idx is None or idx >= len(self._step_labels):
-            return
-
-        lbl = self._step_labels[idx]
-        if status == "running":
-            lbl.setStyleSheet(
-                "padding: 2px 8px; border: 1px solid #1976D2; border-radius: 3px; "
-                "background: #E3F2FD; color: #1976D2; font-weight: bold;"
-            )
-        elif status == "success":
-            lbl.setStyleSheet(
-                "padding: 2px 8px; border: 1px solid #2E7D32; border-radius: 3px; "
-                "background: #E8F5E9; color: #2E7D32;"
-            )
-        elif status == "failed":
-            lbl.setStyleSheet(
-                "padding: 2px 8px; border: 1px solid #D50032; border-radius: 3px; "
-                "background: #FFEBEE; color: #D50032;"
-            )
-        elif status == "waiting":
-            lbl.setStyleSheet(
-                "padding: 2px 8px; border: 1px solid #FF8F00; border-radius: 3px; "
-                "background: #FFF8E1; color: #FF8F00; font-weight: bold;"
-            )
-        elif status == "skipped":
-            lbl.setStyleSheet(
-                "padding: 2px 8px; border: 1px solid #ccc; border-radius: 3px; "
-                "background: #f5f5f5; color: #999;"
-            )
-
-        if message:
-            self.log_viewer.append_line(f"[{self._STEPS[idx]}] {message}")
-
-    def _on_pipeline_done(self, success: bool, waiting: bool) -> None:
-        """Handle pipeline completion or pause."""
-        self.run_controls.set_running(False)
-        pfx = "accuracy.pipeline"
-
-        if waiting:
-            self._resume_btn.setVisible(True)
-            self.log_viewer.append_line(
-                "\n[GUI] Pipeline paused — execute DTF files manually, "
-                "then click 'Resume (DTF files executed)'."
-            )
-            return
-
-        _update_last_run(self._last_run, pfx, success)
-        if success:
-            self.log_viewer.append_line("\n[GUI] Pipeline completed successfully.")
+    def _on_finished(self, exit_code: int) -> None:
+        """Handle job completion."""
+        self._run_controls.set_running(False)
+        if exit_code == 0:
+            self._last_run.set_status("success")
+            self._log_viewer.append_line("\n[GUI] Validation completed successfully.")
         else:
-            self.log_viewer.append_error("\n[GUI] Pipeline failed.")
+            self._last_run.set_status("failed")
+            self._log_viewer.append_error("\n[GUI] Validation failed.")
         self._worker = None
 
-    # ------------------------------------------------------------------
-    # Helpers
-    # ------------------------------------------------------------------
 
-    def _reset_step_labels(self) -> None:
-        """Reset all step labels to the default pending style."""
-        for lbl in self._step_labels:
-            lbl.setStyleSheet(
-                "padding: 2px 8px; border: 1px solid #ccc; border-radius: 3px; "
-                "background: #f5f5f5; color: grey;"
-            )
+# ---------------------------------------------------------------------------
+# Utility Panel Base
+# ---------------------------------------------------------------------------
 
-    def populate_from_config(self, config: Dict[str, Any]) -> None:
-        """Populate panel fields from a loaded YAML config dict.
 
-        Args:
-            config: Loaded YAML dict with panel field values.
+class _UtilityPanelBase(QWidget):
+    """Base class for the four utility panels.
+
+    Provides testing period selector, smart path config, log level,
+    dry run, run controls, and log viewer.  Subclasses add their
+    specific fields by implementing ``_build_fields()``.
+    """
+
+    _TITLE = "Utility"
+    _SUBTITLE = ""
+    _ENDPOINT = ""
+
+    def __init__(
+        self,
+        api_client: ApiClient,
+        settings_prefix: str = "",
+        parent: Optional[QWidget] = None,
+    ) -> None:
+        super().__init__(parent)
+        self._api_client = api_client
+        self._prefix = settings_prefix or self._TITLE.lower().replace(" ", "_")
+        self._worker: Optional[ApiWorker] = None
+
+        inner = QWidget()
+        layout = QVBoxLayout(inner)
+
+        layout.addWidget(_section_header(self._TITLE))
+        if self._SUBTITLE:
+            layout.addWidget(_subtitle(self._SUBTITLE))
+
+        # Testing period
+        self._period = _TestingPeriodSelector(
+            settings_prefix=f"accuracy.{self._prefix}", parent=self
+        )
+        layout.addWidget(self._period)
+
+        # Smart path config
+        self._paths = _SmartPathConfig(
+            settings_prefix=f"accuracy.{self._prefix}", parent=self
+        )
+        layout.addWidget(self._paths)
+
+        # Subclass fields
+        self._build_fields(layout)
+
+        # Advanced
+        advanced_group = QGroupBox("Advanced")
+        advanced_group.setCheckable(True)
+        advanced_group.setChecked(False)
+        adv_layout = QVBoxLayout(advanced_group)
+
+        log_row = QHBoxLayout()
+        log_row.addWidget(QLabel("Log Level:"))
+        self._log_level = QComboBox()
+        self._log_level.addItems(LOG_LEVELS)
+        self._log_level.setCurrentText(
+            str(settings.load(f"accuracy.{self._prefix}.log_level", "INFO"))
+        )
+        self._log_level.currentTextChanged.connect(
+            lambda t: settings.save(f"accuracy.{self._prefix}.log_level", t)
+        )
+        log_row.addWidget(self._log_level)
+        log_row.addStretch()
+        adv_layout.addLayout(log_row)
+
+        self._dry_run = QCheckBox("Dry Run")
+        self._dry_run.setChecked(
+            bool(settings.load(f"accuracy.{self._prefix}.dry_run", False))
+        )
+        self._dry_run.stateChanged.connect(
+            lambda s: settings.save(f"accuracy.{self._prefix}.dry_run", bool(s))
+        )
+        adv_layout.addWidget(self._dry_run)
+
+        layout.addWidget(advanced_group)
+
+        # Run controls
+        self._run_controls = RunControlsWidget()
+        self._run_controls.run_clicked.connect(self._on_run)
+        self._run_controls.cancel_clicked.connect(self._on_cancel)
+        layout.addWidget(self._run_controls)
+
+        # Last run badge
+        self._last_run = StatusBadgeWidget()
+        layout.addWidget(self._last_run)
+
+        # Log viewer
+        self._log_viewer = LogViewerWidget()
+        layout.addWidget(self._log_viewer, stretch=1)
+
+        layout.addStretch()
+
+        self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().addWidget(_scrollable(inner))
+
+    def _build_fields(self, layout: QVBoxLayout) -> None:
+        """Override in subclasses to add panel-specific fields."""
+
+    def _build_payload(self) -> Optional[Dict[str, Any]]:
+        """Override in subclasses to build the API payload.
+
+        Returns:
+            Payload dict, or ``None`` to abort the run.
         """
-        paths = config.get("paths", {})
-        if p := paths.get("input_csv"):
-            self.input_csv.set_path(p)
-        if p := paths.get("sql_template"):
-            self.sql_template.set_path(p)
-        if p := paths.get("output_dir"):
-            self.output_dir.set_path(p)
-        if bs := config.get("batch_size"):
-            self.batch_size._input.setValue(int(bs))
+        return {}
 
+    def _on_run(self) -> None:
+        """Validate and submit the utility job to the API."""
+        payload = self._build_payload()
+        if payload is None:
+            return
 
-class _PipelineWorker(_QThread):
-    """Background thread for ``TransactionRefPipelineExecutor.execute()``."""
+        self._log_viewer.clear()
+        self._run_controls.set_running(True)
 
-    output_line = _QSignal(str)
-    step_update = _QSignal(str, str, str)     # step_name, status, message
-    pipeline_done = _QSignal(bool, bool)       # success, waiting
-
-    def __init__(
-        self,
-        config: "TransactionRefPipelineConfig",
-        parent: Optional[QWidget] = None,
-    ) -> None:
-        super().__init__(parent)
-        self.config = config
-        self._partial_result = None
-
-    def run(self) -> None:  # noqa: D102
-        from src.accuracy_testing.core.txn_ref_pipeline import (
-            TransactionRefPipelineExecutor,
-            StepStatus,
+        self._worker = ApiWorker(
+            client=self._api_client,
+            endpoint=self._ENDPOINT,
+            payload=payload,
         )
+        self._worker.output_line.connect(self._log_viewer.append_line)
+        self._worker.error.connect(self._log_viewer.append_error)
+        self._worker.finished_signal.connect(self._on_finished)
+        self._worker.start()
 
-        def _on_progress(step, status, msg):
-            self.step_update.emit(step.value, status.value, msg)
+    def _on_cancel(self) -> None:
+        """Cancel a running job."""
+        if self._worker:
+            self._worker.cancel()
+        self._run_controls.set_running(False)
+        self._log_viewer.append_error("[GUI] Cancelled.")
 
-        def _on_output(line):
-            self.output_line.emit(line)
-
-        executor = TransactionRefPipelineExecutor(
-            on_progress=_on_progress,
-            on_output=_on_output,
-        )
-        result = executor.execute(self.config)
-        self._partial_result = result
-
-        if result.status == StepStatus.WAITING:
-            self.pipeline_done.emit(False, True)
-        elif result.status == StepStatus.SUCCESS:
-            self.pipeline_done.emit(True, False)
+    def _on_finished(self, exit_code: int) -> None:
+        """Handle job completion."""
+        self._run_controls.set_running(False)
+        if exit_code == 0:
+            self._last_run.set_status("success")
+            self._log_viewer.append_line(f"\n[GUI] {self._TITLE} completed successfully.")
         else:
-            self.pipeline_done.emit(False, False)
-
-    @property
-    def partial_result(self):
-        """Return the pipeline result (may be partial if WAITING)."""
-        return self._partial_result
+            self._last_run.set_status("failed")
+            self._log_viewer.append_error(f"\n[GUI] {self._TITLE} failed.")
+        self._worker = None
 
 
-class _PipelineResumeWorker(_QThread):
-    """Background thread for ``TransactionRefPipelineExecutor.resume()``."""
+# ---------------------------------------------------------------------------
+# Template Generator Panel
+# ---------------------------------------------------------------------------
 
-    output_line = _QSignal(str)
-    step_update = _QSignal(str, str, str)
-    pipeline_done = _QSignal(bool, bool)
 
-    def __init__(
-        self,
-        config: "TransactionRefPipelineConfig",
-        partial_result: "PipelineResult",
-        parent: Optional[QWidget] = None,
-    ) -> None:
-        super().__init__(parent)
-        self.config = config
-        self._partial_result = partial_result
+class TemplateGeneratorPanel(_UtilityPanelBase):
+    """Generate accuracy testing template files from Kaizen data."""
 
-    def run(self) -> None:  # noqa: D102
-        from src.accuracy_testing.core.txn_ref_pipeline import (
-            TransactionRefPipelineExecutor,
-            StepStatus,
+    _TITLE = "Template Generator"
+    _SUBTITLE = (
+        "Generate template CSVs from consolidated Kaizen error/query data."
+    )
+    _ENDPOINT = "/api/accuracy/run"
+
+    def _build_fields(self, layout: QVBoxLayout) -> None:
+        """Add incident selector and kaizen file fields."""
+        # Incident selector (flat mode for utilities)
+        self._incident_selector = IncidentSelectorWidget(
+            incidents=[
+                (s["scriptKey"], s["displayLabel"])
+                for s in INCIDENT_SCRIPTS
+            ],
+            settings_key=f"accuracy.{self._prefix}.selected",
+        )
+        layout.addWidget(self._incident_selector)
+
+        # Kaizen error/query file pickers (auto-populated from base dir)
+        kaizen_group = QGroupBox("Kaizen Files")
+        kaizen_layout = QVBoxLayout(kaizen_group)
+
+        self._errors_csv = FilePickerWidget(
+            "Consolidated Errors CSV:",
+            mode="file",
+            file_filter=CSV_FILTER,
+            tooltip="Consolidated Kaizen errors data CSV.",
+            settings_key=f"accuracy.{self._prefix}.errors_csv",
+        )
+        kaizen_layout.addWidget(self._errors_csv)
+
+        self._queries_csv = FilePickerWidget(
+            "Consolidated Queries CSV:",
+            mode="file",
+            file_filter=CSV_FILTER,
+            tooltip="Consolidated Kaizen queries data CSV.",
+            settings_key=f"accuracy.{self._prefix}.queries_csv",
+        )
+        kaizen_layout.addWidget(self._queries_csv)
+
+        layout.addWidget(kaizen_group)
+
+    def _build_payload(self) -> Optional[Dict[str, Any]]:
+        """Build the template generator API payload."""
+        return {
+            "scriptName": "accuracy_template_generator",
+            "testingPeriod": {
+                "fiscalYear": self._period.fiscal_year,
+                "quarter": self._period.quarter,
+            },
+            "mode": "batch",
+            "batchConfig": {
+                "inputDirectory": self._paths.kaizen_dir,
+                "outputDirectory": self._paths.templates_dir,
+                "templateDirectory": "",
+                "logOutput": "logs",
+            },
+            "logLevel": self._log_level.currentText(),
+            "dryRun": self._dry_run.isChecked(),
+        }
+
+
+# ---------------------------------------------------------------------------
+# Extract Generator Panel (SQL Extract)
+# ---------------------------------------------------------------------------
+
+
+class ExtractGeneratorPanel(_UtilityPanelBase):
+    """Generate SQL extract scripts and optionally execute DTF."""
+
+    _TITLE = "Extract Generator"
+    _SUBTITLE = (
+        "Generate SQL extract batches from transaction reference CSVs."
+    )
+    _ENDPOINT = "/api/accuracy/run"
+
+    def _build_fields(self, layout: QVBoxLayout) -> None:
+        """Add incident selector and file table for extract inputs."""
+        self._incident_selector = IncidentSelectorWidget(
+            incidents=[
+                (s["scriptKey"], s["displayLabel"])
+                for s in INCIDENT_SCRIPTS
+            ],
+            settings_key=f"accuracy.{self._prefix}.selected",
+        )
+        self._incident_selector.selection_changed.connect(self._refresh_table)
+        layout.addWidget(self._incident_selector)
+
+        # File table (input only — no template column)
+        self._file_table = IncidentFileTableWidget(
+            show_template=False,
+            collapsible=True,
+            parent=self,
+        )
+        layout.addWidget(self._file_table)
+
+        self._batch_size = FormFieldWidget(
+            "Batch size:", field_type="spinbox", default=900,
+            tooltip="Transaction references per SQL batch (default 900).",
+            settings_key=f"accuracy.{self._prefix}.batch_size",
+        )
+        layout.addWidget(self._batch_size)
+
+        self._refresh_table()
+
+    def _refresh_table(self) -> None:
+        """Rebuild the file table from selected incidents."""
+        selected = self._incident_selector.get_selected()
+        incidents: List[Tuple[str, str]] = []
+        for s in INCIDENT_SCRIPTS:
+            if s["scriptKey"] in selected:
+                for inc in s["incidents"]:
+                    incidents.append((inc["code"], s["scriptKey"]))
+        self._file_table.set_incidents(
+            incidents,
+            extracts_dir=self._paths.extracts_dir,
+            output_dir=self._paths.output_dir,
+            fiscal_year=self._period.fiscal_year,
+            quarter=self._period.quarter,
         )
 
-        def _on_progress(step, status, msg):
-            self.step_update.emit(step.value, status.value, msg)
+    def _build_payload(self) -> Optional[Dict[str, Any]]:
+        """Build the SQL extract generator API payload."""
+        return {
+            "scriptName": "sql_extract_generator",
+            "testingPeriod": {
+                "fiscalYear": self._period.fiscal_year,
+                "quarter": self._period.quarter,
+            },
+            "mode": "batch",
+            "batchConfig": {
+                "inputDirectory": self._paths.extracts_dir,
+                "outputDirectory": self._paths.output_dir,
+                "templateDirectory": "",
+                "logOutput": "logs",
+            },
+            "logLevel": self._log_level.currentText(),
+            "dryRun": self._dry_run.isChecked(),
+        }
 
-        def _on_output(line):
-            self.output_line.emit(line)
 
-        executor = TransactionRefPipelineExecutor(
-            on_progress=_on_progress,
-            on_output=_on_output,
+# ---------------------------------------------------------------------------
+# CSV Collation Panel
+# ---------------------------------------------------------------------------
+
+
+class CollatePanel(_UtilityPanelBase):
+    """Collate per-incident extract CSVs into combined files."""
+
+    _TITLE = "CSV Collation"
+    _SUBTITLE = (
+        "Collate individual extract CSVs into combined per-incident files."
+    )
+    _ENDPOINT = "/api/accuracy/run"
+
+    def _build_fields(self, layout: QVBoxLayout) -> None:
+        """Add incident selector."""
+        self._incident_selector = IncidentSelectorWidget(
+            incidents=[
+                (s["scriptKey"], s["displayLabel"])
+                for s in INCIDENT_SCRIPTS
+            ],
+            settings_key=f"accuracy.{self._prefix}.selected",
         )
-        result = executor.resume(self.config, self._partial_result)
+        layout.addWidget(self._incident_selector)
 
-        if result.status == StepStatus.SUCCESS:
-            self.pipeline_done.emit(True, False)
-        else:
-            self.pipeline_done.emit(False, False)
+    def _build_payload(self) -> Optional[Dict[str, Any]]:
+        """Build the collation API payload."""
+        return {
+            "scriptName": "collate_csv_extracts",
+            "testingPeriod": {
+                "fiscalYear": self._period.fiscal_year,
+                "quarter": self._period.quarter,
+            },
+            "mode": "batch",
+            "batchConfig": {
+                "inputDirectory": self._paths.extracts_dir,
+                "outputDirectory": self._paths.extracts_dir,
+                "templateDirectory": "",
+                "logOutput": "logs",
+            },
+            "logLevel": self._log_level.currentText(),
+            "dryRun": self._dry_run.isChecked(),
+        }
+
+
+# ---------------------------------------------------------------------------
+# Data Push Panel
+# ---------------------------------------------------------------------------
+
+
+class DataPushPanel(_UtilityPanelBase):
+    """Push validated data back into template CSVs."""
+
+    _TITLE = "Data Push"
+    _SUBTITLE = (
+        "Write validated correction data back into template CSV files."
+    )
+    _ENDPOINT = "/api/accuracy/run"
+
+    def _build_fields(self, layout: QVBoxLayout) -> None:
+        """Add incident selector and file table for push paths."""
+        self._incident_selector = IncidentSelectorWidget(
+            incidents=[
+                (s["scriptKey"], s["displayLabel"])
+                for s in INCIDENT_SCRIPTS
+            ],
+            settings_key=f"accuracy.{self._prefix}.selected",
+        )
+        self._incident_selector.selection_changed.connect(self._refresh_table)
+        layout.addWidget(self._incident_selector)
+
+        self._file_table = IncidentFileTableWidget(
+            show_template=True,
+            collapsible=True,
+            parent=self,
+        )
+        layout.addWidget(self._file_table)
+
+        self._refresh_table()
+
+    def _refresh_table(self) -> None:
+        """Rebuild the file table from selected incidents."""
+        selected = self._incident_selector.get_selected()
+        incidents: List[Tuple[str, str]] = []
+        for s in INCIDENT_SCRIPTS:
+            if s["scriptKey"] in selected:
+                for inc in s["incidents"]:
+                    incidents.append((inc["code"], s["scriptKey"]))
+        self._file_table.set_incidents(
+            incidents,
+            extracts_dir=self._paths.output_dir,
+            templates_dir=self._paths.templates_dir,
+            output_dir=self._paths.output_dir,
+            fiscal_year=self._period.fiscal_year,
+            quarter=self._period.quarter,
+        )
+
+    def _build_payload(self) -> Optional[Dict[str, Any]]:
+        """Build the data push API payload."""
+        configs = self._file_table.get_configs()
+        return {
+            "scriptName": "data_push",
+            "testingPeriod": {
+                "fiscalYear": self._period.fiscal_year,
+                "quarter": self._period.quarter,
+            },
+            "mode": "batch",
+            "batchConfig": {
+                "inputDirectory": self._paths.output_dir,
+                "outputDirectory": self._paths.output_dir,
+                "templateDirectory": self._paths.templates_dir,
+                "logOutput": "logs",
+            },
+            "logLevel": self._log_level.currentText(),
+            "dryRun": self._dry_run.isChecked(),
+        }
 
 
 # ---------------------------------------------------------------------------
@@ -2997,83 +941,24 @@ _SECTION_BG = QColor("#e0e0e0")
 
 
 class AccuracyTab(QWidget):
-    """Accuracy Testing tab with sidebar navigation and stacked panels."""
+    """Accuracy Testing tab with sidebar navigation and stacked panels.
 
-    # (sidebar label, panel class, kwargs)
-    PANELS = [
-        ("Buyer ID", BaseValidationPanel,
-         {"script_module_path": "accuracy_testing.scripts.buyer_id_validation",
-          "title": "Buyer ID Validation",
-          "subtitle": "Validates buyer identification data (incidents 7_35, 7_37, 7_39)",
-          "settings_prefix": "buyer_id",
-          "incidents": ["7_35", "7_37", "7_39"],
-          "needs_template": True,
-          "needs_tracker": True}),
-        ("Seller ID", BaseValidationPanel,
-         {"script_module_path": "accuracy_testing.scripts.seller_id_validation",
-          "title": "Seller ID Validation",
-          "subtitle": "Validates seller identification data (incidents 16_19, 16_21, 16_23)",
-          "settings_prefix": "seller_id",
-          "incidents": ["16_19", "16_21", "16_23"],
-          "needs_template": True,
-          "needs_tracker": True}),
-        ("Inconsistent Buyer ID", BaseValidationPanel,
-         {"script_module_path": "accuracy_testing.scripts.inconsistent_buyer_id_validation",
-          "title": "Inconsistent Buyer ID Validation",
-          "subtitle": "Detects inconsistent buyer IDs across transactions (incident 7_66)",
-          "settings_prefix": "inconsistent_buyer",
-          "incidents": ["7_66"],
-          "needs_template": True,
-          "needs_tracker": True}),
-        ("Inconsistent Seller ID", BaseValidationPanel,
-         {"script_module_path": "accuracy_testing.scripts.inconsistent_seller_id_validation",
-          "title": "Inconsistent Seller ID Validation",
-          "subtitle": "Detects inconsistent seller IDs across transactions (incident 16_20)",
-          "settings_prefix": "inconsistent_seller",
-          "incidents": ["16_20"],
-          "needs_template": True,
-          "needs_tracker": True}),
-        ("Fund Trade Buyer Decision Maker", DecisionMakerPanel,
-         {"script_module_path": "accuracy_testing.scripts.validate_ftbdm",
-          "title": "Fund Trade Buyer Decision Maker Validation",
-          "subtitle": "Field 27 Buyer Decision Maker validation (incident 12_17)",
-          "settings_prefix": "ftbdm",
-          "incidents": ["12_17"]}),
-        ("Fund Trade Seller Decision Maker", DecisionMakerPanel,
-         {"script_module_path": "accuracy_testing.scripts.validate_ftsdm",
-          "title": "Fund Trade Seller Decision Maker Validation",
-          "subtitle": "Field 28 Seller Decision Maker validation (incident 21_17)",
-          "settings_prefix": "ftsdm",
-          "incidents": ["21_17"]}),
-        ("Incorrect Net Amount", BaseValidationPanel,
-         {"script_module_path": "accuracy_testing.scripts.incorrect_net_amount_validation",
-          "title": "Incorrect Net Amount Validation",
-          "subtitle": "Validates transaction net amount fields (incident 35_3)",
-          "settings_prefix": "incorrect_net_amount",
-          "incidents": ["35_3"]}),
-        ("Non-Zero Net Quantity", BaseValidationPanel,
-         {"script_module_path": "accuracy_testing.scripts.non_zero_net_quantity",
-          "title": "Non-Zero Net Quantity Validation",
-          "subtitle": "Checks that net quantity is non-zero where required (incident 7_6)",
-          "settings_prefix": "non_zero_qty",
-          "incidents": ["7_6"]}),
-        ("Non-Zero Net Amount", BaseValidationPanel,
-         {"script_module_path": "accuracy_testing.scripts.non_zero_net_amount",
-          "title": "Non-Zero Net Amount Validation",
-          "subtitle": "Checks that net amount is non-zero where required (incident 7_42)",
-          "settings_prefix": "non_zero_amt",
-          "incidents": ["7_42"]}),
-        ("Run All", RunAllPanel, {}),
-        ("Pipeline", PipelinePanel, {}),
-        (None, None, {}),  # Section separator
-        ("Extracts", SQLExtractPanel, {}),
-        ("Templates", TemplateGeneratorPanel, {}),
-        ("CSV Collation", CollationPanel, {}),
-        ("Data Push", DataPushPanel, {}),
-    ]
+    Layout:
+    - Validation Scripts  (unified incident-driven panel)
+    - --- Utilities ---
+    - Template Generator
+    - Extract Generator
+    - CSV Collation
+    - Data Push
+    """
 
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
+    def __init__(
+        self,
+        api_client: Optional[ApiClient] = None,
+        parent: Optional[QWidget] = None,
+    ) -> None:
         super().__init__(parent)
+        self._api_client = api_client or ApiClient()
 
         layout = QHBoxLayout(self)
 
@@ -3090,29 +975,45 @@ class AccuracyTab(QWidget):
         # Build panels
         self._separator_rows: List[int] = []
         row = 0
-        for label, panel_cls, kwargs in self.PANELS:
-            if label is None:
-                # Section header separator
-                header_item = QListWidgetItem("  Utilities")
-                header_item.setFlags(
-                    header_item.flags()
-                    & ~Qt.ItemFlag.ItemIsSelectable
-                    & ~Qt.ItemFlag.ItemIsEnabled
+
+        # -- Validation Scripts --
+        self._sidebar.addItem("Validation Scripts")
+        self._stack.addWidget(
+            ValidationScriptsPanel(api_client=self._api_client)
+        )
+        row += 1
+
+        # -- Section separator --
+        header_item = QListWidgetItem("  Utilities")
+        header_item.setFlags(
+            header_item.flags()
+            & ~Qt.ItemFlag.ItemIsSelectable
+            & ~Qt.ItemFlag.ItemIsEnabled
+        )
+        header_item.setBackground(_SECTION_BG)
+        header_font = QFont()
+        header_font.setBold(True)
+        header_item.setFont(header_font)
+        self._sidebar.addItem(header_item)
+        self._stack.addWidget(QWidget())  # placeholder
+        self._separator_rows.append(row)
+        row += 1
+
+        # -- Utility panels --
+        utilities: List[tuple] = [
+            ("Templates", TemplateGeneratorPanel, "template_gen"),
+            ("Extracts", ExtractGeneratorPanel, "extract_gen"),
+            ("CSV Collation", CollatePanel, "collate"),
+            ("Data Push", DataPushPanel, "data_push"),
+        ]
+        for label, panel_cls, prefix in utilities:
+            self._sidebar.addItem(label)
+            self._stack.addWidget(
+                panel_cls(
+                    api_client=self._api_client,
+                    settings_prefix=prefix,
                 )
-                header_item.setBackground(_SECTION_BG)
-                header_font = QFont()
-                header_font.setBold(True)
-                header_item.setFont(header_font)
-                self._sidebar.addItem(header_item)
-                self._separator_rows.append(row)
-                self._stack.addWidget(QWidget())
-            else:
-                self._sidebar.addItem(label)
-                if panel_cls is not None:
-                    panel = panel_cls(**kwargs)
-                    self._stack.addWidget(panel)
-                else:
-                    self._stack.addWidget(QWidget())
+            )
             row += 1
 
         self._sidebar.setCurrentRow(0)

@@ -61,6 +61,18 @@ class SettingsManager:
         """Remove all stored settings."""
         self._settings.clear()
 
+    @property
+    def api_url(self) -> str:
+        """Return the stored API URL, defaulting to ``http://localhost:8000``."""
+        from gui.constants import API_DEFAULT_URL
+
+        return str(self.load("api/url", API_DEFAULT_URL))
+
+    @api_url.setter
+    def api_url(self, value: str) -> None:
+        """Persist the API URL."""
+        self.save("api/url", value)
+
 
 # Module-level singleton used by all widgets
 settings = SettingsManager()

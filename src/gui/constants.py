@@ -10,6 +10,9 @@ used across the GUI application.
 APP_NAME = "TXR Automation"
 APP_VERSION = "1.0.0"
 
+# ── API defaults ────────────────────────────────────────────────────────
+API_DEFAULT_URL = "http://localhost:8000"
+
 # ── AJ Bell brand colours ──────────────────────────────────────────────────
 COLOUR_RED = "#D50032"
 COLOUR_RED_HOVER = "#B8002B"
@@ -100,3 +103,140 @@ INCIDENT_SETTINGS_PREFIX = {
     "non-zero-qty": "accuracy.non_zero_qty",
     "non-zero-amt": "accuracy.non_zero_amt",
 }
+
+# ── Incident script definitions (mirrors web INCIDENT_SCRIPTS) ─────────
+# Each entry: {"scriptKey", "displayLabel", "incidents": [{"code", "label"}]}
+INCIDENT_SCRIPTS = [
+    {
+        "scriptKey": "buyer_id_validation",
+        "displayLabel": "Incorrect Buyer ID",
+        "incidents": [
+            {"code": "7_35", "label": "Incorrect Buyer ID"},
+            {"code": "7_37", "label": "Incorrect Buyer ID"},
+            {"code": "7_39", "label": "Incorrect Buyer ID"},
+        ],
+    },
+    {
+        "scriptKey": "seller_id_validation",
+        "displayLabel": "Incorrect Seller ID",
+        "incidents": [
+            {"code": "16_19", "label": "Incorrect Seller ID"},
+            {"code": "16_21", "label": "Incorrect Seller ID"},
+            {"code": "16_23", "label": "Incorrect Seller ID"},
+        ],
+    },
+    {
+        "scriptKey": "inconsistent_buyer_id_validation",
+        "displayLabel": "Inconsistent Buyer ID",
+        "incidents": [{"code": "7_66", "label": "Inconsistent Buyer ID"}],
+    },
+    {
+        "scriptKey": "inconsistent_seller_id_validation",
+        "displayLabel": "Inconsistent Seller ID",
+        "incidents": [{"code": "16_20", "label": "Inconsistent Seller ID"}],
+    },
+    {
+        "scriptKey": "validate_ftbdm",
+        "displayLabel": "Incorrect FT Buyer Decision Maker",
+        "incidents": [{"code": "12_17", "label": "FT Buyer Decision Maker"}],
+    },
+    {
+        "scriptKey": "validate_ftsdm",
+        "displayLabel": "Incorrect FT Seller Decision Maker",
+        "incidents": [{"code": "21_17", "label": "FT Seller Decision Maker"}],
+    },
+    {
+        "scriptKey": "incorrect_net_amount_validation",
+        "displayLabel": "Incorrect Net Amount",
+        "incidents": [{"code": "35_3", "label": "Incorrect Net Amount"}],
+    },
+    {
+        "scriptKey": "non_zero_net_quantity",
+        "displayLabel": "Non-Zero Net Quantity",
+        "incidents": [{"code": "7_6", "label": "Non-Zero Net Quantity"}],
+    },
+    {
+        "scriptKey": "non_zero_net_amount",
+        "displayLabel": "Non-Zero Net Amount",
+        "incidents": [{"code": "7_42", "label": "Non-Zero Net Amount"}],
+    },
+]
+
+# Flat list of all incident codes (for convenience)
+ALL_INCIDENT_CODES = [
+    {"scriptKey": s["scriptKey"], "incidentCode": i["code"]}
+    for s in INCIDENT_SCRIPTS
+    for i in s["incidents"]
+]
+
+# ── Pipeline step definitions (13 steps, ordered) ──────────────────────
+# Each entry: (script_key, display_name)
+PIPELINE_STEPS = [
+    ("accuracy_template_generator", "Generate Templates"),
+    ("sql_extract_generator", "Generate SQL Extracts"),
+    ("collate_csv_extracts", "Collate CSV Extracts"),
+    ("buyer_id_validation", "Buyer ID Validation"),
+    ("seller_id_validation", "Seller ID Validation"),
+    ("inconsistent_buyer_id_validation", "Inconsistent Buyer ID"),
+    ("inconsistent_seller_id_validation", "Inconsistent Seller ID"),
+    ("validate_ftbdm", "Fund Trade Buyer DM"),
+    ("validate_ftsdm", "Fund Trade Seller DM"),
+    ("incorrect_net_amount_validation", "Incorrect Net Amount"),
+    ("non_zero_net_quantity", "Non-Zero Net Quantity"),
+    ("non_zero_net_amount", "Non-Zero Net Amount"),
+    ("data_push", "Data Push"),
+]
+
+# Grouped step keys for the pipeline editor
+PIPELINE_UTILITY_STEPS = [
+    "accuracy_template_generator",
+    "sql_extract_generator",
+    "collate_csv_extracts",
+]
+PIPELINE_VALIDATION_STEPS = [
+    "buyer_id_validation",
+    "seller_id_validation",
+    "inconsistent_buyer_id_validation",
+    "inconsistent_seller_id_validation",
+    "validate_ftbdm",
+    "validate_ftsdm",
+    "incorrect_net_amount_validation",
+    "non_zero_net_quantity",
+    "non_zero_net_amount",
+]
+PIPELINE_PUSH_STEPS = [
+    "data_push",
+]
+
+# Reconciliation script groups (matching API schema)
+RECONCILIATION_TRADE_BY_TRADE_SCRIPTS = [
+    ("buyer_id_validation", "Buyer ID Validation"),
+    ("seller_id_validation", "Seller ID Validation"),
+    ("validate_ftbdm", "Fund Trade Buyer DM"),
+    ("validate_ftsdm", "Fund Trade Seller DM"),
+]
+RECONCILIATION_INCONSISTENT_ID_SCRIPTS = [
+    ("inconsistent_buyer_id_validation", "Inconsistent Buyer ID"),
+    ("inconsistent_seller_id_validation", "Inconsistent Seller ID"),
+]
+
+# Schedule frequency choices (including quarterly for accuracy testing)
+SCHEDULE_FREQUENCIES = [
+    ("hourly", "Hourly"),
+    ("daily", "Daily"),
+    ("weekly", "Weekly (Mondays)"),
+    ("monthly", "Monthly (1st)"),
+    ("quarterly", "Quarterly (fiscal)"),
+    ("custom", "Custom (cron)"),
+]
+
+# Job statuses
+JOB_STATUS_PENDING = "pending"
+JOB_STATUS_RUNNING = "running"
+JOB_STATUS_WAITING = "waiting"
+JOB_STATUS_SUCCESS = "success"
+JOB_STATUS_FAILED = "failed"
+JOB_STATUS_CANCELLED = "cancelled"
+TERMINAL_JOB_STATUSES = frozenset(
+    {JOB_STATUS_SUCCESS, JOB_STATUS_FAILED, JOB_STATUS_CANCELLED}
+)
