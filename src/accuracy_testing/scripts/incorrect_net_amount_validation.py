@@ -200,38 +200,57 @@ class IncorrectNetAmountValidationScript:
         # Use safe_open_csv for automatic encoding detection
         f, encoding = safe_open_csv(self.input_file, 'r', newline='')
         self.logger.info(f"Detected encoding: {encoding}")
-        
+
+        def _to_decimal(raw: str, field: str, row_idx: int) -> Decimal:
+            """Convert a raw CSV string to Decimal, tolerating common formatting.
+
+            Strips surrounding whitespace and thousands-separator commas before
+            conversion.  Non-numeric values (e.g. ``N/A``) are logged as a
+            warning and treated as ``Decimal('0')``.
+            """
+            cleaned = raw.strip().replace(',', '')
+            if not cleaned:
+                return Decimal('0')
+            try:
+                return Decimal(cleaned)
+            except Exception:
+                self.logger.warning(
+                    f"Row {row_idx}: non-numeric value {raw!r} in column '{field}'; "
+                    "treating as 0"
+                )
+                return Decimal('0')
+
         try:
             with f:
                 reader = csv.reader(f)
                 header = next(reader)  # Skip header row
-                
+
                 for row_idx, row in enumerate(reader, start=2):  # Start at 2 (after header)
                     if len(row) < 4:  # Minimum required columns
                         self.logger.warning(f"Row {row_idx} has insufficient columns, skipping")
                         continue
-                    
+
                     try:
                         # Create record from row data (input only has 4 columns)
                         record = IncorrectNetAmountRecord(
                             transaction_ref=row[self.COL_TRANSACTION_REF].strip() if row[self.COL_TRANSACTION_REF] else "",
-                            net_amount=Decimal(row[self.COL_NET_AMOUNT]) if row[self.COL_NET_AMOUNT] else Decimal('0'),
-                            consideration=Decimal(row[self.COL_CONSIDERATION]) if row[self.COL_CONSIDERATION] else Decimal('0'),
-                            interest=Decimal(row[self.COL_INTEREST]) if row[self.COL_INTEREST] else Decimal('0'),
+                            net_amount=_to_decimal(row[self.COL_NET_AMOUNT], "Net Amount", row_idx),
+                            consideration=_to_decimal(row[self.COL_CONSIDERATION], "Consideration", row_idx),
+                            interest=_to_decimal(row[self.COL_INTEREST], "Interest", row_idx),
                             correction=None,
                             correction_field=None,
                             comments=None
                         )
                         records.append(record)
-                    
+
                     except (ValueError, IndexError) as e:
                         self.logger.error(f"Error parsing row {row_idx}: {e}")
                         continue
-        
+
         except Exception as e:
             self.logger.error(f"Error reading CSV file: {e}", exc_info=True)
             raise
-        
+
         self.logger.info(f"Successfully read {len(records)} records")
         return records
     

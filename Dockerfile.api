@@ -46,7 +46,7 @@ RUN groupadd --gid 1001 appuser && \
 # Copy application code
 # api/ and src/ may be empty/absent during early scaffolding — COPY is lenient
 # with trailing slashes but we guard with an explicit mkdir first.
-RUN mkdir -p /app/api /app/src /app/config /app/data/uploads
+RUN mkdir -p /app/api /app/src /app/config /app/data/uploads /app/data/logs /app/data/tmp
 
 COPY src/ /app/src/
 COPY api/ /app/api/

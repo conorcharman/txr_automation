@@ -817,10 +817,17 @@ class ScriptRunnerService:
                         "input_file": incident.input_file,
                         "template_file": incident.template_file,
                         "output_file": incident.output_file,
-                        "log_output": "logs",
+                        "log_output": "/app/data/logs",
                     },
                 },
             }
+
+            # Only write template column overrides when explicitly supplied — the
+            # scripts fall back to their own defaults when the keys are absent.
+            if incident.template_id_column is not None:
+                config["single"]["paths"]["template_id_column"] = incident.template_id_column
+            if incident.template_type_column is not None:
+                config["single"]["paths"]["template_type_column"] = incident.template_type_column
 
             tmp_path = _write_temp_yaml(config)
             argv = ["--config", tmp_path, "--log-level", req.log_level]

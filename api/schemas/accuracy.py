@@ -40,7 +40,7 @@ class BatchModeConfig(_CamelModel):
     input_directory: str
     output_directory: str
     template_directory: str
-    log_output: str = "logs"
+    log_output: str = "/app/data/logs"
 
 
 class SingleModeConfig(_CamelModel):
@@ -63,7 +63,7 @@ class SingleModeConfig(_CamelModel):
     output_file: str
     template_id_column: str = "Buyer identification code"
     template_type_column: str = "Type of buyer identification code"
-    log_output: str = "logs"
+    log_output: str = "/app/data/logs"
 
 
 class RunValidationRequest(_CamelModel):
@@ -115,7 +115,7 @@ class RunAllRequest(_CamelModel):
     output_directory: str
     template_directory: str
     log_level: str = "INFO"
-    log_output: str = "logs"
+    log_output: str = "/app/data/logs"
     dry_run: bool = False
     stop_on_error: bool = False
     selected_scripts: list[str] | None = None
@@ -166,6 +166,12 @@ class IncidentRunConfig(_CamelModel):
         input_file: Path to the extract CSV file for this incident.
         template_file: Path to the Kaizen template CSV file.
         output_file: Path for the validation results output file.
+        template_id_column: Column name for the identification code in the template.
+            When ``None`` the script uses its own default (e.g. ``"Buyer identification
+            code"``).  Override when the template uses a non-standard header such as
+            ``"Buyer ID Code"``.
+        template_type_column: Column name for the identification code type in the
+            template.  When ``None`` the script uses its own default.
     """
 
     script_name: str
@@ -173,6 +179,8 @@ class IncidentRunConfig(_CamelModel):
     input_file: str
     template_file: str
     output_file: str
+    template_id_column: str | None = None
+    template_type_column: str | None = None
 
 
 class RunIncidentsRequest(_CamelModel):

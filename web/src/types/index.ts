@@ -157,11 +157,13 @@ export interface IncidentSelection {
 }
 
 export interface IncidentRunConfig {
-  scriptKey: string;
+  scriptName: string;
   incidentCode: string;
   inputFile: string;
   templateFile: string;
   outputFile: string;
+  templateIdColumn?: string;
+  templateTypeColumn?: string;
 }
 
 export interface RunIncidentsRequest {

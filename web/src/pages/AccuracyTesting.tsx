@@ -226,7 +226,7 @@ const UnifiedValidationForm: React.FC = () => {
       runIncidents({
         testingPeriod: values.testingPeriod,
         incidents: incidentConfigs.map((c) => ({
-          scriptKey: c.scriptKey,
+          scriptName: c.scriptName,
           incidentCode: c.incidentCode,
           inputFile: c.inputFile,
           templateFile: c.templateFile,

@@ -69,6 +69,10 @@ function buildFileName(
   return `${code}_${fy}_${q}_${suffix}`;
 }
 
+function buildTemplateFileName(code: string, fy: string, q: string): string {
+  return `${fy} ${q} ${code}.csv`;
+}
+
 function deriveDefaults(
   code: string,
   fy: string,
@@ -86,10 +90,12 @@ function deriveDefaults(
       ? `${extractsDir}/${buildFileName(code, fy, q, "extract.csv")}`
       : "",
     templateFile: templatesDir
-      ? `${templatesDir}/${buildFileName(code, fy, q, "template.csv")}`
+      ? `${templatesDir}/${buildTemplateFileName(code, fy, q)}`
       : "",
     outputFile: outputBase
-      ? `${outputBase}/${buildFileName(code, fy, q, outputFileSuffix)}`
+      ? (outputFileSuffix === "template.csv"
+          ? `${outputBase}/${buildTemplateFileName(code, fy, q)}`
+          : `${outputBase}/${buildFileName(code, fy, q, outputFileSuffix)}`)
       : "",
   };
 }
@@ -127,7 +133,7 @@ const IncidentFileTable: React.FC<IncidentFileTableProps> = ({
 
     const next = incidents.map((inc) => {
       const existing = value.find(
-        (v) => v.scriptKey === inc.scriptKey && v.incidentCode === inc.incidentCode,
+        (v) => v.scriptName === inc.scriptKey && v.incidentCode === inc.incidentCode,
       );
       const defaults = deriveDefaults(
         inc.incidentCode,
@@ -139,7 +145,7 @@ const IncidentFileTable: React.FC<IncidentFileTableProps> = ({
       );
 
       return {
-        scriptKey: inc.scriptKey,
+        scriptName: inc.scriptKey,
         incidentCode: inc.incidentCode,
         inputFile: existing?.inputFile || defaults.inputFile,
         templateFile: existing?.templateFile || defaults.templateFile,
@@ -152,9 +158,9 @@ const IncidentFileTable: React.FC<IncidentFileTableProps> = ({
     const currentSerialised = JSON.stringify(
       incidents.map((inc) =>
         value.find(
-          (v) => v.scriptKey === inc.scriptKey && v.incidentCode === inc.incidentCode,
+          (v) => v.scriptName === inc.scriptKey && v.incidentCode === inc.incidentCode,
         ) ?? {
-          scriptKey: inc.scriptKey,
+          scriptName: inc.scriptKey,
           incidentCode: inc.incidentCode,
           inputFile: "",
           templateFile: "",
@@ -170,14 +176,14 @@ const IncidentFileTable: React.FC<IncidentFileTableProps> = ({
 
   const updateField = useCallback(
     (
-      scriptKey: string,
+      scriptName: string,
       incidentCode: string,
       field: "inputFile" | "templateFile" | "outputFile",
       newValue: string,
     ) => {
       onChange(
         value.map((c) =>
-          c.scriptKey === scriptKey && c.incidentCode === incidentCode
+          c.scriptName === scriptName && c.incidentCode === incidentCode
             ? { ...c, [field]: newValue }
             : c,
         ),
@@ -221,7 +227,7 @@ const IncidentFileTable: React.FC<IncidentFileTableProps> = ({
         <tbody>
           {incidents.map((inc) => {
             const config = value.find(
-              (v) => v.scriptKey === inc.scriptKey && v.incidentCode === inc.incidentCode,
+              (v) => v.scriptName === inc.scriptKey && v.incidentCode === inc.incidentCode,
             );
 
             return (

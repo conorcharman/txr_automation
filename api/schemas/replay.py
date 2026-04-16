@@ -29,7 +29,7 @@ class ReplayPhase2Request(_CamelModel):
     fiscal_year: str
     quarter: str
     log_level: str = "INFO"
-    log_output: str = "logs"
+    log_output: str = "/app/data/logs"
 
 
 class ReplayPhase3Request(_CamelModel):
@@ -51,7 +51,7 @@ class ReplayPhase3Request(_CamelModel):
     fiscal_year: str
     quarter: str
     log_level: str = "INFO"
-    log_output: str = "logs"
+    log_output: str = "/app/data/logs"
 
 
 class ReplayPhase3FinalRequest(_CamelModel):
@@ -71,7 +71,7 @@ class ReplayPhase3FinalRequest(_CamelModel):
     fiscal_year: str
     quarter: str
     log_level: str = "INFO"
-    log_output: str = "logs"
+    log_output: str = "/app/data/logs"
 
 
 class ReplayMergeRequest(_CamelModel):
