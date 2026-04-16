@@ -240,7 +240,9 @@ class XlsxConverterPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: xlsx-convert")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker("/api/utilities/xlsx-convert", payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint="/api/utilities/xlsx-convert", payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -250,12 +252,12 @@ class XlsxConverterPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if success:
+        if exit_code == 0:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         self._worker = None
 
 
@@ -408,7 +410,9 @@ class XmlConverterPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: xml-convert")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker("/api/utilities/xml-convert", payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint="/api/utilities/xml-convert", payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -418,12 +422,12 @@ class XmlConverterPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if success:
+        if exit_code == 0:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         self._worker = None
 
 
@@ -748,7 +752,9 @@ class CsvRecordFinderPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: csv-finder")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker("/api/utilities/csv-finder", payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint="/api/utilities/csv-finder", payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -758,12 +764,12 @@ class CsvRecordFinderPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if success:
+        if exit_code == 0:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         self._worker = None
 
 

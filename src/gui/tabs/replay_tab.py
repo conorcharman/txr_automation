@@ -416,7 +416,9 @@ class BaseReplayPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line(f"[GUI] Running: {self._api_endpoint}")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(self._api_endpoint, payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint=self._api_endpoint, payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -426,12 +428,13 @@ class BaseReplayPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
+        success = exit_code == 0
         if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         _update_last_run(self._last_run, self._pfx, success)
         self._worker = None
 
@@ -673,7 +676,9 @@ class MergeInconsistentPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: replay-merge")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker("/api/replay/merge", payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint="/api/replay/merge", payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -683,12 +688,13 @@ class MergeInconsistentPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
+        success = exit_code == 0
         if success:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         _update_last_run(self._last_run, self._pfx, success)
         self._worker = None
 

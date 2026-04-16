@@ -181,7 +181,9 @@ class GleifCacheRefreshPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: gleif-refresh")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker("/api/gleif/refresh", payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint="/api/gleif/refresh", payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -191,12 +193,12 @@ class GleifCacheRefreshPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if success:
+        if exit_code == 0:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         self._worker = None
 
 
@@ -476,7 +478,9 @@ class LeiCheckPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: gleif-check")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker("/api/gleif/check", payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint="/api/gleif/check", payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -606,12 +610,12 @@ class LeiCheckPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if success:
+        if exit_code == 0:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         self._worker = None
 
 
@@ -725,7 +729,9 @@ class GleifBackfillPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: gleif-backfill")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker("/api/gleif/backfill", payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint="/api/gleif/backfill", payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -735,12 +741,12 @@ class GleifBackfillPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if success:
+        if exit_code == 0:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         self._worker = None
 
 

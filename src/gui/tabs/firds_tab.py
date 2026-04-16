@@ -153,7 +153,9 @@ class CacheRefreshPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: firds-refresh")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker("/api/firds/refresh", payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint="/api/firds/refresh", payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -163,12 +165,12 @@ class CacheRefreshPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if success:
+        if exit_code == 0:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         self._worker = None
 
 
@@ -394,7 +396,9 @@ class ReportabilityCheckPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: firds-check")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker("/api/firds/check", payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint="/api/firds/check", payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -488,12 +492,12 @@ class ReportabilityCheckPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if success:
+        if exit_code == 0:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         self._worker = None
 
 
@@ -609,7 +613,9 @@ class BackfillPanel(QWidget):
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: firds-backfill")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker("/api/firds/backfill", payload, self._client)
+        self._worker = ApiWorker(
+            client=self._client, endpoint="/api/firds/backfill", payload=payload
+        )
         self._worker.output_line.connect(self.log_viewer.append_line)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
@@ -619,12 +625,12 @@ class BackfillPanel(QWidget):
             self._worker.terminate()
             self.log_viewer.append_error("[GUI] Cancelled by user")
 
-    def _on_finished(self, success: bool) -> None:
+    def _on_finished(self, exit_code: int) -> None:
         self.run_controls.set_running(False)
-        if success:
+        if exit_code == 0:
             self.log_viewer.append_line("[GUI] Completed successfully")
         else:
-            self.log_viewer.append_error("[GUI] Failed")
+            self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         self._worker = None
 
 
