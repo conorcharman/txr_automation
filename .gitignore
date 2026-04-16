@@ -114,3 +114,8 @@ Thumbs.db
 
 # Package manager
 .uv/
+
+# Celery
+
+celerybeat-schedule
+data/celerybeat-schedule
