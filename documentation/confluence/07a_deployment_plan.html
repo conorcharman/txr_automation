@@ -24,10 +24,10 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Deployment &amp; Transition Plan</p>
-<p class="last-updated">Last updated: 9 April 2026</p>
+<p class="last-updated">Last updated: 15 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-DeploymentPlan&amp;Roadmap">Deployment Plan &amp; Roadmap</h1>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
-<strong>Current status:</strong> Phases 0&ndash;5 complete. Phase 6 (Integration &amp; Testing) in progress. Phase 9 (Fullstack Web Application) in progress. Phase 7 (Deployment &amp; Transition) and Phase 8 (Unified CLI) not yet started.
+<strong>Current status:</strong> Phases 0&ndash;5 complete. Phase 6 (Integration &amp; Testing) in progress. Phase 9 (Fullstack Web Application) substantially complete &mdash; 10-page React SPA, 13 API routers, Reconciliation, Pipelines, and GLEIF name search all delivered. Phase 7 (Deployment &amp; Transition) and Phase 8 (Unified CLI) not yet started.
 </div>
 <h2 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-TableofContents">Table of Contents</h2>
 <ul>
@@ -262,7 +262,7 @@ What would you like to do?
 </table></div>
 <span class="confluence-anchor-link" id="id-7a.Deployment&amp;TransitionPlan-phase9"><span class="confluence-anchor-link" id="phase9" /></span><h2 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-Phase9:FullstackWebApplication">Phase 9: Fullstack Web Application</h2>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
-<strong>Status:</strong> In progress. Provides a browser-based alternative to the PySide6 desktop GUI, deployed via Docker Compose.
+<strong>Status:</strong> Substantially complete. Provides a browser-based alternative to the PySide6 desktop GUI, deployed via Docker Compose. Features 10 pages, 13 REST route groups, Reconciliation scheduling, multi-step accuracy testing Pipelines, GLEIF entity-name search, saved configurations, and real-time WebSocket log streaming.
 </div>
 <h3 style="color: rgb(23,43,77);" id="id-7a.Deployment&amp;TransitionPlan-WebAppArchitecture">Architecture</h3>
 <div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
@@ -277,7 +277,7 @@ What would you like to do?
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">API</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FastAPI + Uvicorn</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">REST API with 9 routers, async SQLAlchemy + PostgreSQL</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">REST API with 13 routers (accuracy, configs, dashboard, filesystem, firds, gleif, health, jobs, pipeline, reconciliation, replay, scheduler, utilities), async SQLAlchemy + PostgreSQL</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Task queue</td>

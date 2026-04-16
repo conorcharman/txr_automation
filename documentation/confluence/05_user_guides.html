@@ -24,7 +24,7 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; User Guides</p>
-<p class="last-updated">Last updated: 9 April 2026</p>
+<p class="last-updated">Last updated: 15 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-5.UserGuides-UserGuides">User Guides</h1>
 <h2 style="color: rgb(23,43,77);" id="id-5.UserGuides-TableofContents">Table of Contents</h2>
 <ul>
@@ -324,34 +324,180 @@ txr-tray
 
 <span class="confluence-anchor-link" id="id-5.UserGuides-webapp"><span class="confluence-anchor-link" id="webapp" /></span><h2 style="color: rgb(23,43,77);" id="id-5.UserGuides-WebApplication">Web Application</h2>
 
-<p>The fullstack web application provides a browser-based interface to all TXR Automation functionality, deployed via Docker Compose.</p>
+<p>The fullstack web application provides a browser-based interface to all TXR Automation functionality, deployed via Docker Compose. It comprises a React 19 single-page application (SPA) served by Nginx, a FastAPI backend, Celery task workers, and PostgreSQL/Redis persistence.</p>
 <h3 style="color: rgb(23,43,77);">Starting the Web Application</h3>
 <div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
 <pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
-# Start all services
+# Start all services (development — source-mounted, hot reload)
 docker compose up --build
 
-# Access the web interface at http://localhost
-# API documentation at http://localhost/api/docs
+# Production (optimised images, health checks, memory limits)
+docker compose -f docker-compose.prod.yml up --build
+
+# Access the web interface at http://localhost:3000
+# API documentation (dev only) at http://localhost:8000/docs
 </pre>
 </div></div>
-<h3 style="color: rgb(23,43,77);">Key Features</h3>
-<ul>
-<li style="margin-bottom: 6.0px;"><strong>Dashboard</strong> &mdash; overview of recent runs, system status, and quick actions</li>
-<li style="margin-bottom: 6.0px;"><strong>Accuracy Testing</strong> &mdash; run validations, view results, and manage configurations through the browser</li>
-<li style="margin-bottom: 6.0px;"><strong>Real-time Logs</strong> &mdash; WebSocket-streamed task output visible in the browser as scripts execute</li>
-<li style="margin-bottom: 6.0px;"><strong>Schedule Management</strong> &mdash; create, edit, and monitor automated schedules</li>
-<li style="margin-bottom: 6.0px;"><strong>Run History</strong> &mdash; browse previous task executions with status, duration, and output</li>
-</ul>
-<h3 style="color: rgb(23,43,77);">Architecture</h3>
+
+<h3 style="color: rgb(23,43,77);">Pages</h3>
+<p>The SPA uses React Router and provides the following 10 pages:</p>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Route</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Page</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Purpose</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Dashboard</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Stat cards (jobs today, running now, 7-day success rate, saved configs count), auto-refreshing every 10 seconds. Recent 5 jobs listed with status badges and links to detail view.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/accuracy</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Accuracy Testing</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Two-tab layout (Validation / Utilities). <em>Validation tab:</em> sidebar with 9 validation scripts; each form has SmartPathConfig, TestingPeriodSelector (FY/quarter), incident checklist with auto-discovery, ConfigLoader to save/reload configs, and advanced options (log level, dry-run). <em>Utilities tab:</em> SQL extract generator, accuracy template generator, collate CSV extracts, data push, run-all validations.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/replay</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Replay</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Four sections: <em>Phase II &mdash; Replay Processing</em>, <em>Phase III &mdash; Feedback</em>, <em>Phase III &mdash; Final Lookup</em>, and <em>Merge Inconsistent Summaries</em>. Forms persist input paths to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">localStorage</code>. Each section shows the last run badge and navigates to the job detail page on submission.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/firds</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>FIRDS</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Three sections: <em>Refresh Database</em> (full/delta cache rebuild as background job), <em>Check Reportability</em> (CSV batch job), and <em>Backfill Data</em>. Additionally, an inline <strong>instant lookup</strong> form queries <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/firds/lookup</code> synchronously and displays the reportability result immediately without creating a job.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/gleif</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>GLEIF</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Three sections: <em>Refresh Database</em>, <em>Check LEI</em> (CSV batch), and <em>Backfill Data</em>. Additionally, an inline <strong>instant LEI lookup</strong> via <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/gleif/lookup</code> and an <strong>entity name search</strong> via <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/gleif/search</code> that returns the top 20 matching entities from the local FTS5 cache.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/utilities</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Utilities</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Two sections: <em>XLSX Converter</em> (single-directory or batch parent-directory mode with optional year/quarter/phase filters) and <em>XML Converter</em> (single file to CSV). Both dispatch background Celery jobs.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/scheduler</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Scheduler</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Two tabs: <em>Schedules</em> and <em>Pipelines</em>. <em>Schedules</em> create single-script scheduled runs for any of the 27 registered scripts with hourly/daily/weekly/monthly/quarterly/custom (cron) frequencies, enable/disable toggle, and manual trigger. <em>Pipelines</em> define ordered multi-step accuracy testing workflows with shared fiscal year/quarter, optional stop-on-error, and per-stage overrides.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/reconciliation</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Reconciliation</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Manage scheduled reconciliation runs that execute a configurable selection of validation scripts on a recurring basis. Scripts are grouped into <em>trade-by-trade</em> and <em>aggregate</em> categories. Supports the same frequency options as Schedules. Cards show the last status, next run time, and enable/disable/trigger controls.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/jobs</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Job History</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Paginated list of all jobs auto-refreshing every 5 seconds. Each card shows script name, status badge (pending/running/success/failed/cancelled), creation time, and a link to the detail view. A settings panel (collapsible) allows setting the global log output directory persisted to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">localStorage</code>.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/jobs/:jobId</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>Job Detail</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Full job detail with status, timestamps (created, started, completed), config snapshot, output files list, and a real-time log viewer that streams output via WebSocket (<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">WS /api/ws/jobs/{jobId}/logs</code>) while the job is running and shows the captured <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">log_output</code> field for completed jobs.</td>
+</tr>
+</tbody>
+</table></div>
+
+<h3 style="color: rgb(23,43,77);">Saved Configurations</h3>
+<p>All script forms in the web application support saving and reloading parameter sets via the <strong>ConfigLoader</strong> component. Configurations are stored server-side in PostgreSQL and namespaced by script name, making them available across browser sessions and machines.</p>
+<div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
+<pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
+# REST endpoints used by ConfigLoader
+GET    /api/configs?script_name=buyer_id_validation  &mdash; list saved configs for a script
+POST   /api/configs                                   &mdash; save current form values
+PUT    /api/configs/{id}                              &mdash; update a saved config
+DELETE /api/configs/{id}                              &mdash; remove a saved config
+</pre>
+</div></div>
+
+<h3 style="color: rgb(23,43,77);">API Endpoint Reference</h3>
+<div class="table-wrap"><table style="border-collapse: collapse;width: 100.0%;margin: 16.0px 0;" width="100%" class="confluenceTable">
+<thead><tr>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Router</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Endpoints</th>
+<th align="left" bgcolor="#F4F5F7" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;background-color: rgb(244,245,247);font-weight: 600;" class="confluenceTh" valign="top">Description</th>
+</tr></thead>
+<tbody>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>health</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/health</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Liveness check returning <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">{"status": "ok", "version": "1.0.0"}</code></td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>dashboard</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/dashboard/stats</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Aggregated stats: jobs today, running now, 7-day success rate, total saved configs</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>jobs</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/jobs</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/jobs/last-runs</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/jobs/{id}</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/jobs</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/jobs/{id}/cancel</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">WS /api/ws/jobs/{id}/logs</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Job lifecycle management. WebSocket streams live Redis pub/sub messages per job channel.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>configs</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET/POST /api/configs</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET/PUT/DELETE /api/configs/{id}</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CRUD for saved script configurations. Filterable by <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">?script_name=</code>.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>accuracy</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/accuracy/scripts</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/accuracy/run</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/accuracy/run-all</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/accuracy/run-incidents</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Trigger accuracy validation scripts. <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">run-incidents</code> runs multiple incidents sequentially from a single request.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>replay</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/replay/scripts</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/replay/phase2</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/replay/phase3</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/replay/phase3-final</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/replay/merge</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Trigger replay processing scripts as background Celery jobs.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>firds</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/firds/scripts</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/firds/lookup</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/firds/refresh</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/firds/check</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/firds/backfill</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FIRDS cache operations. <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">lookup</code> is synchronous (no job created); accepts <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">?isin=&amp;date=&amp;mic=</code>.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>gleif</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/gleif/scripts</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/gleif/lookup</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/gleif/search</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/gleif/refresh</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/gleif/check</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/gleif/backfill</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">GLEIF cache operations. <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">lookup</code> is synchronous; <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">search</code> performs FTS5 entity name search returning up to 20 results.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>utilities</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/utilities/scripts</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/utilities/xlsx-convert</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/utilities/xml-convert</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">File conversion utilities dispatched as background Celery jobs.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>filesystem</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET /api/filesystem/browse</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Read-only server directory browser used by the path-picker component. Restricted to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/app/data</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/app/config</code>, <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/app/src</code>. Rejects symlinks outside the allow-list.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>scheduler</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET/POST /api/schedules</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET/PUT/DELETE /api/schedules/{id}</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/schedules/{id}/trigger</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/schedules/{id}/toggle</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CRUD for single-script scheduled runs. Frequencies: hourly, daily, weekly, monthly, quarterly, custom (cron).</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>pipelines</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET/POST /api/pipelines</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET/PUT/DELETE /api/pipelines/{id}</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/pipelines/{id}/trigger</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/pipelines/{id}/toggle</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CRUD for multi-step accuracy testing pipelines. Pipelines store an ordered <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">selected_scripts</code> array drawn from 13 permitted accuracy scripts.</td>
+</tr>
+<tr>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><strong>reconciliations</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET/POST /api/reconciliations</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">GET/PUT/DELETE /api/reconciliations/{id}</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/reconciliations/{id}/trigger</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">POST /api/reconciliations/{id}/toggle</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CRUD for reconciliation schedules. At least one script must be selected; invalid script keys are rejected with HTTP 400.</td>
+</tr>
+</tbody>
+</table></div>
+
+<h3 style="color: rgb(23,43,77);">Docker Services</h3>
 <p>The web application comprises 6 Docker services:</p>
 <ul>
-<li style="margin-bottom: 6.0px;"><strong>Web (Nginx)</strong> &mdash; serves the React SPA and reverse-proxies API/WebSocket requests</li>
-<li style="margin-bottom: 6.0px;"><strong>API (FastAPI)</strong> &mdash; REST API with 9 route groups, Swagger/OpenAPI documentation</li>
-<li style="margin-bottom: 6.0px;"><strong>Celery Worker</strong> &mdash; executes validation scripts asynchronously</li>
-<li style="margin-bottom: 6.0px;"><strong>Celery Beat</strong> &mdash; periodic task scheduler</li>
-<li style="margin-bottom: 6.0px;"><strong>Redis</strong> &mdash; message broker for Celery and pub/sub for WebSocket log streaming</li>
-<li style="margin-bottom: 6.0px;"><strong>PostgreSQL</strong> &mdash; persistent storage for schedules, run history, and configuration</li>
+<li style="margin-bottom: 6.0px;"><strong>Web (Nginx)</strong> &mdash; serves the React SPA on port 3000 (dev) / 80 (prod) and reverse-proxies <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/api/ws/</code> (WebSocket, 86400 s timeout) and <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/api/</code> (REST) to the API service; all unmatched routes fall back to <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">index.html</code> for client-side routing</li>
+<li style="margin-bottom: 6.0px;"><strong>API (FastAPI/Uvicorn)</strong> &mdash; REST API with 13 route groups and an OpenAPI schema available in dev at <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">/docs</code> (disabled in production)</li>
+<li style="margin-bottom: 6.0px;"><strong>Celery Worker</strong> &mdash; executes validation scripts asynchronously; captures stdout/stderr and publishes log lines to Redis pub/sub</li>
+<li style="margin-bottom: 6.0px;"><strong>Celery Beat</strong> &mdash; periodic task scheduler; fires <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">check_and_run_schedules</code> to trigger due schedules, pipelines, and reconciliation runs</li>
+<li style="margin-bottom: 6.0px;"><strong>Redis 7</strong> &mdash; message broker for Celery and pub/sub channel per job for WebSocket log streaming</li>
+<li style="margin-bottom: 6.0px;"><strong>PostgreSQL 16</strong> &mdash; persistent storage for jobs, schedules, pipelines, reconciliation schedules, and saved configurations</li>
 </ul>
 
 <span class="confluence-anchor-link" id="id-5.UserGuides-troubleshooting"><span class="confluence-anchor-link" id="troubleshooting" /></span><h2 style="color: rgb(23,43,77);" id="id-5.UserGuides-Troubleshooting">Troubleshooting</h2>
