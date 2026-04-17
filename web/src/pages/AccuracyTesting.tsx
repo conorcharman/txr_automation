@@ -1029,13 +1029,17 @@ const DataPushForm: React.FC = () => {
   });
 
   const onSubmit = (values: UtilityBaseValues) => {
+    if (!resolvedPaths?.output || !resolvedPaths?.templates) {
+      toast.error("Paths have not resolved yet — please wait for the Directories section to load.");
+      return;
+    }
     mutation.mutate({
       scriptName: "data_push",
       testingPeriod: values.testingPeriod,
       mode: "batch",
       batchConfig: {
-        inputDirectory: resolvedPaths?.output ?? "",
-        outputDirectory: resolvedPaths?.templates ?? "",
+        inputDirectory: resolvedPaths.output,
+        outputDirectory: resolvedPaths.templates,
         templateDirectory: "",
         logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
       },
@@ -1045,6 +1049,7 @@ const DataPushForm: React.FC = () => {
   };
 
   const isPending = mutation.isPending;
+  const pathsReady = !!(resolvedPaths?.output && resolvedPaths?.templates);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-2xl">
@@ -1106,8 +1111,8 @@ const DataPushForm: React.FC = () => {
         </div>
       </AdvancedSection>
 
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
+      <Button type="submit" disabled={isPending || !pathsReady} className="w-full">
+        {isPending ? "Running…" : !pathsReady ? "Waiting for paths…" : "Run"}
       </Button>
     </form>
   );

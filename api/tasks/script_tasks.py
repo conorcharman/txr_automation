@@ -206,6 +206,9 @@ def run_script(
     ]
 
     try:
+        # Evict any cached version so that volume-mounted src/ changes are
+        # always picked up without requiring a worker restart.
+        sys.modules.pop(module_path, None)
         module = importlib.import_module(module_path)
 
         with contextlib.redirect_stdout(output_buffer), contextlib.redirect_stderr(
@@ -339,6 +342,7 @@ def run_incidents(
         full_output.write(header + "\n")
 
         try:
+            sys.modules.pop(module_path, None)
             module = importlib.import_module(module_path)
             script_buffer = io.StringIO()
 
