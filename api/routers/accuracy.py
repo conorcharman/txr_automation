@@ -143,9 +143,7 @@ async def run_incident_validations(
         for module_path, argv, snapshot in incident_tuples
     ]
 
-    script_label = (
-        f"run_incidents ({len(body.incidents)} incident(s))"
-    )
+    script_label = "Accuracy Testing"
     config_snapshot = {
         "testing_period": body.testing_period.model_dump(),
         "incidents": [inc.model_dump() for inc in body.incidents],

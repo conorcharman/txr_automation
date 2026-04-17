@@ -108,6 +108,12 @@ const JobDetail: React.FC = () => {
   const canCancel = job.status === "running" || job.status === "pending";
   const isRunning = job.status === "running";
 
+  const incidentCodes: string[] = (() => {
+    const incidents = job.configSnapshot?.incidents;
+    if (!Array.isArray(incidents)) return [];
+    return incidents.map((inc) => (inc as Record<string, unknown>).incident_code as string).filter(Boolean);
+  })();
+
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
@@ -130,6 +136,25 @@ const JobDetail: React.FC = () => {
           </Button>
         )}
       </div>
+
+      {/* Incidents */}
+      {incidentCodes.length > 0 && (
+        <div>
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+            Incidents ({incidentCodes.length})
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {incidentCodes.map((code) => (
+              <span
+                key={code}
+                className="inline-flex items-center rounded-md border border-border bg-muted px-2 py-0.5 text-xs font-mono text-foreground"
+              >
+                {code}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Metadata */}
       <div className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-3">

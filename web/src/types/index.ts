@@ -60,6 +60,7 @@ export interface JobResponse {
   errorMessage: string | null;
   outputFiles: string[] | null;
   logOutput: string | null;
+  configSnapshot: Record<string, unknown> | null;
 }
 
 export interface CreateJobRequest {
