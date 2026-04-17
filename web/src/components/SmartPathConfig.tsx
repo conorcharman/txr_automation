@@ -16,6 +16,16 @@ interface SmartPathConfigProps {
   fiscalYear: string;
   /** Current quarter, e.g. "Q1". */
   quarter: string;
+  /**
+   * Module sub-directory inserted between the quarter and stage dirs.
+   * Use "accuracy_testing" or "replay" to keep the two separate.
+   */
+  module?: string;
+  /**
+   * Which stage directories to show in the summary and override panels.
+   * Defaults to all five stages when omitted.
+   */
+  visibleStages?: readonly ("kaizen" | "extracts" | "templates" | "output" | "logs")[];
   /** Called when resolved paths change. */
   onChange: (paths: ResolvedPaths) => void;
   /** Disable all inputs. */
@@ -40,9 +50,12 @@ const Label: React.FC<{ text: string; value: string }> = ({ text, value }) => (
 const SmartPathConfig: React.FC<SmartPathConfigProps> = ({
   fiscalYear,
   quarter,
+  module,
+  visibleStages,
   onChange,
   disabled = false,
 }) => {
+  const stages = visibleStages ?? (["kaizen", "extracts", "templates", "output", "logs"] as const);
   const [overridesOpen, setOverridesOpen] = useState(false);
   const [overrides, setOverrides] = useState<Record<string, string>>({});
   const [resolved, setResolved] = useState<ResolvedPaths | null>(null);
@@ -55,16 +68,17 @@ const SmartPathConfig: React.FC<SmartPathConfigProps> = ({
     },
   });
 
-  // Resolve paths whenever FY/Q changes (and on mount).
+  // Resolve paths whenever FY/Q/module changes (and on mount).
   useEffect(() => {
     if (!fiscalYear || !quarter) return;
     mutation.mutate({
       fiscalYear,
       quarter,
+      module: module ?? null,
       overrides: Object.keys(overrides).length > 0 ? overrides : null,
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fiscalYear, quarter]);
+  }, [fiscalYear, quarter, module]);
 
   const handleOverrideChange = useCallback(
     (stage: string, value: string) => {
@@ -80,9 +94,10 @@ const SmartPathConfig: React.FC<SmartPathConfigProps> = ({
     mutation.mutate({
       fiscalYear,
       quarter,
+      module: module ?? null,
       overrides: Object.keys(overrides).length > 0 ? overrides : null,
     });
-  }, [fiscalYear, quarter, overrides, mutation]);
+  }, [fiscalYear, quarter, module, overrides, mutation]);
 
   if (!fiscalYear || !quarter) return null;
 
@@ -105,11 +120,13 @@ const SmartPathConfig: React.FC<SmartPathConfigProps> = ({
         )}
         {resolved && (
           <div className="space-y-0.5">
-            <Label text="Kaizen" value={overrides.kaizen || resolved.kaizen} />
-            <Label text="Extracts" value={overrides.extracts || resolved.extracts} />
-            <Label text="Templates" value={overrides.templates || resolved.templates} />
-            <Label text="Output" value={overrides.output || resolved.output} />
-            <Label text="Logs" value={overrides.logs || resolved.logs} />
+            {stages.map((stage) => (
+              <Label
+                key={stage}
+                text={stage.charAt(0).toUpperCase() + stage.slice(1)}
+                value={overrides[stage] || resolved[stage]}
+              />
+            ))}
           </div>
         )}
       </div>
@@ -131,7 +148,7 @@ const SmartPathConfig: React.FC<SmartPathConfigProps> = ({
         </button>
         {overridesOpen && (
           <div className="space-y-3 px-3 pb-3">
-            {(["kaizen", "extracts", "templates", "output", "logs"] as const).map(
+            {stages.map(
               (stage) => (
                 <div key={stage} className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-muted-foreground capitalize">

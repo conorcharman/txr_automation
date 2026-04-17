@@ -5,11 +5,12 @@ Replay Router
 REST endpoints for triggering replay processing scripts as background jobs.
 
 Endpoints:
-    GET  /api/replay/scripts       — List registered replay script names
-    POST /api/replay/phase2        — Run the Phase 2 replay processor
-    POST /api/replay/phase3        — Run the Phase 3 replay processor
-    POST /api/replay/phase3-final  — Run the Phase 3 final lookup processor
-    POST /api/replay/merge         — Merge Phase 3 Inconsistent ID summary files
+    GET  /api/replay/scripts        — List registered replay script names
+    POST /api/replay/phase2         — Run the Phase 2 replay processor
+    POST /api/replay/phase2-final   — Run the Phase 2 final lookup processor
+    POST /api/replay/phase3         — Run the Phase 3 replay processor
+    POST /api/replay/phase3-final   — Run the Phase 3 final lookup processor
+    POST /api/replay/merge          — Merge Phase 3 Inconsistent ID summary files
 """
 
 import logging
@@ -21,6 +22,7 @@ from api.database import get_db
 from api.schemas.jobs import JobResponse
 from api.schemas.replay import (
     ReplayMergeRequest,
+    ReplayPhase2FinalRequest,
     ReplayPhase2Request,
     ReplayPhase3FinalRequest,
     ReplayPhase3Request,
@@ -37,6 +39,7 @@ _REPLAY_SCRIPTS: list[str] = sorted(
     [
         "replay_merge_inconsistent",
         "replay_phase2",
+        "replay_phase2_final",
         "replay_phase3",
         "replay_phase3_final",
     ]
@@ -77,6 +80,34 @@ async def run_replay_phase2(
 
     run_script.delay(str(job.id), module_path, argv, config_snapshot)
     logger.info("Dispatched replay phase2 task for job %s.", job.id)
+
+    return JobResponse.from_orm_job(job)
+
+
+@router.post("/replay/phase2-final", response_model=JobResponse)
+async def run_replay_phase2_final(
+    body: ReplayPhase2FinalRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JobResponse:
+    """Run the Phase 2 final lookup processor as a background Celery job.
+
+    Phase 2 final lookup validates corrections from the Phase 2 output against
+    UnaVista transaction data, annotating any discrepancies.
+
+    Args:
+        body: Validated ``ReplayPhase2FinalRequest`` from the request body.
+        db: Async database session injected by FastAPI.
+
+    Returns:
+        A ``JobResponse`` for the newly created pending job.
+    """
+    module_path, argv, config_snapshot = script_runner_service.build_replay_argv(
+        body, "replay_phase2_final"
+    )
+    job = await job_service.create_job(db, "replay_phase2_final", config_snapshot)
+
+    run_script.delay(str(job.id), module_path, argv, config_snapshot)
+    logger.info("Dispatched replay phase2-final task for job %s.", job.id)
 
     return JobResponse.from_orm_job(job)
 

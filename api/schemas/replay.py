@@ -32,6 +32,28 @@ class ReplayPhase2Request(_CamelModel):
     log_output: str = "/app/data/logs"
 
 
+class ReplayPhase2FinalRequest(_CamelModel):
+    """Request body for Phase 2 final lookup processing.
+
+    Attributes:
+        replay_output_file: Path to the directory containing Phase 2 processor output CSV files.
+        unavista_files: Path to the directory containing UnaVista transaction CSV files.
+        output_file: Path to the directory for annotated final lookup output files.
+        fiscal_year: Fiscal year string, e.g. ``"FY26"``.
+        quarter: Quarter string, e.g. ``"Q1"``.
+        log_level: Logging verbosity (default: ``"INFO"``).
+        log_output: Directory for log files (default: ``"logs"``)
+    """
+
+    replay_output_file: str
+    unavista_files: str
+    output_file: str
+    fiscal_year: str
+    quarter: str
+    log_level: str = "INFO"
+    log_output: str = "/app/data/logs"
+
+
 class ReplayPhase3Request(_CamelModel):
     """Request body for Phase 3 replay processing.
 

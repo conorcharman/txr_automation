@@ -301,6 +301,7 @@ const UnifiedValidationForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
+        module="accuracy_testing"
         onChange={handlePathsResolved}
         disabled={isPending}
       />
@@ -538,6 +539,7 @@ const TemplateGeneratorForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
+        module="accuracy_testing"
         onChange={handlePathsResolved}
         disabled={isPending}
       />
@@ -749,6 +751,7 @@ const ExtractGeneratorForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
+        module="accuracy_testing"
         onChange={handlePathsResolved}
         disabled={isPending}
       />
@@ -952,6 +955,7 @@ const CollateExtractsForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
+        module="accuracy_testing"
         onChange={setResolvedPaths}
         disabled={isPending}
       />
@@ -1073,6 +1077,7 @@ const DataPushForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
+        module="accuracy_testing"
         onChange={setResolvedPaths}
         disabled={isPending}
       />

@@ -32,6 +32,14 @@ from core import (
     get_client_types,
 )
 
+# Import identity-based incident file indexer from the Feedback stage for
+# cross-reference. IncidentFileIndex from phase_3_processor uses buyer/seller/DM
+# identity indexes (not transaction-reference based).
+from .phase_3_processor import (
+    IncidentFileIndex as IncidentIdentityIndex,
+    IncidentColumnMapper as IncidentIdentityColumnMapper,
+)
+
 # ============================================================================
 # Data Classes
 # ============================================================================
@@ -852,18 +860,34 @@ class Phase3FinalLookup:
         self.data_reference_path = self.config.get('paths', {}).get('unavista_files', '')
         self.output_path = self.config.get('paths', {}).get('replay_output', '')
         self.log_output_path = self.config.get('paths', {}).get('log_output', self.output_path)
+
+        # Optional: incident files for cross-reference
+        # If not configured, cross-reference is silently skipped.
+        self.incident_files_path: str = self.config.get('paths', {}).get('incident_files', '')
         
         # File patterns from config
         files_config = self.config.get('files', {})
         self.unavista_pattern = files_config.get('unavista_pattern', 'UnaVista_MiFIR_Manual_Corrections_*.csv')
         self.replay_ids_pattern = files_config.get('replay_ids_pattern', 'Replay_*_Inconsistent_IDs_Summary_FINAL*.csv')
         self.replay_names_pattern = files_config.get('replay_names_pattern', 'Replay_*_Inconsistent_Names_Summary_FINAL*.csv')
+        self.incident_pattern: str = files_config.get('incident_pattern', '*.csv')
         # Note: incident_matrix no longer loaded from file - in core library
+
+        # Column config for incident file cross-reference (identity columns).
+        # Uses 'source_incident_columns' if present; falls back to 'incident_columns'.
+        self.source_incident_columns: Dict[str, str] = (
+            self.config.get('source_incident_columns')
+            or self.config.get('incident_columns', {})
+        )
+
+        # Incident identity indexes for cross-reference (populated by load_indexes)
+        self.incident_indexes: Dict[str, IncidentIdentityIndex] = {}
         
         # Actual file paths (will be set by find_files)
         self.unavista_paths: List[str] = []
         self.replay_ids_path = None
         self.replay_names_path = None
+        self.incident_files_path_confirmed: bool = False
         
         # Setup logging using core library
         log_level = self.config.get('processor', {}).get('log_level', 'INFO')
@@ -881,7 +905,8 @@ class Phase3FinalLookup:
         self.stats.increment('partial_pass', 0)
         self.stats.increment('full_fail', 0)
         self.stats.increment('inconsistent_corrections', 0)
-        
+        self.stats.increment('cross_ref_discrepancies', 0)
+
         # Additional detailed stats (will use dict for complex nested stats)
         self.field_stats = defaultdict(lambda: {'pass': 0, 'fail': 0})
         self.buyer_stats = {'tested': 0, 'pass': 0, 'fail': 0}
@@ -954,9 +979,252 @@ class Phase3FinalLookup:
         
         # Load all UnaVista files into a single combined index
         self.unavista_index = UnaVistaIndex(self.unavista_paths, self.logger)
-        
+
+        # Optionally preload incident files for cross-reference
+        if self.incident_files_path and self.source_incident_columns:
+            self._preload_incident_indexes()
+        else:
+            self.logger.info(
+                "incident_files path or source_incident_columns not configured — "
+                "cross-reference will be skipped"
+            )
+
         self.logger.info("All indexes loaded successfully")
-    
+
+    # ------------------------------------------------------------------ #
+    # Incident file discovery and cross-reference (v2.1 additions)
+    # ------------------------------------------------------------------ #
+
+    def find_incident_file(self, incident_code: str) -> Optional[str]:
+        """Find the incident file for a given code using a four-tier glob strategy.
+
+        Tier 1: Exact match using pattern prefix + space + code.
+        Tier 2: Dash-separated variant for backwards compatibility.
+        Tier 3: Space-anchored glob with exact code (avoids substring collisions).
+        Tier 4: Space-anchored glob with suffix; regex-filtered for collision safety.
+
+        Args:
+            incident_code: Incident code string, e.g. ``"7_66"``.
+
+        Returns:
+            Absolute path to the incident file, or None if not found.
+        """
+        pattern_prefix = self.incident_pattern.replace('*.csv', '').strip()
+
+        # Tier 1: "FY25 Q4 7_66.csv"
+        path = os.path.join(self.incident_files_path, f"{pattern_prefix} {incident_code}.csv")
+        if os.path.exists(path):
+            return path
+
+        # Tier 2: "FY25 Q4 - 7_66.csv"
+        path_dash = os.path.join(
+            self.incident_files_path, f"{pattern_prefix} - {incident_code}.csv"
+        )
+        if os.path.exists(path_dash):
+            return path_dash
+
+        # Tier 3: "* 7_66.csv" (exact, space-anchored)
+        matches = glob.glob(os.path.join(self.incident_files_path, f"* {incident_code}.csv"))
+        if matches:
+            return matches[0]
+
+        # Tier 4: "* 7_66*.csv" with regex collision guard
+        code_re = re.compile(rf'\s{re.escape(incident_code)}(?=[\s_.])')
+        wider = glob.glob(os.path.join(self.incident_files_path, f"* {incident_code}*.csv"))
+        for match in sorted(wider, key=os.path.getmtime):
+            if code_re.search(os.path.basename(match)):
+                return match
+
+        return None
+
+    def _preload_incident_indexes(self) -> None:
+        """Load and index all incident files referenced by the replay records."""
+        self.logger.info("Preloading incident files for cross-reference...")
+
+        codes: Set[str] = set()
+        for record in self.replay_index.records:
+            codes.update(record.incident_codes)
+
+        loaded = 0
+        for code in codes:
+            path = self.find_incident_file(code)
+            if path:
+                self.incident_indexes[code] = IncidentIdentityIndex(
+                    path, self.source_incident_columns, self.logger
+                )
+                loaded += 1
+            else:
+                self.logger.warning(f"Incident file not found for code: {code}")
+
+        self.logger.info(f"Loaded {loaded} incident files for cross-reference")
+
+    def _extract_incident_correction(
+        self,
+        row: List[str],
+        column_mapper: IncidentIdentityColumnMapper,
+    ) -> Tuple[str, str]:
+        """Extract the effective correction from an incident file row.
+
+        Applies the same decision logic as Phase3Processor._create_lookup_result().
+
+        Args:
+            row: Data row from the incident file.
+            column_mapper: Column mapper for the incident file.
+
+        Returns:
+            Tuple of (correction_value, correction_field). Both are "No Change"
+            when no correction applies.
+        """
+        def _cell(logical: str) -> str:
+            col = column_mapper.get(logical)
+            return row[col].strip() if col is not None and len(row) > col else ""
+
+        correction_value = _cell('correction')
+        correction_field = _cell('correction_field')
+        suggested_value = _cell('suggested_correction')
+        suggested_field = _cell('suggested_correction_field')
+        agree = _cell('agree_with_correction').upper()
+
+        if correction_value:
+            if agree in ('N', 'F'):
+                if suggested_value:
+                    correction_value, correction_field = suggested_value, suggested_field
+                else:
+                    return "No Change", "No Change"
+        else:
+            if suggested_value:
+                correction_value, correction_field = suggested_value, suggested_field
+            else:
+                return "No Change", "No Change"
+
+        if re.search(r'\bre\s+accounts?\b', correction_value, re.IGNORECASE):
+            return "No Change", "No Change"
+
+        return correction_value, correction_field
+
+    def _parse_correction_to_dict(self, inc_value: str, inc_field: str) -> Dict[str, str]:
+        """Parse an incident file correction into a field -> value dict.
+
+        Uses the same delimiter and fan-out logic as ReplayRecordIndex._parse_corrections().
+
+        Args:
+            inc_value: Correction value string from the incident file.
+            inc_field: Correction field string from the incident file.
+
+        Returns:
+            Dict of field_name -> expected_value, or ``{'No Change': 'No Change'}``
+            when the correction is No Change.
+        """
+        if inc_value.strip().lower() == 'no change':
+            return {'No Change': 'No Change'}
+        if not inc_field:
+            return {}
+
+        value_parts = ReplayRecordIndex._split_correction_parts(inc_value)
+        field_parts = ReplayRecordIndex._split_correction_parts(inc_field)
+
+        result: Dict[str, str] = {}
+        for field_item, val in zip(field_parts, value_parts):
+            if ' & ' in field_item:
+                for sub_field in field_item.split(' & '):
+                    result[sub_field.strip()] = val
+            else:
+                result[field_item] = val
+        return result
+
+    def _cross_reference_records(
+        self,
+        records: List[ReplayRecord],
+        merged_corrections: Dict[str, str],
+    ) -> str:
+        """Cross-reference Phase 3 output corrections against source incident files.
+
+        Phase 3 output is the source of truth. The incident file value is used
+        only to detect discrepancies for annotation.
+
+        Args:
+            records: Replay records for the client (from IDs and/or Names files).
+            merged_corrections: Merged correction dict (field -> expected_value)
+                already resolved from the Phase 3 output.
+
+        Returns:
+            Discrepancy annotation string (e.g. ``' [⚠ incident: ...]'``), or
+            empty string when there is no discrepancy or no incident indexes are
+            loaded.
+        """
+        if not self.incident_indexes:
+            return ''
+
+        all_incident_codes: List[str] = []
+        for record in records:
+            all_incident_codes.extend(record.incident_codes)
+
+        discrepancy_parts: List[str] = []
+        seen_codes: Set[str] = set()
+
+        for code in all_incident_codes:
+            if code in seen_codes:
+                continue
+            seen_codes.add(code)
+
+            index = self.incident_indexes.get(code)
+            if index is None:
+                continue
+
+            representative = records[0]
+
+            # Try ID lookup first, then name fallback
+            lookup_result = None
+            if representative.client_id:
+                lookup_result = index.lookup_by_id(
+                    [representative.client_id],
+                    representative.first_name,
+                    representative.surname,
+                )
+
+            if lookup_result is None and representative.first_name and representative.surname:
+                lookup_result = index.lookup_by_name(
+                    representative.first_name,
+                    representative.surname,
+                    representative.date_of_birth,
+                )
+
+            if lookup_result is None:
+                continue
+
+            row_idx, _ = lookup_result
+            row = index.data_rows[row_idx]
+            inc_value, inc_field = self._extract_incident_correction(row, index.column_mapper)
+            inc_corrections = self._parse_correction_to_dict(inc_value, inc_field)
+
+            # Compare incident corrections with Phase 3 output (source of truth)
+            differences: List[str] = []
+
+            for field_name, output_val in merged_corrections.items():
+                if field_name == 'No Change':
+                    continue
+                inc_val = inc_corrections.get(field_name)
+                if inc_val is None and inc_corrections != {'No Change': 'No Change'}:
+                    differences.append(f"'{field_name}' not in incident")
+                elif inc_val is not None and output_val.lower() != inc_val.lower():
+                    differences.append(f"'{field_name}': incident='{inc_val}'")
+
+            for field_name in inc_corrections:
+                if field_name == 'No Change':
+                    continue
+                if field_name not in merged_corrections:
+                    differences.append(
+                        f"incident also has '{field_name}'='{inc_corrections[field_name]}'"
+                    )
+
+            if differences:
+                discrepancy_parts.append(f"({code}) " + "; ".join(differences))
+
+        if discrepancy_parts:
+            self.stats.increment('cross_ref_discrepancies')
+            return ' [⚠ incident: ' + ' | '.join(discrepancy_parts) + ']'
+        return ''
+
     def test_field(self, transaction: UnaVistaTransaction, field_name: str, 
                    expected_value: str, client_type: str, source_file: str = "", 
                    client_id: str = "") -> TestResult:
@@ -1252,9 +1520,19 @@ class Phase3FinalLookup:
                 # Format results
                 results_by_type = {client_type: test_results}
                 result_str = self.format_test_results(results_by_type, inconsistencies)
-                
+
+                # Append cross-reference discrepancy annotation (Phase 3 output is
+                # the source of truth; incident file disagreements are flagged but
+                # do not affect the PASS/FAIL outcome).
+                if not inconsistencies:
+                    discrepancy_note = self._cross_reference_records(
+                        records, merged_corrections
+                    )
+                    if discrepancy_note:
+                        result_str = f"{result_str}{discrepancy_note}"
+
                 transaction_results[transaction.row_index] = result_str
-        
+
         return transaction_results
     
     def generate_output(self):
@@ -1344,6 +1622,7 @@ class Phase3FinalLookup:
             f"  Full fail: {self.stats.custom_stats.get('full_fail', 0)}",
             f"  Client not found: {self.stats.not_found}",
             f"  Inconsistent corrections: {self.stats.custom_stats.get('inconsistent_corrections', 0)}",
+            f"  Cross-reference discrepancies: {self.stats.custom_stats.get('cross_ref_discrepancies', 0)}",
             "",
             "BUYER/SELLER BREAKDOWN:",
             f"  Buyer transactions tested: {self.buyer_stats['tested']}",

@@ -42,6 +42,7 @@ from api.schemas.firds import FirdsBackfillRequest, FirdsCheckRequest, FirdsRefr
 from api.schemas.gleif import GleifBackfillRequest, GleifCheckRequest, GleifRefreshRequest
 from api.schemas.replay import (
     ReplayMergeRequest,
+    ReplayPhase2FinalRequest,
     ReplayPhase2Request,
     ReplayPhase3FinalRequest,
     ReplayPhase3Request,
@@ -75,6 +76,7 @@ _SCRIPT_MODULES: dict[str, str] = {
     "data_push":                         "src.accuracy_testing.scripts.data_push",
     # Replay
     "replay_phase2":                     "src.replay.phase_2_processor",
+    "replay_phase2_final":               "src.replay.phase_2_final_lookup",
     "replay_phase3":                     "src.replay.phase_3_processor",
     "replay_phase3_final":               "src.replay.phase_3_final_lookup",
     "replay_merge_inconsistent":         "src.replay.merge_inconsistent_ids",
@@ -406,6 +408,7 @@ class ScriptRunnerService:
     def build_replay_argv(
         self,
         req: Union[
+            ReplayPhase2FinalRequest,
             ReplayPhase2Request,
             ReplayPhase3Request,
             ReplayPhase3FinalRequest,
@@ -433,7 +436,25 @@ class ScriptRunnerService:
 
         config: dict
 
-        if isinstance(req, ReplayPhase2Request):
+        if isinstance(req, ReplayPhase2FinalRequest):
+            config = {
+                "paths": {
+                    "replay_output": req.replay_output_file,
+                    "unavista_files": req.unavista_files,
+                    "output": req.output_file,
+                    "log_output": req.log_output,
+                },
+                "files": {
+                    "replay_patterns": ["*.csv"],
+                    "unavista_pattern": "UnaVista_MiFIR_Manual_Corrections_*.csv",
+                    "incident_pattern": f"{req.fiscal_year} {req.quarter} *.csv",
+                },
+                "processor": {
+                    "log_level": req.log_level,
+                },
+            }
+
+        elif isinstance(req, ReplayPhase2Request):
             config = {
                 "paths": {
                     "replay_input": req.input_file,

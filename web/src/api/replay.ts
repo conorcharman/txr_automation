@@ -1,5 +1,6 @@
 import type {
   JobResponse,
+  ReplayPhase2FinalRequest,
   ReplayPhase2Request,
   ReplayPhase3Request,
   ReplayPhase3FinalRequest,
@@ -22,6 +23,15 @@ export async function listReplayScripts(): Promise<string[]> {
 
 export async function runReplayPhase2(req: ReplayPhase2Request): Promise<JobResponse> {
   const res = await fetch(`${BASE_URL}/api/replay/phase2`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  return handleResponse<JobResponse>(res);
+}
+
+export async function runReplayPhase2Final(req: ReplayPhase2FinalRequest): Promise<JobResponse> {
+  const res = await fetch(`${BASE_URL}/api/replay/phase2-final`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),

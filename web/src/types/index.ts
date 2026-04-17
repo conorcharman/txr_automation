@@ -26,6 +26,7 @@ export interface BrowseResponse {
 export interface ResolvePathsRequest {
   fiscalYear: string;
   quarter: string;
+  module?: string | null;
   overrides?: Record<string, string> | null;
 }
 
@@ -201,6 +202,16 @@ export interface LastRunInfo {
 // Replay
 export interface ReplayPhase2Request {
   inputFile: string;
+  outputFile: string;
+  fiscalYear: string;
+  quarter: string;
+  logLevel?: string;
+  logOutput?: string;
+}
+
+export interface ReplayPhase2FinalRequest {
+  replayOutputFile: string;
+  unavistaFiles: string;
   outputFile: string;
   fiscalYear: string;
   quarter: string;
