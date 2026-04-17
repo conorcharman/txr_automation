@@ -1,14 +1,12 @@
 Reported ID,Reported Names & DOBs,Suggested Correction (Best Efforts),Incident Types,Incident Codes,Totals,Client Confirmed Correction,Client Confirmed Correction Fields,Client Comments
-AF19650501JAMES#HARRI~CONCAT,"JAMES,WILLIAM:HARRISON:1965-05-01",,Non-applicable ID type,16_18,1,No Change,,
-AF19750622BOB#SMITH~CONCAT,BOB:SMITH:1975-06-22,,Non-applicable ID type,16_18,3,GBBS123456A,ID,
-INTC~,INTC:INTC:,,N/A,7_11,10,No Change,,Internal to firm
-GBCB987654C~NIDN,"CHARLIE:BROWN:1965-11-30
-CHARLES:BROWN:1965-11-30",,Inconsistent name,13_1,5,CHARLIE,FN,
-529900T8BM49AURSDO55~LEI,N/A:N/A:,,Invalid ID format,7_3,2,No Change,,
-GBAJ123456B~NIDN,ALICE:JOHNSON:1980-04-15,,Non-applicable ID type,7_36,3,No Change,,
-GB19880719HARRIWILS~CONCAT,"HARRIET:WILSON:1988-07-19
-HARRIET:WILSONE:1988-07-19",,Inconsistent name,13_1,2,HARRIET,FN,
-GBEJ654321D~NIDN,EDWARD:JONES:1990-02-14,,Missing first name,13_1,2,,,
-AF19720411KARL#ANDE~CONCAT,"KARL:ANDERSSON:1972-04-11
-KARL:ANDERSEN:1972-04-11",,Inconsistent surname,13_1,3,ANDERSSON,SN,
-GBFA111222A~NIDN,FIONA:APPLE:1977-08-03,,Invalid FN|Inconsistent ID,13_1|7_66,5,FIONA,FN,
+AB234567D~NIDN,HELEN:BROWN:1982-09-10,,Inconsistent ID,16_20,2,,,Name consistent — ID inconsistency resolved separately
+CD345678E~NIDN,TOM:DAVIS:1978-04-25,,Inconsistent ID,16_20,3,,,
+CD345678Z~NIDN,CAROL:EVANS:1991-11-08,,Inconsistent ID|Invalid ID format,16_20|16_23,3,,,
+AB234567A~NIDN,HELEN:BROWN:1982-09-10,,Inconsistent ID,16_20,1,,,
+BADSELLERBAD~NIDN,LENA:MULLER:1993-07-18,,Inconsistent ID|Invalid ID format,16_20|16_23,1,,,
+GB_PSFAL~NIDN,PAUL:LAURENT:1987-02-14,,Inconsistent ID|Invalid ID format,16_20|16_23,1,,,Fallback ID — client to confirm
+AB234567B~NIDN,SOPHIE:WHITE:1979-08-22,,Inconsistent ID,16_20,1,,,
+AB234567D~NIDN,"NIKOS:PAPADOPOULOS:1986-03-20
+HELEN:BROWN:1982-09-10",,Inconsistent Name,13_1,2,,,Two persons share this ID — investigate
+AB999888C~NIDN,UNKNOWN:PERSON:1960-01-01,,Inconsistent ID,16_20,1,,,
+INTC~,INTC:INTC:,,N/A,7_11,5,,,Internal to firm
