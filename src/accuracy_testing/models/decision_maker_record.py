@@ -74,8 +74,8 @@ class DecisionMakerRecord:
 
     # Input fields
     account_id: str
-    party_code: str  # Buyer Code or Seller Code
-    dm_code: str  # Buyer DM Code or Seller DM Code
+    party_code: str  # Buyer ID Code or Seller ID Code
+    dm_code: str  # Buyer DM ID Code or Seller DM ID Code
     account_type: str
     service_level: str
     branch_code: str
@@ -107,16 +107,16 @@ class DecisionMakerRecord:
             DecisionMakerRecord instance
 
         Column Mapping:
-            For Buyer: party_code = Buyer Code, dm_code = Buyer DM Code
-            For Seller: party_code = Seller Code, dm_code = Seller DM Code
+            For Buyer: party_code = Buyer ID Code, dm_code = Buyer DM ID Code
+            For Seller: party_code = Seller ID Code, dm_code = Seller DM ID Code
         """
         # Determine field names based on party type
         if party_type.lower() == "seller":
-            code_field = "Seller Code"
-            dm_field = "Seller DM Code"
+            code_field = "Seller ID Code"
+            dm_field = "Seller DM ID Code"
         else:
-            code_field = "Buyer Code"
-            dm_field = "Buyer DM Code"
+            code_field = "Buyer ID Code"
+            dm_field = "Buyer DM ID Code"
 
         return cls(
             transaction_ref=str(data.get("Transaction Reference", "")).strip(),
@@ -187,15 +187,15 @@ class DecisionMakerRecord:
         """
         # Use party-specific field names
         if self.party_type.lower() == "seller":
-            code_name = "Seller Code"
-            code_type_name = "Type of Seller ID"
-            dm_code_name = "Seller DM Code"
-            dm_code_type_name = "Type of Seller DM ID"
+            code_name = "Seller ID Code"
+            code_type_name = "Type of Seller ID Code"
+            dm_code_name = "Seller DM ID Code"
+            dm_code_type_name = "Type of Seller DM ID Code"
         else:
-            code_name = "Buyer Code"
-            code_type_name = "Type of Buyer ID"
-            dm_code_name = "Buyer DM Code"
-            dm_code_type_name = "Type of Buyer DM ID"
+            code_name = "Buyer ID Code"
+            code_type_name = "Type of Buyer ID Code"
+            dm_code_name = "Buyer DM ID Code"
+            dm_code_type_name = "Type of Buyer DM ID Code"
 
         return {
             "Transaction Reference": self.transaction_ref,
@@ -247,10 +247,10 @@ class DecisionMakerRecord:
             return [
                 "Transaction Reference",
                 "Account ID",
-                "Seller Code",
-                "Type of Seller ID",
-                "Seller DM Code",
-                "Type of Seller DM ID",
+                "Seller ID Code",
+                "Type of Seller ID Code",
+                "Seller DM ID Code",
+                "Type of Seller DM ID Code",
                 "Product",
                 "Account Type",
                 "Service Level",
@@ -263,10 +263,10 @@ class DecisionMakerRecord:
             return [
                 "Transaction Reference",
                 "Account ID",
-                "Buyer Code",
-                "Type of Buyer ID",
-                "Buyer DM Code",
-                "Type of Buyer DM ID",
+                "Buyer ID Code",
+                "Type of Buyer ID Code",
+                "Buyer DM ID Code",
+                "Type of Buyer DM ID Code",
                 "Product",
                 "Account Type",
                 "Service Level",

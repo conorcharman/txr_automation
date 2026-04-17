@@ -92,9 +92,9 @@ validation:
 # The extract file MUST contain these columns:
 #   - Transaction Reference
 #   - Account ID
-#   - Buyer Code
+#   - Buyer ID Code
 #   - Type of Buyer ID Code
-#   - Buyer DM Code
+#   - Buyer DM ID Code
 #   - Type of Buyer DM ID Code
 #   - Product               (derived from Account ID prefix)
 #   - Account Type
@@ -104,7 +104,7 @@ validation:
 # Output columns added:
 #   - Error                (Y/N)
 #   - Correction           (LEI value, if needed)
-#   - Correction Field     (Field name, e.g., "Buyer DM Code")
+#   - Correction Field     (Field name, e.g., "Buyer DM ID Code")
 
 # =============================================================================
 # Validation Logic
@@ -113,8 +113,8 @@ validation:
 # 2. Non-discretionary (Service Level != "D"): Always no error
 # 3. Discretionary accounts:
 #    a. DM Code empty → Error, provide LEI correction
-#    b. DM Code = Buyer Code → Error, provide correct LEI
-#    c. DM Code different from Buyer Code → No error
+#    b. DM Code = Buyer ID Code → Error, provide correct LEI
+#    c. DM Code different from Buyer ID Code → No error
 # 4. If Branch Code not found in LEI data → TBC - Investigate branch code
 # 5. If Branch Code found but LEI empty → TBC - Investigate LEI
 #

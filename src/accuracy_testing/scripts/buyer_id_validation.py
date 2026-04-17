@@ -721,8 +721,8 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
             'input_file': str(extract_path),
             'output_file': str(output_path),
             'template_file': str(template_path) if template_path.exists() else '',  # Optional Kaizen lookup
-            'template_id_column': paths.get('template_id_column', 'Buyer identification code'),
-            'template_type_column': paths.get('template_type_column', 'Type of buyer identification code')
+            'template_id_column': paths.get('template_id_column', 'Buyer ID Code'),
+            'template_type_column': paths.get('template_type_column', 'Type of Buyer ID Code')
         }
         
         try:

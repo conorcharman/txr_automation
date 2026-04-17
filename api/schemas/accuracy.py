@@ -61,8 +61,8 @@ class SingleModeConfig(_CamelModel):
     input_file: str
     template_file: str
     output_file: str
-    template_id_column: str = "Buyer identification code"
-    template_type_column: str = "Type of buyer identification code"
+    template_id_column: str = "Buyer ID Code"
+    template_type_column: str = "Type of Buyer ID Code"
     log_output: str = "/app/data/logs"
 
 

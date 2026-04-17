@@ -1253,9 +1253,9 @@ class IDValidationProcessor:
         
         # Auto-detect column names based on client type if not provided
         if not template_id_column:
-            template_id_column = "Buyer identification code" if client_type == "buyer" else "Seller identification code"
+            template_id_column = "Buyer ID Code" if client_type == "buyer" else "Seller ID Code"
         if not template_type_column:
-            template_type_column = "Type of buyer identification code" if client_type == "buyer" else "Type of seller identification code"
+            template_type_column = "Type of Buyer ID Code" if client_type == "buyer" else "Type of Seller ID Code"
         
         self.template_id_column = template_id_column
         self.template_type_column = template_type_column

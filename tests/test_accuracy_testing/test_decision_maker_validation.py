@@ -116,8 +116,8 @@ class TestDecisionMakerRecord:
         data = {
             "Transaction Reference": "TXN002",
             "Account ID": "B98765432",
-            "Buyer Code": "549300BUYER0000000001",
-            "Buyer DM Code": "549300MANAGER0000001",
+            "Buyer ID Code": "549300BUYER0000000001",
+            "Buyer DM ID Code": "549300MANAGER0000001",
             "Account Type": "ISA",
             "Service Level": "D",
             "Branch Code": "XYZ002",
@@ -135,8 +135,8 @@ class TestDecisionMakerRecord:
         data = {
             "Transaction Reference": "TXN003",
             "Account ID": "A11111111",
-            "Seller Code": "549300SELLER000000001",
-            "Seller DM Code": "549300MANAGER0000002",
+            "Seller ID Code": "549300SELLER000000001",
+            "Seller DM ID Code": "549300MANAGER0000002",
             "Account Type": "Trading",
             "Service Level": "A",
             "Branch Code": "DEF003",

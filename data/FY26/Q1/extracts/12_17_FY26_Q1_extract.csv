@@ -1,4 +1,4 @@
-Transaction Reference,Account ID,Buyer Code,Buyer DM Code,Account Type,Service Level,Branch Code
+Transaction Reference,Account ID,Buyer ID Code,Buyer DM ID Code,Account Type,Service Level,Branch Code
 TXN500,A00000001,549300TESTCLIENT0001,549300FNDMGR00000001,SIPP,D,ABC001
 TXN501,A00000002,549300TESTCLIENT0002,,General,A,ABC001
 TXN502,B00000003,549300TESTCLIENT0003,,ISA,E,ABC001
