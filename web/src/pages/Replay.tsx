@@ -542,10 +542,11 @@ const MergeForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
       <p className="text-sm text-muted-foreground">
-        Merge buyer and seller inconsistent summary files into a single output.
+        Merges records for one client that are split across multiple rows after Phase III. Runs on
+        both the Inconsistent IDs and Inconsistent Names files; these remain as separate outputs.
       </p>
 
-      <Field label="Buyer File" hint="Directory containing Inconsistent IDs summary CSV files." error={errors.buyerFile?.message}>
+      <Field label="Inconsistent IDs File" hint="Directory containing Inconsistent IDs summary CSV files." error={errors.buyerFile?.message}>
         <PathPickerInput
           value={watch("buyerFile") ?? ""}
           onChange={(v) => setValue("buyerFile", v)}
@@ -555,7 +556,7 @@ const MergeForm: React.FC = () => {
         />
       </Field>
 
-      <Field label="Seller File" hint="Directory containing Inconsistent Names summary CSV files." error={errors.sellerFile?.message}>
+      <Field label="Inconsistent Names File" hint="Directory containing Inconsistent Names summary CSV files." error={errors.sellerFile?.message}>
         <PathPickerInput
           value={watch("sellerFile") ?? ""}
           onChange={(v) => setValue("sellerFile", v)}
