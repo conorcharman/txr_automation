@@ -26,7 +26,10 @@ Version 2.0 Changes:
 """
 
 from typing import Any, Dict, List, Optional, Tuple
+import os
+import tempfile
 
+import yaml
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor, QFont
 from PySide6.QtWidgets import (
@@ -49,21 +52,27 @@ from gui.api.client import ApiClient
 from gui.constants import (
     CSV_FILTER,
     FISCAL_YEARS,
+    INCIDENT_SCRIPT_MODULES,
     INCIDENT_SCRIPTS,
     LOG_LEVELS,
     QUARTERS,
 )
+from gui.utils.file_discovery_service import FileDiscoveryService, FileCandidate
 from gui.utils.settings import settings
 from gui.widgets import (
     FilePickerWidget,
     FormFieldWidget,
     IncidentSelectorWidget,
     LogViewerWidget,
+    PreRunCheckWidget,
     RunControlsWidget,
+    SmartPathConfigWidget,
+    TestingPeriodWidget,
 )
 from gui.widgets.incident_file_table import IncidentFileTableWidget
+from gui.widgets.pre_run_check import FileCheck
 from gui.widgets.status_badge import StatusBadgeWidget
-from gui.workers import ApiWorker
+from gui.workers import ApiWorker, ScriptRunnerWorker
 
 
 # ---------------------------------------------------------------------------
@@ -283,15 +292,20 @@ class ValidationScriptsPanel(QWidget):
         )
 
         # --- Testing Period ---
-        self._period = _TestingPeriodSelector(
+        self._period = TestingPeriodWidget(
             settings_prefix="accuracy.validation", parent=self
         )
         layout.addWidget(self._period)
 
         # --- Smart Path Config ---
-        self._paths = _SmartPathConfig(
+        self._paths = SmartPathConfigWidget(
             settings_prefix="accuracy.validation", parent=self
         )
+        # Drive SmartPathConfigWidget from the period selector
+        self._period.period_changed.connect(self._paths.set_period)
+        self._paths.paths_resolved.connect(self._on_paths_resolved)
+        # Set initial period so paths resolve on first paint
+        self._paths.set_period(self._period.fiscal_year, self._period.quarter)
         layout.addWidget(self._paths)
 
         # --- Incident Checklist (hierarchical) ---
@@ -371,6 +385,11 @@ class ValidationScriptsPanel(QWidget):
 
         layout.addWidget(advanced_group)
 
+        # --- Pre-run checks ---
+        self._pre_run_check = PreRunCheckWidget()
+        self._pre_run_check.status_changed.connect(self._on_pre_run_status)
+        layout.addWidget(self._pre_run_check)
+
         # --- Run Controls ---
         self._run_controls = RunControlsWidget()
         self._run_controls.run_clicked.connect(self._on_run)
@@ -401,22 +420,59 @@ class ValidationScriptsPanel(QWidget):
         incidents: List[Tuple[str, str]] = [
             (s["incidentCode"], s["scriptKey"]) for s in selected
         ]
+        smart = self._paths.get_smart_paths()
         self._file_table.set_incidents(
             incidents,
-            extracts_dir=self._paths.extracts_dir,
-            templates_dir=self._paths.templates_dir,
-            output_dir=self._paths.output_dir,
+            extracts_dir=smart.extracts if smart else "",
+            templates_dir=smart.templates if smart else "",
+            output_dir=smart.output if smart else "",
             fiscal_year=self._period.fiscal_year,
             quarter=self._period.quarter,
         )
+        self._refresh_pre_run_checks()
+
+    def _on_paths_resolved(self, smart_paths) -> None:
+        """Refresh the file table and pre-run checks when paths change."""
+        self._on_selection_changed()
+
+    def _refresh_pre_run_checks(self) -> None:
+        """Rebuild the pre-run check list from current incident configs."""
+        if not hasattr(self, "_pre_run_check"):
+            return  # Called during __init__ before widget is created
+        configs = self._file_table.get_configs()
+        checks: List[FileCheck] = []
+        for c in configs:
+            code = c.get("incidentCode", "")
+            checks.append(
+                FileCheck(
+                    label=f"Extract ({code})",
+                    path=c.get("inputFile", ""),
+                    required=True,
+                )
+            )
+            if c.get("templateFile"):
+                checks.append(
+                    FileCheck(
+                        label=f"Template ({code})",
+                        path=c.get("templateFile", ""),
+                        required=False,
+                    )
+                )
+        self._pre_run_check.set_checks(checks)
+
+    def _on_pre_run_status(self, all_ok: bool) -> None:
+        """Enable/disable the Run button based on pre-run check status."""
+        self._run_controls._run_btn.setEnabled(all_ok)
 
     def _on_discover(self) -> None:
-        """Call the API to auto-discover files in the extracts directory."""
-        extracts = self._paths.extracts_dir
-        if not extracts:
+        """Scan the extracts directory locally to auto-populate file paths."""
+        smart = self._paths.get_smart_paths()
+        if not smart or not smart.extracts:
+            from PySide6.QtWidgets import QMessageBox
             QMessageBox.warning(
-                self, "Validation",
-                "Set a base directory first so extracts path is known.",
+                self,
+                "Validation",
+                "Set a base directory and testing period first.",
             )
             return
 
@@ -424,88 +480,207 @@ class ValidationScriptsPanel(QWidget):
         self._discover_status.setText("Scanning…")
 
         try:
-            from gui.api.accuracy import discover_incidents
+            svc = FileDiscoveryService()
+            # Collect all selected incident codes
+            selected = self._incident_selector.get_selected_incidents()
+            all_codes = [s["incidentCode"] for s in selected]
+            if not all_codes:
+                self._discover_status.setText("No incidents selected")
+                return
 
-            result = discover_incidents(self._api_client, extracts)
-            total = result.get("totalFound", 0)
-            self._discover_status.setText(f"Found {total} file(s)")
-
-            # Build a code → filePath map from results
-            script_key_map: Dict[str, str] = {}
-            for s in INCIDENT_SCRIPTS:
-                for inc in s["incidents"]:
-                    script_key_map[inc["code"]] = s["scriptKey"]
-
-            self._file_table.populate_from_discovery(
-                result.get("results", []),
-                script_key_map,
+            discovered = svc.discover_incident_files(
+                smart, self._period.fiscal_year, self._period.quarter, all_codes
             )
+            found_count = sum(1 for f in discovered.values() if f.input_found)
+            self._discover_status.setText(
+                f"Found {found_count}/{len(all_codes)} extract file(s)"
+            )
+
+            # Build discovery results in the format expected by populate_from_discovery
+            script_key_map: Dict[str, str] = {}
+            for s_def in INCIDENT_SCRIPTS:
+                for inc in s_def["incidents"]:
+                    script_key_map[inc["code"]] = s_def["scriptKey"]
+
+            results = [
+                {
+                    "incidentCode": code,
+                    "scriptKey": script_key_map.get(code, ""),
+                    "filePath": inc_files.input_file,
+                }
+                for code, inc_files in discovered.items()
+                if inc_files.input_found
+            ]
+            self._file_table.populate_from_discovery(results, script_key_map)
+            self._refresh_pre_run_checks()
         except Exception as exc:
             self._discover_status.setText(f"Error: {exc}")
         finally:
             self._discover_btn.setEnabled(True)
 
     def _on_run(self) -> None:
-        """Validate and submit validation run to the API."""
+        """Validate and run validation scripts locally via ScriptRunnerWorker."""
         selected = self._incident_selector.get_selected_incidents()
         if not selected:
-            QMessageBox.warning(
-                self, "Validation", "Select at least one incident."
-            )
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "Validation", "Select at least one incident.")
             return
 
         configs = self._file_table.get_configs()
-        # Ensure all selected incidents have an input file
         missing = [c["incidentCode"] for c in configs if not c.get("inputFile")]
         if missing:
+            from PySide6.QtWidgets import QMessageBox
             QMessageBox.warning(
-                self, "Validation",
+                self,
+                "Validation",
                 f"Input file missing for: {', '.join(missing)}",
             )
             return
 
-        payload = {
-            "testingPeriod": {
-                "fiscalYear": self._period.fiscal_year,
-                "quarter": self._period.quarter,
-            },
-            "incidents": [
-                {
-                    "scriptKey": c["scriptKey"],
-                    "incidentCode": c["incidentCode"],
-                    "inputFile": c["inputFile"],
-                    "templateFile": c.get("templateFile", ""),
-                    "outputFile": c.get("outputFile", ""),
-                }
-                for c in configs
-            ],
-            "logLevel": self._log_level.currentText(),
-            "dryRun": self._dry_run.isChecked(),
-            "stopOnError": self._stop_on_error.isChecked(),
-        }
+        # Group incident configs by script key
+        scripts_to_run: Dict[str, List[Dict[str, Any]]] = {}
+        for c in configs:
+            sk = c["scriptKey"]
+            scripts_to_run.setdefault(sk, []).append(c)
+
+        # Build run queue: list of (module_path, argv)
+        self._run_queue: List[Tuple[str, List[str]]] = []
+        self._temp_config_paths: List[str] = []
+        for sk, inc_configs in scripts_to_run.items():
+            module_path = INCIDENT_SCRIPT_MODULES.get(sk, "")
+            if not module_path:
+                self._log_viewer.append_error(
+                    f"[GUI] No module path found for script key: {sk}"
+                )
+                continue
+            yaml_path = self._write_batch_config(sk, inc_configs)
+            argv = ["--config", yaml_path, "--gui-mode"]
+            if self._dry_run.isChecked():
+                argv.append("--dry-run")
+            log_level = self._log_level.currentText()
+            if log_level:
+                argv.extend(["--log-level", log_level])
+            self._run_queue.append((module_path, argv))
+
+        if not self._run_queue:
+            return
 
         self._log_viewer.clear()
         self._run_controls.set_running(True)
+        self._run_errors: List[int] = []
+        self._worker: Optional[ScriptRunnerWorker] = None
+        self._start_next_run()
 
-        self._worker = ApiWorker(
-            client=self._api_client,
-            endpoint="/api/accuracy/run-incidents",
-            payload=payload,
-        )
+    def _write_batch_config(
+        self, script_key: str, inc_configs: List[Dict[str, Any]]
+    ) -> str:
+        """Write a batch YAML config for one script and return the temp path."""
+        smart = self._paths.get_smart_paths()
+        incident_codes = [c["incidentCode"] for c in inc_configs]
+
+        # Use smart paths as primary source; fall back to first config's dir
+        extracts_dir = smart.extracts if smart else ""
+        templates_dir = smart.templates if smart else ""
+        output_dir = smart.output if smart else ""
+        if not extracts_dir and inc_configs[0].get("inputFile"):
+            extracts_dir = os.path.dirname(inc_configs[0]["inputFile"])
+        if not templates_dir and inc_configs[0].get("templateFile"):
+            templates_dir = os.path.dirname(inc_configs[0]["templateFile"])
+        if not output_dir and inc_configs[0].get("outputFile"):
+            output_dir = os.path.dirname(inc_configs[0]["outputFile"])
+
+        config: Dict[str, Any] = {
+            "mode": "batch",
+            "testing_period": {
+                "fiscal_year": self._period.fiscal_year,
+                "quarter": self._period.quarter,
+            },
+            "batch": {
+                "incidents": incident_codes,
+                "paths": {
+                    "extract_dir": extracts_dir,
+                    "template_dir": templates_dir,
+                    "output_dir": output_dir,
+                },
+                "filename_patterns": {
+                    "extract": "{incident}_{fiscal_year}_{quarter}_extract.csv",
+                    "template": "{fiscal_year} {quarter} {incident}.csv",
+                    "output": "validated_{fiscal_year}_{quarter}_{incident}.csv",
+                },
+            },
+            "processor": {
+                "log_level": self._log_level.currentText() or "INFO",
+            },
+        }
+        fd, path = tempfile.mkstemp(suffix=".yaml", prefix="gui_accuracy_")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            yaml.safe_dump(config, fh, default_flow_style=False)
+        self._temp_config_paths.append(path)
+        return path
+
+    def _start_next_run(self) -> None:
+        """Pop and start the next script from the run queue."""
+        if not self._run_queue:
+            self._run_controls.set_running(False)
+            if self._run_errors:
+                self._last_run.set_status("failed")
+                self._log_viewer.append_error(
+                    "[GUI] One or more scripts finished with errors."
+                )
+            else:
+                self._last_run.set_status("success")
+                self._log_viewer.append_line(
+                    "[GUI] All scripts completed successfully."
+                )
+            self._cleanup_temp_configs()
+            self._worker = None
+            return
+
+        module_path, argv = self._run_queue.pop(0)
+        import importlib
+        module = importlib.import_module(module_path)
+        self._log_viewer.append_line(f"\n[GUI] Running: {module_path}")
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self._log_viewer.append_line)
         self._worker.error.connect(self._log_viewer.append_error)
-        self._worker.finished_signal.connect(self._on_finished)
+        self._worker.finished_signal.connect(self._on_script_finished)
         self._worker.start()
+
+    def _on_script_finished(self, exit_code: int) -> None:
+        """Called when one script in the queue finishes."""
+        if exit_code != 0:
+            self._run_errors.append(exit_code)
+        if self._stop_on_error.isChecked() and self._run_errors:
+            self._run_controls.set_running(False)
+            self._last_run.set_status("failed")
+            self._log_viewer.append_error("[GUI] Stopped on first error.")
+            self._cleanup_temp_configs()
+            self._worker = None
+            return
+        self._start_next_run()
+
+    def _cleanup_temp_configs(self) -> None:
+        """Delete all temp YAML config files written for this run."""
+        for path in getattr(self, "_temp_config_paths", []):
+            if os.path.isfile(path):
+                try:
+                    os.remove(path)
+                except OSError:
+                    pass
+        self._temp_config_paths = []
 
     def _on_cancel(self) -> None:
         """Cancel a running job."""
-        if self._worker:
-            self._worker.cancel()
+        if self._worker and self._worker.isRunning():
+            self._worker.terminate()
+        self._run_queue = []
         self._run_controls.set_running(False)
-        self._log_viewer.append_error("[GUI] Cancelled.")
+        self._log_viewer.append_error("[GUI] Cancelled by user.")
+        self._cleanup_temp_configs()
+        self._worker = None
 
     def _on_finished(self, exit_code: int) -> None:
-        """Handle job completion."""
+        """Handle job completion (legacy; kept for API-backed utility panels)."""
         self._run_controls.set_running(False)
         if exit_code == 0:
             self._last_run.set_status("success")

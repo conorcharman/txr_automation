@@ -25,7 +25,6 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QDate
 
-from gui.api.client import ApiClient
 from gui.constants import LOG_LEVELS, CSV_FILTER, SQLITE_FILTER, YAML_FILTER
 from gui.widgets import (
     ConfigLoaderWidget,
@@ -34,7 +33,7 @@ from gui.widgets import (
     LogViewerWidget,
     RunControlsWidget,
 )
-from gui.workers import ApiWorker
+from gui.workers import ScriptRunnerWorker
 
 
 # ---------------------------------------------------------------------------
@@ -44,10 +43,9 @@ from gui.workers import ApiWorker
 class CacheRefreshPanel(QWidget):
     """Panel for the FIRDS cache refresh script."""
 
-    def __init__(self, api_client: ApiClient, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
         pfx = "firds.cache_refresh"
 
         layout = QVBoxLayout(self)
@@ -142,21 +140,15 @@ class CacheRefreshPanel(QWidget):
         return argv
 
     def _on_run(self) -> None:
-        payload = {
-            "type": self.refresh_type.get_value(),
-            "date": self._date_edit.date().toString("yyyy-MM-dd"),
-            "dbPath": self.db_path.get_path(),
-            "stagingDir": self.staging_dir.get_path(),
-            "config": self.config_loader.get_last_path(),
-            "logLevel": self.log_level.get_value(),
-        }
+        import importlib
+        module = importlib.import_module("src.firds.scripts.refresh_cache")
+        argv = self.build_argv()
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: firds-refresh")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(
-            client=self._client, endpoint="/api/firds/refresh", payload=payload
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -181,10 +173,9 @@ class CacheRefreshPanel(QWidget):
 class ReportabilityCheckPanel(QWidget):
     """Panel for the FIRDS reportability check script."""
 
-    def __init__(self, api_client: ApiClient, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
 
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("<b>FIRDS Reportability Check</b>"))
@@ -372,34 +363,15 @@ class ReportabilityCheckPanel(QWidget):
             self._run_single_to_file()
             return
 
-        if self._single_radio.isChecked():
-            payload: Dict[str, Any] = {
-                "mode": "single",
-                "isin": self.isin.get_value(),
-                "mic": self.mic.get_value(),
-                "tradeDate": self._trade_date.date().toString("yyyy-MM-dd"),
-                "dbPath": self.db_path.get_path(),
-                "config": self.config_loader.get_last_path(),
-                "logLevel": self.log_level.get_value(),
-            }
-        else:
-            payload = {
-                "mode": "batch",
-                "inputFile": self.input_files.get_path(),
-                "inputDir": self.input_dir.get_path(),
-                "pattern": self.glob_pattern.get_value(),
-                "outputFile": self.output_file.get_path(),
-                "dbPath": self.db_path.get_path(),
-                "config": self.config_loader.get_last_path(),
-                "logLevel": self.log_level.get_value(),
-            }
+        import importlib
+        module = importlib.import_module("src.firds.scripts.check_reportability")
+        argv = self.build_argv()
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: firds-check")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(
-            client=self._client, endpoint="/api/firds/check", payload=payload
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -508,10 +480,9 @@ class ReportabilityCheckPanel(QWidget):
 class BackfillPanel(QWidget):
     """Panel for the FIRDS backfill script."""
 
-    def __init__(self, api_client: ApiClient, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
         pfx = "firds.backfill"
 
         layout = QVBoxLayout(self)
@@ -601,22 +572,15 @@ class BackfillPanel(QWidget):
         return argv
 
     def _on_run(self) -> None:
-        payload = {
-            "inputCsv": self.input_csv.get_path(),
-            "outputCsv": self.output_csv.get_path(),
-            "format": self.format.get_value(),
-            "dbPath": self.db_path.get_path(),
-            "skipRefresh": bool(self.skip_refresh.get_value()),
-            "config": self.config_loader.get_last_path(),
-            "logLevel": self.log_level.get_value(),
-        }
+        import importlib
+        module = importlib.import_module("src.firds.scripts.backfill")
+        argv = self.build_argv()
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: firds-backfill")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(
-            client=self._client, endpoint="/api/firds/backfill", payload=payload
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -641,9 +605,8 @@ class BackfillPanel(QWidget):
 class FirdsTab(QWidget):
     """FIRDS Reference Data tab with sidebar navigation."""
 
-    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client or ApiClient()
 
         layout = QHBoxLayout(self)
 
@@ -656,9 +619,9 @@ class FirdsTab(QWidget):
         layout.addWidget(self._stack, stretch=1)
 
         panels = [
-            ("Cache Refresh", CacheRefreshPanel(self._client)),
-            ("Reportability Check", ReportabilityCheckPanel(self._client)),
-            ("Backfill", BackfillPanel(self._client)),
+            ("Cache Refresh", CacheRefreshPanel()),
+            ("Reportability Check", ReportabilityCheckPanel()),
+            ("Backfill", BackfillPanel()),
         ]
 
         for label, panel in panels:

@@ -139,10 +139,10 @@ class MainWindow(QMainWindow):
         self.setCentralWidget(self.tabs)
 
         self.tabs.addTab(AccuracyTab(api_client=self.api_client), "Accuracy Testing")
-        self.tabs.addTab(ReplayTab(api_client=self.api_client), "Replay")
-        self.tabs.addTab(FirdsTab(api_client=self.api_client), "FIRDS Reportability Data")
-        self.tabs.addTab(GleifTab(api_client=self.api_client), "GLEIF Reference Data")
-        self.tabs.addTab(UtilitiesTab(api_client=self.api_client), "Utilities")
+        self.tabs.addTab(ReplayTab(), "Replay")
+        self.tabs.addTab(FirdsTab(), "FIRDS Reportability Data")
+        self.tabs.addTab(GleifTab(), "GLEIF Reference Data")
+        self.tabs.addTab(UtilitiesTab(), "Utilities")
         self.tabs.addTab(SchedulerTab(api_client=self.api_client), "Scheduler")
         self.tabs.addTab(ReconciliationTab(api_client=self.api_client), "Reconciliation")
 

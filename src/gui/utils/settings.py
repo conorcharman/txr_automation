@@ -73,6 +73,39 @@ class SettingsManager:
         """Persist the API URL."""
         self.save("api/url", value)
 
+    @property
+    def data_root_dir(self) -> str:
+        """Return the stored data root directory for smart path resolution."""
+        return str(self.load("discovery/data_root_dir", ""))
+
+    @data_root_dir.setter
+    def data_root_dir(self, value: str) -> None:
+        """Persist the data root directory."""
+        self.save("discovery/data_root_dir", value)
+
+    @property
+    def default_fy(self) -> str:
+        """Return the stored default fiscal year, e.g. ``'FY26'``."""
+        from datetime import datetime
+
+        fallback = f"FY{datetime.now().year % 100}"
+        return str(self.load("discovery/default_fy", fallback))
+
+    @default_fy.setter
+    def default_fy(self, value: str) -> None:
+        """Persist the default fiscal year."""
+        self.save("discovery/default_fy", value)
+
+    @property
+    def default_quarter(self) -> str:
+        """Return the stored default quarter, e.g. ``'Q1'``."""
+        return str(self.load("discovery/default_quarter", "Q1"))
+
+    @default_quarter.setter
+    def default_quarter(self, value: str) -> None:
+        """Persist the default quarter."""
+        self.save("discovery/default_quarter", value)
+
 
 # Module-level singleton used by all widgets
 settings = SettingsManager()

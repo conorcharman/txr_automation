@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.api.client import ApiClient
 from gui.constants import CSV_FILTER, LOG_LEVELS, XML_FILTER
 from gui.widgets import (
     ConfigLoaderWidget,
@@ -31,7 +30,7 @@ from gui.widgets import (
     RunControlsWidget,
 )
 from gui.utils.settings import settings
-from gui.workers import ApiWorker
+from gui.workers import ScriptRunnerWorker
 
 
 class XlsxConverterPanel(QWidget):
@@ -41,10 +40,9 @@ class XlsxConverterPanel(QWidget):
     Mode 2 (Single directory) shows input-dir and output-dir.
     """
 
-    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
         pfx = "utils.xlsx_converter"
 
         layout = QVBoxLayout(self)
@@ -219,31 +217,17 @@ class XlsxConverterPanel(QWidget):
         self._execute(dry_run=True)
 
     def _execute(self, dry_run: bool = False) -> None:
-        mode_str = self.mode.get_value()
-        mode_num = "1" if str(mode_str).startswith("1") else "2"
-        payload: Dict[str, Any] = {
-            "config": self.config_loader.get_last_path(),
-            "mode": mode_num,
-            "recursive": bool(self.recursive.get_value()),
-            "filterYear": self.filter_year.get_value(),
-            "filterQuarter": self.filter_quarter.get_value(),
-            "filterPhases": self.filter_phases.get_value().split() if self.filter_phases.get_value() else [],
-            "logLevel": self.log_level.get_value(),
-            "dryRun": dry_run or bool(self.dry_run.get_value()),
-            "force": bool(self.force.get_value()),
-        }
-        if mode_num == "1":
-            payload["parentDir"] = self.parent_dir.get_path()
-        else:
-            payload["inputDir"] = self.input_dir.get_path()
-            payload["outputDir"] = self.output_dir.get_path()
+        import importlib
+        module = importlib.import_module("src.utils.xlsx_csv_converter")
+        argv = self.build_argv()
+        if dry_run and "--dry-run" not in argv:
+            argv.append("--dry-run")
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: xlsx-convert")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(
-            client=self._client, endpoint="/api/utilities/xlsx-convert", payload=payload
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -269,10 +253,9 @@ class XmlConverterPanel(QWidget):
     defaults to writing the CSV alongside each source XML file.
     """
 
-    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
         pfx = "utils.xml_converter"
 
         layout = QVBoxLayout(self)
@@ -394,26 +377,17 @@ class XmlConverterPanel(QWidget):
         self._execute(force_dry_run=True)
 
     def _execute(self, force_dry_run: bool = False) -> None:
-        mode_str = str(self.mode.get_value())
-        payload: Dict[str, Any] = {
-            "outputDir": self.output_dir.get_path(),
-            "dryRun": force_dry_run or bool(self.dry_run.get_value()),
-            "logLevel": self.log_level.get_value(),
-        }
-        if mode_str == "Single file":
-            payload["input"] = self.input_file.get_path()
-            payload["mode"] = "file"
-        else:
-            payload["input"] = self.input_dir.get_path()
-            payload["mode"] = "directory"
-            payload["recursive"] = bool(self.recursive.get_value())
+        import importlib
+        module = importlib.import_module("src.utils.xml_csv_converter")
+        argv = self.build_argv()
+        if force_dry_run and "--dry-run" not in argv:
+            argv.append("--dry-run")
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: xml-convert")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(
-            client=self._client, endpoint="/api/utilities/xml-convert", payload=payload
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -524,10 +498,9 @@ class CsvRecordFinderPanel(QWidget):
     Matches are written to a single output CSV.
     """
 
-    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
         pfx = "utils.csv_record_finder"
 
         layout = QVBoxLayout(self)
@@ -728,34 +701,15 @@ class CsvRecordFinderPanel(QWidget):
         self._execute()
 
     def _execute(self) -> None:
-        file_types: List[str] = []
-        if self.ft_csv.get_value():
-            file_types.append("csv")
-        if self.ft_xlsx.get_value():
-            file_types.append("xlsx")
-        if self.ft_xml.get_value():
-            file_types.append("xml")
-        payload: Dict[str, Any] = {
-            "inputDir": self.input_dir.get_path(),
-            "outputFile": self.output_file.get_path(),
-            "column": self.column.get_value(),
-            "terms": self._terms_widget.get_terms(),
-            "fileTypes": file_types,
-            "recursive": bool(self.recursive.get_value()),
-            "sortBy": [s.strip() for s in self.sort_by.get_value().split(",") if s.strip()],
-            "sourceColumn": self.source_column.get_value(),
-            "matchMode": self.match_mode.get_value(),
-            "caseSensitive": bool(self.case_sensitive.get_value()),
-            "encoding": self.encoding.get_value(),
-            "logLevel": self.log_level.get_value(),
-        }
+        import importlib
+        module = importlib.import_module("src.utils.csv_record_finder")
+        argv = self.build_argv()
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: csv-finder")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(
-            client=self._client, endpoint="/api/utilities/csv-finder", payload=payload
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -776,9 +730,8 @@ class CsvRecordFinderPanel(QWidget):
 class UtilitiesTab(QWidget):
     """Utilities tab with sidebar navigation."""
 
-    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client or ApiClient()
 
         layout = QHBoxLayout(self)
 
@@ -791,9 +744,9 @@ class UtilitiesTab(QWidget):
         layout.addWidget(self._stack, stretch=1)
 
         panels = [
-            ("XLSX to CSV", XlsxConverterPanel(self._client)),
-            ("XML to CSV", XmlConverterPanel(self._client)),
-            ("Bulk Record Finder", CsvRecordFinderPanel(self._client)),
+            ("XLSX to CSV", XlsxConverterPanel()),
+            ("XML to CSV", XmlConverterPanel()),
+            ("Bulk Record Finder", CsvRecordFinderPanel()),
         ]
 
         for label, panel in panels:

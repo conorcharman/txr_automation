@@ -466,6 +466,15 @@ class ScriptRunnerService:
                     "replay_patterns": ["*.csv"],
                     "incident_pattern": f"{req.fiscal_year} {req.quarter} *.csv",
                 },
+                "incident_columns": {
+                    "transaction_ref": "Transaction Reference",
+                    "error_flag": "Error",
+                    "correction": "Correction",
+                    "correction_field": "Correction Field",
+                    "agree_with_correction": "Agree With Correction",
+                    "suggested_correction": "Suggested Correction",
+                    "suggested_correction_field": "Suggested Correction Field",
+                },
                 "processor": {
                     "batch_size": 50,
                     "log_level": req.log_level,

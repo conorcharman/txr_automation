@@ -31,7 +31,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from gui.api.client import ApiClient
 from gui.constants import FISCAL_YEARS, LOG_LEVELS, QUARTERS
 from gui.utils.settings import settings
 from gui.widgets import (
@@ -39,9 +38,12 @@ from gui.widgets import (
     FilePickerWidget,
     FormFieldWidget,
     LogViewerWidget,
+    PreRunCheckWidget,
     RunControlsWidget,
+    TestingPeriodWidget,
 )
-from gui.workers import ApiWorker
+from gui.widgets.pre_run_check import FileCheck
+from gui.workers import ScriptRunnerWorker
 
 
 def _subtitle(text: str) -> QLabel:
@@ -134,20 +136,18 @@ class BaseReplayPanel(QWidget):
 
     def __init__(
         self,
-        api_endpoint: str,
+        script_module_path: str,
         title: str,
         subtitle: str = "",
         extra_paths: Optional[List[Dict[str, str]]] = None,
         extra_file_patterns: Optional[List[Dict[str, Any]]] = None,
         default_incident_columns: Optional[Dict[str, str]] = None,
         settings_prefix: str = "",
-        api_client: Optional[ApiClient] = None,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
-        self._api_endpoint = api_endpoint
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._script_module_path = script_module_path
+        self._worker: Optional[ScriptRunnerWorker] = None
         self._temp_config_path: Optional[str] = None
         self._loaded_config: Optional[Dict[str, Any]] = None
         self._file_pattern_fields: Dict[str, FormFieldWidget] = {}
@@ -178,28 +178,24 @@ class BaseReplayPanel(QWidget):
 
         # --- Testing Period ---
         period_group = QGroupBox("Testing Period")
-        period_layout = QHBoxLayout(period_group)
-
-        self.fiscal_year = FormFieldWidget(
-            "Fiscal Year:", field_type="dropdown",
-            choices=[""] + FISCAL_YEARS,
-            tooltip="Reporting fiscal year, e.g. FY26",
-            settings_key=f"{pfx}.fiscal_year",
-        )
-        period_layout.addWidget(self.fiscal_year)
-
-        self.quarter = FormFieldWidget(
-            "Quarter:", field_type="dropdown",
-            choices=[""] + QUARTERS,
-            tooltip="Reporting quarter, e.g. Q1",
-            settings_key=f"{pfx}.quarter",
-        )
-        period_layout.addWidget(self.quarter)
+        period_layout = QVBoxLayout(period_group)
+        self._period = TestingPeriodWidget(settings_prefix=pfx, parent=self)
+        self._period.period_changed.connect(lambda _fy, _q: self._refresh_path_hints())
+        period_layout.addWidget(self._period)
         layout.addWidget(period_group)
 
-        # Connect testing period changes to path hint refresh
-        self.fiscal_year.value_changed.connect(lambda _: self._refresh_path_hints())
-        self.quarter.value_changed.connect(lambda _: self._refresh_path_hints())
+        # Keep legacy aliases so populate_from_config and build_argv work
+        # unchanged; these are thin shims over _period.
+        class _FYAlias:
+            def __init__(self_, p): self_._p = p
+            def get_value(self_): return self_._p.fiscal_year
+            def set_value(self_, v): self_._p.set_period(v, self_._p.quarter)
+        class _QAlias:
+            def __init__(self_, p): self_._p = p
+            def get_value(self_): return self_._p.quarter
+            def set_value(self_, v): self_._p.set_period(self_._p.fiscal_year, v)
+        self.fiscal_year = _FYAlias(self._period)
+        self.quarter = _QAlias(self._period)
 
         # --- Paths ---
         paths_group = QGroupBox("Paths")
@@ -256,6 +252,13 @@ class BaseReplayPanel(QWidget):
         self.run_controls.cancel_clicked.connect(self._on_cancel)
         # Hide dry-run (replay scripts don't support it)
         self.run_controls._dry_run_btn.setVisible(False)
+
+        # Pre-run checks (input directory presence)
+        self._pre_run_check = PreRunCheckWidget()
+        self._pre_run_check.status_changed.connect(
+            lambda ok: self.run_controls._run_btn.setEnabled(ok)
+        )
+        layout.addWidget(self._pre_run_check)
         layout.addWidget(self.run_controls)
 
         self.log_viewer = LogViewerWidget()
@@ -273,14 +276,34 @@ class BaseReplayPanel(QWidget):
 
     def _refresh_path_hints(self) -> None:
         """Update path picker tooltips with FY/Q context hints."""
-        fy = self.fiscal_year.get_value() or "FY__"
-        qtr = self.quarter.get_value() or "Q_"
+        fy = self._period.fiscal_year or "FY__"
+        qtr = self._period.quarter or "Q_"
         hint = f"\u2026/{fy}/{qtr}"
         for key, picker in self._path_pickers.items():
             base = picker.get_path()
             if base:
                 continue  # don't overwrite a user-entered path tooltip
             picker.setToolTip(f"Expected path pattern: {hint}/{key}")
+        self._refresh_pre_run_checks()
+
+    def _refresh_pre_run_checks(self) -> None:
+        """Update PreRunCheckWidget with first configured input directory."""
+        checks: List[FileCheck] = []
+        for key, picker in self._path_pickers.items():
+            path = picker.get_path()
+            if not path:
+                continue
+            import os
+            # Check if a directory is non-empty (has CSV files)
+            checks.append(
+                FileCheck(
+                    label=key.replace("_", " ").title(),
+                    path=path,
+                    required=(key in ("replay_input", "input_dir", "input")),
+                )
+            )
+            break  # Only check the first (primary) path for now
+        self._pre_run_check.set_checks(checks)
 
     # -- Config building --------------------------------------------------
 
@@ -412,14 +435,15 @@ class BaseReplayPanel(QWidget):
     # -- Run / Cancel / Finished ------------------------------------------
 
     def _on_run(self) -> None:
-        payload = self._build_config_dict()
+        import importlib
+        module = importlib.import_module(self._script_module_path)
+        argv = self.build_argv()  # writes temp config, returns --config <path> --gui-mode
         self.log_viewer.clear()
-        self.log_viewer.append_line(f"[GUI] Running: {self._api_endpoint}")
+        self.log_viewer.append_line(f"[GUI] Running: {self._script_module_path}")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(
-            client=self._client, endpoint=self._api_endpoint, payload=payload
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -436,6 +460,7 @@ class BaseReplayPanel(QWidget):
         else:
             self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         _update_last_run(self._last_run, self._pfx, success)
+        self._cleanup_temp_config()
         self._worker = None
 
 
@@ -446,10 +471,9 @@ class BaseReplayPanel(QWidget):
 class MergeInconsistentPanel(QWidget):
     """Panel for the merge-inconsistent-summaries script."""
 
-    def __init__(self, api_client: Optional[ApiClient] = None, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
         self._loaded_config: Optional[Dict[str, Any]] = None
         pfx = "replay.merge_inconsistent"
         self._pfx = pfx
@@ -477,24 +501,22 @@ class MergeInconsistentPanel(QWidget):
 
         # --- Testing Period ---
         period_group = QGroupBox("Testing Period")
-        period_layout = QHBoxLayout(period_group)
-
-        self.fiscal_year = FormFieldWidget(
-            "Fiscal Year:", field_type="dropdown",
-            choices=[""] + FISCAL_YEARS,
-            tooltip="Reporting fiscal year, e.g. FY26",
-            settings_key=f"{pfx}.fiscal_year",
-        )
-        period_layout.addWidget(self.fiscal_year)
-
-        self.quarter = FormFieldWidget(
-            "Quarter:", field_type="dropdown",
-            choices=[""] + QUARTERS,
-            tooltip="Reporting quarter, e.g. Q1",
-            settings_key=f"{pfx}.quarter",
-        )
-        period_layout.addWidget(self.quarter)
+        period_layout = QVBoxLayout(period_group)
+        self._period = TestingPeriodWidget(settings_prefix=pfx, parent=self)
+        period_layout.addWidget(self._period)
         layout.addWidget(period_group)
+
+        # Compatibility aliases (populate_from_config uses .get_value()/.set_value())
+        class _FYAlias:
+            def __init__(self_, p): self_._p = p
+            def get_value(self_): return self_._p.fiscal_year
+            def set_value(self_, v): self_._p.set_period(v, self_._p.quarter)
+        class _QAlias:
+            def __init__(self_, p): self_._p = p
+            def get_value(self_): return self_._p.quarter
+            def set_value(self_, v): self_._p.set_period(self_._p.fiscal_year, v)
+        self.fiscal_year = _FYAlias(self._period)
+        self.quarter = _QAlias(self._period)
 
         # --- Paths ---
         paths_group = QGroupBox("Paths")
@@ -539,10 +561,17 @@ class MergeInconsistentPanel(QWidget):
         layout.addWidget(options_group)
 
         # --- Run controls + Log viewer ---
+        self._pre_run_check = PreRunCheckWidget()
+        self._pre_run_check.status_changed.connect(
+            lambda ok: self.run_controls._run_btn.setEnabled(ok)
+        )
         self.run_controls = RunControlsWidget()
         self.run_controls.run_clicked.connect(self._on_run)
         self.run_controls.dry_run_clicked.connect(self._on_dry_run)
         self.run_controls.cancel_clicked.connect(self._on_cancel)
+        # Wire input_dir change → refresh pre-run check
+        self.input_dir.path_changed.connect(self._refresh_pre_run_check)
+        layout.addWidget(self._pre_run_check)
         layout.addWidget(self.run_controls)
 
         self.log_viewer = LogViewerWidget()
@@ -552,6 +581,20 @@ class MergeInconsistentPanel(QWidget):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(_scrollable(inner))
+
+    def _refresh_pre_run_check(self, path: str = "") -> None:
+        """Update PreRunCheckWidget for the merge input directory."""
+        dir_path = path or self.input_dir.get_path()
+        if not dir_path:
+            self._pre_run_check.set_checks([])
+            return
+        self._pre_run_check.set_checks([
+            FileCheck(
+                label="Input directory",
+                path=dir_path,
+                required=True,
+            )
+        ])
 
     # -- Config building --------------------------------------------------
 
@@ -670,16 +713,17 @@ class MergeInconsistentPanel(QWidget):
         self._execute(dry_run=True)
 
     def _execute(self, dry_run: bool = False) -> None:
-        payload = self._build_config_dict()
-        if dry_run:
-            payload.setdefault("options", {})["dry_run"] = True
+        import importlib
+        module = importlib.import_module("src.replay.merge_inconsistent_ids")
+        argv = self.build_argv()
+        if dry_run and "--dry-run" not in argv:
+            argv.append("--dry-run")
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: replay-merge")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(
-            client=self._client, endpoint="/api/replay/merge", payload=payload
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -696,6 +740,7 @@ class MergeInconsistentPanel(QWidget):
         else:
             self.log_viewer.append_error(f"[GUI] Finished with exit code {exit_code}")
         _update_last_run(self._last_run, self._pfx, success)
+        self._cleanup_temp_config()
         self._worker = None
 
 
@@ -706,9 +751,8 @@ class MergeInconsistentPanel(QWidget):
 class ReplayTab(QWidget):
     """Replay Processing tab with sidebar navigation."""
 
-    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client or ApiClient()
 
         layout = QHBoxLayout(self)
 
@@ -724,11 +768,10 @@ class ReplayTab(QWidget):
 
         panels = [
             ("Phase II", BaseReplayPanel(
-                "/api/replay/phase2",
+                "src.replay.phase_2_processor",
                 "Phase II Processor",
                 subtitle="Transaction reference lookup and correction matching",
                 settings_prefix="phase2",
-                api_client=self._client,
                 extra_paths=[
                     {"label": "Input directory:", "key": "replay_input",
                      "tooltip": "Directory containing replay CSV/XLSX files."},
@@ -751,11 +794,10 @@ class ReplayTab(QWidget):
                 default_incident_columns=_PHASE2_INCIDENT_COLUMNS,
             )),
             ("Phase III - Feedback", BaseReplayPanel(
-                "/api/replay/phase3",
+                "src.replay.phase_3_processor",
                 "Phase III - Feedback Processor",
                 subtitle="Inconsistent ID and name matching processor",
                 settings_prefix="phase3",
-                api_client=self._client,
                 extra_paths=[
                     {"label": "Input directory:", "key": "replay_input",
                      "tooltip": "Directory containing Phase III replay files."},
@@ -786,11 +828,10 @@ class ReplayTab(QWidget):
                 default_incident_columns=_PHASE3_INCIDENT_COLUMNS,
             )),
             ("Phase III - Final Lookup", BaseReplayPanel(
-                "/api/replay/phase3-final",
+                "src.replay.phase_3_final_lookup",
                 "Phase III - Final Lookup Processor",
                 subtitle="UnaVista manual corrections final lookup",
                 settings_prefix="phase3_final",
-                api_client=self._client,
                 extra_paths=[
                     {"label": "Input directory:", "key": "replay_input",
                      "tooltip": "Directory containing Phase III output files."},
@@ -802,7 +843,7 @@ class ReplayTab(QWidget):
                      "tooltip": "Directory for processing log files."},
                 ],
             )),
-            ("Merge Summaries", MergeInconsistentPanel(api_client=self._client)),
+            ("Merge Summaries", MergeInconsistentPanel()),
         ]
 
         for label, panel in panels:

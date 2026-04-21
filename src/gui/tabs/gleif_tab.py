@@ -27,7 +27,6 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import QDate
 
-from gui.api.client import ApiClient
 from gui.constants import LOG_LEVELS, CSV_FILTER, SQLITE_FILTER
 from gui.widgets import (
     ConfigLoaderWidget,
@@ -36,7 +35,7 @@ from gui.widgets import (
     LogViewerWidget,
     RunControlsWidget,
 )
-from gui.workers import ApiWorker
+from gui.workers import ScriptRunnerWorker
 
 
 # ---------------------------------------------------------------------------
@@ -46,10 +45,9 @@ from gui.workers import ApiWorker
 class GleifCacheRefreshPanel(QWidget):
     """Panel for the GLEIF cache refresh script."""
 
-    def __init__(self, api_client: ApiClient, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
         pfx = "gleif.cache_refresh"
 
         layout = QVBoxLayout(self)
@@ -165,26 +163,15 @@ class GleifCacheRefreshPanel(QWidget):
         return argv
 
     def _on_run(self) -> None:
-        rtype = self.refresh_type.get_value()
-        payload: Dict[str, Any] = {
-            "type": rtype,
-            "dbPath": self.db_path.get_path(),
-            "stagingDir": self.staging_dir.get_path(),
-            "config": self.config_loader.get_last_path(),
-            "logLevel": self.log_level.get_value(),
-        }
-        if rtype == "delta":
-            payload["deltaType"] = self.delta_type.get_value()
-        if rtype == "full":
-            payload["skipIsinMap"] = bool(self.skip_isin_map.get_value())
-            payload["goldenCopyUrl"] = self.golden_copy_url.get_value()
+        import importlib
+        module = importlib.import_module("src.gleif.scripts.refresh_cache")
+        argv = self.build_argv()
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: gleif-refresh")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(
-            client=self._client, endpoint="/api/gleif/refresh", payload=payload
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -215,10 +202,9 @@ class LeiCheckPanel(QWidget):
     - Batch: process CSV files with LEI columns
     """
 
-    def __init__(self, api_client: ApiClient, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
 
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("<b>GLEIF LEI Check</b>"))
@@ -445,43 +431,15 @@ class LeiCheckPanel(QWidget):
             self._run_single_to_file()
             return
 
-        if self._single_radio.isChecked():
-            payload: Dict[str, Any] = {
-                "mode": "single",
-                "lei": self.lei.get_value(),
-                "dbPath": self.db_path.get_path(),
-                "config": self.config_loader.get_last_path(),
-                "logLevel": self.log_level.get_value(),
-            }
-            if self._use_date.get_value():
-                payload["tradeDate"] = self._trade_date.date().toString("yyyy-MM-dd")
-        elif self._name_radio.isChecked():
-            payload = {
-                "mode": "name",
-                "name": self.name_query.get_value(),
-                "limit": self.name_limit.get_value(),
-                "dbPath": self.db_path.get_path(),
-                "config": self.config_loader.get_last_path(),
-                "logLevel": self.log_level.get_value(),
-            }
-        else:
-            payload = {
-                "mode": "batch",
-                "inputFile": self.input_files.get_path(),
-                "inputDir": self.input_dir.get_path(),
-                "pattern": self.glob_pattern.get_value(),
-                "outputFile": self.output_file.get_path(),
-                "dbPath": self.db_path.get_path(),
-                "config": self.config_loader.get_last_path(),
-                "logLevel": self.log_level.get_value(),
-            }
+        import importlib
+        module = importlib.import_module("src.gleif.scripts.check_lei")
+        argv = self.build_argv()
         self.log_viewer.clear()
         self.log_viewer.append_line("[GUI] Running: gleif-check")
         self.run_controls.set_running(True)
-        self._worker = ApiWorker(
-            client=self._client, endpoint="/api/gleif/check", payload=payload
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self.log_viewer.append_line)
+        self._worker.error.connect(self.log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
         self._worker.start()
 
@@ -626,10 +584,9 @@ class LeiCheckPanel(QWidget):
 class GleifBackfillPanel(QWidget):
     """Panel for the GLEIF backfill script."""
 
-    def __init__(self, api_client: ApiClient, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
 
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("<b>GLEIF Backfill</b>"))
@@ -757,9 +714,8 @@ class GleifBackfillPanel(QWidget):
 class GleifTab(QWidget):
     """GLEIF Reference Data tab with sidebar navigation."""
 
-    def __init__(self, api_client: ApiClient = None, parent: Optional[QWidget] = None) -> None:
+    def __init__(self, parent: Optional[QWidget] = None) -> None:
         super().__init__(parent)
-        self._client = api_client or ApiClient()
 
         layout = QHBoxLayout(self)
 
@@ -772,9 +728,9 @@ class GleifTab(QWidget):
         layout.addWidget(self._stack, stretch=1)
 
         panels = [
-            ("Cache Refresh", GleifCacheRefreshPanel(self._client)),
-            ("LEI Check", LeiCheckPanel(self._client)),
-            ("Backfill", GleifBackfillPanel(self._client)),
+            ("Cache Refresh", GleifCacheRefreshPanel()),
+            ("LEI Check", LeiCheckPanel()),
+            ("Backfill", GleifBackfillPanel()),
         ]
 
         for label, panel in panels:
