@@ -12,8 +12,9 @@ Usage:
 """
 
 import sys
+from typing import Optional
 
-from PySide6.QtCore import Qt, QTimer
+from PySide6.QtCore import Qt, QThread, QTimer, Signal
 from PySide6.QtGui import QCloseEvent
 from PySide6.QtWidgets import (
     QApplication,
@@ -43,6 +44,29 @@ from gui.constants import (
 from gui.tabs import AccuracyTab, FirdsTab, GleifTab, ReconciliationTab, ReplayTab, SchedulerTab, UtilitiesTab
 from gui.theme import apply_mica, apply_theme
 from gui.utils.settings import settings
+
+
+class _HealthCheckWorker(QThread):
+    """Background thread that pings the API without blocking the main thread."""
+
+    result = Signal(bool)
+
+    def __init__(self, client: "ApiClient", parent=None) -> None:
+        super().__init__(parent)
+        self._client = client
+
+    def run(self) -> None:  # noqa: D102
+        # Use a short timeout so the thread finishes quickly when offline.
+        import requests
+
+        try:
+            resp = self._client._session.get(
+                self._client._url("/api/health"), timeout=3
+            )
+            data = resp.json() if resp.ok else {}
+            self.result.emit(isinstance(data, dict) and data.get("status") == "ok")
+        except Exception:
+            self.result.emit(False)
 
 
 class ApiSettingsDialog(QDialog):
@@ -186,13 +210,21 @@ class MainWindow(QMainWindow):
         self._health_timer = QTimer(self)
         self._health_timer.timeout.connect(self._check_api_health)
         self._health_timer.start(60_000)  # 60 seconds
+        self._health_worker: Optional[_HealthCheckWorker] = None
 
         # Run the first check after a short delay (let the window paint first)
         QTimer.singleShot(500, self._check_api_health)
 
     def _check_api_health(self) -> None:
-        """Ping the API and update the status bar indicator."""
-        connected = self.api_client.health_check()
+        """Ping the API in a background thread so the main thread is never blocked."""
+        if self._health_worker and self._health_worker.isRunning():
+            return  # Previous check still in progress; skip this cycle.
+        self._health_worker = _HealthCheckWorker(self.api_client, parent=self)
+        self._health_worker.result.connect(self._on_health_result)
+        self._health_worker.start()
+
+    def _on_health_result(self, connected: bool) -> None:
+        """Update the status bar indicator with the health check result."""
         if connected:
             self._api_indicator.setText("\u25cf API: Connected")
             self._api_indicator.setObjectName("api-connected")
