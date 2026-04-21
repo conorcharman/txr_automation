@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 const GLOBAL_LOG_KEY = "txr_global_log_output";
 
 function readGlobalLog(): string {
-  try { return localStorage.getItem(GLOBAL_LOG_KEY) || "logs"; } catch { return "logs"; }
+  try { return localStorage.getItem(GLOBAL_LOG_KEY) || "/app/data/logs"; } catch { return "/app/data/logs"; }
 }
 
 interface AdvancedSectionProps { show: boolean; onToggle: () => void; children: React.ReactNode; }

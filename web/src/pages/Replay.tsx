@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -171,9 +171,11 @@ const Phase2Form: React.FC = () => {
 
   const testingPeriod = watch("testingPeriod");
   const [sourceFileCount, setSourceFileCount] = useState<number | null>(null);
+  const resolvedLogPath = useRef<string>("");
 
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
+      resolvedLogPath.current = paths.logs;
       if (!watch("outputFile")) setValue("outputFile", paths.output);
       const { fiscalYear, quarter } = watch("testingPeriod");
       try {
@@ -207,7 +209,7 @@ const Phase2Form: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
-      logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
+      logOutput: resolvedLogPath.current || "/app/data/logs",
     });
   };
 
@@ -347,16 +349,26 @@ const Phase2FinalForm: React.FC = () => {
 
   const testingPeriod = watch("testingPeriod");
   const [outputFileCount, setOutputFileCount] = useState<number | null>(null);
+  const [unavistaFileCount, setUnavistaFileCount] = useState<number | null>(null);
+  const resolvedLogPath = useRef<string>("");
 
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
+      resolvedLogPath.current = paths.logs;
       if (!watch("replayOutputFile")) setValue("replayOutputFile", paths.output);
       if (!watch("outputFile")) setValue("outputFile", paths.output);
+      if (!watch("unavistaFiles")) setValue("unavistaFiles", paths.kaizen);
       try {
         const res = await browseDirectory(paths.output);
         setOutputFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
         setOutputFileCount(0);
+      }
+      try {
+        const res = await browseDirectory(paths.kaizen);
+        setUnavistaFileCount(res.entries.filter((e) => !e.isDir).length);
+      } catch {
+        setUnavistaFileCount(0);
       }
     },
     [setValue, watch],
@@ -382,7 +394,7 @@ const Phase2FinalForm: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
-      logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
+      logOutput: resolvedLogPath.current || "/app/data/logs",
     });
   };
 
@@ -415,36 +427,48 @@ const Phase2FinalForm: React.FC = () => {
         disabled={isPending}
       />
 
-      {outputFileCount !== null && (
+      {(outputFileCount !== null || unavistaFileCount !== null) && (
         <div className="rounded-md border border-border px-3 py-3 space-y-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Phase 2 Output (replay/output)
+            Discovered Files
           </p>
-          <div className="flex items-center gap-2">
-            <span className={cn("h-2 w-2 rounded-full shrink-0", outputFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
-            <span className="text-xs text-muted-foreground shrink-0">Files</span>
-            <span className="truncate text-xs font-mono text-foreground/80">
-              {outputFileCount > 0 ? `${outputFileCount} file(s) found` : "no files found"}
-            </span>
+          <div className="space-y-1">
+            {outputFileCount !== null && (
+              <div className="flex items-center gap-2">
+                <span className={cn("h-2 w-2 rounded-full shrink-0", outputFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
+                <span className="text-xs text-muted-foreground shrink-0">Phase 2 output</span>
+                <span className="truncate text-xs font-mono text-foreground/80">
+                  {outputFileCount > 0 ? `${outputFileCount} file(s) found` : "no files found"}
+                </span>
+              </div>
+            )}
+            {unavistaFileCount !== null && (
+              <div className="flex items-center gap-2">
+                <span className={cn("h-2 w-2 rounded-full shrink-0", unavistaFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
+                <span className="text-xs text-muted-foreground shrink-0">UnaVista (replay/kaizen)</span>
+                <span className="truncate text-xs font-mono text-foreground/80">
+                  {unavistaFileCount > 0 ? `${unavistaFileCount} file(s) found` : "no files found"}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )}
-
-      <Field label="UnaVista Files" hint="Directory containing UnaVista transaction CSV files." error={errors.unavistaFiles?.message}>
-        <PathPickerInput
-          value={watch("unavistaFiles") ?? ""}
-          onChange={(v) => setValue("unavistaFiles", v)}
-          mode="directory"
-          placeholder="/path/to/unavista"
-          disabled={isPending}
-        />
-      </Field>
 
       <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
         <Field label="Log Level" hint="Logging verbosity level." error={errors.logLevel?.message}>
           <select {...register("logLevel")} disabled={isPending} className={selectCls}>
             {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
+        </Field>
+        <Field label="UnaVista Files" hint="Override: directory containing UnaVista transaction CSV files (auto-resolved from replay/kaizen)." error={errors.unavistaFiles?.message}>
+          <PathPickerInput
+            value={watch("unavistaFiles") ?? ""}
+            onChange={(v) => setValue("unavistaFiles", v)}
+            mode="directory"
+            placeholder="auto-resolved from replay/kaizen"
+            disabled={isPending}
+          />
         </Field>
         <Field label="Phase 2 Output Directory" hint="Override: directory containing Phase 2 processor output CSV files." error={errors.replayOutputFile?.message}>
           <PathPickerInput
@@ -534,9 +558,11 @@ const Phase3Form: React.FC = () => {
   const testingPeriod = watch("testingPeriod");
   const [inputFileCount, setInputFileCount] = useState<number | null>(null);
   const [feedbackFileCount, setFeedbackFileCount] = useState<number | null>(null);
+  const resolvedLogPath = useRef<string>("");
 
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
+      resolvedLogPath.current = paths.logs;
       if (!watch("inputFile")) setValue("inputFile", paths.output);
       if (!watch("outputFile")) setValue("outputFile", paths.output);
       try {
@@ -578,7 +604,7 @@ const Phase3Form: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
-      logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
+      logOutput: resolvedLogPath.current || "/app/data/logs",
     });
   };
 
@@ -738,9 +764,11 @@ const Phase3FinalForm: React.FC = () => {
 
   const testingPeriod = watch("testingPeriod");
   const [phase3FileCount, setPhase3FileCount] = useState<number | null>(null);
+  const resolvedLogPath = useRef<string>("");
 
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
+      resolvedLogPath.current = paths.logs;
       if (!watch("inputFile")) setValue("inputFile", paths.output);
       if (!watch("outputFile")) setValue("outputFile", paths.output);
       try {
@@ -772,7 +800,7 @@ const Phase3FinalForm: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
-      logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
+      logOutput: resolvedLogPath.current || "/app/data/logs",
     });
   };
 
