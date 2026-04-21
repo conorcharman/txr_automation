@@ -505,8 +505,7 @@ class ScriptRunnerService:
         elif isinstance(req, ReplayPhase3FinalRequest):
             config = {
                 "paths": {
-                    "replay_input": req.input_file,
-                    "replay_output": req.output_file,
+                    "replay_input": req.input_file,                    "incident_files": req.input_file,                    "replay_output": req.output_file,
                     "log_output": req.log_output,
                 },
                 "files": {

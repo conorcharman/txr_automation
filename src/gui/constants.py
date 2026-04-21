@@ -57,6 +57,8 @@ ACCURACY_INCIDENTS = [
     ("incorrect_net_amount", "Incorrect Net Amount Validation (35_3)"),
     ("non-zero-qty", "Non-Zero Net Quantity (7_6)"),
     ("non-zero-amt", "Non-Zero Net Amount (7_42)"),
+    ("inconsistent-price-type", "Inconsistent Price Type (7_50)"),
+    ("inconsistent-qty-type", "Inconsistent Qty Type (7_38)"),
 ]
 
 # Mapping of incident names to their known incident code patterns
@@ -71,6 +73,8 @@ INCIDENT_CODE_PATTERNS = {
     "incorrect_net_amount": ["35_3"],
     "non-zero-qty": ["7_6"],
     "non-zero-amt": ["7_42"],
+    "inconsistent-price-type": ["7_50"],
+    "inconsistent-qty-type": ["7_38"],
 }
 
 # Mapping of incident names to their script module paths
@@ -84,6 +88,9 @@ INCIDENT_SCRIPT_MODULES = {
     "incorrect_net_amount": "accuracy_testing.scripts.incorrect_net_amount_validation",
     "non-zero-qty": "accuracy_testing.scripts.non_zero_net_quantity",
     "non-zero-amt": "accuracy_testing.scripts.non_zero_net_amount",
+    # No validation scripts yet for these incidents; SQL extract only
+    # "inconsistent-price-type": "accuracy_testing.scripts.inconsistent_price_type_validation",
+    # "inconsistent-qty-type": "accuracy_testing.scripts.inconsistent_qty_type_validation",
 }
 
 # Testing period choices
@@ -102,6 +109,8 @@ INCIDENT_SETTINGS_PREFIX = {
     "incorrect_net_amount": "accuracy.incorrect_net_amount",
     "non-zero-qty": "accuracy.non_zero_qty",
     "non-zero-amt": "accuracy.non_zero_amt",
+    "inconsistent-price-type": "accuracy.inconsistent_price_type",
+    "inconsistent-qty-type": "accuracy.inconsistent_qty_type",
 }
 
 # ── Incident script definitions (mirrors web INCIDENT_SCRIPTS) ─────────
@@ -159,6 +168,18 @@ INCIDENT_SCRIPTS = [
         "scriptKey": "non_zero_net_amount",
         "displayLabel": "Non-Zero Net Amount",
         "incidents": [{"code": "7_42", "label": "Non-Zero Net Amount"}],
+    },
+    {
+        "scriptKey": "inconsistent_price_type_validation",
+        "displayLabel": "Inconsistent Price Type",
+        "incidents": [{"code": "7_50", "label": "Inconsistent Price Type"}],
+        "sql_only": True,
+    },
+    {
+        "scriptKey": "inconsistent_qty_type_validation",
+        "displayLabel": "Inconsistent Qty Type",
+        "incidents": [{"code": "7_38", "label": "Inconsistent Qty Type"}],
+        "sql_only": True,
     },
 ]
 

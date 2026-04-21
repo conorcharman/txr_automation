@@ -546,7 +546,22 @@ class ValidationScriptsPanel(QWidget):
         # Build run queue: list of (module_path, argv)
         self._run_queue: List[Tuple[str, List[str]]] = []
         self._temp_config_paths: List[str] = []
+
+        # Build a set of sql_only script keys so we can give a clear message
+        sql_only_keys = {
+            s["scriptKey"]
+            for s in INCIDENT_SCRIPTS
+            if s.get("sql_only")
+        }
+
         for sk, inc_configs in scripts_to_run.items():
+            if sk in sql_only_keys:
+                codes = ", ".join(c["incidentCode"] for c in inc_configs)
+                self._log_viewer.append_line(
+                    f"[GUI] Skipping {sk} ({codes}) — validation script not yet "
+                    "implemented. Use the Extract Generator for SQL."
+                )
+                continue
             module_path = INCIDENT_SCRIPT_MODULES.get(sk, "")
             if not module_path:
                 self._log_viewer.append_error(
