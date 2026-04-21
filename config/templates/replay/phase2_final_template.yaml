@@ -1,0 +1,60 @@
+# Configuration for Phase 2 Final Lookup
+# =========================================
+# This is Stage 2 of Phase II replay processing.
+# Stage 1 (Feedback): phase_2_processor.py
+# Stage 2 (Final Lookup): phase_2_final_lookup.py
+#
+# Copy this template to config/local/replay/phase2_final.yaml and adjust paths.
+
+paths:
+  # Phase 2 PROCESSOR OUTPUT directory (the Feedback stage output — source of truth).
+  # These are the processed replay files written by phase_2_processor.py.
+  replay_output: "/path/to/data/output/phase_ii"
+
+  # UnaVista reference files (CSV only — convert XLSX upstream before running).
+  unavista_files: "/path/to/data/sample/unavista"
+
+  # Output directory for the annotated UnaVista CSV produced by Final Lookup.
+  # Defaults to replay_output if not specified.
+  output: "/path/to/data/output/phase_ii_final_lookup"
+
+  # Log output directory
+  log_output: "/path/to/data/output/logs"
+
+  # OPTIONAL: Incident code reference files for cross-reference.
+  # If omitted, cross-reference annotations are skipped; testing still runs.
+  # Cross-reference compares the Phase 2 output correction (source of truth)
+  # against the source incident file and flags any discrepancy in test_result.
+  incident_files: "/path/to/data/incident_code_files"
+
+files:
+  # Glob patterns for Phase 2 output replay files in replay_output directory.
+  # Update the pattern to match your output filenames — typically the input
+  # filename with the KR prefix replaced (e.g. "KR" -> "AJB" in phase2.yaml).
+  # Example: "1903a~G15~P2_0-7~*_*~AJB Final Analysis_Data_1 OF 1.csv"
+  replay_patterns:
+    - "*.csv"
+
+  # Incident file pattern (for cross-reference, Tier 1/2 glob prefix).
+  # Primary:  space-separated  (FY26 Q1 7_39.csv)
+  # Fallback: dash-separated   (FY26 Q1 - 7_39.csv)
+  # Wider:    suffix variant    (FY26 Q1 7_39_batch.csv)
+  incident_pattern: "FY26 Q1 *.csv"
+
+  # UnaVista file pattern (CSV only).
+  unavista_pattern: "UnaVista_MiFIR_Manual_Corrections_*.csv"
+
+# Column mappings for incident template files (used for cross-reference only).
+# These must match the exact header strings in your incident CSV files.
+# All keys are required when incident_files is configured.
+incident_columns:
+  transaction_ref:              "Transaction Reference"
+  correction:                   "Correction"
+  correction_field:             "Correction Field"
+  agree_with_correction:        "Agree With Correction"
+  suggested_correction:         "Suggested Correction"
+  suggested_correction_field:   "Suggested Correction Field"
+
+processor:
+  # Log level (DEBUG, INFO, WARNING, ERROR)
+  log_level: "INFO"

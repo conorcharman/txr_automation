@@ -19,7 +19,7 @@ Usage:
 import uuid
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.models.job import Job
@@ -146,6 +146,28 @@ class JobService:
             job.log_output = log_output
 
         await db.commit()
+
+
+    async def delete_completed_jobs(self, db: AsyncSession) -> int:
+        """Delete all jobs that are in a terminal state.
+
+        Only jobs with status ``success``, ``failed``, or ``cancelled`` are
+        removed.  Jobs with status ``pending``, ``running``, or ``waiting``
+        are never deleted.
+
+        Args:
+            db: Active async database session.
+
+        Returns:
+            The number of rows deleted.
+        """
+        result = await db.execute(
+            delete(Job).where(
+                Job.status.in_(["success", "failed", "cancelled"])
+            )
+        )
+        await db.commit()
+        return result.rowcount
 
 
 job_service = JobService()

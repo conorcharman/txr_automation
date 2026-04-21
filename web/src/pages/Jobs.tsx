@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import JobCard from "@/components/JobCard";
 import { PathPickerInput } from "@/components/PathPickerInput";
-import { listJobs } from "@/api/jobs";
+import { listJobs, clearJobHistory } from "@/api/jobs";
 import type { JobResponse } from "@/types";
 import { cn } from "@/lib/utils";
 
@@ -29,8 +30,19 @@ const AdvancedSection: React.FC<AdvancedSectionProps> = ({ show, onToggle, child
 
 const Jobs: React.FC = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(false);
   const [logOutput, setLogOutput] = useState<string>(readGlobalLog);
+
+  const clearMutation = useMutation({
+    mutationFn: clearJobHistory,
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["jobs"] }),
+  });
+
+  const handleClearHistory = () => {
+    if (!window.confirm("Delete all completed, failed, and cancelled jobs? Active jobs will not be affected.")) return;
+    clearMutation.mutate();
+  };
 
   useEffect(() => {
     try { localStorage.setItem(GLOBAL_LOG_KEY, logOutput); } catch { /* ignore */ }
@@ -76,6 +88,17 @@ const Jobs: React.FC = () => {
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4 flex-wrap">
         <h2 className="text-2xl font-bold tracking-tight">Job History</h2>
+        {jobs && jobs.length > 0 && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearHistory}
+            disabled={clearMutation.isPending}
+            className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
+          >
+            {clearMutation.isPending ? "Clearing…" : "Clear History"}
+          </Button>
+        )}
       </div>
 
       <AdvancedSection show={showSettings} onToggle={() => setShowSettings((v) => !v)}>

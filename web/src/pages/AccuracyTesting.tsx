@@ -226,7 +226,7 @@ const UnifiedValidationForm: React.FC = () => {
       runIncidents({
         testingPeriod: values.testingPeriod,
         incidents: incidentConfigs.map((c) => ({
-          scriptKey: c.scriptKey,
+          scriptName: c.scriptName,
           incidentCode: c.incidentCode,
           inputFile: c.inputFile,
           templateFile: c.templateFile,
@@ -301,6 +301,7 @@ const UnifiedValidationForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
+        module="accuracy_testing"
         onChange={handlePathsResolved}
         disabled={isPending}
       />
@@ -538,6 +539,7 @@ const TemplateGeneratorForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
+        module="accuracy_testing"
         onChange={handlePathsResolved}
         disabled={isPending}
       />
@@ -749,6 +751,7 @@ const ExtractGeneratorForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
+        module="accuracy_testing"
         onChange={handlePathsResolved}
         disabled={isPending}
       />
@@ -952,6 +955,7 @@ const CollateExtractsForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
+        module="accuracy_testing"
         onChange={setResolvedPaths}
         disabled={isPending}
       />
@@ -1029,13 +1033,17 @@ const DataPushForm: React.FC = () => {
   });
 
   const onSubmit = (values: UtilityBaseValues) => {
+    if (!resolvedPaths?.output || !resolvedPaths?.templates) {
+      toast.error("Paths have not resolved yet — please wait for the Directories section to load.");
+      return;
+    }
     mutation.mutate({
       scriptName: "data_push",
       testingPeriod: values.testingPeriod,
       mode: "batch",
       batchConfig: {
-        inputDirectory: resolvedPaths?.output ?? "",
-        outputDirectory: resolvedPaths?.templates ?? "",
+        inputDirectory: resolvedPaths.output,
+        outputDirectory: resolvedPaths.templates,
         templateDirectory: "",
         logOutput: ((): string => { try { return localStorage.getItem("txr_global_log_output") || "logs"; } catch { return "logs"; } })(),
       },
@@ -1045,6 +1053,7 @@ const DataPushForm: React.FC = () => {
   };
 
   const isPending = mutation.isPending;
+  const pathsReady = !!(resolvedPaths?.output && resolvedPaths?.templates);
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-2xl">
@@ -1068,6 +1077,7 @@ const DataPushForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
+        module="accuracy_testing"
         onChange={setResolvedPaths}
         disabled={isPending}
       />
@@ -1106,8 +1116,8 @@ const DataPushForm: React.FC = () => {
         </div>
       </AdvancedSection>
 
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
+      <Button type="submit" disabled={isPending || !pathsReady} className="w-full">
+        {isPending ? "Running…" : !pathsReady ? "Waiting for paths…" : "Run"}
       </Button>
     </form>
   );

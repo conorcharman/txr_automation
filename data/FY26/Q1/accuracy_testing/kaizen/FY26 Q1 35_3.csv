@@ -1,0 +1,9 @@
+Transaction Reference,Correction,Correction Field,Agree With Correction,Suggested Correction,Suggested Correction Field,Error
+SAMPLE_P2_35_3_001,1234.56,Net amount,P,,,
+SAMPLE_P2_35_3_002,No Change,,Y,,,
+SAMPLE_P2_35_3_003,3500.00,Net amount,N,3499.85,Net amount,
+SAMPLE_P2_35_3_005,5000.00,Net amount,P,,,
+SAMPLE_P2_35_3_006,1000.00,Net amount,Y,,,
+SAMPLE_P2_35_3_007,-875.50,Net amount,P,,,
+SAMPLE_P2_35_3_008,0.00,Net amount,Y,,,
+SAMPLE_P2_35_3_009,750.00,Net amount,F,748.25,Net amount,

@@ -6,11 +6,12 @@ REST endpoints for managing background job records, plus a WebSocket
 endpoint for streaming live log output to connected clients.
 
 Endpoints:
-    GET  /api/jobs                    — List jobs (paginated)
-    GET  /api/jobs/{job_id}           — Retrieve a single job
-    POST /api/jobs                    — Create a job and dispatch a Celery task
-    POST /api/jobs/{job_id}/cancel    — Cancel a pending or running job
-    WS   /api/ws/jobs/{job_id}/logs   — Stream live logs via Redis pub/sub
+    GET    /api/jobs                    — List jobs (paginated)
+    GET    /api/jobs/{job_id}           — Retrieve a single job
+    POST   /api/jobs                    — Create a job and dispatch a Celery task
+    POST   /api/jobs/{job_id}/cancel    — Cancel a pending or running job
+    DELETE /api/jobs                    — Delete all completed/failed/cancelled jobs
+    WS     /api/ws/jobs/{job_id}/logs   — Stream live logs via Redis pub/sub
 
 The ``SCRIPT_MODULES`` dict maps a registered ``script_name`` string to
 its fully-qualified Python module path.  Extend this dict in Phase 4 as
@@ -273,3 +274,24 @@ async def ws_job_logs(websocket: WebSocket, job_id: str) -> None:
         job_id: UUID string of the job whose logs to stream.
     """
     await log_stream_ws(websocket, job_id)
+
+
+@router.delete("/jobs", status_code=200)
+async def clear_job_history(
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """Delete all jobs that are in a terminal state.
+
+    Only jobs with status ``success``, ``failed``, or ``cancelled`` are
+    removed.  Active jobs (``pending``, ``running``, ``waiting``) are
+    never deleted.
+
+    Args:
+        db: Async database session injected by FastAPI.
+
+    Returns:
+        A dict ``{"deleted": <count>}`` indicating how many rows were removed.
+    """
+    deleted = await job_service.delete_completed_jobs(db)
+    logger.info("Cleared %d completed job(s) from history.", deleted)
+    return {"deleted": deleted}

@@ -39,3 +39,8 @@ export async function fetchLastRuns(): Promise<Record<string, LastRunInfo>> {
   const res = await fetch(`${BASE_URL}/api/jobs/last-runs`);
   return handleResponse<Record<string, LastRunInfo>>(res);
 }
+
+export async function clearJobHistory(): Promise<{ deleted: number }> {
+  const res = await fetch(`${BASE_URL}/api/jobs`, { method: "DELETE" });
+  return handleResponse<{ deleted: number }>(res);
+}

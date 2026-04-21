@@ -26,6 +26,7 @@ export interface BrowseResponse {
 export interface ResolvePathsRequest {
   fiscalYear: string;
   quarter: string;
+  module?: string | null;
   overrides?: Record<string, string> | null;
 }
 
@@ -60,6 +61,7 @@ export interface JobResponse {
   errorMessage: string | null;
   outputFiles: string[] | null;
   logOutput: string | null;
+  configSnapshot: Record<string, unknown> | null;
 }
 
 export interface CreateJobRequest {
@@ -157,11 +159,13 @@ export interface IncidentSelection {
 }
 
 export interface IncidentRunConfig {
-  scriptKey: string;
+  scriptName: string;
   incidentCode: string;
   inputFile: string;
   templateFile: string;
   outputFile: string;
+  templateIdColumn?: string;
+  templateTypeColumn?: string;
 }
 
 export interface RunIncidentsRequest {
@@ -198,6 +202,16 @@ export interface LastRunInfo {
 // Replay
 export interface ReplayPhase2Request {
   inputFile: string;
+  outputFile: string;
+  fiscalYear: string;
+  quarter: string;
+  logLevel?: string;
+  logOutput?: string;
+}
+
+export interface ReplayPhase2FinalRequest {
+  replayOutputFile: string;
+  unavistaFiles: string;
   outputFile: string;
   fiscalYear: string;
   quarter: string;

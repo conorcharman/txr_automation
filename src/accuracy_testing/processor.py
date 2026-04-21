@@ -1253,9 +1253,9 @@ class IDValidationProcessor:
         
         # Auto-detect column names based on client type if not provided
         if not template_id_column:
-            template_id_column = "Buyer identification code" if client_type == "buyer" else "Seller identification code"
+            template_id_column = "Buyer ID Code" if client_type == "buyer" else "Seller ID Code"
         if not template_type_column:
-            template_type_column = "Type of buyer identification code" if client_type == "buyer" else "Type of seller identification code"
+            template_type_column = "Type of Buyer ID Code" if client_type == "buyer" else "Type of Seller ID Code"
         
         self.template_id_column = template_id_column
         self.template_type_column = template_type_column
@@ -2150,37 +2150,48 @@ class IDValidationProcessor:
             if self.logger:
                 self.logger.info(f"Loading template file: {file_path}")
                 self.logger.info(f"Using column names: ID='{self.template_id_column}', Type='{self.template_type_column}'")
-            
+
             with open(file_path, 'r', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
-                
+
                 # Verify required columns exist
                 if not reader.fieldnames:
                     raise ValueError("Template file has no header row")
-                
-                if self.template_id_column not in reader.fieldnames:
-                    raise ValueError(
-                        f"Template column '{self.template_id_column}' not found. "
-                        f"Available columns: {list(reader.fieldnames)}"
+
+                fieldnames: list[str] = list(reader.fieldnames)
+
+                # Resolve column names dynamically when the configured name is absent.
+                # This handles templates that use shortform headers such as
+                # "Buyer ID Code" instead of "Buyer identification code".
+                id_col = self._resolve_template_column(
+                    self.template_id_column, fieldnames, kind="id"
+                )
+                type_col = self._resolve_template_column(
+                    self.template_type_column, fieldnames, kind="type"
+                )
+
+                if id_col != self.template_id_column and self.logger:
+                    self.logger.info(
+                        f"Column '{self.template_id_column}' not found; "
+                        f"resolved to '{id_col}' via keyword match."
                     )
-                
-                if self.template_type_column not in reader.fieldnames:
-                    raise ValueError(
-                        f"Template column '{self.template_type_column}' not found. "
-                        f"Available columns: {list(reader.fieldnames)}"
+                if type_col != self.template_type_column and self.logger:
+                    self.logger.info(
+                        f"Column '{self.template_type_column}' not found; "
+                        f"resolved to '{type_col}' via keyword match."
                     )
-                
+
                 for row in reader:
                     txn_ref = row.get('Transaction Reference', '').strip()
                     if txn_ref:
-                        expected_id = row.get(self.template_id_column, '').strip()
-                        expected_type = row.get(self.template_type_column, '').strip()
+                        expected_id = row.get(id_col, '').strip()
+                        expected_type = row.get(type_col, '').strip()
                         # Store both ID and type for flexible formatting
                         self.template_data[txn_ref] = {
                             'id': expected_id,
                             'type': expected_type
                         }
-            
+
             if self.logger:
                 self.logger.info(f"Loaded {len(self.template_data)} template records")
                 # Show a sample of what was loaded for debugging
@@ -2192,8 +2203,66 @@ class IDValidationProcessor:
         except Exception as e:
             if self.logger:
                 self.logger.warning(f"Failed to load template file: {e}")
-    
-    def _get_tracker_status(self, person_code: str) -> str:
+
+    @staticmethod
+    def _resolve_template_column(
+        configured: str,
+        fieldnames: list[str],
+        kind: str,
+    ) -> str:
+        """Return the best-matching column name from *fieldnames*.
+
+        If *configured* is present exactly it is returned immediately.  Otherwise
+        a case-insensitive keyword search is used to find the most appropriate
+        column:
+
+        - ``kind="id"``: prefers columns whose normalised name contains *id* or
+          *identification* but does **not** contain *type*.
+        - ``kind="type"``: prefers columns whose normalised name contains *type*
+          and also *id* or *identification*.
+
+        The search intentionally ignores role prefixes (``buyer``/``seller``) so
+        that both ``"Buyer identification code"`` and ``"Buyer ID Code"`` resolve
+        correctly regardless of which role the script uses.
+
+        Args:
+            configured: The originally configured column name.
+            fieldnames: Actual column names read from the CSV header.
+            kind: Either ``"id"`` or ``"type"``.
+
+        Returns:
+            The resolved column name.  Falls back to *configured* (and lets the
+            caller raise) if no suitable match is found.
+        """
+        if configured in fieldnames:
+            return configured
+
+        lower_fields = {f.lower(): f for f in fieldnames}
+
+        if kind == "id":
+            # Match columns that contain "id" or "identification" but not "type"
+            for norm, original in lower_fields.items():
+                if ("identification" in norm or " id " in f" {norm} ") and "type" not in norm:
+                    return original
+            # Broader fallback: any column ending in " code" that isn't a type col
+            for norm, original in lower_fields.items():
+                if norm.endswith("code") and "type" not in norm:
+                    return original
+
+        elif kind == "type":
+            # Match columns containing both "type" and ("id" or "identification")
+            for norm, original in lower_fields.items():
+                if "type" in norm and ("identification" in norm or " id " in f" {norm} "):
+                    return original
+            # Broader fallback: any "type of …" column
+            for norm, original in lower_fields.items():
+                if norm.startswith("type of"):
+                    return original
+
+        # No match found — return configured so the existing error path triggers
+        return configured
+
+
         """
         Get tracker status for a person code.
         Checks Italian tracker first, then main tracker.

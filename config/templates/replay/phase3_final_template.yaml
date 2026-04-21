@@ -14,11 +14,21 @@ paths:
   # Log output directory
   log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
 
+  # OPTIONAL: Incident code reference files for cross-reference.
+  # If omitted, cross-reference annotations are skipped; testing still runs.
+  # Cross-reference compares Phase 3 output corrections (source of truth) against
+  # the source incident file and flags discrepancies in test_result.
+  # incident_files: "/path/to/incident_code_files"
+
 files:
   # File patterns for discovery (using glob)
   unavista_pattern: "UnaVista_MiFIR_Manual_Corrections_*.csv"
   replay_ids_pattern: "Replay_*_Inconsistent_IDs_Summary_*.csv"
   replay_names_pattern: "Replay_*_Inconsistent_Names_Summary_*.csv"
+  # Incident file pattern (used when incident_files path is configured).
+  # Primary:  space-separated  (FY26 Q1 7_66.csv)
+  # Fallback: dash-separated   (FY26 Q1 - 7_66.csv)
+  incident_pattern: "FY26 Q1 *.csv"
   # Note: incident_matrix is no longer needed - now in txr_replay_core.incident_codes
 
 # Replay summary file column mappings
@@ -52,3 +62,33 @@ processor:
   
   # Skip duplicate client records in Replay files
   skip_duplicates: true
+
+# OPTIONAL: Column mappings for the SOURCE INCIDENT TEMPLATE files.
+# Required only when paths.incident_files is configured for cross-reference.
+# These must match the exact header strings in your Phase 3 incident CSV files.
+# If omitted, the code falls back to incident_columns above (which lacks identity
+# columns, so cross-reference lookups will silently find no matches).
+source_incident_columns:
+  # Identity columns — for looking up clients in the incident file
+  buyer_id:              "Buyer ID"
+  seller_id:             "Seller ID"
+  buyer_first_name:      "Buyer First Name"
+  buyer_last_name:       "Buyer Last Name"
+  buyer_dob:             "Buyer Date of Birth"
+  seller_first_name:     "Seller First Name"
+  seller_last_name:      "Seller Last Name"
+  seller_dob:            "Seller Date of Birth"
+  buyer_dm_id:           "Buyer DM ID"
+  seller_dm_id:          "Seller DM ID"
+  buyer_dm_first_name:   "Buyer DM First Name"
+  buyer_dm_last_name:    "Buyer DM Last Name"
+  buyer_dm_dob:          "Buyer DM Date of Birth"
+  seller_dm_first_name:  "Seller DM First Name"
+  seller_dm_last_name:   "Seller DM Last Name"
+  seller_dm_dob:         "Seller DM Date of Birth"
+  # Correction columns — for extracting the incident file correction value
+  correction:                   "Correction"
+  correction_field:             "Correction Field"
+  agree_with_correction:        "Agree With Correction"
+  suggested_correction:         "Suggested Correction"
+  suggested_correction_field:   "Suggested Correction Field"

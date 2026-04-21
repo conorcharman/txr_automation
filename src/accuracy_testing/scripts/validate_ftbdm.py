@@ -36,8 +36,8 @@ Usage:
 Input CSV columns (7 columns minimum):
     1. Transaction Reference
     2. Account ID
-    3. Buyer Code
-    4. Buyer DM Code
+    3. Buyer ID Code
+    4. Buyer DM ID Code
     5. Account Type
     6. Service Level
     7. Branch Code
@@ -45,10 +45,10 @@ Input CSV columns (7 columns minimum):
 Output CSV columns (13 columns):
     1. Transaction Reference
     2. Account ID
-    3. Buyer Code
-    4. Type of Buyer ID (derived)
-    5. Buyer DM Code
-    6. Type of Buyer DM ID (derived)
+    3. Buyer ID Code
+    4. Type of Buyer ID Code (derived)
+    5. Buyer DM ID Code
+    6. Type of Buyer DM ID Code (derived)
     7. Product (derived from Account ID)
     8. Account Type
     9. Service Level

@@ -1,0 +1,3 @@
+Transaction Reference,Error,Net Amount,Consideration,Interest,Total,Expected Interest,Net Difference,Correction,Correction Field,Agree With Correction,Suggested Correction,Suggested Correction Field,INCIDENT_CODE,INCIDENT_DESCRIPTION,KR_RECORD_KEY,Transaction reference number,Buyer identification code,Type of buyer identification code,Buyer - First name(s),Buyer - Surname(s),Buyer - Date of birth,Seller identification code,Type of seller identification code,Net amount
+TXN_35_3_0001,,,,,,,,,,,,,35_3,Incorrect net amount,KR00007,TXN_35_3_0001,,,,,,,,1000.00
+TXN_35_3_0002,,,,,,,,,,,,,35_3,Incorrect net amount,KR00008,TXN_35_3_0002,,,,,,,,980.00

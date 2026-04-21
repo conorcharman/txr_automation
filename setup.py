@@ -25,6 +25,7 @@ setup(
         "console_scripts": [
             # Replay scripts
             "replay-phase2=replay.phase_2_processor:main",
+            "replay-phase2-final=replay.phase_2_final_lookup:main",
             "replay-phase3=replay.phase_3_processor:main",
             "replay-phase3-final=replay.phase_3_final_lookup:main",
             "replay-xlsx-converter=utils.xlsx_csv_converter:main",

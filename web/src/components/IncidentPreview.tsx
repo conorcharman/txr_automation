@@ -79,7 +79,7 @@ const IncidentPreview: React.FC<IncidentPreviewProps> = ({
             <tbody>
               {configs.map((c) => (
                 <tr
-                  key={`${c.scriptKey}-${c.incidentCode}`}
+                  key={`${c.scriptName}-${c.incidentCode}`}
                   className="border-t border-border"
                 >
                   <td className="px-3 py-1.5 font-mono whitespace-nowrap">

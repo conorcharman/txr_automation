@@ -24,7 +24,7 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Getting Started</p>
-<p class="last-updated">Last updated: 9 April 2026</p>
+<p class="last-updated">Last updated: 15 April 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-4a.GettingStarted-GettingStarted">Getting Started</h1>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
 <strong>Time to setup:</strong> ~10 minutes. This guide covers environment setup, project installation, and running your first validation script.
@@ -378,11 +378,11 @@ txr-tray
 # Start all 6 services (Redis, PostgreSQL, API, Celery Worker, Celery Beat, Web/Nginx)
 docker compose up --build
 
-# Access the web interface
-# http://localhost (Nginx serves the React SPA and proxies API requests)
+# Access the web interface (development)
+# http://localhost:3000 (Nginx serves the React SPA and proxies API requests)
 
-# API documentation (Swagger UI)
-# http://localhost/api/docs
+# API documentation (Swagger UI, dev only)
+# http://localhost:3000/api/docs
 
 # Stop all services
 docker compose down

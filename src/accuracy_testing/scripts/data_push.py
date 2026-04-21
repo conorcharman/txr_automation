@@ -557,8 +557,16 @@ def main() -> int:
                 batch_paths = batch_config.get('paths', {})
                 testing_period = config.get('testing_period', {})
                 
-                source_dir = args.source_dir or batch_paths.get('source_dir')
-                target_dir = args.target_dir or batch_paths.get('target_dir')
+                source_dir = (
+                    args.source_dir
+                    or batch_paths.get('source_dir')
+                    or batch_paths.get('input_directory')
+                )
+                target_dir = (
+                    args.target_dir
+                    or batch_paths.get('target_dir')
+                    or batch_paths.get('output_directory')
+                )
                 fiscal_year = args.fiscal_year or testing_period.get('fiscal_year')
                 quarter = args.quarter or testing_period.get('quarter')
                 

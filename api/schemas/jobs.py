@@ -67,6 +67,7 @@ class JobResponse(_CamelModel):
     error_message: str | None
     output_files: list[str] | None
     log_output: str | None
+    config_snapshot: dict | None
 
     @classmethod
     def from_orm_job(cls, job: Job) -> "JobResponse":
@@ -96,6 +97,7 @@ class JobResponse(_CamelModel):
             error_message=job.error_message,
             output_files=job.output_files,
             log_output=job.log_output,
+            config_snapshot=job.config_snapshot,
         )
 
 
