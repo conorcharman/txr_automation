@@ -24,11 +24,48 @@ from __future__ import annotations
 import logging
 from typing import Any, Dict, List, Optional
 
-from PySide6.QtCore import QObject, QTimer, Signal
+from PySide6.QtCore import QObject, QThread, QTimer, Signal
 
 from gui.api.client import ApiClient
 
 logger = logging.getLogger(__name__)
+
+
+class _PollWorker(QThread):
+    """Background thread that fetches pipeline and schedule data from the API.
+
+    Runs HTTP calls off the main thread so the UI is never blocked by
+    network I/O or connection timeouts.
+
+    Signals:
+        polled (list, list): Emitted with ``(pipelines, schedules)`` lists
+            once both requests have completed (or failed).
+    """
+
+    polled = Signal(list, list)
+
+    def __init__(self, client: ApiClient, parent: Optional[QObject] = None) -> None:
+        super().__init__(parent)
+        self._client = client
+
+    def run(self) -> None:
+        """Fetch pipelines and schedules; emit results regardless of errors."""
+        from gui.api.pipeline import list_pipelines
+        from gui.api.scheduler import list_schedules
+
+        try:
+            pipelines = list_pipelines(self._client)
+        except Exception as exc:
+            logger.debug("Pipeline poll error: %s", exc)
+            pipelines = []
+
+        try:
+            schedules = list_schedules(self._client)
+        except Exception as exc:
+            logger.debug("Schedule poll error: %s", exc)
+            schedules = []
+
+        self.polled.emit(pipelines, schedules)
 
 
 class ScheduleEngine(QObject):
@@ -64,6 +101,9 @@ class ScheduleEngine(QObject):
         self._timer = QTimer(self)
         self._timer.setInterval(poll_interval)
         self._timer.timeout.connect(self._tick)
+
+        # Background worker — only one poll at a time.
+        self._poll_worker: Optional[_PollWorker] = None
 
         # Cache last-known statuses to detect transitions.
         self._pipeline_statuses: Dict[str, str] = {}
@@ -199,21 +239,30 @@ class ScheduleEngine(QObject):
     # ------------------------------------------------------------------
 
     def _tick(self) -> None:
-        """Fetch latest pipelines and schedules from the API."""
-        self._poll_pipelines()
-        self._poll_schedules()
+        """Start a background poll for pipeline and schedule status.
+
+        If a previous poll is still in flight the new request is skipped
+        so we never queue up multiple concurrent network calls.
+        """
+        if self._poll_worker and self._poll_worker.isRunning():
+            return
+        self._poll_worker = _PollWorker(self._client, parent=self)
+        self._poll_worker.polled.connect(self._on_polled)
+        self._poll_worker.start()
+
+    def _on_polled(
+        self,
+        pipelines: List[Dict[str, Any]],
+        schedules: List[Dict[str, Any]],
+    ) -> None:
+        """Process data returned by the background poll worker."""
+        self._process_pipelines(pipelines)
+        self._process_schedules(schedules)
         self.data_refreshed.emit()
 
-    def _poll_pipelines(self) -> None:
-        """Fetch pipelines and detect status transitions."""
-        try:
-            from gui.api.pipeline import list_pipelines
-
-            self.pipelines = list_pipelines(self._client)
-        except Exception as exc:
-            logger.debug("Pipeline poll failed: %s", exc)
-            return
-
+    def _process_pipelines(self, pipelines: List[Dict[str, Any]]) -> None:
+        """Update cached pipeline data and emit transition signals."""
+        self.pipelines = pipelines
         for p in self.pipelines:
             pid = p.get("id", "")
             name = p.get("name", "")
@@ -232,16 +281,9 @@ class ScheduleEngine(QObject):
 
             self._pipeline_statuses[pid] = status
 
-    def _poll_schedules(self) -> None:
-        """Fetch schedules and detect status transitions."""
-        try:
-            from gui.api.scheduler import list_schedules
-
-            self.schedules = list_schedules(self._client)
-        except Exception as exc:
-            logger.debug("Schedule poll failed: %s", exc)
-            return
-
+    def _process_schedules(self, schedules: List[Dict[str, Any]]) -> None:
+        """Update cached schedule data and emit transition signals."""
+        self.schedules = schedules
         for s in self.schedules:
             sid = s.get("id", "")
             status = s.get("lastStatus", "")

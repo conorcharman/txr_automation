@@ -303,8 +303,9 @@ class ValidationScriptsPanel(QWidget):
         )
         # Drive SmartPathConfigWidget from the period selector
         self._period.period_changed.connect(self._paths.set_period)
-        self._paths.paths_resolved.connect(self._on_paths_resolved)
         # Set initial period so paths resolve on first paint
+        # NOTE: paths_resolved is connected AFTER _incident_selector is created
+        # to avoid the signal firing before the widget exists.
         self._paths.set_period(self._period.fiscal_year, self._period.quarter)
         layout.addWidget(self._paths)
 
@@ -318,6 +319,9 @@ class ValidationScriptsPanel(QWidget):
         self._incident_selector.set_scripts(INCIDENT_SCRIPTS)
         self._incident_selector.selection_changed.connect(self._on_selection_changed)
         layout.addWidget(self._incident_selector)
+
+        # Connect paths_resolved here, after _incident_selector exists
+        self._paths.paths_resolved.connect(self._on_paths_resolved)
 
         # --- Discover Files button ---
         discover_row = QHBoxLayout()
@@ -721,18 +725,20 @@ class _UtilityPanelBase(QWidget):
 
     _TITLE = "Utility"
     _SUBTITLE = ""
-    _ENDPOINT = ""
+    _SCRIPT_MODULE = ""  # Subclasses set this to the importable module path
+    _SUPPORTS_LOG_LEVEL = True  # Set False for scripts without --log-level
 
     def __init__(
         self,
-        api_client: ApiClient,
+        api_client: Optional[ApiClient] = None,
         settings_prefix: str = "",
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
-        self._api_client = api_client
+        self._api_client = api_client  # kept for optional API use; not used for run
         self._prefix = settings_prefix or self._TITLE.lower().replace(" ", "_")
-        self._worker: Optional[ApiWorker] = None
+        self._worker: Optional[ScriptRunnerWorker] = None
+        self._temp_config_path: Optional[str] = None
 
         inner = QWidget()
         layout = QVBoxLayout(inner)
@@ -742,15 +748,17 @@ class _UtilityPanelBase(QWidget):
             layout.addWidget(_subtitle(self._SUBTITLE))
 
         # Testing period
-        self._period = _TestingPeriodSelector(
+        self._period = TestingPeriodWidget(
             settings_prefix=f"accuracy.{self._prefix}", parent=self
         )
         layout.addWidget(self._period)
 
         # Smart path config
-        self._paths = _SmartPathConfig(
+        self._paths = SmartPathConfigWidget(
             settings_prefix=f"accuracy.{self._prefix}", parent=self
         )
+        self._period.period_changed.connect(self._paths.set_period)
+        self._paths.set_period(self._period.fiscal_year, self._period.quarter)
         layout.addWidget(self._paths)
 
         # Subclass fields
@@ -810,28 +818,47 @@ class _UtilityPanelBase(QWidget):
     def _build_fields(self, layout: QVBoxLayout) -> None:
         """Override in subclasses to add panel-specific fields."""
 
-    def _build_payload(self) -> Optional[Dict[str, Any]]:
-        """Override in subclasses to build the API payload.
+    def _build_config(self) -> Optional[Dict[str, Any]]:
+        """Override in subclasses to return the YAML config dict for the script.
 
         Returns:
-            Payload dict, or ``None`` to abort the run.
+            Config dict, or ``None`` to abort the run.
         """
         return {}
 
     def _on_run(self) -> None:
-        """Validate and submit the utility job to the API."""
-        payload = self._build_payload()
-        if payload is None:
+        """Build a temp YAML config and run the utility script locally."""
+        if not self._SCRIPT_MODULE:
+            from PySide6.QtWidgets import QMessageBox
+            QMessageBox.warning(self, "Not implemented",
+                                f"{self._TITLE} has no script module configured.")
             return
+
+        config = self._build_config()
+        if config is None:
+            return
+
+        # Write temp YAML
+        fd, path = tempfile.mkstemp(suffix=".yaml", prefix="gui_util_")
+        with os.fdopen(fd, "w", encoding="utf-8") as fh:
+            yaml.safe_dump(config, fh, default_flow_style=False)
+        self._temp_config_path = path
+
+        argv = ["--config", path, "--gui-mode"]
+        if self._dry_run.isChecked():
+            argv.append("--dry-run")
+        log_level = self._log_level.currentText()
+        if log_level and self._SUPPORTS_LOG_LEVEL:
+            argv.extend(["--log-level", log_level])
+
+        import importlib
+        module = importlib.import_module(self._SCRIPT_MODULE)
 
         self._log_viewer.clear()
         self._run_controls.set_running(True)
+        self._log_viewer.append_line(f"[GUI] Running: {self._SCRIPT_MODULE}")
 
-        self._worker = ApiWorker(
-            client=self._api_client,
-            endpoint=self._ENDPOINT,
-            payload=payload,
-        )
+        self._worker = ScriptRunnerWorker(module, argv)
         self._worker.output_line.connect(self._log_viewer.append_line)
         self._worker.error.connect(self._log_viewer.append_error)
         self._worker.finished_signal.connect(self._on_finished)
@@ -839,10 +866,12 @@ class _UtilityPanelBase(QWidget):
 
     def _on_cancel(self) -> None:
         """Cancel a running job."""
-        if self._worker:
-            self._worker.cancel()
+        if self._worker and self._worker.isRunning():
+            self._worker.terminate()
         self._run_controls.set_running(False)
         self._log_viewer.append_error("[GUI] Cancelled.")
+        self._cleanup_temp_config()
+        self._worker = None
 
     def _on_finished(self, exit_code: int) -> None:
         """Handle job completion."""
@@ -853,7 +882,17 @@ class _UtilityPanelBase(QWidget):
         else:
             self._last_run.set_status("failed")
             self._log_viewer.append_error(f"\n[GUI] {self._TITLE} failed.")
+        self._cleanup_temp_config()
         self._worker = None
+
+    def _cleanup_temp_config(self) -> None:
+        """Delete the temp YAML config file if it exists."""
+        if self._temp_config_path and os.path.isfile(self._temp_config_path):
+            try:
+                os.remove(self._temp_config_path)
+            except OSError:
+                pass
+        self._temp_config_path = None
 
 
 # ---------------------------------------------------------------------------
@@ -868,7 +907,7 @@ class TemplateGeneratorPanel(_UtilityPanelBase):
     _SUBTITLE = (
         "Generate template CSVs from consolidated Kaizen error/query data."
     )
-    _ENDPOINT = "/api/accuracy/run"
+    _SCRIPT_MODULE = "accuracy_testing.scripts.accuracy_template_generator"
 
     def _build_fields(self, layout: QVBoxLayout) -> None:
         """Add incident selector and kaizen file fields."""
@@ -906,23 +945,29 @@ class TemplateGeneratorPanel(_UtilityPanelBase):
 
         layout.addWidget(kaizen_group)
 
-    def _build_payload(self) -> Optional[Dict[str, Any]]:
-        """Build the template generator API payload."""
+    def _build_config(self) -> Optional[Dict[str, Any]]:
+        """Build YAML config for accuracy_template_generator."""
+        smart = self._paths.get_smart_paths()
+        kaizen_dir = smart.kaizen if smart else self._errors_csv.get_path()
+        templates_dir = smart.templates if smart else ""
         return {
-            "scriptName": "accuracy_template_generator",
-            "testingPeriod": {
-                "fiscalYear": self._period.fiscal_year,
+            "testing_period": {
+                "fiscal_year": self._period.fiscal_year,
                 "quarter": self._period.quarter,
             },
-            "mode": "batch",
-            "batchConfig": {
-                "inputDirectory": self._paths.kaizen_dir,
-                "outputDirectory": self._paths.templates_dir,
-                "templateDirectory": "",
-                "logOutput": "logs",
+            "paths": {
+                "input": {
+                    "directory": kaizen_dir,
+                    "errors_file": self._errors_csv.get_path() or None,
+                    "queries_file": self._queries_csv.get_path() or None,
+                },
+                "output": {
+                    "directory": templates_dir,
+                },
             },
-            "logLevel": self._log_level.currentText(),
-            "dryRun": self._dry_run.isChecked(),
+            "processor": {
+                "log_level": self._log_level.currentText() or "INFO",
+            },
         }
 
 
@@ -938,7 +983,8 @@ class ExtractGeneratorPanel(_UtilityPanelBase):
     _SUBTITLE = (
         "Generate SQL extract batches from transaction reference CSVs."
     )
-    _ENDPOINT = "/api/accuracy/run"
+    _SCRIPT_MODULE = "accuracy_testing.scripts.sql_extract_generator"
+    _SUPPORTS_LOG_LEVEL = False  # sql_extract_generator uses --verbose, not --log-level
 
     def _build_fields(self, layout: QVBoxLayout) -> None:
         """Add incident selector and file table for extract inputs."""
@@ -977,31 +1023,58 @@ class ExtractGeneratorPanel(_UtilityPanelBase):
             if s["scriptKey"] in selected:
                 for inc in s["incidents"]:
                     incidents.append((inc["code"], s["scriptKey"]))
+        smart = self._paths.get_smart_paths()
         self._file_table.set_incidents(
             incidents,
-            extracts_dir=self._paths.extracts_dir,
-            output_dir=self._paths.output_dir,
+            extracts_dir=smart.extracts if smart else "",
+            output_dir=smart.output if smart else "",
             fiscal_year=self._period.fiscal_year,
             quarter=self._period.quarter,
         )
 
-    def _build_payload(self) -> Optional[Dict[str, Any]]:
-        """Build the SQL extract generator API payload."""
+    def _build_config(self) -> Optional[Dict[str, Any]]:
+        """Build YAML config for sql_extract_generator batch mode."""
+        smart = self._paths.get_smart_paths()
+        templates_dir = smart.templates if smart else ""
+        output_dir = smart.extracts if smart else ""
+        sql_templates_dir = str(
+            __import__("pathlib").Path(__file__).parent.parent.parent
+            / "accuracy_testing" / "sql_templates"
+        )
+
+        selected = self._incident_selector.get_selected()
+        incidents = [
+            inc["code"]
+            for s in INCIDENT_SCRIPTS
+            if s["scriptKey"] in selected
+            for inc in s["incidents"]
+        ]
+
+        batch_size = int(self._batch_size.get_value() or 900)
         return {
-            "scriptName": "sql_extract_generator",
-            "testingPeriod": {
-                "fiscalYear": self._period.fiscal_year,
+            "mode": "batch",
+            "testing_period": {
+                "fiscal_year": self._period.fiscal_year,
                 "quarter": self._period.quarter,
             },
-            "mode": "batch",
-            "batchConfig": {
-                "inputDirectory": self._paths.extracts_dir,
-                "outputDirectory": self._paths.output_dir,
-                "templateDirectory": "",
-                "logOutput": "logs",
+            "batch": {
+                "incidents": incidents,
+                "paths": {
+                    "template_dir": templates_dir,
+                    "output_dir": output_dir,
+                    "sql_template_dir": sql_templates_dir,
+                },
+                "filename_patterns": {
+                    "template": "{fiscal_year} {quarter} {incident}.csv",
+                },
             },
-            "logLevel": self._log_level.currentText(),
-            "dryRun": self._dry_run.isChecked(),
+            "processing": {
+                "batch_size": batch_size,
+                "output_format": "both",
+            },
+            "processor": {
+                "log_level": self._log_level.currentText() or "INFO",
+            },
         }
 
 
@@ -1017,7 +1090,7 @@ class CollatePanel(_UtilityPanelBase):
     _SUBTITLE = (
         "Collate individual extract CSVs into combined per-incident files."
     )
-    _ENDPOINT = "/api/accuracy/run"
+    _SCRIPT_MODULE = "accuracy_testing.scripts.collate_csv_extracts"
 
     def _build_fields(self, layout: QVBoxLayout) -> None:
         """Add incident selector."""
@@ -1030,23 +1103,33 @@ class CollatePanel(_UtilityPanelBase):
         )
         layout.addWidget(self._incident_selector)
 
-    def _build_payload(self) -> Optional[Dict[str, Any]]:
-        """Build the collation API payload."""
+    def _build_config(self) -> Optional[Dict[str, Any]]:
+        """Build YAML config for collate_csv_extracts batch mode."""
+        smart = self._paths.get_smart_paths()
+        extracts_dir = smart.extracts if smart else ""
+
+        selected = self._incident_selector.get_selected()
+        incidents = [
+            inc["code"]
+            for s in INCIDENT_SCRIPTS
+            if s["scriptKey"] in selected
+            for inc in s["incidents"]
+        ]
+
         return {
-            "scriptName": "collate_csv_extracts",
-            "testingPeriod": {
-                "fiscalYear": self._period.fiscal_year,
+            "testing_period": {
+                "fiscal_year": self._period.fiscal_year,
                 "quarter": self._period.quarter,
             },
-            "mode": "batch",
-            "batchConfig": {
-                "inputDirectory": self._paths.extracts_dir,
-                "outputDirectory": self._paths.extracts_dir,
-                "templateDirectory": "",
-                "logOutput": "logs",
+            "incidents": incidents,
+            "paths": {
+                "input_dir": extracts_dir,
+                "output_dir": extracts_dir,
             },
-            "logLevel": self._log_level.currentText(),
-            "dryRun": self._dry_run.isChecked(),
+            "processing": {
+                "dry_run": self._dry_run.isChecked(),
+                "log_level": self._log_level.currentText() or "INFO",
+            },
         }
 
 
@@ -1062,7 +1145,7 @@ class DataPushPanel(_UtilityPanelBase):
     _SUBTITLE = (
         "Write validated correction data back into template CSV files."
     )
-    _ENDPOINT = "/api/accuracy/run"
+    _SCRIPT_MODULE = "accuracy_testing.scripts.data_push"
 
     def _build_fields(self, layout: QVBoxLayout) -> None:
         """Add incident selector and file table for push paths."""
@@ -1093,33 +1176,49 @@ class DataPushPanel(_UtilityPanelBase):
             if s["scriptKey"] in selected:
                 for inc in s["incidents"]:
                     incidents.append((inc["code"], s["scriptKey"]))
+        smart = self._paths.get_smart_paths()
         self._file_table.set_incidents(
             incidents,
-            extracts_dir=self._paths.output_dir,
-            templates_dir=self._paths.templates_dir,
-            output_dir=self._paths.output_dir,
+            extracts_dir=smart.output if smart else "",
+            templates_dir=smart.templates if smart else "",
+            output_dir=smart.output if smart else "",
             fiscal_year=self._period.fiscal_year,
             quarter=self._period.quarter,
         )
 
-    def _build_payload(self) -> Optional[Dict[str, Any]]:
-        """Build the data push API payload."""
-        configs = self._file_table.get_configs()
+    def _build_config(self) -> Optional[Dict[str, Any]]:
+        """Build YAML config for data_push batch mode."""
+        smart = self._paths.get_smart_paths()
+        output_dir = smart.output if smart else ""
+        templates_dir = smart.templates if smart else ""
+
+        selected = self._incident_selector.get_selected()
+        incidents = [
+            inc["code"]
+            for s in INCIDENT_SCRIPTS
+            if s["scriptKey"] in selected
+            for inc in s["incidents"]
+        ]
+
         return {
-            "scriptName": "data_push",
-            "testingPeriod": {
-                "fiscalYear": self._period.fiscal_year,
+            "mode": "batch",
+            "testing_period": {
+                "fiscal_year": self._period.fiscal_year,
                 "quarter": self._period.quarter,
             },
-            "mode": "batch",
-            "batchConfig": {
-                "inputDirectory": self._paths.output_dir,
-                "outputDirectory": self._paths.output_dir,
-                "templateDirectory": self._paths.templates_dir,
-                "logOutput": "logs",
+            "batch": {
+                "incidents": incidents,
+                "paths": {
+                    "source_dir": output_dir,
+                    "target_dir": templates_dir,
+                    "input_directory": output_dir,
+                    "output_directory": templates_dir,
+                    "log_output": "logs",
+                },
             },
-            "logLevel": self._log_level.currentText(),
-            "dryRun": self._dry_run.isChecked(),
+            "processor": {
+                "log_level": self._log_level.currentText() or "INFO",
+            },
         }
 
 

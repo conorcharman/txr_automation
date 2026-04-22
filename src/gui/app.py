@@ -153,6 +153,8 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event: QCloseEvent) -> None:
         """Stop all running worker threads before closing."""
         self._health_timer.stop()
+        if self._health_worker and self._health_worker.isRunning():
+            self._health_worker.wait(4000)
         self._stop_all_workers()
         super().closeEvent(event)
 

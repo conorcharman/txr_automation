@@ -89,8 +89,7 @@ class GleifCacheRefreshPanel(QWidget):
 
         self.golden_copy_url = FormFieldWidget(
             "Golden Copy URL:", field_type="text",
-            tooltip="Override URL for the GLEIF golden copy download.",
-            settings_key=f"{pfx}.golden_copy_url",
+            tooltip="Override URL for the GLEIF golden copy download.\nThis is a one-time override and is not saved between sessions.",
         )
         layout.addWidget(self.golden_copy_url)
 
@@ -335,6 +334,17 @@ class LeiCheckPanel(QWidget):
         )
         batch_layout.addWidget(self.output_file)
 
+        self.name_column = FormFieldWidget(
+            "Name Column:", field_type="text",
+            tooltip=(
+                "Name of the column containing entity names for name-based matching. "
+                "Leave blank to auto-detect (legal_name, entity_name, name, "
+                "company_name, counterparty_name)."
+            ),
+            settings_key="gleif.lei_check.name_column",
+        )
+        batch_layout.addWidget(self.name_column)
+
         layout.addWidget(self._batch_widget)
         self._batch_widget.setVisible(False)
 
@@ -411,6 +421,9 @@ class LeiCheckPanel(QWidget):
             output = self.output_file.get_path()
             if output:
                 argv.extend(["--output", output])
+            name_col = self.name_column.get_value()
+            if name_col:
+                argv.extend(["--name-column", name_col])
 
         db = self.db_path.get_path()
         if db:

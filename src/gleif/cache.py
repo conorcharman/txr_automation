@@ -360,41 +360,82 @@ class GleifCacheManager:
             row = conn.execute(_SELECT_BY_LEI, {"lei": lei.strip().upper()}).fetchone()
         return _row_to_dict(row) if row else None
 
-    def search_by_name(self, name: str, limit: int = 20) -> List[Dict]:
+    def search_by_name(
+        self,
+        name: str,
+        limit: int = 20,
+        raw_query: bool = False,
+        priority_country: Optional[str] = None,
+    ) -> List[Dict]:
         """Search LEI records by legal name or other names using FTS5.
 
-        Uses SQLite FTS5 prefix matching.  Searches ``legal_name`` and
-        ``other_names`` in a single query.
+        Uses SQLite FTS5 phrase or prefix matching.  Searches ``legal_name``
+        and ``other_names`` in a single query.
 
         Args:
             name: Name fragment to search for.  Partial words are matched
                 when the term ends with ``*``.
             limit: Maximum number of results to return (default: 20).
+            raw_query: When ``True``, *name* is passed directly to the FTS5
+                ``MATCH`` clause without any sanitisation or phrase-quoting.
+                Use this to supply pre-formed FTS5 expressions such as
+                ``"AJ* Bell*"`` for prefix searches.  The caller is
+                responsible for ensuring the string is a valid FTS5 query.
+            priority_country: When provided, results whose
+                ``legal_address_country`` matches this ISO 3166-1 alpha-2
+                code are sorted before all others (within the same FTS5
+                relevance tier).  Pass ``"GB"`` to surface UK-registered
+                entities at the top.
 
         Returns:
-            List of row dicts ordered by FTS relevance (``rank`` ascending).
+            List of row dicts ordered by FTS relevance (``rank`` ascending),
+            with results from *priority_country* promoted to the front.
         """
-        # Sanitise: strip FTS5 special characters that could cause parse errors
-        safe_name = name.replace('"', "").replace("*", "").strip()
-        if not safe_name:
-            return []
-
-        query = f'"{safe_name}"'
-        sql = """
-            SELECT r.lei, r.legal_name, r.other_names,
-                   r.registration_status, r.entity_status, r.entity_category,
-                   r.legal_address_country, r.legal_jurisdiction,
-                   r.initial_registration_date, r.last_update_date,
-                   r.next_renewal_date, r.entity_expiration_date,
-                   r.entity_expiration_reason, r.successor_lei
-            FROM   lei_fts
-            JOIN   lei_records r ON lei_fts.rowid = r.rowid
-            WHERE  lei_fts MATCH ?
-            ORDER  BY rank
-            LIMIT  ?;
-        """
-        with self._connect() as conn:
-            rows = conn.execute(sql, (query, limit)).fetchall()
+        if raw_query:
+            query = name.strip()
+            if not query:
+                return []
+        else:
+            # Sanitise: strip FTS5 special characters that could cause parse errors
+            safe_name = name.replace('"', "").replace("*", "").strip()
+            if not safe_name:
+                return []
+            query = f'"{safe_name}"'
+        if priority_country:
+            sql = """
+                SELECT r.lei, r.legal_name, r.other_names,
+                       r.registration_status, r.entity_status, r.entity_category,
+                       r.legal_address_country, r.legal_jurisdiction,
+                       r.initial_registration_date, r.last_update_date,
+                       r.next_renewal_date, r.entity_expiration_date,
+                       r.entity_expiration_reason, r.successor_lei
+                FROM   lei_fts
+                JOIN   lei_records r ON lei_fts.rowid = r.rowid
+                WHERE  lei_fts MATCH ?
+                ORDER  BY CASE WHEN r.legal_address_country = ? THEN 0 ELSE 1 END,
+                          rank
+                LIMIT  ?;
+            """
+            with self._connect() as conn:
+                rows = conn.execute(
+                    sql, (query, priority_country.strip().upper(), limit)
+                ).fetchall()
+        else:
+            sql = """
+                SELECT r.lei, r.legal_name, r.other_names,
+                       r.registration_status, r.entity_status, r.entity_category,
+                       r.legal_address_country, r.legal_jurisdiction,
+                       r.initial_registration_date, r.last_update_date,
+                       r.next_renewal_date, r.entity_expiration_date,
+                       r.entity_expiration_reason, r.successor_lei
+                FROM   lei_fts
+                JOIN   lei_records r ON lei_fts.rowid = r.rowid
+                WHERE  lei_fts MATCH ?
+                ORDER  BY rank
+                LIMIT  ?;
+            """
+            with self._connect() as conn:
+                rows = conn.execute(sql, (query, limit)).fetchall()
         return [_row_to_dict(row) for row in rows]
 
     def get_leis_for_isin(self, isin: str) -> List[str]:

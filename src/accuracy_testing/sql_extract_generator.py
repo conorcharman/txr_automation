@@ -298,6 +298,12 @@ class SQLExtractGenerator:
         """
         if self.values_mode:
             refs_sql = self.format_values_block(batch.transaction_refs)
+            if not refs_sql.strip():
+                raise ValueError(
+                    f"Batch {batch.batch_number}: VALUES mode produced an empty block. "
+                    f"All {len(batch.transaction_refs)} reference(s) were CA-prefix and were "
+                    f"excluded. This template requires non-CA contract keys as input."
+                )
         else:
             # Format transaction refs
             refs_sql = self.format_transaction_refs(batch.transaction_refs)

@@ -32,7 +32,7 @@ import json
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -1056,7 +1056,8 @@ class RunHistoryPanel(QWidget):
         splitter.setSizes([300, 150])
         outer.addWidget(splitter, stretch=1)
 
-        self.refresh()
+        # Defer the first load so the widget tree is built before any network call.
+        QTimer.singleShot(0, self.refresh)
 
     def refresh(self) -> None:
         """Fetch recent jobs from the API and populate the table."""
@@ -1238,7 +1239,8 @@ class SchedulerTab(QWidget):
         # Select Dashboard by default
         self._sidebar.setCurrentRow(0)
 
-        self._engine.start()
+        # Defer engine start so the window can paint before the first network poll.
+        QTimer.singleShot(500, self._engine.start)
 
     def closeEvent(self, event) -> None:
         """Stop the engine cleanly before the widget is destroyed."""

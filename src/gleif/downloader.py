@@ -124,7 +124,7 @@ class GleifDownloader:
             zip_path=zip_path,
         )
         try:
-            result.csv_paths = self._extract_csv(zip_path)
+            result.csv_paths = self._extract_csv(zip_path, zip_path.name)
             logger.info(
                 "Extracted %d CSV file(s) from local ZIP: %s",
                 len(result.csv_paths),
@@ -277,6 +277,14 @@ class GleifDownloader:
                 if member.lower().endswith(".csv"):
                     zf.extract(member, extract_dir)
                     csv_paths.append(extract_dir / member)
+
+        if not csv_paths:
+            all_members = ", ".join(zipfile.ZipFile(zip_path).namelist()[:5])
+            raise ValueError(
+                f"No CSV files found in ZIP archive '{archive_name}'. "
+                f"Archive contains: {all_members}. "
+                f"Ensure the download URL points to a CSV Golden Copy (not XML)."
+            )
 
         logger.debug(
             "Extracted CSV files from ZIP",

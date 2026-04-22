@@ -66,7 +66,31 @@ from gleif.lookup import GleifLookup, LeiLookupResult
 # Regex to extract YYYY-MM-DD from a filename
 _DATE_PATTERN = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 
-# Result column names appended to each output row
+# Strips characters that are special in FTS5 syntax (parentheses, colons, etc.)
+# so they cannot corrupt a prefix query built from user-supplied name strings.
+_FTS5_SPECIAL_CHARS = re.compile(r"[^\w\s]", re.UNICODE)
+
+# Common company-suffix abbreviations and their full registered-name equivalents.
+# Patterns are word-boundary anchored and treat a trailing period as optional so
+# that both "Ltd" and "Ltd." are expanded.  Applied in _normalise_company_suffixes.
+_SUFFIX_EXPANSIONS: List[Tuple[re.Pattern[str], str]] = [
+    (re.compile(r"\bLtd\.?(?!\w)",   re.IGNORECASE), "Limited"),
+    (re.compile(r"\bCorp\.?(?!\w)",  re.IGNORECASE), "Corporation"),
+    (re.compile(r"\bInc\.?(?!\w)",   re.IGNORECASE), "Incorporated"),
+    (re.compile(r"\bBros\.?(?!\w)",  re.IGNORECASE), "Brothers"),
+    (re.compile(r"\bIntl\.?(?!\w)",  re.IGNORECASE), "International"),
+    (re.compile(r"\bMgmt\.?(?!\w)",  re.IGNORECASE), "Management"),
+    (re.compile(r"\bSvcs\.?(?!\w)",  re.IGNORECASE), "Services"),
+    (re.compile(r"\bSvc\.?(?!\w)",   re.IGNORECASE), "Services"),
+    (re.compile(r"\bGrp\.?(?!\w)",   re.IGNORECASE), "Group"),
+    (re.compile(r"\bHldgs\.?(?!\w)", re.IGNORECASE), "Holdings"),
+    (re.compile(r"\bHldg\.?(?!\w)",  re.IGNORECASE), "Holding"),
+    (re.compile(r"\bMfg\.?(?!\w)",   re.IGNORECASE), "Manufacturing"),
+    (re.compile(r"\bAssoc\.?(?!\w)", re.IGNORECASE), "Association"),
+    (re.compile(r"\bAssn\.?(?!\w)",  re.IGNORECASE), "Association"),
+]
+
+# Result column names appended to each output row — LEI validation mode
 _COL_LEI_VALID = "lei_valid"
 _COL_LEI_STATUS = "lei_status"
 _COL_LEGAL_NAME = "legal_name"
@@ -74,7 +98,14 @@ _COL_LEI_REASON = "lei_reason"
 _COL_ENTITY_CATEGORY = "entity_category"
 _COL_LEGAL_ADDR_COUNTRY = "legal_address_country"
 
-logger = logging.getLogger(__name__)
+# Result column names appended in name-match mode
+_COL_NAME_MATCH_LEI = "name_match_lei"
+_COL_NAME_MATCH_LEGAL_NAME = "name_match_legal_name"
+_COL_NAME_MATCH_STATUS = "name_match_status"
+_COL_NAME_MATCH_COUNTRY = "name_match_country"
+_COL_NAME_MATCH_SCORE = "name_match_score"
+
+_PRIORITY_COUNTRY = "GB"
 
 
 # ---------------------------------------------------------------------------
@@ -167,6 +198,18 @@ def _parse_args() -> argparse.Namespace:
         help=(
             "Optional merged output CSV collecting results from all input files, "
             "with an added 'source_file' column."
+        ),
+    )
+    batch.add_argument(
+        "--name-column",
+        type=str,
+        default=None,
+        metavar="COLUMN",
+        help=(
+            "Name of the column containing entity names for name-based matching. "
+            "When set, the script uses name-match mode instead of LEI validation. "
+            "Without this flag, auto-detection is attempted on common column names: "
+            "legal_name, entity_name, name, company_name, counterparty_name."
         ),
     )
 
@@ -291,13 +334,136 @@ def _detect_trade_date_column(fieldnames: List[str]) -> Optional[str]:
     return None
 
 
+def _detect_name_column(fieldnames: List[str]) -> Optional[str]:
+    """Find the entity name column from a list of CSV field names.
+
+    Accepts common column names used in counterparty and transaction files.
+
+    Args:
+        fieldnames: List of CSV header names.
+
+    Returns:
+        Matched column name, or ``None`` if not found.
+    """
+    candidates = {
+        "legal_name",
+        "entity_name",
+        "name",
+        "company_name",
+        "counterparty_name",
+    }
+    for field in fieldnames:
+        if field.strip().lower() in candidates:
+            return field
+    return None
+
+
+def _normalise_company_suffixes(name: str) -> str:
+    """Expand common company suffix abbreviations to their full registered forms.
+
+    For example ``"Retail Book Ltd"`` becomes ``"Retail Book Limited"`` so that
+    a subsequent phrase or prefix FTS5 search can match official GLEIF records
+    that use the full legal-name spelling.
+
+    Args:
+        name: Raw entity name string from the input CSV.
+
+    Returns:
+        Name with known abbreviations replaced by their full equivalents.
+        Returns the original string unchanged when no abbreviations are found.
+    """
+    result = name
+    for pattern, replacement in _SUFFIX_EXPANSIONS:
+        result = pattern.sub(replacement, result)
+    return result.strip()
+
+
+def _search_name_with_fallback(
+    lookup: GleifLookup,
+    name_value: str,
+    limit: int = 1,
+) -> Tuple[List[Dict], str]:
+    """Search the GLEIF cache by entity name with a phrase-to-prefix fallback.
+
+    Normalises company suffix abbreviations first (e.g. ``Ltd`` → ``Limited``)
+    so that the primary searches are performed against the full registered-name
+    spelling stored in GLEIF.  This ensures that a query for "Zeus Capital Ltd"
+    reaches "ZEUS CAPITAL LIMITED" before a lower-quality prefix match on the
+    abbreviation "Ltd." in an unrelated record.
+
+    Search order:
+    1. Phrase search on the normalised form (GB results promoted).
+    2. Prefix search on the normalised form (GB results promoted).
+    3. If normalisation changed the query: phrase search on the original form.
+    4. If normalisation changed the query: prefix search on the original form.
+
+    Args:
+        lookup: Initialised :class:`~gleif.lookup.GleifLookup`.
+        name_value: Entity name string to search for.
+        limit: Maximum number of results to return (default: 1).
+
+    Returns:
+        Tuple of ``(results_list, score_string)`` where *score_string* is one
+        of ``"1_PHRASE"``, ``"1_PREFIX"``, ``"1_PHRASE_NORM"``,
+        ``"1_PREFIX_NORM"``, or ``"NO_MATCH"``.  *results_list* is empty when
+        no match is found.
+    """
+    if not name_value.strip():
+        return [], "NO_MATCH"
+
+    normalised = _normalise_company_suffixes(name_value)
+    is_normalised = normalised != name_value
+    phrase_score = "1_PHRASE_NORM" if is_normalised else "1_PHRASE"
+    prefix_score = "1_PREFIX_NORM" if is_normalised else "1_PREFIX"
+
+    # Step 1: phrase search on normalised form (GB results promoted first)
+    results = lookup.search_by_name(normalised, limit=limit, priority_country=_PRIORITY_COUNTRY)
+    if results:
+        return results, phrase_score
+
+    # Step 2: prefix search on normalised form
+    safe = _FTS5_SPECIAL_CHARS.sub(" ", normalised).strip()
+    words = safe.split()
+    if not words:
+        return [], "NO_MATCH"
+    prefix_query = " ".join(w + "*" for w in words)
+    results = lookup.search_by_name(prefix_query, limit=limit, raw_query=True, priority_country=_PRIORITY_COUNTRY)
+    if results:
+        return results, prefix_score
+
+    # Steps 3 & 4: retry with the original (un-normalised) form when the query
+    # was changed by suffix expansion — catches entities whose official registered
+    # name itself uses abbreviations (e.g. "Smith Consulting Ltd." in GLEIF).
+    if is_normalised:
+        results = lookup.search_by_name(name_value, limit=limit, priority_country=_PRIORITY_COUNTRY)
+        if results:
+            return results, "1_PHRASE"
+
+        safe_raw = _FTS5_SPECIAL_CHARS.sub(" ", name_value).strip()
+        words_raw = safe_raw.split()
+        if words_raw:
+            prefix_raw = " ".join(w + "*" for w in words_raw)
+            results = lookup.search_by_name(prefix_raw, limit=limit, raw_query=True, priority_country=_PRIORITY_COUNTRY)
+            if results:
+                return results, "1_PREFIX"
+
+    return [], "NO_MATCH"
+
+
 def _process_batch_file(
     input_path: Path,
     lookup: GleifLookup,
     output_path: Path,
     fallback_date: Optional[date] = None,
+    name_column: Optional[str] = None,
 ) -> Tuple[int, int]:
-    """Read an input CSV, validate each LEI, write results to output CSV.
+    """Read an input CSV, validate each LEI or match entity names, and write results.
+
+    When the CSV has a LEI column, each row is validated against the GLEIF
+    cache (existing behaviour).  When the CSV has a name column instead,
+    each row is matched by name using FTS5 phrase search with a prefix
+    fallback.  If both columns are present, LEI validation takes precedence
+    and a warning is printed.
 
     Args:
         input_path: Path to the input CSV file.
@@ -305,6 +471,8 @@ def _process_batch_file(
         output_path: Destination CSV path for the enriched results.
         fallback_date: Trade date to use when no ``trade_date`` column is
             found and no date was extracted from the filename.
+        name_column: Override for the entity name column.  When ``None``,
+            auto-detection via :func:`_detect_name_column` is attempted.
 
     Returns:
         Tuple of ``(rows_processed, rows_skipped)``.
@@ -312,29 +480,126 @@ def _process_batch_file(
     rows_processed = 0
     rows_skipped = 0
 
-    with input_path.open(encoding="utf-8", newline="") as in_fh:
+    with input_path.open(encoding="utf-8-sig", newline="") as in_fh:
         reader = csv.DictReader(in_fh)
         if not reader.fieldnames:
             logger.warning("Input CSV has no headers: %s", input_path)
             return 0, 0
 
-        lei_col = _detect_lei_column(list(reader.fieldnames))
-        date_col = _detect_trade_date_column(list(reader.fieldnames))
+        fieldnames = list(reader.fieldnames)
+        lei_col = _detect_lei_column(fieldnames)
+        date_col = _detect_trade_date_column(fieldnames)
         filename_date = _extract_date_from_filename(input_path)
 
-        if lei_col is None:
-            logger.warning(
-                "No 'lei' column found in %s — skipping file", input_path.name
+        # Resolve name column: explicit override → auto-detect
+        resolved_name_col: Optional[str] = None
+        if name_column:
+            if name_column in fieldnames:
+                resolved_name_col = name_column
+            else:
+                print(
+                    f"WARNING: Specified --name-column '{name_column}' not found "
+                    f"in {input_path.name} — attempting auto-detection.",
+                    file=sys.stderr,
+                )
+                resolved_name_col = _detect_name_column(fieldnames)
+        else:
+            resolved_name_col = _detect_name_column(fieldnames)
+
+        # Determine processing mode
+        if lei_col is not None and resolved_name_col is not None:
+            print(
+                f"INFO: Both LEI column ('{lei_col}') and name column "
+                f"('{resolved_name_col}') found in {input_path.name}. "
+                f"Using LEI validation mode; name column will be ignored.",
+                file=sys.stderr,
+            )
+            resolved_name_col = None  # force LEI mode
+
+        if lei_col is None and resolved_name_col is None:
+            available = ", ".join(fieldnames[:10])
+            print(
+                f"WARNING: No LEI or name column found in {input_path.name} — skipping.\n"
+                f"  Detected columns: {available}\n"
+                f"  LEI mode expects a column named 'lei', 'LEI', or "
+                f"'Legal Entity Identifier'.\n"
+                f"  Name mode expects a column named 'legal_name', 'entity_name', "
+                f"'name', 'company_name', or 'counterparty_name'.\n"
+                f"  Use --name-column <COLUMN> to specify a custom name column.",
+                file=sys.stderr,
             )
             return 0, 0
 
-        out_fieldnames = list(reader.fieldnames) + [
-            _COL_LEI_VALID,
-            _COL_LEI_STATUS,
-            _COL_LEGAL_NAME,
-            _COL_LEI_REASON,
-            _COL_ENTITY_CATEGORY,
-            _COL_LEGAL_ADDR_COUNTRY,
+        # ----------------------------------------------------------------
+        # LEI validation mode
+        # ----------------------------------------------------------------
+        if lei_col is not None:
+            out_fieldnames = fieldnames + [
+                _COL_LEI_VALID,
+                _COL_LEI_STATUS,
+                _COL_LEGAL_NAME,
+                _COL_LEI_REASON,
+                _COL_ENTITY_CATEGORY,
+                _COL_LEGAL_ADDR_COUNTRY,
+            ]
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+
+            with output_path.open("w", encoding="utf-8", newline="") as out_fh:
+                writer = csv.DictWriter(out_fh, fieldnames=out_fieldnames)
+                writer.writeheader()
+
+                for row in reader:
+                    lei_value = row.get(lei_col, "").strip()
+                    if not lei_value:
+                        rows_skipped += 1
+                        out_row = dict(row)
+                        out_row.update({
+                            _COL_LEI_VALID: "",
+                            _COL_LEI_STATUS: "",
+                            _COL_LEGAL_NAME: "",
+                            _COL_LEI_REASON: "",
+                            _COL_ENTITY_CATEGORY: "",
+                            _COL_LEGAL_ADDR_COUNTRY: "",
+                        })
+                        writer.writerow(out_row)
+                        continue
+
+                    # Resolve trade date: column > filename > fallback
+                    trade_date: Optional[date] = None
+                    if date_col and row.get(date_col, "").strip():
+                        raw_date = row[date_col].strip()[:10]
+                        try:
+                            trade_date = date.fromisoformat(raw_date)
+                        except ValueError:
+                            pass
+                    if trade_date is None:
+                        trade_date = filename_date or fallback_date
+
+                    result: LeiLookupResult = lookup.lookup_lei(lei_value, trade_date)
+
+                    out_row = dict(row)
+                    out_row.update({
+                        _COL_LEI_VALID: "Y" if result.is_valid else "N",
+                        _COL_LEI_STATUS: result.registration_status,
+                        _COL_LEGAL_NAME: result.legal_name,
+                        _COL_LEI_REASON: result.reason,
+                        _COL_ENTITY_CATEGORY: result.entity_category,
+                        _COL_LEGAL_ADDR_COUNTRY: result.legal_address_country,
+                    })
+                    writer.writerow(out_row)
+                    rows_processed += 1
+
+            return rows_processed, rows_skipped
+
+        # ----------------------------------------------------------------
+        # Name-match mode
+        # ----------------------------------------------------------------
+        out_fieldnames = fieldnames + [
+            _COL_NAME_MATCH_LEI,
+            _COL_NAME_MATCH_LEGAL_NAME,
+            _COL_NAME_MATCH_STATUS,
+            _COL_NAME_MATCH_COUNTRY,
+            _COL_NAME_MATCH_SCORE,
         ]
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -343,43 +608,40 @@ def _process_batch_file(
             writer.writeheader()
 
             for row in reader:
-                lei_value = row.get(lei_col, "").strip()
-                if not lei_value:
+                name_value = row.get(resolved_name_col, "").strip()  # type: ignore[arg-type]
+                if not name_value:
                     rows_skipped += 1
                     out_row = dict(row)
                     out_row.update({
-                        _COL_LEI_VALID: "",
-                        _COL_LEI_STATUS: "",
-                        _COL_LEGAL_NAME: "",
-                        _COL_LEI_REASON: "",
-                        _COL_ENTITY_CATEGORY: "",
-                        _COL_LEGAL_ADDR_COUNTRY: "",
+                        _COL_NAME_MATCH_LEI: "",
+                        _COL_NAME_MATCH_LEGAL_NAME: "",
+                        _COL_NAME_MATCH_STATUS: "",
+                        _COL_NAME_MATCH_COUNTRY: "",
+                        _COL_NAME_MATCH_SCORE: "",
                     })
                     writer.writerow(out_row)
                     continue
 
-                # Resolve trade date: column > filename > fallback
-                trade_date: Optional[date] = None
-                if date_col and row.get(date_col, "").strip():
-                    raw_date = row[date_col].strip()[:10]
-                    try:
-                        trade_date = date.fromisoformat(raw_date)
-                    except ValueError:
-                        pass
-                if trade_date is None:
-                    trade_date = filename_date or fallback_date
-
-                result: LeiLookupResult = lookup.lookup_lei(lei_value, trade_date)
+                matches, score = _search_name_with_fallback(lookup, name_value)
 
                 out_row = dict(row)
-                out_row.update({
-                    _COL_LEI_VALID: "Y" if result.is_valid else "N",
-                    _COL_LEI_STATUS: result.registration_status,
-                    _COL_LEGAL_NAME: result.legal_name,
-                    _COL_LEI_REASON: result.reason,
-                    _COL_ENTITY_CATEGORY: result.entity_category,
-                    _COL_LEGAL_ADDR_COUNTRY: result.legal_address_country,
-                })
+                if matches:
+                    match = matches[0]
+                    out_row.update({
+                        _COL_NAME_MATCH_LEI: match.get("lei", ""),
+                        _COL_NAME_MATCH_LEGAL_NAME: match.get("legal_name", ""),
+                        _COL_NAME_MATCH_STATUS: match.get("registration_status", ""),
+                        _COL_NAME_MATCH_COUNTRY: match.get("legal_address_country", ""),
+                        _COL_NAME_MATCH_SCORE: score,
+                    })
+                else:
+                    out_row.update({
+                        _COL_NAME_MATCH_LEI: "",
+                        _COL_NAME_MATCH_LEGAL_NAME: "",
+                        _COL_NAME_MATCH_STATUS: "",
+                        _COL_NAME_MATCH_COUNTRY: "",
+                        _COL_NAME_MATCH_SCORE: score,
+                    })
                 writer.writerow(out_row)
                 rows_processed += 1
 
@@ -407,7 +669,7 @@ def main() -> None:
         _DEFAULT_CONFIG if _DEFAULT_CONFIG.exists() else None
     )
     cfg: Dict[str, Any] = _load_yaml_config(config_path) if config_path else {}
-    batch_cfg: Dict[str, Any] = cfg.get("batch", {})
+    batch_cfg: Dict[str, Any] = cfg.get("batch") or {}
 
     # --- Resolve DB path ------------------------------------------------
     db_path: Path = args.db or _REPO_ROOT / "data" / "gleif_cache.db"
@@ -454,7 +716,7 @@ def main() -> None:
     # Name search
     # ====================================================================
     if args.name:
-        results = lookup.search_by_name(args.name, limit=args.limit)
+        results, _ = _search_name_with_fallback(lookup, args.name, limit=args.limit)
         if not results:
             print(f"No results found for name: {args.name!r}")
             sys.exit(0)
@@ -518,6 +780,7 @@ def main() -> None:
             input_path=input_path,
             lookup=lookup,
             output_path=per_file_out,
+            name_column=args.name_column,
         )
         total_processed += rows_p
         total_skipped += rows_s
@@ -525,8 +788,8 @@ def main() -> None:
             f"  {input_path.name}: {rows_p} rows processed -> {per_file_out.name}"
         )
 
-        # Collect for merged output
-        if output:
+        # Collect for merged output — only if the file was actually written
+        if output and per_file_out.exists():
             with per_file_out.open(encoding="utf-8", newline="") as fh:
                 reader = csv.DictReader(fh)
                 for row in reader:

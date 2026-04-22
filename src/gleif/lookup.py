@@ -255,17 +255,31 @@ class GleifLookup:
         leis = self._cache.get_leis_for_isin(isin)
         return [self.lookup_lei(lei, trade_date) for lei in leis]
 
-    def search_by_name(self, name: str, limit: int = 20) -> List[dict]:
+    def search_by_name(
+        self,
+        name: str,
+        limit: int = 20,
+        raw_query: bool = False,
+        priority_country: Optional[str] = None,
+    ) -> List[dict]:
         """Search for legal entities by name using the local FTS5 index.
 
         Args:
             name: Name fragment or phrase to search for.
             limit: Maximum number of results to return (default: 20).
+            raw_query: When ``True``, *name* is passed directly to the FTS5
+                ``MATCH`` clause without sanitisation or phrase-quoting.  Use
+                this for pre-formed FTS5 expressions such as ``"AJ* Bell*"``.
+            priority_country: ISO 3166-1 alpha-2 country code whose results
+                are promoted to the top of the list before other FTS5 matches.
 
         Returns:
-            List of row dicts from ``lei_records``, ordered by FTS5 relevance.
+            List of row dicts from ``lei_records``, ordered by FTS5 relevance
+            with *priority_country* results first.
         """
-        return self._cache.search_by_name(name, limit=limit)
+        return self._cache.search_by_name(
+            name, limit=limit, raw_query=raw_query, priority_country=priority_country
+        )
 
     def lookup_by_bic(self, bic: str) -> Optional[LeiLookupResult]:
         """Look up an LEI by BIC code via the live GLEIF API.

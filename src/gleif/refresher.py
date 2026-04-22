@@ -240,77 +240,73 @@ class GleifRefresher:
         publish_slug = gc_info.publish_date.replace(":", "").replace("-", "")[:15]
         golden_copy_file_name = f"gleif-goldencopy-{publish_slug}.zip"
 
+        # Clear the sync log upfront so a forced full refresh always
+        # re-downloads and re-ingests, even if today's file was already
+        # processed in a previous run.
+        self._cache.truncate_lei_records()
+        self._cache.clear_full_refresh_sync_log()
+
         with _staging_context(self._staging_dir) as staging_dir:
             downloader = GleifDownloader(staging_dir)
 
             # --- Golden Copy ---
-            if self._cache.is_file_processed(golden_copy_file_name):
-                logger.info(
-                    "Skipping already-processed Golden Copy: %s",
-                    golden_copy_file_name,
+            logger.info(
+                "Downloading GLEIF Golden Copy from: %s", gc_info.download_url
+            )
+            gc_result = downloader.download_and_extract(
+                gc_info.download_url, golden_copy_file_name
+            )
+
+            if not gc_result.success:
+                logger.error(
+                    "Failed to download Golden Copy: %s", gc_result.error
                 )
-                result.files_skipped += 1
+                self._cache.log_sync(
+                    sync_type="FULL",
+                    file_name=golden_copy_file_name,
+                    records_processed=0,
+                    status="ERROR",
+                )
+                result.files_failed += 1
             else:
-                logger.info(
-                    "Downloading GLEIF Golden Copy from: %s", gc_info.download_url
-                )
-                self._cache.truncate_lei_records()
-                self._cache.clear_full_refresh_sync_log()
+                total_records = 0
+                try:
+                    for csv_path in gc_result.csv_paths:
+                        count = self._ingest_golden_copy_csv(csv_path)
+                        total_records += count
+                        logger.info(
+                            "Golden Copy CSV ingested: %s records from %s",
+                            f"{count:,}",
+                            csv_path.name,
+                        )
 
-                gc_result = downloader.download_and_extract(
-                    gc_info.download_url, golden_copy_file_name
-                )
+                    # Rebuild FTS after bulk load (triggers handle incremental
+                    # updates, but a rebuild after full truncate+reload is cleaner)
+                    self._cache.rebuild_fts()
 
-                if not gc_result.success:
-                    logger.error(
-                        "Failed to download Golden Copy: %s", gc_result.error
-                    )
                     self._cache.log_sync(
                         sync_type="FULL",
                         file_name=golden_copy_file_name,
-                        records_processed=0,
+                        records_processed=total_records,
+                        status="SUCCESS",
+                    )
+                    result.files_processed += 1
+                    result.total_records += total_records
+                    logger.info(
+                        "GLEIF Golden Copy load complete — %s records",
+                        f"{total_records:,}",
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    logger.error("Error ingesting Golden Copy CSV: %s", exc)
+                    self._cache.log_sync(
+                        sync_type="FULL",
+                        file_name=golden_copy_file_name,
+                        records_processed=total_records,
                         status="ERROR",
                     )
                     result.files_failed += 1
-                else:
-                    total_records = 0
-                    try:
-                        for csv_path in gc_result.csv_paths:
-                            count = self._ingest_golden_copy_csv(csv_path)
-                            total_records += count
-                            logger.info(
-                                "Golden Copy CSV ingested: %s records from %s",
-                                f"{count:,}",
-                                csv_path.name,
-                            )
-
-                        # Rebuild FTS after bulk load (triggers handle incremental
-                        # updates, but a rebuild after full truncate+reload is cleaner)
-                        self._cache.rebuild_fts()
-
-                        self._cache.log_sync(
-                            sync_type="FULL",
-                            file_name=golden_copy_file_name,
-                            records_processed=total_records,
-                            status="SUCCESS",
-                        )
-                        result.files_processed += 1
-                        result.total_records += total_records
-                        logger.info(
-                            "GLEIF Golden Copy load complete — %s records",
-                            f"{total_records:,}",
-                        )
-                    except Exception as exc:  # noqa: BLE001
-                        logger.error("Error ingesting Golden Copy CSV: %s", exc)
-                        self._cache.log_sync(
-                            sync_type="FULL",
-                            file_name=golden_copy_file_name,
-                            records_processed=total_records,
-                            status="ERROR",
-                        )
-                        result.files_failed += 1
-                    finally:
-                        downloader.cleanup_file(gc_result)
+                finally:
+                    downloader.cleanup_file(gc_result)
 
             # --- ISIN-to-LEI mapping ---
             if not skip_isin_map:

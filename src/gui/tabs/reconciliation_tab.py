@@ -23,7 +23,7 @@ from __future__ import annotations
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, QTimer, Signal
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import (
     QCheckBox,
@@ -255,7 +255,8 @@ class ReconciliationListPanel(QWidget):
         btn_row.addStretch()
         outer.addLayout(btn_row)
 
-        self.refresh()
+        # Defer the first load so the widget tree is built before any network call.
+        QTimer.singleShot(0, self.refresh)
 
     # ------------------------------------------------------------------
     # Public

@@ -4,7 +4,7 @@ FilePickerWidget
 ================
 
 A file or directory selection widget with a native dialog.
-Provides a label, read-only line edit, Browse button, and an optional
+Provides a label, editable line edit, Browse button, and an optional
 Auto-detect button that presents filesystem candidates ranked by
 modification time.
 """
@@ -126,8 +126,8 @@ class FilePickerWidget(QWidget):
         layout.addWidget(self._label)
 
         self._line_edit = QLineEdit()
-        self._line_edit.setReadOnly(True)
         self._line_edit.setPlaceholderText(placeholder or "No file selected")
+        self._line_edit.editingFinished.connect(self._on_text_edited)
         layout.addWidget(self._line_edit, stretch=1)
 
         if auto_detect_fn is not None:
@@ -157,6 +157,10 @@ class FilePickerWidget(QWidget):
             if saved:
                 self._line_edit.setText(str(saved))
             self.path_changed.connect(self._persist_path)
+
+    def _on_text_edited(self) -> None:
+        """Emit path_changed when the user edits the line edit directly."""
+        self.path_changed.emit(self._line_edit.text())
 
     def _on_browse(self) -> None:
         """Open the native file dialog based on mode."""
