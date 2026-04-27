@@ -59,6 +59,7 @@ VALIDATION_TYPE_MAP: dict[str, ValidationType] = {
     "non_zero_net_qty": ValidationType.NON_ZERO_NET_QTY,
     "non_zero_net_amt": ValidationType.NON_ZERO_NET_AMT,
     "incorrect_net_amount": ValidationType.INCORRECT_NET_AMOUNT,
+    "incorrect_time": ValidationType.INCORRECT_TIME,
 }
 
 SQL_TEMPLATE_MAP: dict[ValidationType, str] = {
@@ -71,6 +72,7 @@ SQL_TEMPLATE_MAP: dict[ValidationType, str] = {
     ValidationType.NON_ZERO_NET_QTY: "NonZeroNetQuantity_period.sql",
     ValidationType.NON_ZERO_NET_AMT: "NonZeroNetAmount_period.sql",
     ValidationType.INCORRECT_NET_AMOUNT: "IncorrectNetAmount_period.sql",
+    ValidationType.INCORRECT_TIME: "IncorrectTime_period.sql",
 }
 
 _SQL_TEMPLATES_DIR = Path(__file__).parent.parent / "sql_templates"

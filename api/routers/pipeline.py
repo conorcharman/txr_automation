@@ -44,6 +44,7 @@ PIPELINE_SCRIPTS: frozenset[str] = frozenset(
         "incorrect_net_amount_validation",
         "non_zero_net_quantity",
         "non_zero_net_amount",
+        "incorrect_time",
         "data_push",
     }
 )

@@ -61,7 +61,10 @@ class TemplateFormat:
 
     # Net amount validation incidents
     NET_AMOUNT_INCIDENTS = {'7_42'}
-    
+
+    # Incorrect time validation incidents
+    INCORRECT_TIME_INCIDENTS = {'7_30'}
+
     # Buyer validation template columns (empty columns to be filled by validation script)
     BUYER_VALIDATION_COLS = [
         "Transaction Reference",
@@ -147,6 +150,21 @@ class TemplateFormat:
         "error"
     ]
     
+    # Incorrect time validation template columns (Incident 7_30: IncorrectTime)
+    # child_ref / parent_ref are the primary keys; bulk_ref is derived.
+    # time_difference records the human-readable gap or 'parent datetime missing'.
+    INCORRECT_TIME_VALIDATION_COLS = [
+        "child_ref",
+        "child_datetime",
+        "parent_ref",
+        "parent_datetime",
+        "bulk_ref",
+        "time_difference",
+        "error",
+        "Correction",
+        "Correction Field",
+    ]
+
     # Default template columns
     DEFAULT_VALIDATION_COLS = [
         "Transaction Reference",
@@ -177,6 +195,8 @@ class TemplateFormat:
             return "net_quantity"
         elif incident_code in cls.NET_AMOUNT_INCIDENTS:
             return "net_amount"
+        elif incident_code in cls.INCORRECT_TIME_INCIDENTS:
+            return "incorrect_time"
         else:
             return "default"
     
@@ -193,6 +213,8 @@ class TemplateFormat:
             return cls.NET_QUANTITY_VALIDATION_COLS.copy()
         elif template_type == "net_amount":
             return cls.NET_AMOUNT_VALIDATION_COLS.copy()
+        elif template_type == "incorrect_time":
+            return cls.INCORRECT_TIME_VALIDATION_COLS.copy()
         else:
             return cls.DEFAULT_VALIDATION_COLS.copy()
 
@@ -442,15 +464,18 @@ class AccuracyTemplateGenerator:
                          if code in TemplateFormat.BUYER_INCIDENTS)
         seller_count = sum(len(records) for code, records in self.incident_records.items() 
                           if code in TemplateFormat.SELLER_INCIDENTS)
-        incorrect_net_amount_count = sum(len(records) for code, records in self.incident_records.items() 
+        incorrect_net_amount_count = sum(len(records) for code, records in self.incident_records.items()
                            if code in TemplateFormat.INCORRECT_NET_AMOUNT_INCIDENTS)
-        default_count = total_records - buyer_count - seller_count - incorrect_net_amount_count
-        
+        incorrect_time_count = sum(len(records) for code, records in self.incident_records.items()
+                           if code in TemplateFormat.INCORRECT_TIME_INCIDENTS)
+        default_count = total_records - buyer_count - seller_count - incorrect_net_amount_count - incorrect_time_count
+
         return {
             'total_incidents': len(self.incident_records),
             'total_records': total_records,
             'buyer_records': buyer_count,
             'seller_records': seller_count,
             'incorrect_net_amount_records': incorrect_net_amount_count,
+            'incorrect_time_records': incorrect_time_count,
             'default_records': default_count
         }

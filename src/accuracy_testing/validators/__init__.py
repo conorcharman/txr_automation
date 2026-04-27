@@ -6,6 +6,7 @@ Validation logic for various accuracy testing workflows.
 """
 
 from .incorrect_net_amount_validator import IncorrectNetAmountValidator
+from .incorrect_time_validator import IncorrectTimeValidator
 from .net_quantity_validator import NetQuantityValidator
 from .net_amount_validator import NetAmountValidator
 from .decision_maker_validator import (
@@ -22,6 +23,7 @@ from .data_push_processor import (
 
 __all__ = [
     'IncorrectNetAmountValidator',
+    'IncorrectTimeValidator',
     'NetQuantityValidator',
     'NetAmountValidator',
     'DecisionMakerValidator',

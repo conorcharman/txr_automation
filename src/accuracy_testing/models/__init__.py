@@ -6,6 +6,10 @@ Dataclasses representing records for various validation workflows.
 """
 
 from .incorrect_net_amount_record import IncorrectNetAmountRecord
+from .incorrect_time_record import (
+    IncorrectTimeRecord,
+    PARENT_DATETIME_MISSING,
+)
 from .inconsistent_type_record import (
     InconsistentTypeRecord,
     classify_f11,
@@ -32,6 +36,8 @@ from .data_push_record import (
 
 __all__ = [
     'IncorrectNetAmountRecord',
+    'IncorrectTimeRecord',
+    'PARENT_DATETIME_MISSING',
     'InconsistentTypeRecord',
     'classify_f11',
     'F11_PERCENTAGE_MARKERS',

@@ -25,7 +25,9 @@ Usage:
 """
 
 import argparse
+import glob
 import sys
+from typing import Optional
 import yaml
 from pathlib import Path
 
@@ -130,6 +132,36 @@ Template Formats:
     return parser.parse_args()
 
 
+def _discover_kaizen_file(directory: Path, kind: str) -> Optional[str]:
+    """Discover a Kaizen consolidated CSV by exact name then glob pattern.
+
+    Args:
+        directory: Directory to search.
+        kind: ``"errors"`` or ``"queries"``.
+
+    Returns:
+        Absolute path string of the best match, or ``None``.
+    """
+    exact_names = {
+        "errors": "consolidated_errors.csv",
+        "queries": "consolidated_queries.csv",
+    }
+    glob_patterns = {
+        "errors": "1903a*_Consolidated Errors Data_*.csv",
+        "queries": "1903a*_Consolidated Queries Data_*.csv",
+    }
+    # 1. Exact name match
+    exact = directory / exact_names[kind]
+    if exact.exists():
+        return str(exact)
+    # 2. Glob pattern match — return newest if multiple
+    matches = glob.glob(str(directory / glob_patterns[kind]))
+    if matches:
+        matches.sort(key=lambda p: Path(p).stat().st_mtime, reverse=True)
+        return matches[0]
+    return None
+
+
 def load_config(config_path: str) -> dict:
     """Load configuration from YAML file."""
     try:
@@ -219,14 +251,13 @@ def main():
         input_dir_from_config = input_paths.get('directory')
         if input_dir_from_config:
             input_dir = Path(input_dir_from_config)
-            candidate_errors = input_dir / 'consolidated_errors.csv'
-            candidate_queries = input_dir / 'consolidated_queries.csv'
-            if candidate_errors.exists():
-                errors_path = str(candidate_errors)
-            if candidate_queries.exists():
-                queries_path = str(candidate_queries)
-        else:
+            errors_path = _discover_kaizen_file(input_dir, 'errors')
+            queries_path = _discover_kaizen_file(input_dir, 'queries')
+
+        # Fall back to explicit file paths if directory discovery did not find both files
+        if not errors_path:
             errors_path = input_paths.get('errors_file')
+        if not queries_path:
             queries_path = input_paths.get('queries_file')
 
         output_dir = output_paths.get('directory')
@@ -234,10 +265,12 @@ def main():
     # --input directory overrides config (discovers files automatically)
     if args.input:
         input_dir = Path(args.input)
-        candidate_errors = input_dir / 'consolidated_errors.csv'
-        candidate_queries = input_dir / 'consolidated_queries.csv'
-        errors_path = str(candidate_errors) if candidate_errors.exists() else errors_path
-        queries_path = str(candidate_queries) if candidate_queries.exists() else queries_path
+        discovered_errors = _discover_kaizen_file(input_dir, 'errors')
+        discovered_queries = _discover_kaizen_file(input_dir, 'queries')
+        if discovered_errors:
+            errors_path = discovered_errors
+        if discovered_queries:
+            queries_path = discovered_queries
 
     # Explicit file args override everything
     if args.errors:

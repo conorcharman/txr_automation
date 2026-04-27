@@ -217,15 +217,15 @@ class _SmartPathConfig(QWidget):
             self._output_lbl.setText("Output: —")
             return
 
-        self._extracts_lbl.setText(f"Extracts: {base}/extracts")
+        self._extracts_lbl.setText(f"Extracts: {base}/extracts/csv")
         self._templates_lbl.setText(f"Templates: {base}/templates")
         self._output_lbl.setText(f"Output: {base}/output")
 
     @property
     def extracts_dir(self) -> str:
-        """Path to the extracts sub-directory."""
+        """Path to the extracts/csv sub-directory."""
         base = self._base_dir.get_path()
-        return f"{base}/extracts" if base else ""
+        return f"{base}/extracts/csv" if base else ""
 
     @property
     def templates_dir(self) -> str:
@@ -427,7 +427,7 @@ class ValidationScriptsPanel(QWidget):
         smart = self._paths.get_smart_paths()
         self._file_table.set_incidents(
             incidents,
-            extracts_dir=smart.extracts if smart else "",
+            extracts_dir=os.path.join(smart.extracts, "csv") if smart and smart.extracts else "",
             templates_dir=smart.templates if smart else "",
             output_dir=smart.output if smart else "",
             fiscal_year=self._period.fiscal_year,
@@ -593,12 +593,40 @@ class ValidationScriptsPanel(QWidget):
     def _write_batch_config(
         self, script_key: str, inc_configs: List[Dict[str, Any]]
     ) -> str:
-        """Write a batch YAML config for one script and return the temp path."""
+        """Write a YAML config for one script and return the temp path.
+
+        Scripts that support batch mode receive a ``mode: batch`` config.
+        Scripts that only understand ``paths.input_file``/``paths.output_file``
+        receive a single-incident ``paths:`` config.  ``validate_ftbdm`` and
+        ``validate_ftsdm`` additionally need ``single.incident_code``.
+        """
+        # Script keys that support the batch config format natively
+        _BATCH_CAPABLE = {
+            "buyer_id_validation",
+            "seller_id_validation",
+            "incorrect_time",
+        }
+        # Script keys that require single.incident_code in their config
+        _NEEDS_INCIDENT_CODE = {
+            "validate_ftbdm",
+            "validate_ftsdm",
+        }
+        # Mapping from script key to the local YAML config that contains
+        # supplementary paths (e.g. lei_data_file) not derivable from
+        # SmartPaths alone.
+        _LOCAL_CONFIG_FILES = {
+            "validate_ftbdm": "ftbdm_validation.yaml",
+            "validate_ftsdm": "ftsdm_validation.yaml",
+        }
+
         smart = self._paths.get_smart_paths()
         incident_codes = [c["incidentCode"] for c in inc_configs]
+        fy = self._period.fiscal_year
+        quarter = self._period.quarter
+        log_level = self._log_level.currentText() or "INFO"
 
         # Use smart paths as primary source; fall back to first config's dir
-        extracts_dir = smart.extracts if smart else ""
+        extracts_dir = os.path.join(smart.extracts, "csv") if smart and smart.extracts else ""
         templates_dir = smart.templates if smart else ""
         output_dir = smart.output if smart else ""
         if not extracts_dir and inc_configs[0].get("inputFile"):
@@ -608,29 +636,74 @@ class ValidationScriptsPanel(QWidget):
         if not output_dir and inc_configs[0].get("outputFile"):
             output_dir = os.path.dirname(inc_configs[0]["outputFile"])
 
-        config: Dict[str, Any] = {
-            "mode": "batch",
-            "testing_period": {
-                "fiscal_year": self._period.fiscal_year,
-                "quarter": self._period.quarter,
-            },
-            "batch": {
-                "incidents": incident_codes,
+        if script_key in _BATCH_CAPABLE:
+            config: Dict[str, Any] = {
+                "mode": "batch",
+                "testing_period": {
+                    "fiscal_year": fy,
+                    "quarter": quarter,
+                },
+                "batch": {
+                    "incidents": incident_codes,
+                    "paths": {
+                        "extract_dir": extracts_dir,
+                        "template_dir": templates_dir,
+                        "output_dir": output_dir,
+                    },
+                    "filename_patterns": {
+                        "extract": "{incident}_{fiscal_year}_{quarter}_extract.csv",
+                        "template": "{fiscal_year} {quarter} {incident}.csv",
+                        "output": "validated_{fiscal_year}_{quarter}_{incident}.csv",
+                    },
+                },
+                "processor": {
+                    "log_level": log_level,
+                },
+            }
+        else:
+            # Single-incident scripts: build explicit paths for the one incident
+            incident_code = incident_codes[0]
+            input_file = (
+                inc_configs[0].get("inputFile")
+                or os.path.join(extracts_dir, f"{incident_code}_{fy}_{quarter}_extract.csv")
+            )
+            output_file = (
+                inc_configs[0].get("outputFile")
+                or os.path.join(output_dir, f"validated_{fy}_{quarter}_{incident_code}.csv")
+            )
+            config = {
                 "paths": {
-                    "extract_dir": extracts_dir,
-                    "template_dir": templates_dir,
-                    "output_dir": output_dir,
+                    "input_file": input_file,
+                    "output_file": output_file,
+                    "log_output": "logs",
                 },
-                "filename_patterns": {
-                    "extract": "{incident}_{fiscal_year}_{quarter}_extract.csv",
-                    "template": "{fiscal_year} {quarter} {incident}.csv",
-                    "output": "validated_{fiscal_year}_{quarter}_{incident}.csv",
+                "processor": {
+                    "log_level": log_level,
                 },
-            },
-            "processor": {
-                "log_level": self._log_level.currentText() or "INFO",
-            },
-        }
+            }
+            if script_key in _NEEDS_INCIDENT_CODE:
+                config["single"] = {"incident_code": incident_code}
+
+            # Merge supplementary paths (e.g. lei_data_file) from the
+            # existing local YAML config when available.
+            if script_key in _LOCAL_CONFIG_FILES:
+                from pathlib import Path as _Path
+                local_cfg_path = (
+                    _Path(__file__).parent.parent.parent.parent
+                    / "config" / "local" / "accuracy_testing"
+                    / _LOCAL_CONFIG_FILES[script_key]
+                )
+                if local_cfg_path.exists():
+                    with open(local_cfg_path, "r", encoding="utf-8") as fh:
+                        local_cfg = yaml.safe_load(fh) or {}
+                    local_paths = (
+                        local_cfg.get("single", {}).get("paths", {})
+                        or local_cfg.get("paths", {})
+                    )
+                    for extra_key in ("lei_data_file", "id_formats_file"):
+                        if extra_key in local_paths and extra_key not in config["paths"]:
+                            config["paths"][extra_key] = local_paths[extra_key]
+
         fd, path = tempfile.mkstemp(suffix=".yaml", prefix="gui_accuracy_")
         with os.fdopen(fd, "w", encoding="utf-8") as fh:
             yaml.safe_dump(config, fh, default_flow_style=False)
@@ -1026,7 +1099,7 @@ class ExtractGeneratorPanel(_UtilityPanelBase):
         smart = self._paths.get_smart_paths()
         self._file_table.set_incidents(
             incidents,
-            extracts_dir=smart.extracts if smart else "",
+            extracts_dir=os.path.join(smart.extracts, "csv") if smart and smart.extracts else "",
             output_dir=smart.output if smart else "",
             fiscal_year=self._period.fiscal_year,
             quarter=self._period.quarter,
@@ -1116,6 +1189,8 @@ class CollatePanel(_UtilityPanelBase):
             for inc in s["incidents"]
         ]
 
+        csv_dir = os.path.join(extracts_dir, "csv") if extracts_dir else ""
+
         return {
             "testing_period": {
                 "fiscal_year": self._period.fiscal_year,
@@ -1123,11 +1198,12 @@ class CollatePanel(_UtilityPanelBase):
             },
             "incidents": incidents,
             "paths": {
-                "input_dir": extracts_dir,
-                "output_dir": extracts_dir,
+                "input_dir": csv_dir,
+                "output_dir": csv_dir,
             },
             "processing": {
                 "dry_run": self._dry_run.isChecked(),
+                "delete_originals": True,
                 "log_level": self._log_level.currentText() or "INFO",
             },
         }
@@ -1173,7 +1249,7 @@ class DataPushPanel(_UtilityPanelBase):
         selected = self._incident_selector.get_selected()
         incidents: List[Tuple[str, str]] = []
         for s in INCIDENT_SCRIPTS:
-            if s["scriptKey"] in selected:
+            if s["scriptKey"] in selected and not s.get("sql_only"):
                 for inc in s["incidents"]:
                     incidents.append((inc["code"], s["scriptKey"]))
         smart = self._paths.get_smart_paths()
@@ -1193,10 +1269,11 @@ class DataPushPanel(_UtilityPanelBase):
         templates_dir = smart.templates if smart else ""
 
         selected = self._incident_selector.get_selected()
+        # Exclude sql_only incidents — they have no validation output files
         incidents = [
             inc["code"]
             for s in INCIDENT_SCRIPTS
-            if s["scriptKey"] in selected
+            if s["scriptKey"] in selected and not s.get("sql_only")
             for inc in s["incidents"]
         ]
 
@@ -1213,6 +1290,7 @@ class DataPushPanel(_UtilityPanelBase):
                     "target_dir": templates_dir,
                     "input_directory": output_dir,
                     "output_directory": templates_dir,
+                    "backup_dir": os.path.join(templates_dir, "backup") if templates_dir else "",
                     "log_output": "logs",
                 },
             },

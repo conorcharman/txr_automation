@@ -56,6 +56,7 @@ SCRIPT_MODULES: dict[str, str] = {
     "incorrect_net_amount_validation":   "src.accuracy_testing.scripts.incorrect_net_amount_validation",
     "non_zero_net_quantity":             "src.accuracy_testing.scripts.non_zero_net_quantity",
     "non_zero_net_amount":               "src.accuracy_testing.scripts.non_zero_net_amount",
+    "incorrect_time":                    "src.accuracy_testing.scripts.incorrect_time",
     # Accuracy Testing — utility scripts
     "run_all_validations":               "src.accuracy_testing.scripts.run_all_validations",
     "sql_extract_generator":             "src.accuracy_testing.scripts.sql_extract_generator",

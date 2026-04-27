@@ -55,7 +55,7 @@ INCIDENT_CODE_MATRIX: Dict[str, IncidentMetadata] = {
     '7_27':   {'sides': {'buyer'},           'validation_type': 'pending',          'description': 'Single INTC ISIN trade'},
     '7_28':   {'sides': {'buyer'},           'validation_type': 'pending',          'description': 'Block or allocation ISIN trade that does not correctly pair'},
     '7_29':   {'sides': {'buyer'},           'validation_type': 'pending',          'description': 'INTC ISIN trade where part of one to one block and allocation pair'},
-    '7_30':   {'sides': {'buyer'},           'validation_type': 'pending',          'description': 'Block or allocation ISIN trade with incorrect time'},
+    '7_30':   {'sides': {'buyer'},           'validation_type': 'incorrect_time',  'description': 'Block or allocation ISIN trade with incorrect time'},
     '7_38':   {'sides': {'buyer', 'seller'}, 'validation_type': 'pending',          'description': 'INTC ISIN trade with inconsistent quantity types across block and allocations'},
     '7_35':   {'sides': {'buyer'},           'validation_type': 'standard_id',      'description': 'Incorrect CONCAT value within Buyer identification code field'},
     '7_36':   {'sides': {'buyer'},           'validation_type': 'standard_id',      'description': 'Non-preferred value type within Buyer identification code field'},

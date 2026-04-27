@@ -642,7 +642,7 @@ def run_batch_validation(config: Dict, dry_run: bool = False, show_progress: boo
     
     # Get filename patterns from batch configuration
     filename_patterns = batch_config.get('filename_patterns', {})
-    extract_pattern = filename_patterns.get('extract', '{incident}_{fiscal_year}_{quarter}.csv')
+    extract_pattern = filename_patterns.get('extract', '{incident}_{fiscal_year}_{quarter}_extract.csv')
     template_pattern = filename_patterns.get('template', '{fiscal_year} {quarter} {incident}.csv')
     output_pattern = filename_patterns.get('output', 'validated_{fiscal_year}_{quarter}_{incident}.csv')
     

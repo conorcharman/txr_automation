@@ -71,6 +71,7 @@ _DISPLAY_NAMES: dict[str, str] = {
     "ftsdm": "Fund Trade Seller Decision Maker Validation",
     "non-zero-qty": "Non-Zero Net Quantity Validation",
     "non-zero-amt": "Non-Zero Net Amount Validation",
+    "incorrect-time": "Incorrect Time Validation",
     "incorrect_net_amount": "Incorrect Net Amount Validation",
 }
 
@@ -114,6 +115,7 @@ class ValidationType(enum.Enum):
     FUND_TRADE_SELLER_DM = "ftsdm"
     NON_ZERO_NET_QTY = "non-zero-qty"
     NON_ZERO_NET_AMT = "non-zero-amt"
+    INCORRECT_TIME = "incorrect-time"
     INCORRECT_NET_AMOUNT = "incorrect_net_amount"
 
     @property

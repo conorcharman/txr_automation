@@ -2262,7 +2262,7 @@ class IDValidationProcessor:
         # No match found — return configured so the existing error path triggers
         return configured
 
-
+    def _get_tracker_status(self, person_code: str) -> str:
         """
         Get tracker status for a person code.
         Checks Italian tracker first, then main tracker.

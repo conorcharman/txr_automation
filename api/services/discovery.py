@@ -25,6 +25,7 @@ INCIDENT_CODE_PATTERNS: dict[str, list[str]] = {
     "incorrect_net_amount_validation": ["35_3"],
     "non_zero_net_quantity": ["7_6"],
     "non_zero_net_amount": ["7_42"],
+    "incorrect_time": ["7_30"],
 }
 
 

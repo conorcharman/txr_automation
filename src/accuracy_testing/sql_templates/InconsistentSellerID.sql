@@ -11,7 +11,7 @@ WITH LinkCodes AS (
     GLDATA / ROTCLI t4 
   GROUP BY 
     t4.CLINUM
-c)
+)
 
   SELECT 
     t1.REPORTREF, 

@@ -1,0 +1,40 @@
+# Incorrect Time Validation Configuration
+# ==========================================
+# Configuration for Incident Code 7_30 (IncorrectTime) validation.
+#
+# This script compares the trade datetime of each child allocation against the
+# trade datetime of its parent block at second precision. Microseconds are
+# ignored. Records where the datetimes do not match are flagged with error = 'Y'
+# and the human-readable time difference is written to the time_difference column.
+#
+# Usage:
+#   validate-incorrect-time --config config/local/accuracy_testing/incorrect_time.yaml
+#   python -m src.accuracy_testing.scripts.incorrect_time --config <this file>
+
+# =============================================================================
+# PATHS
+# =============================================================================
+
+paths:
+  # Input CSV produced by the IncorrectTime SQL extract
+  input_file: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\extracts\csv\7_30.csv'
+
+  # Output CSV — all input columns plus bulk_ref, time_difference, error
+  output_file: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2026\Q1\validated\7_30_validated.csv'
+
+  # Directory for log files (defaults to 'logs' if omitted)
+  log_output: 'logs'
+
+# =============================================================================
+# PROCESSOR SETTINGS
+# =============================================================================
+
+processor:
+  # Logging level: DEBUG, INFO, WARNING, ERROR
+  log_level: 'INFO'
+
+  # Enable verbose per-record logging
+  verbose: false
+
+  # Batch size (reserved for future use)
+  batch_size: 1000

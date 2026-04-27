@@ -68,6 +68,7 @@ _SCRIPT_MODULES: dict[str, str] = {
     "incorrect_net_amount_validation":   "src.accuracy_testing.scripts.incorrect_net_amount_validation",
     "non_zero_net_quantity":             "src.accuracy_testing.scripts.non_zero_net_quantity",
     "non_zero_net_amount":               "src.accuracy_testing.scripts.non_zero_net_amount",
+    "incorrect_time":                    "src.accuracy_testing.scripts.incorrect_time",
     # Accuracy Testing — utility scripts
     "run_all_validations":               "src.accuracy_testing.scripts.run_all_validations",
     "sql_extract_generator":             "src.accuracy_testing.scripts.sql_extract_generator",
@@ -106,6 +107,7 @@ ACCURACY_VALIDATION_SCRIPTS: frozenset[str] = frozenset(
         "incorrect_net_amount_validation",
         "non_zero_net_quantity",
         "non_zero_net_amount",
+        "incorrect_time",
         "sql_extract_generator",
         "accuracy_template_generator",
         "collate_csv_extracts",
@@ -306,14 +308,19 @@ class ScriptRunnerService:
         }
 
         if req.mode == "batch" and req.batch_config is not None:
-            config["batch"] = {
-                "paths": {
-                    "input_directory": req.batch_config.input_directory,
-                    "output_directory": req.batch_config.output_directory,
-                    "template_directory": req.batch_config.template_directory,
-                    "log_output": req.batch_config.log_output,
-                }
+            batch_paths: dict[str, str] = {
+                "input_directory": req.batch_config.input_directory,
+                "output_directory": req.batch_config.output_directory,
+                "template_directory": req.batch_config.template_directory,
+                "log_output": req.batch_config.log_output,
             }
+            # For data_push, store backups in a "backup" subfolder
+            # within the target (template) directory.
+            if req.script_name == "data_push" and req.batch_config.output_directory:
+                batch_paths["backup_dir"] = os.path.join(
+                    req.batch_config.output_directory, "backup",
+                )
+            config["batch"] = {"paths": batch_paths}
         elif req.mode == "single" and req.single_config is not None:
             config["single"] = {
                 "incident_code": req.single_config.incident_code,

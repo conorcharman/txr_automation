@@ -3,14 +3,16 @@
 Replay Processing Tab
 =====================
 
-Four replay processing script panels:
-- Phase II
+Five replay processing script panels:
+- Phase II - Feedback
+- Phase II - Final Lookup
 - Phase III - Feedback
 - Phase III - Final Lookup
 - Merge Inconsistent Summaries
 
 Uses a sidebar list + stacked widget layout with per-panel log viewers.
 Panels persist field values across sessions via QSettings caching.
+SmartPathConfigWidget provides auto-path resolution from FY/Q selection.
 """
 
 import os
@@ -33,6 +35,7 @@ from PySide6.QtWidgets import (
 
 from gui.constants import FISCAL_YEARS, LOG_LEVELS, QUARTERS
 from gui.utils.settings import settings
+from gui.utils.file_discovery_service import SmartPaths
 from gui.widgets import (
     ConfigLoaderWidget,
     FilePickerWidget,
@@ -40,6 +43,7 @@ from gui.widgets import (
     LogViewerWidget,
     PreRunCheckWidget,
     RunControlsWidget,
+    SmartPathConfigWidget,
     TestingPeriodWidget,
 )
 from gui.widgets.pre_run_check import FileCheck
@@ -143,6 +147,7 @@ class BaseReplayPanel(QWidget):
         extra_file_patterns: Optional[List[Dict[str, Any]]] = None,
         default_incident_columns: Optional[Dict[str, str]] = None,
         settings_prefix: str = "",
+        smart_fill_map: Optional[Dict[str, List[str]]] = None,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
@@ -153,6 +158,7 @@ class BaseReplayPanel(QWidget):
         self._file_pattern_fields: Dict[str, FormFieldWidget] = {}
         self._list_fields: set = set()
         self._default_incident_columns = default_incident_columns
+        self._smart_fill_map: Dict[str, List[str]] = smart_fill_map or {}
         pfx = f"replay.{settings_prefix}" if settings_prefix else "replay"
         self._pfx = pfx
 
@@ -197,8 +203,28 @@ class BaseReplayPanel(QWidget):
         self.fiscal_year = _FYAlias(self._period)
         self.quarter = _QAlias(self._period)
 
-        # --- Paths ---
-        paths_group = QGroupBox("Paths")
+        # --- Smart Path Configuration ---
+        self._smart = SmartPathConfigWidget(
+            settings_prefix="replay",
+            stages=["kaizen", "output", "logs"],
+            parent=self,
+        )
+        self._period.period_changed.connect(self._smart.set_period)
+        self._smart.paths_resolved.connect(self._on_smart_paths_resolved)
+        # Set initial period so status grid populates on first paint
+        self._smart.set_period(self._period.fiscal_year, self._period.quarter)
+        layout.addWidget(self._smart)
+
+        # --- Discovered Files summary row ---
+        self._discovery_row = QHBoxLayout()
+        self._discovery_label = QLabel("")
+        self._discovery_label.setStyleSheet("color: grey; font-size: 11px;")
+        self._discovery_row.addWidget(self._discovery_label)
+        self._discovery_row.addStretch()
+        layout.addLayout(self._discovery_row)
+
+        # --- Paths (manual overrides) ---
+        paths_group = QGroupBox("Paths (overrides)")
         paths_layout = QVBoxLayout(paths_group)
 
         self._path_pickers: Dict[str, FilePickerWidget] = {}
@@ -284,6 +310,36 @@ class BaseReplayPanel(QWidget):
             if base:
                 continue  # don't overwrite a user-entered path tooltip
             picker.setToolTip(f"Expected path pattern: {hint}/{key}")
+        self._refresh_pre_run_checks()
+
+    def _on_smart_paths_resolved(self, paths: SmartPaths) -> None:
+        """Auto-fill empty path pickers from smart-resolved paths.
+
+        Only fills pickers that are currently empty so manual entries
+        are never overwritten.
+
+        Args:
+            paths: Resolved :class:`SmartPaths` from SmartPathConfigWidget.
+        """
+        for stage, picker_keys in self._smart_fill_map.items():
+            stage_path = getattr(paths, stage, "")
+            if not stage_path:
+                continue
+            for key in picker_keys:
+                picker = self._path_pickers.get(key)
+                if picker and not picker.get_path():
+                    picker.set_path(stage_path)
+
+        # Update discovery summary label
+        counts: List[str] = []
+        for stage in ("output", "kaizen"):
+            count = paths.file_counts.get(stage, 0)
+            if count:
+                counts.append(f"{stage}: {count} file{'s' if count != 1 else ''}")
+        self._discovery_label.setText(
+            "Discovered — " + ",  ".join(counts) if counts else ""
+        )
+
         self._refresh_pre_run_checks()
 
     def _refresh_pre_run_checks(self) -> None:
@@ -518,8 +574,19 @@ class MergeInconsistentPanel(QWidget):
         self.fiscal_year = _FYAlias(self._period)
         self.quarter = _QAlias(self._period)
 
+        # --- Smart Path Configuration ---
+        self._smart = SmartPathConfigWidget(
+            settings_prefix="replay",
+            stages=["output", "logs"],
+            parent=self,
+        )
+        self._period.period_changed.connect(self._smart.set_period)
+        self._smart.paths_resolved.connect(self._on_smart_paths_resolved)
+        self._smart.set_period(self._period.fiscal_year, self._period.quarter)
+        layout.addWidget(self._smart)
+
         # --- Paths ---
-        paths_group = QGroupBox("Paths")
+        paths_group = QGroupBox("Paths (overrides)")
         paths_layout = QVBoxLayout(paths_group)
 
         self.input_dir = FilePickerWidget(
@@ -581,6 +648,12 @@ class MergeInconsistentPanel(QWidget):
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(_scrollable(inner))
+
+    def _on_smart_paths_resolved(self, paths: SmartPaths) -> None:
+        """Auto-fill the input directory from the resolved output path if empty."""
+        if not self.input_dir.get_path() and paths.output:
+            self.input_dir.set_path(paths.output)
+            self._refresh_pre_run_check(paths.output)
 
     def _refresh_pre_run_check(self, path: str = "") -> None:
         """Update PreRunCheckWidget for the merge input directory."""
@@ -767,7 +840,7 @@ class ReplayTab(QWidget):
         layout.addWidget(self._stack, stretch=1)
 
         panels = [
-            ("Phase II", BaseReplayPanel(
+            ("Phase II - Feedback", BaseReplayPanel(
                 "src.replay.phase_2_processor",
                 "Phase II Processor",
                 subtitle="Transaction reference lookup and correction matching",
@@ -792,6 +865,28 @@ class ReplayTab(QWidget):
                     },
                 ],
                 default_incident_columns=_PHASE2_INCIDENT_COLUMNS,
+                smart_fill_map={"output": ["replay_output"], "logs": ["log_output"]},
+            )),
+            ("Phase II - Final Lookup", BaseReplayPanel(
+                "src.replay.phase_2_final_lookup",
+                "Phase II - Final Lookup",
+                subtitle="Validate Phase II corrections against UnaVista transaction data",
+                settings_prefix="phase2_final",
+                extra_paths=[
+                    {"label": "Phase 2 output directory:", "key": "replay_output_file",
+                     "tooltip": "Directory containing Phase II processor output CSV files."},
+                    {"label": "UnaVista files directory:", "key": "unavista_files",
+                     "tooltip": "Directory containing UnaVista transaction CSV files."},
+                    {"label": "Output directory:", "key": "output_file",
+                     "tooltip": "Directory for annotated final lookup output files."},
+                    {"label": "Log directory:", "key": "log_output",
+                     "tooltip": "Directory for processing log files."},
+                ],
+                smart_fill_map={
+                    "output": ["replay_output_file", "output_file"],
+                    "kaizen": ["unavista_files"],
+                    "logs": ["log_output"],
+                },
             )),
             ("Phase III - Feedback", BaseReplayPanel(
                 "src.replay.phase_3_processor",
@@ -826,6 +921,10 @@ class ReplayTab(QWidget):
                     },
                 ],
                 default_incident_columns=_PHASE3_INCIDENT_COLUMNS,
+                smart_fill_map={
+                    "output": ["replay_input", "replay_output"],
+                    "logs": ["log_output"],
+                },
             )),
             ("Phase III - Final Lookup", BaseReplayPanel(
                 "src.replay.phase_3_final_lookup",
@@ -842,6 +941,11 @@ class ReplayTab(QWidget):
                     {"label": "Log directory:", "key": "log_output",
                      "tooltip": "Directory for processing log files."},
                 ],
+                smart_fill_map={
+                    "output": ["replay_input", "replay_output"],
+                    "kaizen": ["unavista_files"],
+                    "logs": ["log_output"],
+                },
             )),
             ("Merge Summaries", MergeInconsistentPanel()),
         ]

@@ -57,6 +57,7 @@ ACCURACY_INCIDENTS = [
     ("incorrect_net_amount", "Incorrect Net Amount Validation (35_3)"),
     ("non-zero-qty", "Non-Zero Net Quantity (7_6)"),
     ("non-zero-amt", "Non-Zero Net Amount (7_42)"),
+    ("incorrect-time", "Incorrect Time (7_30)"),
     ("inconsistent-price-type", "Inconsistent Price Type (7_50)"),
     ("inconsistent-qty-type", "Inconsistent Qty Type (7_38)"),
 ]
@@ -73,12 +74,17 @@ INCIDENT_CODE_PATTERNS = {
     "incorrect_net_amount": ["35_3"],
     "non-zero-qty": ["7_6"],
     "non-zero-amt": ["7_42"],
+    "incorrect-time": ["7_30"],
     "inconsistent-price-type": ["7_50"],
     "inconsistent-qty-type": ["7_38"],
 }
 
-# Mapping of incident names to their script module paths
+# Mapping of incident names to their script module paths.
+# Contains two sets of keys:
+#   - Legacy short keys used by SchedulerValidationType enum (e.g. "buyer", "ftbdm")
+#   - INCIDENT_SCRIPTS scriptKey values used by ValidationScriptsPanel (e.g. "buyer_id_validation")
 INCIDENT_SCRIPT_MODULES = {
+    # Legacy keys (used by SchedulerValidationType enum)
     "buyer": "accuracy_testing.scripts.buyer_id_validation",
     "seller": "accuracy_testing.scripts.seller_id_validation",
     "inconsistent-buyer": "accuracy_testing.scripts.inconsistent_buyer_id_validation",
@@ -88,9 +94,17 @@ INCIDENT_SCRIPT_MODULES = {
     "incorrect_net_amount": "accuracy_testing.scripts.incorrect_net_amount_validation",
     "non-zero-qty": "accuracy_testing.scripts.non_zero_net_quantity",
     "non-zero-amt": "accuracy_testing.scripts.non_zero_net_amount",
-    # No validation scripts yet for these incidents; SQL extract only
-    # "inconsistent-price-type": "accuracy_testing.scripts.inconsistent_price_type_validation",
-    # "inconsistent-qty-type": "accuracy_testing.scripts.inconsistent_qty_type_validation",
+    "incorrect_time": "accuracy_testing.scripts.incorrect_time",
+    # INCIDENT_SCRIPTS scriptKey values (used by ValidationScriptsPanel._on_run)
+    "buyer_id_validation": "accuracy_testing.scripts.buyer_id_validation",
+    "seller_id_validation": "accuracy_testing.scripts.seller_id_validation",
+    "inconsistent_buyer_id_validation": "accuracy_testing.scripts.inconsistent_buyer_id_validation",
+    "inconsistent_seller_id_validation": "accuracy_testing.scripts.inconsistent_seller_id_validation",
+    "validate_ftbdm": "accuracy_testing.scripts.validate_ftbdm",
+    "validate_ftsdm": "accuracy_testing.scripts.validate_ftsdm",
+    "incorrect_net_amount_validation": "accuracy_testing.scripts.incorrect_net_amount_validation",
+    "non_zero_net_quantity": "accuracy_testing.scripts.non_zero_net_quantity",
+    "non_zero_net_amount": "accuracy_testing.scripts.non_zero_net_amount",
 }
 
 # Testing period choices
@@ -109,6 +123,7 @@ INCIDENT_SETTINGS_PREFIX = {
     "incorrect_net_amount": "accuracy.incorrect_net_amount",
     "non-zero-qty": "accuracy.non_zero_qty",
     "non-zero-amt": "accuracy.non_zero_amt",
+    "incorrect_time": "accuracy.incorrect_time",
     "inconsistent-price-type": "accuracy.inconsistent_price_type",
     "inconsistent-qty-type": "accuracy.inconsistent_qty_type",
 }
@@ -170,6 +185,11 @@ INCIDENT_SCRIPTS = [
         "incidents": [{"code": "7_42", "label": "Non-Zero Net Amount"}],
     },
     {
+        "scriptKey": "incorrect_time",
+        "displayLabel": "Incorrect Time",
+        "incidents": [{"code": "7_30", "label": "Incorrect Time"}],
+    },
+    {
         "scriptKey": "inconsistent_price_type_validation",
         "displayLabel": "Inconsistent Price Type",
         "incidents": [{"code": "7_50", "label": "Inconsistent Price Type"}],
@@ -205,6 +225,7 @@ PIPELINE_STEPS = [
     ("incorrect_net_amount_validation", "Incorrect Net Amount"),
     ("non_zero_net_quantity", "Non-Zero Net Quantity"),
     ("non_zero_net_amount", "Non-Zero Net Amount"),
+    ("incorrect_time", "Incorrect Time"),
     ("data_push", "Data Push"),
 ]
 
@@ -224,6 +245,7 @@ PIPELINE_VALIDATION_STEPS = [
     "incorrect_net_amount_validation",
     "non_zero_net_quantity",
     "non_zero_net_amount",
+    "incorrect_time",
 ]
 PIPELINE_PUSH_STEPS = [
     "data_push",

@@ -294,21 +294,27 @@ class DataPushConfig:
         )
 
 
-# Default column mappings for Buyer/Seller ID validation outputs
-# These match the output columns from buyer_id_validation.py and seller_id_validation.py
+# Default column mappings for all validation outputs.
+# Each entry maps source_col (validation CSV) to target_col (template CSV).
+# Mappings are identity no-ops for incidents that don't have the column —
+# get_push_values only pushes when source_col is present in the source file.
 DEFAULT_COLUMN_MAPPINGS = [
     # Identity columns
     ColumnMapping("Account ID", "Account ID", "Client account identifier"),
     ColumnMapping("Person Code", "Person Code", "Person code identifier"),
     ColumnMapping("Account Type", "Account Type", "Account type classification"),
-    # ID columns (Buyer variant - replace with Seller for seller validation)
+    # ID columns — buyer (7_35, 7_37, 7_39, 7_66)
     ColumnMapping("Buyer ID Code", "Buyer ID Code", "Buyer identification code"),
     ColumnMapping("Type of Buyer ID Code", "Type of Buyer ID Code", "Type of buyer ID"),
+    # ID columns — seller (16_19, 16_21, 16_23, 16_20)
+    ColumnMapping("Seller ID Code", "Seller ID Code", "Seller identification code"),
+    ColumnMapping("Type of Seller ID Code", "Type of Seller ID Code", "Type of seller ID"),
     # Personal details
     ColumnMapping("First Name", "First Name", "Client first name"),
     ColumnMapping("Surname", "Surname", "Client surname"),
     ColumnMapping("Date of Birth", "Date of Birth", "Client date of birth"),
     ColumnMapping("Gender", "Gender", "Client gender"),
+    ColumnMapping("Prefixed Nationality", "Prefixed Nationality", "ISO-2 prefixed nationality code"),
     ColumnMapping("Primary Nationality", "Primary Nationality", "Primary nationality code"),
     ColumnMapping("Secondary Nationality", "Secondary Nationality", "Secondary nationality code"),
     # Correction columns (same column names in validation output and template)
@@ -326,6 +332,13 @@ DEFAULT_COLUMN_MAPPINGS = [
     # Match columns
     ColumnMapping("Kaizen Error", "Kaizen Error", "Template lookup result (ID:TYPE)"),
     ColumnMapping("Match", "Match", "Match result (TRUE/FALSE)"),
+    # Incorrect Net Amount (35_3) columns
+    ColumnMapping("Net Amount", "Net Amount", "Net transaction amount"),
+    ColumnMapping("Consideration", "Consideration", "Transaction consideration"),
+    ColumnMapping("Interest", "Interest", "Interest component"),
+    ColumnMapping("Total", "Total", "Total amount"),
+    ColumnMapping("Expected Interest", "Expected Interest", "Expected interest"),
+    ColumnMapping("Net Difference", "Net Difference", "Difference between net amount and expected"),
     # Net quantity (7_6) / net amount (7_42) incidents.
     # The SQL output uses 'child_ref' and lowercase 'error' rather than the
     # standard buyer/seller column names.  All mappings here are no-ops for
@@ -335,10 +348,17 @@ DEFAULT_COLUMN_MAPPINGS = [
     ColumnMapping("parent_ref", "parent_ref", "Parent order reference"),
     ColumnMapping("bulk_ref", "bulk_ref", "Contract group prefix derived from parent_ref"),
     ColumnMapping("bulk_qty", "bulk_qty", "Total contract quantity"),
+    ColumnMapping("parent_qty", "parent_qty", "Parent order quantity (7_6)"),
     ColumnMapping("net_qty", "net_qty", "Sum of child transaction quantities"),
     ColumnMapping("child_netamt", "child_netamt", "Child transaction net amount"),
     ColumnMapping("parent_netamt", "parent_netamt", "Parent order net amount"),
     ColumnMapping("net_amt", "net_amt", "Sum of child net amounts"),
     ColumnMapping("difference", "difference", "Calculated difference (net vs bulk)"),
+    ColumnMapping("report_status", "report_status", "Report status (7_42)"),
+    ColumnMapping("trade_date_time", "trade_date_time", "Trade date and time (7_42)"),
     ColumnMapping("error", "error", "Validation error flag, lowercase (N=match, Y=mismatch)"),
+    # Incorrect Time (7_30) columns
+    ColumnMapping("child_datetime", "child_datetime", "Child transaction datetime (7_30)"),
+    ColumnMapping("parent_datetime", "parent_datetime", "Parent order datetime (7_30)"),
+    ColumnMapping("time_difference", "time_difference", "Time difference between child and parent (7_30)"),
 ]

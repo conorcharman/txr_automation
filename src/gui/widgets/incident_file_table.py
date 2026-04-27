@@ -199,11 +199,11 @@ class IncidentFileTableWidget(QWidget):
                 self._table.setCellWidget(row_idx, col, template_cell)
                 col += 1
 
-            # Output path
+            # Output path — uses validated_{fy}_{q}_{code}.csv convention
             output_cell = _PathCell()
             if output_dir and fiscal_year and quarter:
                 output_cell.set_path(
-                    self._build_path(output_dir, code, fiscal_year, quarter, "validated.csv")
+                    os.path.join(output_dir, f"validated_{fiscal_year}_{quarter}_{code}.csv")
                 )
             output_cell.path_changed.connect(lambda _: self.configs_changed.emit())
             self._table.setCellWidget(row_idx, col, output_cell)

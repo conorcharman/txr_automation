@@ -166,10 +166,48 @@ class DataPushProcessor:
         ref_col = self.config.transaction_ref_column
         
         if ref_col not in self.target_df.columns:
-            raise ValueError(
-                f"Transaction reference column '{ref_col}' not found in target. "
-                f"Available columns: {list(self.target_df.columns)}"
-            )
+            # Fallback: look for a column mapping whose target_col matches
+            # the configured ref column and whose source_col is present in
+            # the target.  This mirrors the load_source fallback and handles
+            # targets that use a differently-named ref column (e.g.
+            # "Transaction reference number" in 7_30 tracking sheets).
+            resolved = False
+            for mapping in self.config.column_mappings:
+                if (
+                    mapping.target_col == ref_col
+                    and mapping.source_col in self.target_df.columns
+                ):
+                    self.logger.info(
+                        f"Transaction reference column '{ref_col}' not found "
+                        f"in target — using mapped column '{mapping.source_col}' instead"
+                    )
+                    ref_col = mapping.source_col
+                    resolved = True
+                    break
+
+            if not resolved:
+                # Second fallback: case-insensitive partial match on
+                # common transaction reference column name variants.
+                lower_cols = {c.lower(): c for c in self.target_df.columns}
+                for candidate in (
+                    "transaction reference",
+                    "transaction reference number",
+                    "transaction ref",
+                ):
+                    if candidate in lower_cols:
+                        ref_col = lower_cols[candidate]
+                        self.logger.info(
+                            f"Resolved target transaction reference column "
+                            f"to '{ref_col}' via case-insensitive match"
+                        )
+                        resolved = True
+                        break
+
+            if not resolved:
+                raise ValueError(
+                    f"Transaction reference column '{ref_col}' not found in target. "
+                    f"Available columns: {list(self.target_df.columns)}"
+                )
         
         for idx, row in self.target_df.iterrows():
             trans_ref = str(row[ref_col]).strip()
@@ -478,7 +516,10 @@ class BatchDataPushProcessor:
         self.fiscal_year = fiscal_year
         self.quarter = quarter
         self.column_mappings = column_mappings
-        self.backup_dir = Path(backup_dir) if backup_dir else None
+        # Always send backups to a dedicated subfolder.  Use an explicit
+        # backup_dir when supplied; otherwise default to base_target_dir/backup
+        # so that template files are never cluttered with .backup_* files.
+        self.backup_dir = Path(backup_dir) if backup_dir else Path(base_target_dir) / "backup"
         self.logger = logger or logging.getLogger(__name__)
         
         # Results storage

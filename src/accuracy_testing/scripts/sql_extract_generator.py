@@ -441,6 +441,12 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
     # Non-zero net amount — uses VALUES block CTE, not an IN-clause
     elif incident_code == '7_42':
         template_path = sql_template_dir / "NonZeroNetAmount.sql"
+    # Incorrect time — uses VALUES block CTE, not an IN-clause
+    elif incident_code == '7_30':
+        template_path = sql_template_dir / "IncorrectTime.sql"
+    # Inconsistent qty type — uses VALUES block CTE
+    elif incident_code == '7_38':
+        template_path = sql_template_dir / "InconsistentQtyType.sql"
     # Inconsistent price type — IN-clause template (CA-prefix REPORTREF input)
     elif incident_code == '7_50':
         template_path = sql_template_dir / "InconsistentPriceType.sql"
@@ -473,7 +479,7 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
 
 # Incidents that require a DB2 VALUES block instead of a SQL IN-clause.
 # The corresponding SQL templates use {VALUES} as their placeholder.
-VALUES_MODE_INCIDENTS: set = {'7_6', '7_42'}
+VALUES_MODE_INCIDENTS: set = {'7_6', '7_42', '7_30', '7_38', '7_50'}
 
 
 def requires_values_mode(incident_code: str) -> bool:
@@ -665,7 +671,7 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
                     transaction_refs=refs,
                     output_dir=str(output_dir),
                     base_filename=base_filename,
-                    incident_code=incident
+                    incident_code=f"{incident}_{fiscal_year}_{quarter}_extract"
                 )
                 
                 if generated_files['sql_files']:

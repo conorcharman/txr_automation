@@ -83,6 +83,7 @@ const SCRIPTS: { value: string; label: string }[] = [
   { value: "incorrect_net_amount_validation", label: "Incorrect Net Amount" },
   { value: "non_zero_net_quantity", label: "Non-Zero Net Quantity" },
   { value: "non_zero_net_amount", label: "Non-Zero Net Amount" },
+  { value: "incorrect_time", label: "Incorrect Time" },
   { value: "run_all_validations", label: "Run All Validations" },
   { value: "sql_extract_generator", label: "SQL Extract Generator" },
   { value: "accuracy_template_generator", label: "Accuracy Template Generator" },
@@ -504,7 +505,8 @@ const PIPELINE_SCRIPTS = [
   { key: "incorrect_net_amount_validation", label: "Incorrect Net Amount", step: 10 },
   { key: "non_zero_net_quantity", label: "Non-Zero Net Quantity", step: 11 },
   { key: "non_zero_net_amount", label: "Non-Zero Net Amount", step: 12 },
-  { key: "data_push", label: "Data Push", step: 13 },
+  { key: "incorrect_time", label: "Incorrect Time", step: 13 },
+  { key: "data_push", label: "Data Push", step: 14 },
 ] as const;
 
 function currentFY(): string {

@@ -87,6 +87,11 @@ const INCIDENT_SCRIPTS: IncidentScriptDef[] = [
     displayLabel: "Non-Zero Net Amount",
     incidents: [{ code: "7_42", label: "Non-Zero Net Amount" }],
   },
+  {
+    scriptKey: "incorrect_time",
+    displayLabel: "Incorrect Time",
+    incidents: [{ code: "7_30", label: "Incorrect Time" }],
+  },
 ];
 
 type ActiveTab = "validation" | "utilities";

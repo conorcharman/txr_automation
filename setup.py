@@ -39,6 +39,7 @@ setup(
             "validate-incorrect-net-amount=accuracy_testing.scripts.incorrect_net_amount_validation:main",
             "validate-non-zero-net-qty=accuracy_testing.scripts.non_zero_net_quantity:main",
             "validate-non-zero-net-amt=accuracy_testing.scripts.non_zero_net_amount:main",
+            "validate-incorrect-time=accuracy_testing.scripts.incorrect_time:main",
             "validate-all=accuracy_testing.scripts.run_all_validations:main",
             "generate-sql-extract=accuracy_testing.scripts.sql_extract_generator:main",
             "generate-period-extract=accuracy_testing.scripts.period_extract_generator:main",

@@ -29,6 +29,19 @@ def run_phase2(client: ApiClient, payload: Dict[str, Any]) -> Dict[str, Any]:
     return client.post("/api/replay/phase2", payload)
 
 
+def run_phase2_final(client: ApiClient, payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Run Phase II final lookup processing.
+
+    Args:
+        client: API client instance.
+        payload: Phase 2 final request fields.
+
+    Returns:
+        Job response dict.
+    """
+    return client.post("/api/replay/phase2-final", payload)
+
+
 def run_phase3(client: ApiClient, payload: Dict[str, Any]) -> Dict[str, Any]:
     """Run Phase III feedback replay processing.
 

@@ -188,8 +188,8 @@ class CSVExtractCollator:
     def _build_output_filename(self, incident_code: str) -> str:
         """Build the output filename for a collated file."""
         if self.fiscal_year and self.quarter:
-            return f"{incident_code}_{self.fiscal_year}_{self.quarter}.csv"
-        return f"{incident_code}.csv"
+            return f"{incident_code}_{self.fiscal_year}_{self.quarter}_extract.csv"
+        return f"{incident_code}_extract.csv"
     
     def collate_incident(
         self,
