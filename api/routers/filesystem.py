@@ -20,6 +20,7 @@ from fastapi import APIRouter, HTTPException, Query
 
 from api.schemas.filesystem import (
     BrowseResponse,
+    FileReadResponse,
     FilesystemEntry,
     ResolvedPaths,
     ResolvePathsRequest,
@@ -114,6 +115,87 @@ async def browse_directory(
         raise HTTPException(status_code=403, detail="Permission denied.")
 
     return BrowseResponse(current=str(resolved), parent=parent, entries=entries)
+
+
+# ---------------------------------------------------------------------------
+# File read
+# ---------------------------------------------------------------------------
+
+#: Maximum number of bytes read from a single file.  Files larger than this
+#: are truncated and the ``truncated`` flag is set in the response.
+_MAX_READ_BYTES: int = 1_048_576  # 1 MiB
+
+#: Encodings attempted in order when reading an unknown text file.
+_TEXT_ENCODINGS = ("utf-8", "utf-8-sig", "latin-1")
+
+
+@router.get("/read", response_model=FileReadResponse)
+async def read_file(
+    path: str = Query(description="Absolute path of the file to read."),
+) -> FileReadResponse:
+    """Return the text content of a server-side file.
+
+    Reads up to 1 MiB of content, setting ``truncated=True`` when the file
+    is larger.  Attempts UTF-8 decoding first, then falls back to Latin-1 so
+    that most log and CSV files can be displayed without error.
+
+    Args:
+        path: The absolute file path to read.
+
+    Returns:
+        A ``FileReadResponse`` with the file name, size, and decoded content.
+
+    Raises:
+        HTTPException 400: If the path is relative.
+        HTTPException 403: If the path is outside the allowed roots.
+        HTTPException 404: If the path does not exist or is a directory.
+        HTTPException 422: If the file cannot be decoded as text.
+    """
+    target = Path(path)
+
+    if not target.is_absolute():
+        raise HTTPException(status_code=400, detail="Path must be absolute.")
+
+    try:
+        resolved = target.resolve(strict=True)
+    except OSError:
+        raise HTTPException(status_code=404, detail="File does not exist.")
+
+    if not _is_allowed(resolved):
+        raise HTTPException(
+            status_code=403,
+            detail="Reading is restricted to /app/data, /app/config, and /app/src.",
+        )
+
+    if resolved.is_dir():
+        raise HTTPException(status_code=404, detail="Path is a directory, not a file.")
+
+    size_bytes = resolved.stat().st_size
+    truncated = size_bytes > _MAX_READ_BYTES
+
+    raw = resolved.read_bytes()[:_MAX_READ_BYTES]
+
+    content: str | None = None
+    for enc in _TEXT_ENCODINGS:
+        try:
+            content = raw.decode(enc)
+            break
+        except UnicodeDecodeError:
+            continue
+
+    if content is None:
+        raise HTTPException(
+            status_code=422,
+            detail="File does not appear to be a text file.",
+        )
+
+    return FileReadResponse(
+        path=str(resolved),
+        name=resolved.name,
+        size_bytes=size_bytes,
+        content=content,
+        truncated=truncated,
+    )
 
 
 # ---------------------------------------------------------------------------

@@ -10,9 +10,11 @@ import AccuracyTesting from "@/pages/AccuracyTesting";
 import Replay from "@/pages/Replay";
 import FIRDS from "@/pages/FIRDS";
 import GLEIF from "@/pages/GLEIF";
+import FCA from "@/pages/FCA";
 import Utilities from "@/pages/Utilities";
 import Scheduler from "@/pages/Scheduler";
 import ReconciliationPage from "@/pages/ReconciliationPage";
+import FileBrowser from "@/pages/FileBrowser";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -31,9 +33,11 @@ export default function App() {
             <Route path="replay" element={<Replay />} />
             <Route path="firds" element={<FIRDS />} />
             <Route path="gleif" element={<GLEIF />} />
+            <Route path="fca" element={<FCA />} />
             <Route path="utilities" element={<Utilities />} />
             <Route path="scheduler" element={<Scheduler />} />
             <Route path="reconciliation" element={<ReconciliationPage />} />
+            <Route path="files" element={<FileBrowser />} />
             <Route path="jobs" element={<Jobs />} />
             <Route path="jobs/:jobId" element={<JobDetail />} />
           </Route>

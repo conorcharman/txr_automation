@@ -206,14 +206,16 @@ def run_script(
     ]
 
     try:
-        # Evict any cached version so that volume-mounted src/ changes are
-        # always picked up without requiring a worker restart.
-        sys.modules.pop(module_path, None)
-        module = importlib.import_module(module_path)
-
         with contextlib.redirect_stdout(output_buffer), contextlib.redirect_stderr(
             output_buffer
         ):
+            # Evict any cached version and re-import *inside* the redirect so
+            # that module-level logging handlers (e.g. StructuredLogger's
+            # StreamHandler, which stores sys.stderr at init time) pick up the
+            # capture buffer rather than the worker's original stderr.
+            sys.modules.pop(module_path, None)
+            module = importlib.import_module(module_path)
+
             # Protect sys.argv from concurrent task corruption.
             with _argv_lock:
                 old_argv = sys.argv
@@ -342,8 +344,6 @@ def run_incidents(
         full_output.write(header + "\n")
 
         try:
-            sys.modules.pop(module_path, None)
-            module = importlib.import_module(module_path)
             script_buffer = io.StringIO()
 
             with _argv_lock:
@@ -352,6 +352,11 @@ def run_incidents(
             try:
                 with contextlib.redirect_stdout(script_buffer), \
                      contextlib.redirect_stderr(script_buffer):
+                    # Import inside the redirect so module-level logging
+                    # handlers (StructuredLogger's StreamHandler) capture to
+                    # script_buffer rather than the worker's original stderr.
+                    sys.modules.pop(module_path, None)
+                    module = importlib.import_module(module_path)
                     module.main()
             except SystemExit as exc:
                 exit_code = exc.code if isinstance(exc.code, int) else 1

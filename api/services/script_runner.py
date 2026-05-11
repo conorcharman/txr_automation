@@ -39,6 +39,7 @@ from fastapi import HTTPException
 from api.config import get_settings
 from api.schemas.accuracy import RunAllRequest, RunIncidentsRequest, RunValidationRequest
 from api.schemas.firds import FirdsBackfillRequest, FirdsCheckRequest, FirdsRefreshRequest
+from api.schemas.fca import FcaCheckRequest
 from api.schemas.gleif import GleifBackfillRequest, GleifCheckRequest, GleifRefreshRequest
 from api.schemas.replay import (
     ReplayMergeRequest,
@@ -89,6 +90,8 @@ _SCRIPT_MODULES: dict[str, str] = {
     "gleif_refresh":                     "src.gleif.scripts.refresh_cache",
     "gleif_check":                       "src.gleif.scripts.check_lei",
     "gleif_backfill":                    "src.gleif.scripts.backfill",
+    # FCA Register
+    "fca_check":                         "src.fca.scripts.check_firm",
     # Utilities
     "xlsx_csv_converter":                "src.utils.xlsx_csv_converter",
     "xml_csv_converter":                 "src.utils.xml_csv_converter",
@@ -740,6 +743,47 @@ class ScriptRunnerService:
                 argv.append("--skip-refresh")
 
         logger.debug("Built GLEIF argv %s for script %s.", argv, script_name)
+        return module_path, argv, config
+
+    def build_fca_argv(
+        self,
+        req: FcaCheckRequest,
+    ) -> tuple[str, list[str], dict]:
+        """Build argv for the fca-check script.
+
+        Args:
+            req: Validated ``FcaCheckRequest`` from the API router.
+
+        Returns:
+            A tuple of ``(module_path, argv, config_snapshot)``.
+
+        Raises:
+            HTTPException: 400 if the request is malformed.
+        """
+        module_path = _resolve_module("fca_check")
+        config: dict = {
+            "check": {
+                "mode": req.mode,
+                "frn": req.frn,
+                "name": req.name,
+                "input_file": req.input_file,
+                "output_file": req.output_file,
+                "permission": req.permission,
+            },
+            "processor": {"log_level": req.log_level},
+        }
+        argv: list[str] = ["--log-level", req.log_level]
+        if req.frn:
+            argv.extend(["--frn", req.frn])
+        if req.name:
+            argv.extend(["--name", req.name])
+        if req.input_file:
+            argv.extend(["--input", req.input_file])
+        if req.output_file:
+            argv.extend(["--output", req.output_file])
+        if req.permission:
+            argv.extend(["--permission", req.permission])
+        logger.debug("Built FCA argv %s.", argv)
         return module_path, argv, config
 
     def build_utilities_argv(

@@ -90,6 +90,7 @@ class SmartPaths:
     base_dir: str
     fiscal_year: str
     quarter: str
+    module: str = ""          # e.g. "replay" or "accuracy_testing"
     extracts: str = ""
     templates: str = ""
     output: str = ""
@@ -122,6 +123,7 @@ class FileDiscoveryService:
         base_dir: str,
         fiscal_year: str,
         quarter: str,
+        module: Optional[str] = None,
         populate_status: bool = True,
     ) -> SmartPaths:
         """Derive stage directories and check their existence.
@@ -130,6 +132,10 @@ class FileDiscoveryService:
             base_dir: Root directory, e.g. ``C:/data/txr``.
             fiscal_year: Fiscal year string, e.g. ``"FY26"``.
             quarter: Quarter string, e.g. ``"Q1"``.
+            module: Optional module sub-directory inserted between the quarter
+                and stage dirs, e.g. ``"replay"`` or ``"accuracy_testing"``.
+                When omitted stage dirs are placed directly under the quarter
+                root (legacy behaviour).
             populate_status: When ``True``, stat each directory
                 and populate ``SmartPaths.statuses`` and
                 ``SmartPaths.file_counts``.
@@ -138,15 +144,17 @@ class FileDiscoveryService:
             :class:`SmartPaths` with resolved paths.
         """
         period_root = os.path.join(base_dir, fiscal_year, quarter)
+        root = os.path.join(period_root, module) if module else period_root
         paths = SmartPaths(
             base_dir=base_dir,
             fiscal_year=fiscal_year,
             quarter=quarter,
-            extracts=os.path.join(period_root, "extracts"),
-            templates=os.path.join(period_root, "templates"),
-            output=os.path.join(period_root, "output"),
-            logs=os.path.join(period_root, "logs"),
-            kaizen=os.path.join(period_root, "kaizen"),
+            module=module or "",
+            extracts=os.path.join(root, "extracts"),
+            templates=os.path.join(root, "templates"),
+            output=os.path.join(root, "output"),
+            logs=os.path.join(root, "logs"),
+            kaizen=os.path.join(root, "kaizen"),
         )
         if populate_status:
             for stage in self._STAGE_DIRS:

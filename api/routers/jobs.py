@@ -76,6 +76,8 @@ SCRIPT_MODULES: dict[str, str] = {
     "gleif_refresh":                     "src.gleif.scripts.refresh_cache",
     "gleif_check":                       "src.gleif.scripts.check_lei",
     "gleif_backfill":                    "src.gleif.scripts.backfill",
+    # FCA Register
+    "fca_check":                         "src.fca.scripts.check_firm",
     # Utilities
     "xlsx_csv_converter":                "src.utils.xlsx_csv_converter",
     "xml_csv_converter":                 "src.utils.xml_csv_converter",

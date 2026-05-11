@@ -180,8 +180,8 @@ const Phase2Form: React.FC = () => {
       const { fiscalYear, quarter } = watch("testingPeriod");
       try {
         const atPaths = await resolvePaths({ fiscalYear, quarter, module: "accuracy_testing" });
-        if (!watch("inputFile")) setValue("inputFile", atPaths.kaizen);
-        const res = await browseDirectory(atPaths.kaizen);
+        if (!watch("inputFile")) setValue("inputFile", atPaths.templates);
+        const res = await browseDirectory(atPaths.templates);
         setSourceFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
         setSourceFileCount(0);
@@ -244,7 +244,7 @@ const Phase2Form: React.FC = () => {
       {sourceFileCount !== null && (
         <div className="rounded-md border border-border px-3 py-3 space-y-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Source Files (Accuracy Testing — Kaizen)
+            Source Files (Accuracy Testing — Templates)
           </p>
           <div className="flex items-center gap-2">
             <span className={cn("h-2 w-2 rounded-full shrink-0", sourceFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
@@ -262,7 +262,7 @@ const Phase2Form: React.FC = () => {
             {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         </Field>
-        <Field label="Input Directory" hint="Override: directory containing Phase 2 replay source CSV files (auto-resolved from accuracy_testing/kaizen)." error={errors.inputFile?.message}>
+        <Field label="Input Directory" hint="Override: directory containing Phase 2 replay source CSV files (auto-resolved from accuracy_testing/templates)." error={errors.inputFile?.message}>
           <PathPickerInput
             value={watch("inputFile") ?? ""}
             onChange={(v) => setValue("inputFile", v)}
@@ -574,8 +574,8 @@ const Phase3Form: React.FC = () => {
       const { fiscalYear, quarter } = watch("testingPeriod");
       try {
         const atPaths = await resolvePaths({ fiscalYear, quarter, module: "accuracy_testing" });
-        if (!watch("feedbackFile")) setValue("feedbackFile", atPaths.kaizen);
-        const res = await browseDirectory(atPaths.kaizen);
+        if (!watch("feedbackFile")) setValue("feedbackFile", atPaths.templates);
+        const res = await browseDirectory(atPaths.templates);
         setFeedbackFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
         setFeedbackFileCount(0);
@@ -654,7 +654,7 @@ const Phase3Form: React.FC = () => {
             {feedbackFileCount !== null && (
               <div className="flex items-center gap-2">
                 <span className={cn("h-2 w-2 rounded-full shrink-0", feedbackFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
-                <span className="text-xs text-muted-foreground shrink-0">Feedback (AT Kaizen)</span>
+                <span className="text-xs text-muted-foreground shrink-0">Feedback (AT Templates)</span>
                 <span className="truncate text-xs font-mono text-foreground/80">
                   {feedbackFileCount > 0 ? `${feedbackFileCount} file(s) found` : "no files found"}
                 </span>
@@ -679,12 +679,12 @@ const Phase3Form: React.FC = () => {
             disabled={isPending}
           />
         </Field>
-        <Field label="Feedback Directory" hint="Override: directory containing incident template CSV files (auto-resolved from accuracy_testing/kaizen)." error={errors.feedbackFile?.message}>
+        <Field label="Feedback Directory" hint="Override: directory containing incident template CSV files (auto-resolved from accuracy_testing/templates)." error={errors.feedbackFile?.message}>
           <PathPickerInput
             value={watch("feedbackFile") ?? ""}
             onChange={(v) => setValue("feedbackFile", v)}
             mode="directory"
-            placeholder="auto-resolved from accuracy_testing/kaizen"
+            placeholder="auto-resolved from accuracy_testing/templates"
             disabled={isPending}
           />
         </Field>

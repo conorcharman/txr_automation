@@ -53,6 +53,7 @@ setup(
             "gleif-refresh=gleif.scripts.refresh_cache:main",
             "gleif-check=gleif.scripts.check_lei:main",
             "gleif-backfill=gleif.scripts.backfill:main",
+            "fca-check=fca.scripts.check_firm:main",
             "txr-automate=automation.cli:main",
         ],
         "gui_scripts": [

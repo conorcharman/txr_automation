@@ -37,6 +37,25 @@ class BrowseResponse(_CamelModel):
     entries: list[FilesystemEntry]
 
 
+class FileReadResponse(_CamelModel):
+    """Response body for reading a text file.
+
+    Attributes:
+        path: The resolved absolute path of the file.
+        name: The filename (basename).
+        size_bytes: File size in bytes.
+        content: The decoded text content of the file.
+        truncated: ``True`` if the file was larger than the read limit and
+            the content was truncated.
+    """
+
+    path: str
+    name: str
+    size_bytes: int
+    content: str
+    truncated: bool = False
+
+
 # ---------------------------------------------------------------------------
 # Smart path resolution
 # ---------------------------------------------------------------------------

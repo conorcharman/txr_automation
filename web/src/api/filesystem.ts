@@ -1,4 +1,4 @@
-import type { BrowseResponse, ResolvedPaths, ResolvePathsRequest } from "@/types";
+import type { BrowseResponse, FileReadResponse, ResolvedPaths, ResolvePathsRequest } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -28,4 +28,15 @@ export async function resolvePaths(
     throw new Error(body.detail ?? "Path resolution failed");
   }
   return res.json() as Promise<ResolvedPaths>;
+}
+
+export async function readFile(path: string): Promise<FileReadResponse> {
+  const res = await fetch(
+    `${BASE_URL}/api/filesystem/read?path=${encodeURIComponent(path)}`,
+  );
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ detail: "Read failed" }));
+    throw new Error(body.detail ?? "Read failed");
+  }
+  return res.json() as Promise<FileReadResponse>;
 }

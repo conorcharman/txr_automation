@@ -1,4 +1,4 @@
-"""
+﻿"""
 API Configuration
 =================
 
@@ -27,6 +27,8 @@ class Settings(BaseSettings):
         upload_dir: Directory where uploaded files are stored.
         firds_db_path: Path to the FIRDS SQLite cache database.
         gleif_db_path: Path to the GLEIF SQLite cache database.
+        fca_api_email: FCA Developer Portal signup email (API username).
+        fca_api_key: FCA Developer Portal API key.
         secret_key: Secret key for signing tokens (must be overridden in production).
         version: API version string surfaced by the health endpoint.
         environment: Deployment environment (``dev`` or ``production``).
@@ -39,6 +41,8 @@ class Settings(BaseSettings):
     upload_dir: Path = Path("data/uploads")
     firds_db_path: Path = Path("data/firds_cache.db")
     gleif_db_path: Path = Path("data/gleif_cache.db")
+    fca_api_email: str = ""
+    fca_api_key: str = ""
     secret_key: str = "dev-secret-key"
     version: str = "1.0.0"
     environment: str = "dev"

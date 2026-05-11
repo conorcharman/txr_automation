@@ -1,0 +1,24 @@
+{
+  "Status": "FSR-API-02-01-00",
+  "ResultInfo": {
+    "Page": 1,
+    "per_page": 25,
+    "total_count": 2
+  },
+  "Data": {
+    "Accepting deposits": [
+      {
+        "Customer Type": ["Commercial customers", "Retail customers"],
+        "Investment Type": [],
+        "Limitation": ["Subject to limitations"]
+      }
+    ],
+    "Dealing in investments as agent": [
+      {
+        "Customer Type": ["Retail customers"],
+        "Investment Type": ["Shares"],
+        "Limitation": []
+      }
+    ]
+  }
+}

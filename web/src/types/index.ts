@@ -19,6 +19,14 @@ export interface BrowseResponse {
   entries: FilesystemEntry[];
 }
 
+export interface FileReadResponse {
+  path: string;
+  name: string;
+  sizeBytes: number;
+  content: string;
+  truncated: boolean;
+}
+
 // ---------------------------------------------------------------------------
 // Smart path resolution
 // ---------------------------------------------------------------------------
@@ -334,6 +342,52 @@ export interface GleifSearchResult {
 export interface GleifSearchResponse {
   results: GleifSearchResult[];
   count: number;
+}
+
+// FCA Register
+export interface FcaCheckRequest {
+  mode: "single" | "name_search" | "batch";
+  frn?: string;
+  name?: string;
+  inputFile?: string;
+  outputFile?: string;
+  permission?: string;
+  logLevel?: string;
+}
+
+export interface FcaPermissionResponse {
+  activityName: string;
+  customerTypes: string[];
+  investmentTypes: string[];
+  limitations: string[];
+}
+
+export interface FcaLookupResponse {
+  frn: string;
+  organisationName: string;
+  status: string;
+  isAuthorised: boolean;
+  businessType: string;
+  companiesHouseNumber: string;
+  statusEffectiveDate: string;
+  permissions: FcaPermissionResponse[];
+}
+
+export interface FcaSearchResult {
+  frn: string;
+  organisationName: string;
+  status: string;
+}
+
+export interface FcaSearchResponse {
+  results: FcaSearchResult[];
+  count: number;
+}
+
+export interface FcaLeiSearchResponse {
+  lei: string;
+  resolvedName: string;
+  result: FcaSearchResult | null;
 }
 
 // ---------------------------------------------------------------------------

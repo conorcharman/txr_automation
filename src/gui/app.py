@@ -41,7 +41,7 @@ from gui.constants import (
     DEFAULT_WINDOW_SIZE,
     STATUS_READY,
 )
-from gui.tabs import AccuracyTab, FirdsTab, GleifTab, ReconciliationTab, ReplayTab, SchedulerTab, UtilitiesTab
+from gui.tabs import AccuracyTab, FcaTab, FileBrowserTab, FirdsTab, GleifTab, ReconciliationTab, ReplayTab, SchedulerTab, UtilitiesTab
 from gui.theme import apply_mica, apply_theme
 from gui.utils.settings import settings
 
@@ -142,9 +142,11 @@ class MainWindow(QMainWindow):
         self.tabs.addTab(ReplayTab(), "Replay")
         self.tabs.addTab(FirdsTab(), "FIRDS Reportability Data")
         self.tabs.addTab(GleifTab(), "GLEIF Reference Data")
+        self.tabs.addTab(FcaTab(), "FCA Register")
         self.tabs.addTab(UtilitiesTab(), "Utilities")
         self.tabs.addTab(SchedulerTab(api_client=self.api_client), "Scheduler")
         self.tabs.addTab(ReconciliationTab(api_client=self.api_client), "Reconciliation")
+        self.tabs.addTab(FileBrowserTab(api_client=self.api_client), "Output Files")
 
         self._create_menu_bar()
         self._create_status_bar()

@@ -1,0 +1,17 @@
+fca:
+  # FCA Developer Portal signup email (used as the API username).
+  # Register at: https://register.fca.org.uk/Developer/s/
+  api_email: "your.email@example.com"
+
+  # FCA Developer Portal API key.
+  api_key: "your_api_key_here"
+
+  # Delay between API requests in seconds.
+  # The API allows 50 requests per 10 seconds.  A delay of 0.2 seconds
+  # gives approximately 5 requests/second, well within the limit.
+  request_delay_seconds: 0.2
+
+# Optional: default batch input/output paths for fca-check CLI.
+# batch:
+#   input_file: "data/counterparties.csv"
+#   output_file: "data/counterparties_fca_check.csv"

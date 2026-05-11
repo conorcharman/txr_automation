@@ -148,6 +148,7 @@ class BaseReplayPanel(QWidget):
         default_incident_columns: Optional[Dict[str, str]] = None,
         settings_prefix: str = "",
         smart_fill_map: Optional[Dict[str, List[str]]] = None,
+        at_fill_map: Optional[Dict[str, List[str]]] = None,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
@@ -159,6 +160,7 @@ class BaseReplayPanel(QWidget):
         self._list_fields: set = set()
         self._default_incident_columns = default_incident_columns
         self._smart_fill_map: Dict[str, List[str]] = smart_fill_map or {}
+        self._at_fill_map: Dict[str, List[str]] = at_fill_map or {}
         pfx = f"replay.{settings_prefix}" if settings_prefix else "replay"
         self._pfx = pfx
 
@@ -203,10 +205,11 @@ class BaseReplayPanel(QWidget):
         self.fiscal_year = _FYAlias(self._period)
         self.quarter = _QAlias(self._period)
 
-        # --- Smart Path Configuration ---
+        # --- Smart Path Configuration (replay module) ---
         self._smart = SmartPathConfigWidget(
             settings_prefix="replay",
             stages=["kaizen", "output", "logs"],
+            module="replay",
             parent=self,
         )
         self._period.period_changed.connect(self._smart.set_period)
@@ -214,6 +217,21 @@ class BaseReplayPanel(QWidget):
         # Set initial period so status grid populates on first paint
         self._smart.set_period(self._period.fiscal_year, self._period.quarter)
         layout.addWidget(self._smart)
+
+        # --- Smart Path Configuration (accuracy_testing module, for incident templates) ---
+        if self._at_fill_map:
+            self._at_smart: Optional[SmartPathConfigWidget] = SmartPathConfigWidget(
+                settings_prefix="accuracy_testing",
+                stages=["templates"],
+                module="accuracy_testing",
+                parent=self,
+            )
+            self._period.period_changed.connect(self._at_smart.set_period)
+            self._at_smart.paths_resolved.connect(self._on_at_paths_resolved)
+            self._at_smart.set_period(self._period.fiscal_year, self._period.quarter)
+            layout.addWidget(self._at_smart)
+        else:
+            self._at_smart = None
 
         # --- Discovered Files summary row ---
         self._discovery_row = QHBoxLayout()
@@ -313,13 +331,13 @@ class BaseReplayPanel(QWidget):
         self._refresh_pre_run_checks()
 
     def _on_smart_paths_resolved(self, paths: SmartPaths) -> None:
-        """Auto-fill empty path pickers from smart-resolved paths.
+        """Auto-fill empty path pickers from the replay SmartPathConfigWidget.
 
         Only fills pickers that are currently empty so manual entries
         are never overwritten.
 
         Args:
-            paths: Resolved :class:`SmartPaths` from SmartPathConfigWidget.
+            paths: Resolved :class:`SmartPaths` from the replay SmartPathConfigWidget.
         """
         for stage, picker_keys in self._smart_fill_map.items():
             stage_path = getattr(paths, stage, "")
@@ -341,6 +359,24 @@ class BaseReplayPanel(QWidget):
         )
 
         self._refresh_pre_run_checks()
+
+    def _on_at_paths_resolved(self, paths: SmartPaths) -> None:
+        """Auto-fill empty path pickers from the accuracy_testing SmartPathConfigWidget.
+
+        Used for incident template files that live under
+        ``accuracy_testing/FY/Q/templates``.
+
+        Args:
+            paths: Resolved :class:`SmartPaths` from the AT SmartPathConfigWidget.
+        """
+        for stage, picker_keys in self._at_fill_map.items():
+            stage_path = getattr(paths, stage, "")
+            if not stage_path:
+                continue
+            for key in picker_keys:
+                picker = self._path_pickers.get(key)
+                if picker and not picker.get_path():
+                    picker.set_path(stage_path)
 
     def _refresh_pre_run_checks(self) -> None:
         """Update PreRunCheckWidget with first configured input directory."""
@@ -578,6 +614,7 @@ class MergeInconsistentPanel(QWidget):
         self._smart = SmartPathConfigWidget(
             settings_prefix="replay",
             stages=["output", "logs"],
+            module="replay",
             parent=self,
         )
         self._period.period_changed.connect(self._smart.set_period)
@@ -866,6 +903,7 @@ class ReplayTab(QWidget):
                 ],
                 default_incident_columns=_PHASE2_INCIDENT_COLUMNS,
                 smart_fill_map={"output": ["replay_output"], "logs": ["log_output"]},
+                at_fill_map={"templates": ["incident_files"]},
             )),
             ("Phase II - Final Lookup", BaseReplayPanel(
                 "src.replay.phase_2_final_lookup",
@@ -925,6 +963,7 @@ class ReplayTab(QWidget):
                     "output": ["replay_input", "replay_output"],
                     "logs": ["log_output"],
                 },
+                at_fill_map={"templates": ["incident_files"]},
             )),
             ("Phase III - Final Lookup", BaseReplayPanel(
                 "src.replay.phase_3_final_lookup",

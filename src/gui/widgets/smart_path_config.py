@@ -96,12 +96,14 @@ class SmartPathConfigWidget(QWidget):
         self,
         settings_prefix: str = "accuracy",
         stages: Optional[list[str]] = None,
+        module: Optional[str] = None,
         parent: Optional[QWidget] = None,
     ) -> None:
         super().__init__(parent)
         self._prefix = settings_prefix
         self._base_key = f"{settings_prefix}.base_dir"
         self._svc = FileDiscoveryService()
+        self._module = module
         self._fy = ""
         self._quarter = ""
         self._stages = stages or [s[0] for s in _STAGES]
@@ -217,7 +219,9 @@ class SmartPathConfigWidget(QWidget):
             self._clear_grid()
             return
 
-        paths = self._svc.resolve_smart_paths(base, self._fy, self._quarter)
+        paths = self._svc.resolve_smart_paths(
+            base, self._fy, self._quarter, module=self._module
+        )
         self._last_paths = paths  # type: ignore[attr-defined]
         self._update_grid(paths)
         self.paths_resolved.emit(paths)

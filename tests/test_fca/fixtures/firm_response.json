@@ -1,0 +1,18 @@
+{
+  "Status": "FSR-API-02-01-00",
+  "ResultInfo": {
+    "Page": 1,
+    "per_page": 1,
+    "total_count": 1
+  },
+  "Data": [
+    {
+      "FRN": "122702",
+      "Organisation Name": "Barclays Bank PLC",
+      "Status": "Authorised",
+      "Business Type": "Credit Institution",
+      "Companies House Number": "01026167",
+      "Status Effective Date": "01/12/2001"
+    }
+  ]
+}

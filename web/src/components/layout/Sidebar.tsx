@@ -10,6 +10,8 @@ import {
   History,
   CalendarClock,
   FileCheck,
+  ShieldCheck,
+  FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAppStore } from "@/stores/appStore";
@@ -26,9 +28,11 @@ const navItems: NavItem[] = [
   { label: "Replay", to: "/replay", icon: <RefreshCw size={18} /> },
   { label: "FIRDS", to: "/firds", icon: <Database size={18} /> },
   { label: "GLEIF", to: "/gleif", icon: <Search size={18} /> },
+  { label: "FCA Register", to: "/fca", icon: <ShieldCheck size={18} /> },
   { label: "Utilities", to: "/utilities", icon: <Wrench size={18} /> },
   { label: "Scheduler", to: "/scheduler", icon: <CalendarClock size={18} /> },
   { label: "Reconciliation", to: "/reconciliation", icon: <FileCheck size={18} /> },
+  { label: "Output Files", to: "/files", icon: <FolderOpen size={18} /> },
   { label: "Job History", to: "/jobs", icon: <History size={18} /> },
 ];
 
