@@ -15,14 +15,21 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
+# Inject corporate proxy cert bundle and configure pip to route through Socket proxy
+COPY pip-trusted-certs.pem /tmp/pip-trusted-certs.pem
+ENV PIP_CERT=/tmp/pip-trusted-certs.pem
+ENV REQUESTS_CA_BUNDLE=/tmp/pip-trusted-certs.pem
+ENV PIP_PROXY=https://soc-fg.core2-dev.ajbbuild.uk:443
+ENV HTTPS_PROXY=https://soc-fg.core2-dev.ajbbuild.uk:443
+ENV HTTP_PROXY=https://soc-fg.core2-dev.ajbbuild.uk:443
+
 # Install api-specific requirements first (better layer caching)
 COPY api/requirements.txt ./api-requirements.txt
-RUN pip install --upgrade pip && \
-    pip install --prefix=/install --no-cache-dir -r api-requirements.txt
+RUN pip install --no-cache-dir --prefix=/install -r api-requirements.txt
 
 # Install project requirements if present (non-fatal if absent)
 COPY requirements.txt ./requirements.txt
-RUN pip install --prefix=/install --no-cache-dir -r requirements.txt || true
+RUN pip install --no-cache-dir --prefix=/install -r requirements.txt || true
 
 # -----------------------------------------------------------------------------
 # Stage 2: final — lean runtime image

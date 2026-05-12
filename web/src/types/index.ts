@@ -83,8 +83,8 @@ export interface PaginatedJobs {
 }
 
 export interface WsMessage {
-  type: "log" | "status" | "waiting";
-  data: string;
+  type: "log" | "status" | "waiting" | "progress";
+  data: string | number;
 }
 
 export interface DashboardStats {

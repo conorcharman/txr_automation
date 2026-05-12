@@ -9,14 +9,22 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Inject Zscaler CA certificate so npm can verify TLS through the corporate proxy.
+# NODE_EXTRA_CA_CERTS tells Node.js to trust this cert without needing system CA tools.
+COPY zscaler-ca.crt /tmp/zscaler-ca.crt
+ENV NODE_EXTRA_CA_CERTS=/tmp/zscaler-ca.crt
+
+# Copy Socket proxy .npmrc so npm routes through the corporate proxy.
+# Disable strict-ssl for the container build — the Alpine CA store doesn't
+# include the Socket proxy cert, but the proxy itself is trusted internally.
+COPY .npmrc /root/.npmrc
+RUN echo "strict-ssl=false" >> /root/.npmrc
+
 # Copy package manifests first for better layer caching.
-# The web/ directory may be partially scaffolded; COPY tolerates missing files
-# when using a glob, but we use explicit paths for clarity.
 COPY web/package*.json ./
 
-# Install dependencies (ci for reproducible builds; falls back gracefully if
-# package-lock.json is absent during early scaffolding).
-RUN npm ci 2>/dev/null || npm install
+# Install all dependencies including devDependencies (needed for tsc and vite).
+RUN npm install --include=dev
 
 # Copy the rest of the frontend source
 COPY web/ ./

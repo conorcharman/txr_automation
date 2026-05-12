@@ -64,8 +64,20 @@ export function useWebSocket(
           "data" in parsed
         ) {
           const p = parsed as Record<string, unknown>;
-          if ((p["type"] === "log" || p["type"] === "status") && typeof p["data"] === "string") {
+          if (
+            (p["type"] === "log" || p["type"] === "status") &&
+            typeof p["data"] === "string"
+          ) {
             msg = { type: p["type"], data: p["data"] };
+          } else if (p["type"] === "progress" && typeof p["data"] === "number") {
+            msg = { type: "progress", data: p["data"] };
+          } else if (p["type"] === "progress" && typeof p["data"] === "string") {
+            const maybeProgress = Number.parseInt(p["data"], 10);
+            if (Number.isFinite(maybeProgress)) {
+              msg = { type: "progress", data: maybeProgress };
+            } else {
+              msg = { type: "log", data: event.data as string };
+            }
           } else {
             msg = { type: "log", data: event.data as string };
           }
@@ -79,7 +91,7 @@ export function useWebSocket(
       onMessageRef.current(msg);
 
       // Stop reconnecting on terminal status messages
-      if (msg.type === "status" && TERMINAL_STATUSES.has(msg.data)) {
+      if (msg.type === "status" && typeof msg.data === "string" && TERMINAL_STATUSES.has(msg.data)) {
         stoppedRef.current = true;
       }
     };

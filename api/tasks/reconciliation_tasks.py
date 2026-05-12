@@ -323,9 +323,14 @@ def run_reconciliation(
         except Exception as exc:  # noqa: BLE001
             logger.warning("Redis publish failed for job %s: %s", job_id, exc)
 
+    def _publish_progress(percent: int) -> None:
+        bounded = max(0, min(100, percent))
+        _publish({"type": "progress", "data": bounded})
+
     # ── Mark running ────────────────────────────────────────────────────────
     _sync_update_status(job_id, "running")
     _publish({"type": "status", "data": "running"})
+    _publish_progress(5)
 
     rec_period_days: int = config_snapshot["rec_period_days"]
     lookback_days: int = config_snapshot["lookback_days"]
@@ -358,6 +363,8 @@ def run_reconciliation(
     ordered_scripts = [
         s for s in _REC_EXECUTION_ORDER if s in selected_scripts
     ]
+    total_scripts = max(len(ordered_scripts), 1)
+    total_extract_scripts = max(len(ordered_scripts), 1)
 
     # ── Phase 1 & 2: DTF config generation ──────────────────────────────────
     _publish({"type": "log", "data": "═══ Phase 1: Generating DTF extraction configs ═══"})
@@ -415,15 +422,21 @@ def run_reconciliation(
                 expected_csvs.append(str(csv_file))
 
             results.append({"script": f"extract:{script_name}", "status": "success"})
+            completed_extracts = len([r for r in results if str(r.get("script", "")).startswith("extract:")])
+            _publish_progress(5 + int((completed_extracts / total_extract_scripts) * 25))
 
         except SystemExit as exc:
             if exc.code in (None, 0):
                 results.append({"script": f"extract:{script_name}", "status": "success"})
+                completed_extracts = len([r for r in results if str(r.get("script", "")).startswith("extract:")])
+                _publish_progress(5 + int((completed_extracts / total_extract_scripts) * 25))
             else:
                 error_msg = f"  ✗ DTF generation for {script_name} exited with code {exc.code}."
                 _publish({"type": "log", "data": error_msg})
                 full_output.write(error_msg + "\n")
                 results.append({"script": f"extract:{script_name}", "status": "failed"})
+                completed_extracts = len([r for r in results if str(r.get("script", "")).startswith("extract:")])
+                _publish_progress(5 + int((completed_extracts / total_extract_scripts) * 25))
                 failed = True
                 if stop_on_error:
                     break
@@ -433,11 +446,14 @@ def run_reconciliation(
             _publish({"type": "log", "data": error_msg})
             full_output.write(error_msg + "\n")
             results.append({"script": f"extract:{script_name}", "status": "failed"})
+            completed_extracts = len([r for r in results if str(r.get("script", "")).startswith("extract:")])
+            _publish_progress(5 + int((completed_extracts / total_extract_scripts) * 25))
             failed = True
             if stop_on_error:
                 break
 
     if failed and stop_on_error:
+        _publish_progress(100)
         _publish({"type": "status", "data": "failed"})
         _sync_update_status(
             job_id, "failed",
@@ -451,6 +467,7 @@ def run_reconciliation(
     # config generation to direct Python/API calls, replace phases 1–3.
     _publish({"type": "log", "data": "═══ Phase 2: Waiting for extract CSV files ═══"})
     full_output.write("═══ Phase 2: Waiting for extract CSV files ═══\n")
+    _publish_progress(35)
 
     if expected_csvs:
         deadline = time.monotonic() + EXTRACT_POLL_TIMEOUT_SECONDS
@@ -460,6 +477,7 @@ def run_reconciliation(
                 msg = "  All extract CSV files found."
                 _publish({"type": "log", "data": msg})
                 full_output.write(msg + "\n")
+                _publish_progress(45)
                 break
             for m in missing:
                 _publish({"type": "log", "data": f"  Waiting for extract: {Path(m).name}"})
@@ -474,6 +492,7 @@ def run_reconciliation(
                 _publish({"type": "log", "data": error_msg})
                 full_output.write(error_msg + "\n")
                 _publish({"type": "status", "data": "failed"})
+                _publish_progress(100)
                 _sync_update_status(
                     job_id, "failed",
                     error_message=f"Extract timeout: {[Path(p).name for p in missing]}",
@@ -484,6 +503,7 @@ def run_reconciliation(
         msg = "  No extract CSV files expected — skipping poll."
         _publish({"type": "log", "data": msg})
         full_output.write(msg + "\n")
+        _publish_progress(45)
 
     # ── Phase 4 & 5: Validation scripts ─────────────────────────────────────
     _publish({"type": "log", "data": "═══ Phase 3: Running validation scripts ═══"})
@@ -505,6 +525,7 @@ def run_reconciliation(
             _publish, full_output, step_label,
         )
         results.append({"script": script_name, "status": "success" if success else "failed"})
+        _publish_progress(45 + int((idx / total_scripts) * 40))
 
         if not success:
             failed = True
@@ -512,6 +533,7 @@ def run_reconciliation(
                 break
 
     if failed and stop_on_error:
+        _publish_progress(100)
         _publish({"type": "status", "data": "failed"})
         _sync_update_status(
             job_id, "failed",
@@ -531,11 +553,13 @@ def run_reconciliation(
         _publish, full_output, "[data_push]",
     )
     results.append({"script": "data_push", "status": "success" if success else "failed"})
+    _publish_progress(95)
     if not success:
         failed = True
 
     # ── Final status ────────────────────────────────────────────────────────
     final_status = "failed" if failed else "success"
+    _publish_progress(100)
     _publish({"type": "status", "data": final_status})
     _sync_update_status(
         job_id,

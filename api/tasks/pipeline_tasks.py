@@ -294,9 +294,14 @@ def run_pipeline(
         except Exception as exc:  # noqa: BLE001
             logger.warning("Redis publish failed for job %s: %s", job_id, exc)
 
+    def _publish_progress(percent: int) -> None:
+        bounded = max(0, min(100, percent))
+        _publish({"type": "progress", "data": bounded})
+
     # ── Mark running ────────────────────────────────────────────────────────
     _sync_update_status(job_id, "running")
     _publish({"type": "status", "data": "running"})
+    _publish_progress(5)
 
     fiscal_year = config_snapshot["fiscal_year"]
     quarter = config_snapshot["quarter"]
@@ -319,6 +324,7 @@ def run_pipeline(
     results: list[dict] = []
     failed = False
     extract_gen_just_ran = False
+    total_scripts = max(len(selected_scripts), 1)
 
     for idx, script_name in enumerate(selected_scripts, 1):
         # ── Pause after Extract Generator, before Collate ───────────────────
@@ -374,6 +380,7 @@ def run_pipeline(
                         f"{len(missing)}/{len(expected_files)} still missing."
                     )
                     _publish({"type": "waiting", "data": heartbeat})
+                    _publish_progress(max(10, int(((idx - 1) / total_scripts) * 90)))
                     time.sleep(60)
 
         module_path = _PIPELINE_SCRIPT_MODULES.get(script_name)
@@ -382,6 +389,7 @@ def run_pipeline(
             _publish({"type": "log", "data": msg})
             full_output.write(msg + "\n")
             results.append({"script": script_name, "status": "skipped"})
+            _publish_progress(max(10, int((idx / total_scripts) * 90)))
             continue
 
         header = f"[{idx}/{len(selected_scripts)}] Running {script_name}..."
@@ -426,6 +434,7 @@ def run_pipeline(
             results.append({"script": script_name, "status": "success"})
             _publish({"type": "log", "data": f"  ✓ {script_name} completed."})
             full_output.write(f"  ✓ {script_name} completed.\n")
+            _publish_progress(max(10, int((idx / total_scripts) * 90)))
 
             if script_name == "sql_extract_generator":
                 extract_gen_just_ran = True
@@ -435,6 +444,7 @@ def run_pipeline(
                 results.append({"script": script_name, "status": "success"})
                 _publish({"type": "log", "data": f"  ✓ {script_name} completed."})
                 full_output.write(f"  ✓ {script_name} completed.\n")
+                _publish_progress(max(10, int((idx / total_scripts) * 90)))
 
                 if script_name == "sql_extract_generator":
                     extract_gen_just_ran = True
@@ -443,6 +453,7 @@ def run_pipeline(
                 _publish({"type": "log", "data": error_msg})
                 full_output.write(error_msg + "\n")
                 results.append({"script": script_name, "status": "failed", "exit_code": exc.code})
+                _publish_progress(max(10, int((idx / total_scripts) * 90)))
                 failed = True
                 if stop_on_error:
                     break
@@ -452,12 +463,14 @@ def run_pipeline(
             _publish({"type": "log", "data": error_msg})
             full_output.write(error_msg + "\n")
             results.append({"script": script_name, "status": "failed", "error": str(exc)})
+            _publish_progress(max(10, int((idx / total_scripts) * 90)))
             failed = True
             if stop_on_error:
                 break
 
     # ── Final status ────────────────────────────────────────────────────────
     final_status = "failed" if failed else "success"
+    _publish_progress(100)
     _publish({"type": "status", "data": final_status})
     _sync_update_status(
         job_id,

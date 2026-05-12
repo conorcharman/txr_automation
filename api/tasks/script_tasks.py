@@ -38,9 +38,10 @@ import io
 import json
 import logging
 import os
+import re
 import sys
 import threading
-from typing import Any
+from typing import Any, Callable
 
 import redis as redis_lib
 from celery import Task
@@ -52,6 +53,169 @@ logger = logging.getLogger(__name__)
 
 # Lock protecting global sys.argv mutations across concurrent Celery tasks.
 _argv_lock = threading.Lock()
+
+
+class _ProgressEstimator:
+    """Estimate percentage completion from task lifecycle and known log patterns."""
+
+    def __init__(self, module_path: str) -> None:
+        self._module_path = module_path
+        self._last_percent = 0
+        self._fulins_total: int | None = None
+        self._fulcan_total: int | None = None
+        self._heartbeat_count = 0
+
+    @staticmethod
+    def _clamp(percent: int) -> int:
+        return max(0, min(100, percent))
+
+    def _set(self, percent: int) -> int | None:
+        bounded = self._clamp(percent)
+        if bounded <= self._last_percent:
+            return None
+        self._last_percent = bounded
+        return bounded
+
+    def on_running(self) -> int | None:
+        """Emit an initial non-zero progress once the job starts."""
+        return self._set(5)
+
+    def on_log_line(self, line: str) -> int | None:
+        """Infer progress from known script output patterns."""
+        text = line.strip()
+        if not text:
+            return None
+
+        # Fallback for scripts whose logger output bypasses capture:
+        # advance gradually whilst heartbeat messages arrive.
+        if text.startswith("[heartbeat]"):
+            self._heartbeat_count += 1
+            return self._set(min(95, 5 + (self._heartbeat_count * 2)))
+
+        # FIRDS refresh provides reliable totals and per-file [x/y] markers.
+        if self._module_path == "src.firds.scripts.refresh_cache":
+            fulins_match = re.search(
+                r"Found\s+(\d+)\s+in-scope\s+FULINS\s+file\(s\)\s+to\s+process",
+                text,
+            )
+            if fulins_match:
+                self._fulins_total = int(fulins_match.group(1))
+                return self._set(10)
+
+            fulcan_match = re.search(
+                r"Found\s+(\d+)\s+FULCAN\s+cancellation\s+file\(s\)\s+to\s+process",
+                text,
+            )
+            if fulcan_match:
+                self._fulcan_total = int(fulcan_match.group(1))
+                return self._set(75)
+
+            bracket = re.search(r"\[(\d+)/(\d+)\]", text)
+            if bracket:
+                idx = int(bracket.group(1))
+                total = max(int(bracket.group(2)), 1)
+
+                if "FULINS" in text:
+                    span = 60 if (self._fulcan_total or 0) > 0 else 80
+                    return self._set(10 + int((idx / total) * span))
+
+                if "FULCAN" in text:
+                    base = 75 if (self._fulins_total or 0) > 0 else 10
+                    span = 20 if (self._fulins_total or 0) > 0 else 80
+                    return self._set(base + int((idx / total) * span))
+
+            if "FIRDS full refresh complete" in text:
+                return self._set(98)
+
+        # Generic fallback: support scripts that log [x/y] progress markers.
+        generic = re.search(r"\[(\d+)/(\d+)\]", text)
+        if generic:
+            idx = int(generic.group(1))
+            total = max(int(generic.group(2)), 1)
+            return self._set(10 + int((idx / total) * 80))
+
+        return None
+
+    def on_terminal(self) -> int | None:
+        """Emit completion progress for terminal states."""
+        return self._set(100)
+
+
+def _publish_progress(
+    publish: Callable[[dict], None],
+    percent: int | None,
+) -> None:
+    """Publish progress updates when a higher percentage is available."""
+    if percent is None:
+        return
+    publish({"type": "progress", "data": percent})
+
+
+class _LiveOutputCapture(io.TextIOBase):
+    """Capture stdout/stderr and publish complete lines in real time.
+
+    This file-like object is used with ``contextlib.redirect_stdout`` and
+    ``contextlib.redirect_stderr``. It keeps a full in-memory copy of output
+    for DB persistence whilst publishing each completed line to Redis as soon
+    as it is emitted.
+    """
+
+    def __init__(self, publish_line: Callable[[str], None]) -> None:
+        self._publish_line = publish_line
+        self._buffer = io.StringIO()
+        self._partial = ""
+
+    def write(self, s: str) -> int:
+        if not s:
+            return 0
+
+        self._buffer.write(s)
+        chunk = self._partial + s
+        lines = chunk.splitlines(keepends=True)
+
+        self._partial = ""
+        for line in lines:
+            if line.endswith("\n") or line.endswith("\r"):
+                text = line.rstrip("\r\n")
+                if text.strip():
+                    self._publish_line(text)
+            else:
+                self._partial = line
+
+        return len(s)
+
+    def flush(self) -> None:
+        if self._partial.strip():
+            self._publish_line(self._partial)
+        self._partial = ""
+
+    def getvalue(self) -> str:
+        return self._buffer.getvalue()
+
+
+def _start_heartbeat(
+    publish_line: Callable[[str], None],
+    stop_event: threading.Event,
+    interval_seconds: int = 10,
+) -> threading.Thread:
+    """Start a background heartbeat publisher for long-running jobs.
+
+    Args:
+        publish_line: Callback used to publish a single log line.
+        stop_event: Event that signals the heartbeat thread to stop.
+        interval_seconds: Seconds between heartbeat messages.
+
+    Returns:
+        The started daemon ``threading.Thread`` instance.
+    """
+
+    def _run() -> None:
+        while not stop_event.wait(timeout=interval_seconds):
+            publish_line("[heartbeat] Job still running...")
+
+    thread = threading.Thread(target=_run, daemon=True)
+    thread.start()
+    return thread
 
 
 # ---------------------------------------------------------------------------
@@ -172,6 +336,7 @@ def run_script(
     settings = get_settings()
     redis_client = redis_lib.from_url(settings.redis_url)
     channel = f"job:{job_id}:logs"
+    estimator = _ProgressEstimator(module_path)
 
     def _publish(message: dict) -> None:
         """Publish a JSON message to the job's Redis log channel."""
@@ -183,6 +348,17 @@ def run_script(
     # ── Mark running ────────────────────────────────────────────────────────
     _sync_update_status(job_id, "running")
     _publish({"type": "status", "data": "running"})
+    _publish_progress(_publish, estimator.on_running())
+
+    def _publish_log_line(line: str) -> None:
+        _publish({"type": "log", "data": line})
+        _publish_progress(_publish, estimator.on_log_line(line))
+
+    heartbeat_stop = threading.Event()
+    heartbeat_thread = _start_heartbeat(
+        _publish_log_line,
+        heartbeat_stop,
+    )
 
     # Some scripts use non-zero exit codes for informational results rather
     # than errors.  Map module paths to the set of codes that should be
@@ -194,7 +370,7 @@ def run_script(
     accepted_exit_codes = _ACCEPTED_EXIT_CODES.get(module_path, set())
 
     # ── Import and run the module ────────────────────────────────────────────
-    output_buffer = io.StringIO()
+    output_capture = _LiveOutputCapture(_publish_log_line)
     old_stdout = sys.stdout
     old_stderr = sys.stderr
 
@@ -206,8 +382,8 @@ def run_script(
     ]
 
     try:
-        with contextlib.redirect_stdout(output_buffer), contextlib.redirect_stderr(
-            output_buffer
+        with contextlib.redirect_stdout(output_capture), contextlib.redirect_stderr(
+            output_capture
         ):
             # Evict any cached version and re-import *inside* the redirect so
             # that module-level logging handlers (e.g. StructuredLogger's
@@ -236,14 +412,12 @@ def run_script(
                 with _argv_lock:
                     sys.argv = old_argv
 
-        # Publish captured output line by line.
-        output = output_buffer.getvalue()
-        for line in output.splitlines():
-            if line.strip():
-                _publish({"type": "log", "data": line})
+        output_capture.flush()
+        output = output_capture.getvalue()
 
         # ── Success ─────────────────────────────────────────────────────────
         _sync_update_status(job_id, "success", output_files=[], log_output=output)
+        _publish_progress(_publish, estimator.on_terminal())
         _publish({"type": "status", "data": "success"})
         return {"status": "success", "output_files": []}
 
@@ -253,19 +427,25 @@ def run_script(
         sys.stderr = old_stderr
 
         # Flush any partial output.
-        partial_output = output_buffer.getvalue()
+        output_capture.flush()
+        partial_output = output_capture.getvalue()
         for line in partial_output.splitlines():
             if line.strip():
                 _publish({"type": "log", "data": line})
 
         error_str = f"{type(exc).__name__}: {exc}"
         _publish({"type": "log", "data": error_str})
+        _publish_progress(_publish, estimator.on_terminal())
         _publish({"type": "status", "data": "failed"})
         full_log = partial_output + ("\n" if partial_output else "") + error_str
         _sync_update_status(job_id, "failed", error_message=error_str, log_output=full_log)
         raise
 
     finally:
+        heartbeat_stop.set()
+        if heartbeat_thread.is_alive():
+            heartbeat_thread.join(timeout=1.0)
+
         sys.stdout = old_stdout
         sys.stderr = old_stderr
         # Clean up temporary config YAML files written by ScriptRunnerService.
@@ -320,6 +500,12 @@ def run_incidents(
 
     _sync_update_status(job_id, "running")
     _publish({"type": "status", "data": "running"})
+    _publish({"type": "progress", "data": 5})
+    heartbeat_stop = threading.Event()
+    heartbeat_thread = _start_heartbeat(
+        lambda line: _publish({"type": "log", "data": line}),
+        heartbeat_stop,
+    )
 
     full_output = io.StringIO()
     results: list[dict] = []
@@ -377,6 +563,7 @@ def run_incidents(
             results.append({"incident": incident_code, "status": "success"})
             done_msg = f"  ✓ {incident_code} completed."
             _publish({"type": "log", "data": done_msg})
+            _publish({"type": "progress", "data": int((idx / total) * 100)})
             full_output.write(done_msg + "\n")
 
         except Exception as exc:  # noqa: BLE001
@@ -388,11 +575,13 @@ def run_incidents(
                 "status": "failed",
                 "error": str(exc),
             })
+            _publish({"type": "progress", "data": int((idx / total) * 100)})
             failed = True
             if stop_on_error:
                 break
 
     final_status = "failed" if failed else "success"
+    _publish({"type": "progress", "data": 100})
     _publish({"type": "status", "data": final_status})
     _sync_update_status(
         job_id,
@@ -402,6 +591,10 @@ def run_incidents(
     )
 
     # Clean up temp YAML files.
+    heartbeat_stop.set()
+    if heartbeat_thread.is_alive():
+        heartbeat_thread.join(timeout=1.0)
+
     for tmp in temp_files:
         try:
             os.unlink(tmp)

@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import LogViewer from "@/components/LogViewer";
 import { getJob, cancelJob } from "@/api/jobs";
 import { useWebSocket } from "@/hooks/useWebSocket";
+import { getJobProgress, setJobProgress } from "@/lib/jobProgressCache";
 import type { JobResponse, JobStatus, WsMessage } from "@/types";
 import { formatRelativeTime } from "@/lib/time";
 
@@ -19,6 +20,17 @@ const STATUS_CLASSES: Record<JobStatus, string> = {
   cancelled: "bg-gray-200 text-gray-800",
 };
 
+function clampProgress(value: number): number {
+  return Math.max(0, Math.min(100, Math.round(value)));
+}
+
+function statusToProgress(status: JobStatus): number {
+  if (status === "success" || status === "failed" || status === "cancelled") {
+    return 100;
+  }
+  return 0;
+}
+
 function buildWsUrl(jobId: string): string {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${protocol}//${window.location.host}/api/ws/jobs/${jobId}/logs`;
@@ -29,6 +41,13 @@ const JobDetail: React.FC = () => {
   const queryClient = useQueryClient();
   const [logLines, setLogLines] = useState<string[]>([]);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [progress, setProgress] = useState<number>(() => {
+    if (!jobId) {
+      return 0;
+    }
+    const cached = getJobProgress(jobId);
+    return cached ?? 0;
+  });
 
   const { data: job, isLoading, isError, error } = useQuery<JobResponse>({
     queryKey: ["jobs", jobId],
@@ -40,11 +59,43 @@ const JobDetail: React.FC = () => {
     },
   });
 
+  useEffect(() => {
+    setLogLines([]);
+    if (!jobId) {
+      setProgress(0);
+      return;
+    }
+    const cached = getJobProgress(jobId);
+    setProgress(cached ?? 0);
+  }, [jobId]);
+
   const handleMessage = useCallback((msg: WsMessage) => {
     if (msg.type === "log") {
-      setLogLines((prev) => [...prev, msg.data]);
+      setLogLines((prev) => [...prev, String(msg.data)]);
+      return;
     }
-  }, []);
+
+    if (msg.type === "progress" && typeof msg.data === "number") {
+      const next = clampProgress(msg.data);
+      setProgress((prev) => {
+        const updated = next > prev ? next : prev;
+        if (jobId) {
+          setJobProgress(jobId, updated);
+        }
+        return updated;
+      });
+      return;
+    }
+
+    if (msg.type === "status" && typeof msg.data === "string") {
+      if (msg.data === "success" || msg.data === "failed" || msg.data === "cancelled") {
+        setProgress(100);
+        if (jobId) {
+          setJobProgress(jobId, 100);
+        }
+      }
+    }
+  }, [jobId]);
 
   // For completed/failed jobs, seed logLines from the persisted log_output
   // returned by the API (WebSocket is only active whilst the job is running).
@@ -58,11 +109,27 @@ const JobDetail: React.FC = () => {
     }
   }, [job?.logOutput, job?.status]);
 
+  useEffect(() => {
+    if (!job) {
+      return;
+    }
+    const baseline = statusToProgress(job.status);
+    setProgress((prev) => {
+      const cached = getJobProgress(job.id);
+      const updated = Math.max(prev, baseline, cached ?? 0);
+      setJobProgress(job.id, updated);
+      return updated;
+    });
+  }, [job]);
+
   const wsUrl = jobId ? buildWsUrl(jobId) : "";
 
   useWebSocket(wsUrl, {
     onMessage: handleMessage,
-    enabled: job?.status === "running",
+    enabled:
+      job?.status === "pending" ||
+      job?.status === "waiting" ||
+      job?.status === "running",
   });
 
   const handleCancel = async () => {
@@ -174,6 +241,25 @@ const JobDetail: React.FC = () => {
             <p>{formatRelativeTime(job.completedAt)}</p>
           </div>
         )}
+      </div>
+
+      {/* Progress */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+          <span>Progress</span>
+          <span>{progress}%</span>
+        </div>
+        <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
+            style={{ width: `${progress}%` }}
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={progress}
+            aria-label="Job progress"
+          />
+        </div>
       </div>
 
       {/* Error message */}

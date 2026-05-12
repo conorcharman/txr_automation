@@ -119,3 +119,8 @@ Thumbs.db
 
 celerybeat-schedule
 data/celerybeat-schedule
+
+# Machine-specific corporate proxy config (do not commit)
+zscaler-ca.crt
+.npmrc
+pip-trusted-certs.pem
