@@ -1,9 +1,0 @@
-Transaction Reference,Account ID,Person Code,Buyer ID Code,Type of Buyer ID Code,First Name,Surname,Date of Birth,Gender,Primary Nationality,Secondary Nationality,Correction Output,Correction Fields,Tracker Status,Agree With Correction
-TXN001,ACC001,P001,AB123456C,NIDN,John,Smith,1985-06-15,M,GB,,,,,
-TXN002,ACC002,P002,AB123456Z,NIDN,Jane,Doe,1990-03-20,F,GB,,,,,
-TXN003,ACC003,P003,BG123456C,NIDN,Robert,Jones,1975-12-01,M,GB,,,,,
-TXN004,ACC004,P004,GB19850615JOHN#SMIT#,CONCAT,John,Smith,1985-06-15,M,GB,,,,,
-TXN005,ACC005,P005,GB19901225JOHN#SMIT#,CONCAT,John,Smith,1985-06-15,M,GB,,,,,
-TXN006,ACC006,P006,GB19850615JOHN#SMIT#,NIDN,John,Smith,1985-06-15,M,GB,,,,,
-TXN009,ACC009,P009,,,Alice,Williams,1988-04-10,F,DE,,,,,
-TXN010,ACC010,P010,,NIDN,Bob,Taylor,1992-07-22,M,FR,,,,,

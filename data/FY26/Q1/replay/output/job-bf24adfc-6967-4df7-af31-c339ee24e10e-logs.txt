@@ -1,9 +1,0 @@
-Loading configuration from /app/data/tmp/tmpj0vcfiid.yaml...
-Fatal error: Configuration error: 'incident_columns' section is required in config file
-Traceback (most recent call last):
-  File "/app/src/replay/phase_2_processor.py", line 747, in main
-    processor = Phase2Processor(config_dict=config)
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/app/src/replay/phase_2_processor.py", line 229, in __init__
-    raise ValueError("Configuration error: 'incident_columns' section is required in config file")
-ValueError: Configuration error: 'incident_columns' section is required in config file
