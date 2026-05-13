@@ -31,6 +31,11 @@ RUN pip install --no-cache-dir --prefix=/install -r api-requirements.txt
 COPY requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir --prefix=/install -r requirements.txt || true
 
+# Install the local project so setup.py console_scripts are generated.
+COPY setup.py README.md ./
+COPY src/ ./src/
+RUN pip install --no-cache-dir --prefix=/install .
+
 # -----------------------------------------------------------------------------
 # Stage 2: final — lean runtime image
 # -----------------------------------------------------------------------------
@@ -38,6 +43,7 @@ FROM python:3.11-slim AS final
 
 # Runtime system libraries only
 RUN apt-get update && apt-get install -y --no-install-recommends \
+    ca-certificates \
     libpq5 \
     libglib2.0-0 \
     libx11-6 \
@@ -46,6 +52,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
+
+# Trust the corporate proxy CA at runtime as well (used by requests/HTTPS API calls).
+COPY --from=builder /tmp/pip-trusted-certs.pem /usr/local/share/ca-certificates/pip-trusted-certs.crt
+RUN update-ca-certificates
 
 # Copy installed packages from builder
 COPY --from=builder /install /usr/local
@@ -72,6 +82,8 @@ EXPOSE 8000
 
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONPATH=/app:/app/src
+    PYTHONPATH=/app:/app/src \
+    REQUESTS_CA_BUNDLE=/etc/ssl/certs/ca-certificates.crt \
+    SSL_CERT_FILE=/etc/ssl/certs/ca-certificates.crt
 
 CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000"]

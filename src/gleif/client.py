@@ -328,8 +328,18 @@ class GleifApiClient:
             requests.HTTPError: On non-2xx response.
         """
         logger.debug("GLEIF API request", extra={"url": url, "params": params})
-
-        response = self._session.get(url, params=params, timeout=self._timeout)
+        try:
+            response = self._session.get(url, params=params, timeout=self._timeout)
+        except requests.exceptions.SSLError as exc:
+            raise requests.exceptions.SSLError(
+                (
+                    f"TLS certificate verification failed for {url}. "
+                    "If running behind a corporate proxy, ensure the proxy/root CA is trusted "
+                    "and exported via REQUESTS_CA_BUNDLE (or SSL_CERT_FILE). "
+                    "For immediate workaround, use --golden-copy-url with a manually obtained link, "
+                    "or load a local Golden Copy ZIP via the refresher local-file path."
+                )
+            ) from exc
         response.raise_for_status()
 
         time.sleep(self._request_delay)
