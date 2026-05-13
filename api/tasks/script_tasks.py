@@ -41,6 +41,7 @@ import os
 import re
 import sys
 import threading
+from pathlib import Path
 from typing import Any, Callable
 
 import redis as redis_lib
@@ -50,6 +51,11 @@ from api.config import get_settings
 from api.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
+
+_TEMPLATE_CODE_RE = re.compile(
+    r"^(?:FY\d{2}\s+Q[1-4]\s+)?(?P<code>\d+_\d+)\.csv$",
+    re.IGNORECASE,
+)
 
 # Lock protecting global sys.argv mutations across concurrent Celery tasks.
 _argv_lock = threading.Lock()
@@ -85,12 +91,6 @@ class _ProgressEstimator:
         text = line.strip()
         if not text:
             return None
-
-        # Fallback for scripts whose logger output bypasses capture:
-        # advance gradually whilst heartbeat messages arrive.
-        if text.startswith("[heartbeat]"):
-            self._heartbeat_count += 1
-            return self._set(min(95, 5 + (self._heartbeat_count * 2)))
 
         # FIRDS refresh provides reliable totals and per-file [x/y] markers.
         if self._module_path == "src.firds.scripts.refresh_cache":
@@ -193,29 +193,43 @@ class _LiveOutputCapture(io.TextIOBase):
         return self._buffer.getvalue()
 
 
-def _start_heartbeat(
-    publish_line: Callable[[str], None],
-    stop_event: threading.Event,
-    interval_seconds: int = 10,
-) -> threading.Thread:
-    """Start a background heartbeat publisher for long-running jobs.
+def _extract_template_incident_code(filename: str) -> str | None:
+    """Extract an incident code from a generated template CSV filename."""
+    match = _TEMPLATE_CODE_RE.match(filename)
+    if match is None:
+        return None
+    return match.group("code")
+
+
+def _filter_template_outputs(
+    output_directory: str,
+    allowed_incident_codes: set[str],
+) -> tuple[int, int]:
+    """Delete generated template CSVs whose incident codes are not selected.
 
     Args:
-        publish_line: Callback used to publish a single log line.
-        stop_event: Event that signals the heartbeat thread to stop.
-        interval_seconds: Seconds between heartbeat messages.
+        output_directory: Directory containing generated template CSV files.
+        allowed_incident_codes: Selected incident codes to retain.
 
     Returns:
-        The started daemon ``threading.Thread`` instance.
+        Tuple of ``(removed_count, scanned_count)`` where ``scanned_count``
+        includes only CSV files matching the template filename pattern.
     """
+    base = Path(output_directory)
+    if not base.exists() or not base.is_dir():
+        return 0, 0
 
-    def _run() -> None:
-        while not stop_event.wait(timeout=interval_seconds):
-            publish_line("[heartbeat] Job still running...")
-
-    thread = threading.Thread(target=_run, daemon=True)
-    thread.start()
-    return thread
+    removed = 0
+    scanned = 0
+    for csv_path in base.glob("*.csv"):
+        code = _extract_template_incident_code(csv_path.name)
+        if code is None:
+            continue
+        scanned += 1
+        if code not in allowed_incident_codes:
+            csv_path.unlink(missing_ok=True)
+            removed += 1
+    return removed, scanned
 
 
 # ---------------------------------------------------------------------------
@@ -354,12 +368,6 @@ def run_script(
         _publish({"type": "log", "data": line})
         _publish_progress(_publish, estimator.on_log_line(line))
 
-    heartbeat_stop = threading.Event()
-    heartbeat_thread = _start_heartbeat(
-        _publish_log_line,
-        heartbeat_stop,
-    )
-
     # Some scripts use non-zero exit codes for informational results rather
     # than errors.  Map module paths to the set of codes that should be
     # treated as successful completion.
@@ -415,6 +423,32 @@ def run_script(
         output_capture.flush()
         output = output_capture.getvalue()
 
+        # Template generator creates all incident templates by design. When
+        # selected incident codes are provided by the web UI, retain only those.
+        if module_path == "src.accuracy_testing.scripts.accuracy_template_generator":
+            processing_cfg = config_snapshot.get("processing")
+            paths_cfg = config_snapshot.get("paths")
+            selected_codes = (
+                processing_cfg.get("incident_codes")
+                if isinstance(processing_cfg, dict)
+                else None
+            )
+            output_dir = (
+                paths_cfg.get("output", {}).get("directory")
+                if isinstance(paths_cfg, dict)
+                else None
+            )
+            if isinstance(selected_codes, list) and selected_codes and isinstance(output_dir, str):
+                allowed = {str(code).strip() for code in selected_codes if str(code).strip()}
+                removed_count, scanned_count = _filter_template_outputs(output_dir, allowed)
+                _publish_log_line(
+                    (
+                        f"Template filter applied: kept {len(allowed)} selected incident(s); "
+                        f"removed {removed_count} of {scanned_count} generated template file(s)."
+                    )
+                )
+                output = output_capture.getvalue()
+
         # ── Success ─────────────────────────────────────────────────────────
         _sync_update_status(job_id, "success", output_files=[], log_output=output)
         _publish_progress(_publish, estimator.on_terminal())
@@ -442,10 +476,6 @@ def run_script(
         raise
 
     finally:
-        heartbeat_stop.set()
-        if heartbeat_thread.is_alive():
-            heartbeat_thread.join(timeout=1.0)
-
         sys.stdout = old_stdout
         sys.stderr = old_stderr
         # Clean up temporary config YAML files written by ScriptRunnerService.

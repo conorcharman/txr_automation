@@ -188,6 +188,7 @@ def _build_utility_config(
     script_name: str,
     fiscal_year: str,
     quarter: str,
+    kaizen_dir: str,
     extracts_dir: str,
     templates_dir: str,
     output_dir: str,
@@ -199,6 +200,7 @@ def _build_utility_config(
         script_name: The script identifier.
         fiscal_year: Fiscal year string.
         quarter: Quarter string.
+        kaizen_dir: Path to the kaizen directory (consolidated source CSVs).
         extracts_dir: Path to the extracts directory.
         templates_dir: Path to the templates directory.
         output_dir: Path to the output directory.
@@ -218,7 +220,7 @@ def _build_utility_config(
         config["paths"] = {"output": {"directory": extracts_dir}}
     elif script_name == "accuracy_template_generator":
         config["paths"] = {
-            "input": {"directory": extracts_dir},
+            "input": {"directory": kaizen_dir},
             "output": {"directory": templates_dir},
         }
     elif script_name == "collate_csv_extracts":
@@ -247,7 +249,7 @@ def _write_temp_yaml(config: dict) -> str:
 
     import yaml
 
-    shared_tmp = Path("/app/data/tmp")
+    shared_tmp = Path(get_settings().data_dir) / "tmp"
     shared_tmp.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         mode="w",
@@ -310,14 +312,15 @@ def run_pipeline(
     stop_on_error: bool = config_snapshot.get("stop_on_error", True)
 
     # Resolve paths.
-    root = Path("/app/data") / fiscal_year / quarter
+    root = Path(get_settings().data_dir) / fiscal_year / quarter
+    kaizen_dir = overrides.get("kaizen", str(root / "kaizen"))
     extracts_dir = overrides.get("extracts", str(root / "extracts"))
     templates_dir = overrides.get("templates", str(root / "templates"))
     output_dir = overrides.get("output", str(root / "output"))
     logs_dir = overrides.get("logs", str(root / "logs"))
 
     # Ensure directories exist.
-    for d in (extracts_dir, templates_dir, output_dir, logs_dir):
+    for d in (kaizen_dir, extracts_dir, templates_dir, output_dir, logs_dir):
         Path(d).mkdir(parents=True, exist_ok=True)
 
     full_output = io.StringIO()
@@ -405,7 +408,7 @@ def run_pipeline(
         else:
             config = _build_utility_config(
                 script_name, fiscal_year, quarter,
-                extracts_dir, templates_dir, output_dir, logs_dir,
+                kaizen_dir, extracts_dir, templates_dir, output_dir, logs_dir,
             )
 
         tmp_path = _write_temp_yaml(config)

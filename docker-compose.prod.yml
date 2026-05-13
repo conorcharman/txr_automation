@@ -92,7 +92,7 @@ services:
         condition: service_healthy
       db:
         condition: service_healthy
-    command: celery -A api.tasks.celery_app worker --loglevel=info
+    command: celery -A api.tasks.celery_app worker --loglevel=info --pool=solo
     networks:
       - txr-network
     deploy:

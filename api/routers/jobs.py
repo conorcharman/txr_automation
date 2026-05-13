@@ -107,6 +107,39 @@ def _resolve_module(script_name: str) -> str:
     return module_path
 
 
+def _build_argv(script_name: str, config: dict) -> list[str]:
+    """Build command-line arguments from job config based on script type.
+
+    Args:
+        script_name: The registered script identifier.
+        config: Configuration dict from the job.
+
+    Returns:
+        List of CLI argument strings to pass to the script.
+    """
+    argv: list[str] = []
+
+    # GLEIF refresh
+    if script_name == "gleif_refresh":
+        refresh_type = config.get("type", "full")
+        argv.append(f"--type={refresh_type}")
+        if config.get("skipIsinMap"):
+            argv.append("--skip-isin-map")
+        if config.get("deltaType"):
+            argv.append(f"--delta-type={config['deltaType']}")
+
+    # FIRDS refresh
+    elif script_name == "firds_refresh":
+        refresh_type = config.get("type", "full")
+        argv.append(f"--type={refresh_type}")
+        if config.get("date"):
+            argv.append(f"--date={config['date']}")
+
+    # Add more script-specific argv builders as needed in future phases
+
+    return argv
+
+
 # ---------------------------------------------------------------------------
 # REST routes
 # ---------------------------------------------------------------------------
@@ -207,9 +240,8 @@ async def create_job(
     module_path = _resolve_module(body.script_name)
     job = await job_service.create_job(db, body.script_name, body.config)
 
-    # Build argv from config; for now pass an empty list — Phase 4 will
-    # derive argv from config fields per-script.
-    argv: list[str] = []
+    # Build argv from config based on script type
+    argv = _build_argv(body.script_name, body.config)
 
     run_script.delay(
         str(job.id),

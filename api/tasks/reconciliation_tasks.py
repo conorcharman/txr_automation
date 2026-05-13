@@ -202,7 +202,7 @@ def _write_temp_yaml(config: dict) -> str:
 
     import yaml
 
-    shared_tmp = Path("/app/data/tmp")
+    shared_tmp = Path(get_settings().data_dir) / "tmp"
     shared_tmp.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         mode="w",
@@ -344,7 +344,7 @@ def run_reconciliation(
     lookback_start = (now - timedelta(days=lookback_days)).date()
 
     # Resolve paths — reconciliation uses a dedicated rec/ directory.
-    root = Path("/app/data/reconciliation") / now.strftime("%Y%m%d_%H%M%S")
+    root = Path(get_settings().data_dir) / "reconciliation" / now.strftime("%Y%m%d_%H%M%S")
     extracts_dir = overrides.get("extracts", str(root / "extracts"))
     templates_dir = overrides.get("templates", str(root / "templates"))
     output_dir = overrides.get("output", str(root / "output"))

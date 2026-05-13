@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+﻿import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +14,7 @@ import Field from "@/components/Field";
 import SmartPathConfig from "@/components/SmartPathConfig";
 import ConfigLoader from "@/components/ConfigLoader";
 import { browseDirectory, resolvePaths } from "@/api/filesystem";
+import { useDataRoot } from "@/hooks/useDataRoot";
 import type { ResolvedPaths } from "@/types";
 import {
   runReplayPhase2,
@@ -103,7 +104,7 @@ const AdvancedSection: React.FC<AdvancedSectionProps> = ({ isOpen, onToggle, chi
       className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
     >
       Advanced
-      <span className={cn("transition-transform text-[10px]", isOpen && "rotate-180")}>▾</span>
+      <span className={cn("transition-transform text-[10px]", isOpen && "rotate-180")}>â–¾</span>
     </button>
     {isOpen && (
       <div className="space-y-3 px-3 pb-3 border-t border-border pt-3">{children}</div>
@@ -171,6 +172,7 @@ const Phase2Form: React.FC = () => {
 
   const testingPeriod = watch("testingPeriod");
   const [sourceFileCount, setSourceFileCount] = useState<number | null>(null);
+  const dataRoot = useDataRoot();
   const resolvedLogPath = useRef<string>("");
 
   const handlePathsResolved = useCallback(
@@ -209,7 +211,7 @@ const Phase2Form: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
-      logOutput: resolvedLogPath.current || "/app/data/logs",
+      logOutput: resolvedLogPath.current || dataRoot + "/logs",
     });
   };
 
@@ -218,7 +220,7 @@ const Phase2Form: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
       <p className="text-sm text-muted-foreground">
-        Process replay Phase 2 — initial replay processing against the input file.
+        Process replay Phase 2 â€” initial replay processing against the input file.
       </p>
 
       <div>
@@ -244,7 +246,7 @@ const Phase2Form: React.FC = () => {
       {sourceFileCount !== null && (
         <div className="rounded-md border border-border px-3 py-3 space-y-2">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Source Files (Accuracy Testing — Templates)
+            Source Files (Accuracy Testing â€” Templates)
           </p>
           <div className="flex items-center gap-2">
             <span className={cn("h-2 w-2 rounded-full shrink-0", sourceFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
@@ -288,7 +290,7 @@ const Phase2Form: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
+        {isPending ? "Runningâ€¦" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -350,6 +352,7 @@ const Phase2FinalForm: React.FC = () => {
   const testingPeriod = watch("testingPeriod");
   const [outputFileCount, setOutputFileCount] = useState<number | null>(null);
   const [unavistaFileCount, setUnavistaFileCount] = useState<number | null>(null);
+  const dataRoot = useDataRoot();
   const resolvedLogPath = useRef<string>("");
 
   const handlePathsResolved = useCallback(
@@ -394,7 +397,7 @@ const Phase2FinalForm: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
-      logOutput: resolvedLogPath.current || "/app/data/logs",
+      logOutput: resolvedLogPath.current || dataRoot + "/logs",
     });
   };
 
@@ -403,7 +406,7 @@ const Phase2FinalForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
       <p className="text-sm text-muted-foreground">
-        Phase 2 final lookup — validate corrections from Phase 2 output against UnaVista
+        Phase 2 final lookup â€” validate corrections from Phase 2 output against UnaVista
         transaction data and annotate any discrepancies.
       </p>
 
@@ -496,7 +499,7 @@ const Phase2FinalForm: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
+        {isPending ? "Runningâ€¦" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -558,6 +561,7 @@ const Phase3Form: React.FC = () => {
   const testingPeriod = watch("testingPeriod");
   const [inputFileCount, setInputFileCount] = useState<number | null>(null);
   const [feedbackFileCount, setFeedbackFileCount] = useState<number | null>(null);
+  const dataRoot = useDataRoot();
   const resolvedLogPath = useRef<string>("");
 
   const handlePathsResolved = useCallback(
@@ -604,7 +608,7 @@ const Phase3Form: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
-      logOutput: resolvedLogPath.current || "/app/data/logs",
+      logOutput: resolvedLogPath.current || dataRoot + "/logs",
     });
   };
 
@@ -613,7 +617,7 @@ const Phase3Form: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
       <p className="text-sm text-muted-foreground">
-        Process replay Phase 3 — incorporate feedback file into replay output.
+        Process replay Phase 3 â€” incorporate feedback file into replay output.
       </p>
 
       <div>
@@ -705,7 +709,7 @@ const Phase3Form: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
+        {isPending ? "Runningâ€¦" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -764,6 +768,7 @@ const Phase3FinalForm: React.FC = () => {
 
   const testingPeriod = watch("testingPeriod");
   const [phase3FileCount, setPhase3FileCount] = useState<number | null>(null);
+  const dataRoot = useDataRoot();
   const resolvedLogPath = useRef<string>("");
 
   const handlePathsResolved = useCallback(
@@ -800,7 +805,7 @@ const Phase3FinalForm: React.FC = () => {
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
       logLevel: values.logLevel,
-      logOutput: resolvedLogPath.current || "/app/data/logs",
+      logOutput: resolvedLogPath.current || dataRoot + "/logs",
     });
   };
 
@@ -809,7 +814,7 @@ const Phase3FinalForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
       <p className="text-sm text-muted-foreground">
-        Phase 3 final lookup — perform final ID resolution pass on the replay output.
+        Phase 3 final lookup â€” perform final ID resolution pass on the replay output.
       </p>
 
       <div>
@@ -879,7 +884,7 @@ const Phase3FinalForm: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
+        {isPending ? "Runningâ€¦" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -1083,7 +1088,7 @@ const MergeForm: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
+        {isPending ? "Runningâ€¦" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -1200,3 +1205,5 @@ const Replay: React.FC = () => {
 };
 
 export default Replay;
+
+

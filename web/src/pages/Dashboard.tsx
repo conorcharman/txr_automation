@@ -17,7 +17,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import JobCard from "@/components/JobCard";
 import { fetchDashboardStats } from "@/api/dashboard";
 import { listJobs } from "@/api/jobs";
-import { browseDirectory, readFile } from "@/api/filesystem";
+import { browseDirectory, getFilesystemConfig, readFile } from "@/api/filesystem";
 import type { FilesystemEntry, FileReadResponse } from "@/types";
 
 interface StatCardProps {
@@ -157,8 +157,8 @@ const Dashboard: React.FC = () => {
 // File Browser tile
 // ---------------------------------------------------------------------------
 
-const ROOT_PATH = "/app/data";
-
+// ROOT_PATH is now sourced dynamically from /api/filesystem/config
+// to support both Docker (/app/data) and native Windows deployments.
 function formatBytes(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1_048_576) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -166,9 +166,21 @@ function formatBytes(bytes: number): string {
 }
 
 const FileBrowserCard: React.FC = () => {
-  const [currentPath, setCurrentPath] = useState<string>(ROOT_PATH);
+  const { data: fsConfig } = useQuery({
+    queryKey: ["filesystem-config"],
+    queryFn: getFilesystemConfig,
+    staleTime: Infinity,
+  });
+  const rootPath = fsConfig?.dataRoot ?? "/app/data";
+
+  const [currentPath, setCurrentPath] = useState<string>(rootPath);
   const [selectedFile, setSelectedFile] = useState<FilesystemEntry | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
+
+  // Navigate to root once config resolves.
+  React.useEffect(() => {
+    setCurrentPath(rootPath);
+  }, [rootPath]);
 
   const { data: browse, isLoading: browseLoading, isError: browseError } = useQuery({
     queryKey: ["filesystem-browse", currentPath],
@@ -195,9 +207,9 @@ const FileBrowserCard: React.FC = () => {
     if (browse?.parent) setCurrentPath(browse.parent);
   };
 
-  // Breadcrumb: split path relative to ROOT_PATH
-  const relParts = currentPath.startsWith(ROOT_PATH)
-    ? currentPath.slice(ROOT_PATH.length).split("/").filter(Boolean)
+  // Breadcrumb: split path relative to rootPath
+  const relParts = currentPath.startsWith(rootPath)
+    ? currentPath.slice(rootPath.length).split("/").filter(Boolean)
     : [];
 
   return (
@@ -206,7 +218,7 @@ const FileBrowserCard: React.FC = () => {
         <CardHeader className="pb-2 flex flex-row items-center justify-between">
           <CardTitle className="text-sm font-medium">File Browser</CardTitle>
           <span className="text-xs text-muted-foreground font-mono truncate max-w-xs">
-            {ROOT_PATH}
+            {rootPath}
             {relParts.map((p, i) => (
               <span key={i}> / {p}</span>
             ))}

@@ -31,9 +31,10 @@ Usage:
 
 import argparse
 import logging
+import os
 import sys
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 try:
     import yaml
@@ -46,6 +47,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "src"))
 
+from core.progress import ProgressTracker
 from gleif.cache import GleifCacheManager
 from gleif.client import GleifApiClient
 from gleif.refresher import GleifRefresher
@@ -201,10 +203,25 @@ def main() -> None:
         api_client_kwargs["golden_copy_url"] = golden_copy_url
     api_client = GleifApiClient(**api_client_kwargs)
 
+    # Set up progress tracking if job_id is available (e.g., from Celery task)
+    job_id = os.environ.get("JOB_ID")
+    redis_url = os.environ.get("REDIS_URL")
+    progress_tracker: Optional[ProgressTracker] = None
+    progress_callback: Optional[Callable[[str, int], None]] = None
+    
+    if job_id:
+        progress_tracker = ProgressTracker(
+            job_id=job_id,
+            total_phases=4 if args.skip_isin_map else 4,
+            redis_url=redis_url,
+        )
+        progress_callback = progress_tracker.report_phase_progress
+
     refresher = GleifRefresher(
         cache=cache,
         api_client=api_client,
         staging_dir=staging_dir,
+        progress_callback=progress_callback,
     )
 
     # --- Run refresh ----------------------------------------------------
@@ -216,6 +233,10 @@ def main() -> None:
             f"Starting GLEIF delta refresh (type: {args.delta_type}) -> {db_path}"
         )
         result = refresher.run_delta_refresh(delta_type=args.delta_type)
+    
+    # Signal completion if progress tracker is active
+    if progress_tracker:
+        progress_tracker.complete()
 
     # --- Report results -------------------------------------------------
     print(

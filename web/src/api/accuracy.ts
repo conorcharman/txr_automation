@@ -1,4 +1,13 @@
-import type { JobResponse, RunValidationRequest, RunAllRequest, RunIncidentsRequest, DiscoveryRequest, DiscoveryResponse } from "@/types";
+import type {
+  ConsolidatedIncidentDetectRequest,
+  ConsolidatedIncidentDetectResponse,
+  DiscoveryRequest,
+  DiscoveryResponse,
+  JobResponse,
+  RunAllRequest,
+  RunIncidentsRequest,
+  RunValidationRequest,
+} from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -48,4 +57,15 @@ export async function discoverIncidents(req: DiscoveryRequest): Promise<Discover
     body: JSON.stringify(req),
   });
   return handleResponse<DiscoveryResponse>(res);
+}
+
+export async function detectConsolidatedIncidents(
+  req: ConsolidatedIncidentDetectRequest,
+): Promise<ConsolidatedIncidentDetectResponse> {
+  const res = await fetch(`${BASE_URL}/api/accuracy/detect-consolidated-incidents`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  return handleResponse<ConsolidatedIncidentDetectResponse>(res);
 }

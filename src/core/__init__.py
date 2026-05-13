@@ -27,6 +27,9 @@ from .utils import DateParser, CharacterReplacement, FileDiscovery, safe_open_cs
 # Config
 from .config import ConfigManager, PathConfig, ProcessorConfig
 
+# Progress tracking
+from .progress import ProgressTracker
+
 # Data structures
 from .data import (
     ReplayRecord,
@@ -96,8 +99,8 @@ __all__ = [
     'ConfigManager',
     'PathConfig',
     'ProcessorConfig',
-    # Data structures
-    'ReplayRecord',
+    # Progress tracking
+    'ProgressTracker',
     'LookupResult',
     'UnaVistaTransaction',
     'ProcessingStats',

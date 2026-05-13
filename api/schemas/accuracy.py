@@ -33,6 +33,7 @@ class BatchModeConfig(_CamelModel):
         input_directory: Path to the directory containing extract CSV files.
         output_directory: Path to the directory for validated output files.
         template_directory: Path to the directory containing Kaizen template files.
+        incident_codes: Optional incident codes to include for template generation.
         log_output: Directory for log output (default: ``"logs"``).
 
     """
@@ -40,6 +41,7 @@ class BatchModeConfig(_CamelModel):
     input_directory: str
     output_directory: str
     template_directory: str
+    incident_codes: list[str] | None = None
     log_output: str = "/app/data/logs"
 
 
@@ -155,6 +157,34 @@ class DiscoveryResponse(_CamelModel):
 
     results: list[DiscoveryResult]
     total_found: int
+
+
+class ConsolidatedIncidentDetectRequest(_CamelModel):
+    """Request body for consolidated incident detection.
+
+    Attributes:
+        errors_file: Optional absolute path to consolidated Errors CSV.
+        queries_file: Optional absolute path to consolidated Queries CSV.
+    """
+
+    errors_file: str | None = None
+    queries_file: str | None = None
+
+
+class ConsolidatedIncidentStat(_CamelModel):
+    """Detected consolidated incident statistics for a single incident code."""
+
+    code: str
+    description: str
+    errors_count: int
+    queries_count: int
+
+
+class ConsolidatedIncidentDetectResponse(_CamelModel):
+    """Response body for consolidated incident detection."""
+
+    incidents: list[ConsolidatedIncidentStat]
+    total_incidents: int
 
 
 class IncidentRunConfig(_CamelModel):

@@ -27,6 +27,18 @@ Usage:
     refresher = GleifRefresher(cache=GleifCacheManager(db_path))
     refresher.run_full_refresh()           # Downloads latest Golden Copy
     refresher.run_delta_refresh("24h")    # 24-hour delta update
+
+Progress Tracking:
+    Pass a progress_callback to track multi-phase progress:
+
+    def on_progress(phase: str, percent: int) -> None:
+        print(f"{phase}: {percent}%")
+
+    refresher = GleifRefresher(
+        cache=cache,
+        progress_callback=on_progress
+    )
+    refresher.run_full_refresh()
 """
 
 import logging
@@ -34,7 +46,7 @@ import tempfile
 from contextlib import contextmanager
 from datetime import date, datetime, timezone
 from pathlib import Path
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from .cache import GleifCacheManager
 from .client import GleifApiClient
@@ -91,6 +103,9 @@ class GleifRefresher:
             discovery.  Constructed automatically if not provided.
         staging_dir: Directory for temporary ZIP/CSV files.  A system temp
             directory is created per refresh when ``None``.
+        progress_callback: Optional callable that receives (phase_name: str,
+            phase_percent: int) for multi-phase progress tracking. Called
+            whenever phase progress changes.
     """
 
     def __init__(
@@ -98,12 +113,22 @@ class GleifRefresher:
         cache: GleifCacheManager,
         api_client: Optional[GleifApiClient] = None,
         staging_dir: Optional[Path] = None,
+        progress_callback: Optional[Callable[[str, int], None]] = None,
     ) -> None:
         self._cache = cache
         self._api_client = api_client or GleifApiClient()
         self._staging_dir = staging_dir
         self._parser = GleifCsvParser()
         self._isin_parser = GleifIsinMapParser()
+        self._progress_callback = progress_callback
+
+    def _report_progress(self, phase: str, percent: int) -> None:
+        """Report phase progress if a callback is registered."""
+        if self._progress_callback:
+            try:
+                self._progress_callback(phase, max(0, min(100, percent)))
+            except Exception as exc:
+                logger.warning("Progress callback error: %s", exc)
 
     # ------------------------------------------------------------------
     # Public interface
@@ -228,12 +253,14 @@ class GleifRefresher:
         """
         logger.info("Starting GLEIF full refresh")
         result = RefreshResult()
+        self._report_progress("download_gc", 0)
 
         # Discover the current Golden Copy publish date and download URL
         gc_info = self._api_client.get_latest_golden_copy_info()
         logger.info(
             "Golden Copy publish date: %s", gc_info.publish_date
         )
+        self._report_progress("download_gc", 10)
 
         # Use a deterministic file name derived from the publish date so that
         # the sync log correctly identifies the file across runs
@@ -256,6 +283,8 @@ class GleifRefresher:
             gc_result = downloader.download_and_extract(
                 gc_info.download_url, golden_copy_file_name
             )
+            self._report_progress("download_gc", 100)
+            self._report_progress("ingest_gc", 0)
 
             if not gc_result.success:
                 logger.error(
@@ -271,9 +300,12 @@ class GleifRefresher:
             else:
                 total_records = 0
                 try:
-                    for csv_path in gc_result.csv_paths:
+                    for idx, csv_path in enumerate(gc_result.csv_paths, 1):
                         count = self._ingest_golden_copy_csv(csv_path)
                         total_records += count
+                        # Report ingest progress proportional to number of CSVs
+                        ingest_percent = (idx / max(len(gc_result.csv_paths), 1)) * 90
+                        self._report_progress("ingest_gc", int(ingest_percent))
                         logger.info(
                             "Golden Copy CSV ingested: %s records from %s",
                             f"{count:,}",
@@ -283,6 +315,7 @@ class GleifRefresher:
                     # Rebuild FTS after bulk load (triggers handle incremental
                     # updates, but a rebuild after full truncate+reload is cleaner)
                     self._cache.rebuild_fts()
+                    self._report_progress("ingest_gc", 100)
 
                     self._cache.log_sync(
                         sync_type="FULL",
@@ -311,18 +344,23 @@ class GleifRefresher:
             # --- ISIN-to-LEI mapping ---
             if not skip_isin_map:
                 isin_file_name = f"gleif-isin-lei-map-{publish_slug}.zip"
+                self._report_progress("download_isin", 0)
 
                 if self._cache.is_file_processed(isin_file_name):
                     logger.info(
                         "Skipping already-processed ISIN map: %s", isin_file_name
                     )
                     result.files_skipped += 1
+                    self._report_progress("download_isin", 100)
+                    self._report_progress("ingest_isin", 100)
                 else:
                     logger.info("Downloading GLEIF ISIN-to-LEI mapping")
                     self._cache.truncate_isin_map()
                     isin_result = downloader.download_and_extract(
                         _ISIN_MAP_URL, isin_file_name
                     )
+                    self._report_progress("download_isin", 100)
+                    self._report_progress("ingest_isin", 0)
 
                     if not isin_result.success:
                         logger.warning(
@@ -339,15 +377,18 @@ class GleifRefresher:
                     else:
                         total_isin = 0
                         try:
-                            for csv_path in isin_result.csv_paths:
+                            for idx, csv_path in enumerate(isin_result.csv_paths, 1):
                                 count = self._ingest_isin_map_csv(csv_path)
                                 total_isin += count
+                                ingest_percent = (idx / max(len(isin_result.csv_paths), 1)) * 90
+                                self._report_progress("ingest_isin", int(ingest_percent))
                                 logger.info(
                                     "ISIN mapping CSV ingested: %s pairs from %s",
                                     f"{count:,}",
                                     csv_path.name,
                                 )
 
+                            self._report_progress("ingest_isin", 100)
                             self._cache.log_sync(
                                 sync_type="ISIN_MAP",
                                 file_name=isin_file_name,
@@ -367,6 +408,9 @@ class GleifRefresher:
                             result.files_failed += 1
                         finally:
                             downloader.cleanup_file(isin_result)
+            else:
+                self._report_progress("download_isin", 100)
+                self._report_progress("ingest_isin", 100)
 
         logger.info("GLEIF full refresh complete: %r", result)
         return result

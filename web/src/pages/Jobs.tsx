@@ -7,13 +7,14 @@ import { Button } from "@/components/ui/button";
 import JobCard from "@/components/JobCard";
 import { PathPickerInput } from "@/components/PathPickerInput";
 import { listJobs, clearJobHistory } from "@/api/jobs";
+import { getFilesystemConfig } from "@/api/filesystem";
 import type { JobResponse } from "@/types";
 import { cn } from "@/lib/utils";
 
 const GLOBAL_LOG_KEY = "txr_global_log_output";
 
 function readGlobalLog(): string {
-  try { return localStorage.getItem(GLOBAL_LOG_KEY) || "/app/data/logs"; } catch { return "/app/data/logs"; }
+  try { return localStorage.getItem(GLOBAL_LOG_KEY) || ""; } catch { return ""; }
 }
 
 interface AdvancedSectionProps { show: boolean; onToggle: () => void; children: React.ReactNode; }
@@ -33,6 +34,18 @@ const Jobs: React.FC = () => {
   const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(false);
   const [logOutput, setLogOutput] = useState<string>(readGlobalLog);
+
+  // Populate log path default from server config when localStorage is empty.
+  const { data: fsConfig } = useQuery({
+    queryKey: ["filesystem-config"],
+    queryFn: getFilesystemConfig,
+    staleTime: Infinity,
+  });
+  useEffect(() => {
+    if (!logOutput && fsConfig?.dataRoot) {
+      setLogOutput(fsConfig.dataRoot + "/logs");
+    }
+  }, [fsConfig, logOutput]);
 
   const clearMutation = useMutation({
     mutationFn: clearJobHistory,

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+﻿import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -17,8 +17,13 @@ import IncidentChecklist from "@/components/IncidentChecklist";
 import type { IncidentScriptDef } from "@/components/IncidentChecklist";
 import IncidentFileTable from "@/components/IncidentFileTable";
 import IncidentPreview from "@/components/IncidentPreview";
-import { runValidation, runIncidents, discoverIncidents } from "@/api/accuracy";
-import { browseDirectory } from "@/api/filesystem";
+import {
+  detectConsolidatedIncidents,
+  runValidation,
+  runIncidents,
+  discoverIncidents,
+} from "@/api/accuracy";
+import { browseDirectory, getFilesystemConfig } from "@/api/filesystem";
 import { cn } from "@/lib/utils";
 import type {
   DiscoveryResponse,
@@ -32,6 +37,15 @@ import type {
 // ---------------------------------------------------------------------------
 
 const LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"] as const;
+
+const INCIDENT_CODE_RE = /^\d+_\d+$/;
+
+interface DetectedIncidentStat {
+  code: string;
+  description: string;
+  errorsCount: number;
+  queriesCount: number;
+}
 
 const INCIDENT_SCRIPTS: IncidentScriptDef[] = [
   {
@@ -100,6 +114,67 @@ function currentFY(): string {
   return `FY${String(new Date().getFullYear()).slice(-2)}`;
 }
 
+function incidentSort(a: string, b: string): number {
+  const [aLeft, aRight] = a.split("_").map((n) => Number(n));
+  const [bLeft, bRight] = b.split("_").map((n) => Number(n));
+  if (aLeft !== bLeft) return aLeft - bLeft;
+  return aRight - bRight;
+}
+
+function fileNameOnly(path: string): string {
+  const parts = path.split(/[\\/]/);
+  return parts[parts.length - 1] || path;
+}
+
+function buildTemplateIncidentScripts(detectedIncidents: Map<string, string>): IncidentScriptDef[] {
+  if (detectedIncidents.size === 0) {
+    return INCIDENT_SCRIPTS;
+  }
+
+  const scripts: IncidentScriptDef[] = [];
+  const knownCodes = new Set<string>();
+
+  for (const script of INCIDENT_SCRIPTS) {
+    const matchedIncidents = script.incidents
+      .filter((incident) => detectedIncidents.has(incident.code))
+      .sort((a, b) => incidentSort(a.code, b.code));
+    for (const incident of matchedIncidents) {
+      knownCodes.add(incident.code);
+    }
+    if (matchedIncidents.length > 0) {
+      scripts.push({
+        scriptKey: script.scriptKey,
+        displayLabel: script.displayLabel,
+        incidents: matchedIncidents,
+      });
+    }
+  }
+
+  const unknownCodes = Array.from(detectedIncidents.keys())
+    .filter((code) => !knownCodes.has(code))
+    .sort(incidentSort);
+
+  for (const code of unknownCodes) {
+    const description = detectedIncidents.get(code) || "Detected Incident";
+    scripts.push({
+      scriptKey: `detected_${code}`,
+      displayLabel: description,
+      incidents: [{ code, label: description }],
+    });
+  }
+
+  return scripts;
+}
+
+function flattenIncidentSelection(scripts: IncidentScriptDef[]): IncidentSelection[] {
+  return scripts.flatMap((script) =>
+    script.incidents.map((incident) => ({
+      scriptKey: script.scriptKey,
+      incidentCode: incident.code,
+    })),
+  );
+}
+
 // ---------------------------------------------------------------------------
 // Shared styles
 // ---------------------------------------------------------------------------
@@ -145,7 +220,7 @@ const AdvancedSection: React.FC<AdvancedSectionProps> = ({ isOpen, onToggle, chi
       className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
     >
       Advanced
-      <span className={cn("transition-transform text-[10px]", isOpen && "rotate-180")}>▾</span>
+      <span className={cn("transition-transform text-[10px]", isOpen && "rotate-180")}>â–¾</span>
     </button>
     {isOpen && (
       <div className="space-y-3 px-3 pb-3 border-t border-border pt-3">{children}</div>
@@ -191,6 +266,13 @@ const UnifiedValidationForm: React.FC = () => {
   const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
   const [discoveryResult, setDiscoveryResult] = useState<DiscoveryResponse | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const { data: fsConfig } = useQuery({
+    queryKey: ["filesystem-config"],
+    queryFn: getFilesystemConfig,
+    staleTime: Infinity,
+  });
+  const defaultLogsDir = `${fsConfig?.dataRoot ?? "/app/data"}/logs`;
 
   const {
     control,
@@ -329,13 +411,13 @@ const UnifiedValidationForm: React.FC = () => {
         }
         className="w-full"
       >
-        {discoveryMutation.isPending ? "Scanning…" : "Discover Files"}
+        {discoveryMutation.isPending ? "Scanningâ€¦" : "Discover Files"}
       </Button>
 
       {discoveryResult && (
         <div className="rounded-lg border border-border p-4 space-y-2 text-sm">
           <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Discovery Results — {discoveryResult.totalFound} file(s) found
+            Discovery Results â€” {discoveryResult.totalFound} file(s) found
           </p>
           {discoveryResult.results.map((r) => (
             <div key={r.scriptName} className="flex items-center gap-2">
@@ -410,7 +492,7 @@ const UnifiedValidationForm: React.FC = () => {
         disabled={isPending || selectedIncidents.length === 0}
         className="w-full"
       >
-        {isPending ? "Running…" : selectedIncidents.length > 1 ? "Run Selected" : "Run"}
+        {isPending ? "Runningâ€¦" : selectedIncidents.length > 1 ? "Run Selected" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -425,7 +507,7 @@ const UnifiedValidationForm: React.FC = () => {
 };
 
 // ---------------------------------------------------------------------------
-// Utility sidebar config (display only — each form is a distinct component)
+// Utility sidebar config (display only â€” each form is a distinct component)
 // ---------------------------------------------------------------------------
 
 interface UtilityNavItem {
@@ -458,10 +540,13 @@ type UtilityBaseValues = z.infer<typeof utilityBaseSchema>;
 
 const TemplateGeneratorForm: React.FC = () => {
   const navigate = useNavigate();
+  const [templateIncidentScripts, setTemplateIncidentScripts] = useState<IncidentScriptDef[]>(INCIDENT_SCRIPTS);
   const [selectedIncidents, setSelectedIncidents] = useState<IncidentSelection[]>(ALL_INCIDENTS);
   const [incidentConfigs, setIncidentConfigs] = useState<IncidentRunConfig[]>([]);
   const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
   const [kaizenFiles, setKaizenFiles] = useState<{ errors: string; queries: string } | null>(null);
+  const [detectedIncidentCount, setDetectedIncidentCount] = useState<number>(0);
+  const [detectedIncidentStats, setDetectedIncidentStats] = useState<DetectedIncidentStat[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const { control, register, handleSubmit, watch, formState: { errors } } = useForm<UtilityBaseValues>({
@@ -489,12 +574,64 @@ const TemplateGeneratorForm: React.FC = () => {
     browseDirectory(paths.kaizen)
       .then((res) => {
         const files = res.entries.filter((e) => !e.isDir).map((e) => e.path);
-        const errorsFile = files.find((f) => /Consolidated.Errors.Data/i.test(f)) ?? "";
-        const queriesFile = files.find((f) => /Consolidated.Queries.Data/i.test(f)) ?? "";
+        const errorsFile = files.find((f) => /(consolidated[._ ]errors[._ ]data|consolidated_errors)/i.test(f)) ?? "";
+        const queriesFile = files.find((f) => /(consolidated[._ ]queries[._ ]data|consolidated_queries)/i.test(f)) ?? "";
         setKaizenFiles({ errors: errorsFile, queries: queriesFile });
       })
       .catch(() => setKaizenFiles(null));
   }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function detectIncidents(): Promise<void> {
+      if (!kaizenFiles) {
+        setDetectedIncidentStats([]);
+        return;
+      }
+
+      const response = await detectConsolidatedIncidents({
+        errorsFile: kaizenFiles.errors || null,
+        queriesFile: kaizenFiles.queries || null,
+      }).catch(() => null);
+
+      if (response === null) {
+        setDetectedIncidentCount(0);
+        setDetectedIncidentStats([]);
+        setTemplateIncidentScripts(INCIDENT_SCRIPTS);
+        setSelectedIncidents(ALL_INCIDENTS);
+        return;
+      }
+
+      const incidentMap = new Map<string, string>();
+      const stats = response.incidents.map((incident) => ({
+        code: incident.code,
+        description: incident.description,
+        errorsCount: incident.errorsCount,
+        queriesCount: incident.queriesCount,
+      }));
+      for (const stat of stats) {
+        if (INCIDENT_CODE_RE.test(stat.code)) {
+          incidentMap.set(stat.code, stat.description || "");
+        }
+      }
+
+      if (cancelled) {
+        return;
+      }
+
+      const nextScripts = buildTemplateIncidentScripts(incidentMap);
+      setTemplateIncidentScripts(nextScripts);
+      setDetectedIncidentCount(response.totalIncidents);
+      setDetectedIncidentStats(stats.sort((a, b) => incidentSort(a.code, b.code)));
+      setSelectedIncidents(flattenIncidentSelection(nextScripts));
+    }
+
+    void detectIncidents();
+    return () => {
+      cancelled = true;
+    };
+  }, [kaizenFiles]);
 
   const mutation = useMutation({
     mutationFn: runValidation,
@@ -513,7 +650,8 @@ const TemplateGeneratorForm: React.FC = () => {
         inputDirectory: resolvedPaths?.kaizen ?? "",
         outputDirectory: resolvedPaths?.templates ?? "",
         templateDirectory: "",
-        logOutput: resolvedPaths?.logs || "/app/data/logs",
+        incidentCodes: selectedIncidents.map((incident) => incident.incidentCode),
+        logOutput: resolvedPaths?.logs || defaultLogsDir,
       },
       logLevel: values.logLevel,
       dryRun: values.dryRun,
@@ -540,7 +678,7 @@ const TemplateGeneratorForm: React.FC = () => {
         />
       </div>
 
-      {/* Smart Path Config — includes Kaizen dir */}
+      {/* Smart Path Config â€” includes Kaizen dir */}
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
@@ -581,18 +719,60 @@ const TemplateGeneratorForm: React.FC = () => {
               </span>
             </div>
           </div>
+          {detectedIncidentCount > 0 && (
+            <div className="space-y-2">
+              <p className="text-[11px] text-muted-foreground">
+                Detected {detectedIncidentCount} incident code(s) from consolidated files.
+              </p>
+              {detectedIncidentStats.length > 0 && (
+                <div className="rounded-md border border-border/80 bg-muted/20 px-2 py-2 space-y-1.5">
+                  <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-2 text-[10px] uppercase tracking-wide text-muted-foreground font-semibold">
+                    <span>Code</span>
+                    <span>Description</span>
+                    <span className="text-right">Errors</span>
+                    <span className="text-right">Queries</span>
+                    <span className="text-right">Total</span>
+                  </div>
+                  {detectedIncidentStats.map((stat) => {
+                    const total = stat.errorsCount + stat.queriesCount;
+                    const sources: string[] = [];
+                    if (stat.errorsCount > 0 && kaizenFiles.errors) {
+                      sources.push(`Errors: ${fileNameOnly(kaizenFiles.errors)}`);
+                    }
+                    if (stat.queriesCount > 0 && kaizenFiles.queries) {
+                      sources.push(`Queries: ${fileNameOnly(kaizenFiles.queries)}`);
+                    }
+                    return (
+                      <div key={stat.code} className="space-y-0.5">
+                        <div className="grid grid-cols-[auto_1fr_auto_auto_auto] gap-2 text-xs items-center">
+                          <span className="font-mono text-foreground">{stat.code}</span>
+                          <span className="truncate text-foreground/80">{stat.description || "Detected Incident"}</span>
+                          <span className="text-right font-mono text-foreground/80">{stat.errorsCount}</span>
+                          <span className="text-right font-mono text-foreground/80">{stat.queriesCount}</span>
+                          <span className="text-right font-mono text-foreground">{total}</span>
+                        </div>
+                        {sources.length > 0 && (
+                          <p className="text-[10px] text-muted-foreground truncate">{sources.join(" | ")}</p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
 
       {/* Incident Checklist */}
       <IncidentChecklist
-        scripts={INCIDENT_SCRIPTS}
+        scripts={templateIncidentScripts}
         selected={selectedIncidents}
         onChange={setSelectedIncidents}
         disabled={isPending}
       />
 
-      {/* Incident File Table — output only, collapsible */}
+      {/* Incident File Table â€” output only, collapsible */}
       <IncidentFileTable
         incidents={selectedIncidents}
         resolvedPaths={resolvedPaths}
@@ -627,8 +807,8 @@ const TemplateGeneratorForm: React.FC = () => {
         </div>
       </AdvancedSection>
 
-      <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
+      <Button type="submit" disabled={isPending || selectedIncidents.length === 0} className="w-full">
+        {isPending ? "Runningâ€¦" : "Run"}
       </Button>
     </form>
   );
@@ -724,7 +904,7 @@ const ExtractGeneratorForm: React.FC = () => {
         inputDirectory: resolvedPaths?.extracts ?? "",
         outputDirectory: values.sqlOutputDir ?? derivedDirs?.sql ?? "",
         templateDirectory: "",
-        logOutput: resolvedPaths?.logs || "/app/data/logs",
+        logOutput: resolvedPaths?.logs || defaultLogsDir,
       },
       logLevel: values.logLevel,
       dryRun: values.dryRun,
@@ -789,7 +969,7 @@ const ExtractGeneratorForm: React.FC = () => {
         disabled={isPending}
       />
 
-      {/* Incident File Table — input only, collapsible */}
+      {/* Incident File Table â€” input only, collapsible */}
       <IncidentFileTable
         incidents={selectedIncidents}
         resolvedPaths={resolvedPaths}
@@ -877,7 +1057,7 @@ const ExtractGeneratorForm: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
+        {isPending ? "Runningâ€¦" : "Run"}
       </Button>
     </form>
   );
@@ -928,7 +1108,7 @@ const CollateExtractsForm: React.FC = () => {
         inputDirectory: resolvedPaths?.extracts ?? "",
         outputDirectory: resolvedPaths?.extracts ?? "",
         templateDirectory: "",
-        logOutput: resolvedPaths?.logs || "/app/data/logs",
+        logOutput: resolvedPaths?.logs || defaultLogsDir,
       },
       logLevel: values.logLevel,
       dryRun: values.dryRun,
@@ -964,7 +1144,7 @@ const CollateExtractsForm: React.FC = () => {
         disabled={isPending}
       />
 
-      {/* Incident File Table — output only, collated files go back to Extracts */}
+      {/* Incident File Table â€” output only, collated files go back to Extracts */}
       <IncidentFileTable
         incidents={ALL_INCIDENTS}
         resolvedPaths={resolvedPaths}
@@ -993,7 +1173,7 @@ const CollateExtractsForm: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Running…" : "Run"}
+        {isPending ? "Runningâ€¦" : "Run"}
       </Button>
     </form>
   );
@@ -1038,7 +1218,7 @@ const DataPushForm: React.FC = () => {
 
   const onSubmit = (values: UtilityBaseValues) => {
     if (!resolvedPaths?.output || !resolvedPaths?.templates) {
-      toast.error("Paths have not resolved yet — please wait for the Directories section to load.");
+      toast.error("Paths have not resolved yet â€” please wait for the Directories section to load.");
       return;
     }
     mutation.mutate({
@@ -1049,7 +1229,7 @@ const DataPushForm: React.FC = () => {
         inputDirectory: resolvedPaths.output,
         outputDirectory: resolvedPaths.templates,
         templateDirectory: "",
-        logOutput: resolvedPaths?.logs || "/app/data/logs",
+        logOutput: resolvedPaths?.logs || defaultLogsDir,
       },
       logLevel: values.logLevel,
       dryRun: values.dryRun,
@@ -1094,7 +1274,7 @@ const DataPushForm: React.FC = () => {
         disabled={isPending}
       />
 
-      {/* Incident File Table — input (validated CSV) + output (template overwritten) */}
+      {/* Incident File Table â€” input (validated CSV) + output (template overwritten) */}
       <IncidentFileTable
         incidents={selectedIncidents}
         resolvedPaths={resolvedPaths}
@@ -1121,7 +1301,7 @@ const DataPushForm: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending || !pathsReady} className="w-full">
-        {isPending ? "Running…" : !pathsReady ? "Waiting for paths…" : "Run"}
+        {isPending ? "Runningâ€¦" : !pathsReady ? "Waiting for pathsâ€¦" : "Run"}
       </Button>
     </form>
   );
@@ -1217,3 +1397,4 @@ const AccuracyTesting: React.FC = () => {
 };
 
 export default AccuracyTesting;
+

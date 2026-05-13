@@ -30,6 +30,14 @@ export async function resolvePaths(
   return res.json() as Promise<ResolvedPaths>;
 }
 
+export async function getFilesystemConfig(): Promise<{ dataRoot: string }> {
+  const res = await fetch(`${BASE_URL}/api/filesystem/config`);
+  if (!res.ok) {
+    throw new Error("Failed to fetch filesystem config");
+  }
+  return res.json() as Promise<{ dataRoot: string }>;
+}
+
 export async function readFile(path: string): Promise<FileReadResponse> {
   const res = await fetch(
     `${BASE_URL}/api/filesystem/read?path=${encodeURIComponent(path)}`,

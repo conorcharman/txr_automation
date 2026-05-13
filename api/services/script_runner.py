@@ -145,7 +145,7 @@ def _write_temp_yaml(config: dict) -> str:
         HTTPException: 400 if any path value contains traversal sequences.
     """
     _validate_paths(config)
-    shared_tmp = Path("/app/data/tmp")
+    shared_tmp = Path(get_settings().data_dir) / "tmp"
     shared_tmp.mkdir(parents=True, exist_ok=True)
     with tempfile.NamedTemporaryFile(
         mode="w",
@@ -295,6 +295,10 @@ class ScriptRunnerService:
                     "input": {"directory": batch.input_directory},
                     "output": {"directory": batch.output_directory},
                 }
+                if batch.incident_codes:
+                    tpl_config["processing"] = {
+                        "incident_codes": batch.incident_codes,
+                    }
             tmp_path = _write_temp_yaml(tpl_config)
             argv = ["--config", tmp_path, "--log-level", req.log_level]
             logger.debug(
@@ -898,7 +902,7 @@ class ScriptRunnerService:
                         "input_file": incident.input_file,
                         "template_file": incident.template_file,
                         "output_file": incident.output_file,
-                        "log_output": "/app/data/logs",
+                        "log_output": str(Path(get_settings().data_dir) / "logs"),
                     },
                 },
             }

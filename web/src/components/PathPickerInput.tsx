@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
-import { browseDirectory } from "@/api/filesystem";
+import { browseDirectory, getFilesystemConfig } from "@/api/filesystem";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -31,7 +31,7 @@ interface PathPickerInputProps {
   disabled?: boolean;
   /** Extra classes applied to the outer wrapper. */
   className?: string;
-  /** Starting directory when the dialog opens (default `/app/data`). */
+  /** Starting directory when the dialog opens. Defaults to the server's data root. */
   rootPath?: string;
   /** `id` forwarded to the inner text input for label association. */
   id?: string;
@@ -57,27 +57,42 @@ const PathPickerInput: React.FC<PathPickerInputProps> = ({
   placeholder,
   disabled = false,
   className,
-  rootPath = "/app/data",
+  rootPath,
   id,
 }) => {
+  // Fetch the server's data root once; fall back to the Docker default if the
+  // endpoint hasn't responded yet or fails (keeps Docker deployments working).
+  const { data: fsConfig } = useQuery({
+    queryKey: ["filesystem-config"],
+    queryFn: getFilesystemConfig,
+    staleTime: Infinity,
+  });
+  const effectiveRoot = rootPath ?? fsConfig?.dataRoot ?? "/app/data";
+
   const [open, setOpen] = React.useState(false);
-  const [browsePath, setBrowsePath] = React.useState(rootPath);
+  const [browsePath, setBrowsePath] = React.useState(effectiveRoot);
   const [selected, setSelected] = React.useState<string | null>(null);
+
+  // Keep browsePath in sync with effectiveRoot once config resolves.
+  React.useEffect(() => {
+    if (!open) setBrowsePath(effectiveRoot);
+  }, [effectiveRoot, open]);
 
   // Reset dialog state each time it opens.
   React.useEffect(() => {
     if (open) {
-      // If the current value looks like a valid path, start browsing from
-      // its parent directory so the user sees familiar territory.
-      if (value && value.startsWith("/")) {
-        const dir = mode === "directory" ? value : value.replace(/\/[^/]*$/, "") || rootPath;
+      // If the current value looks like a valid absolute path, start browsing
+      // from its parent so the user sees familiar territory.
+      const isAbsolute = value && (value.startsWith("/") || /^[A-Za-z]:[/\\]/.test(value));
+      if (isAbsolute) {
+        const dir = mode === "directory" ? value : value.replace(/[\\/][^\\/]*$/, "") || effectiveRoot;
         setBrowsePath(dir);
       } else {
-        setBrowsePath(rootPath);
+        setBrowsePath(effectiveRoot);
       }
       setSelected(null);
     }
-  }, [open, value, mode, rootPath]);
+  }, [open, value, mode, effectiveRoot]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ["filesystem-browse", browsePath],

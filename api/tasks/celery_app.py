@@ -26,9 +26,16 @@ Usage:
         ...
 """
 
+import asyncio
+import logging
+from datetime import datetime, timezone
+
 from celery import Celery
+from celery.signals import worker_ready
 
 from api.config import get_settings
+
+_log = logging.getLogger(__name__)
 
 _settings = get_settings()
 
@@ -37,6 +44,48 @@ celery_app = Celery(
     broker=_settings.redis_url,
     backend=_settings.redis_url,
 )
+
+@worker_ready.connect
+def _cleanup_orphaned_jobs(sender, **kwargs) -> None:  # noqa: ANN001
+    """Mark any 'running' jobs as 'failed' when the worker (re)starts.
+
+    If a previous worker process was killed (OOM or SIGKILL), any jobs that
+    were in-progress will be permanently stuck in 'running' state in the
+    database. This signal handler resets them to 'failed' on startup so the
+    UI does not show permanently stalled jobs.
+    """
+    async def _reset() -> None:
+        from sqlalchemy import update
+        from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+
+        from api.models.job import Job
+
+        engine = create_async_engine(_settings.database_url, echo=False)
+        factory = async_sessionmaker(engine, expire_on_commit=False)
+        try:
+            async with factory() as session:
+                result = await session.execute(
+                    update(Job)
+                    .where(Job.status == "running")
+                    .values(
+                        status="failed",
+                        error_message="Worker was restarted while job was in progress.",
+                        completed_at=datetime.now(tz=timezone.utc),
+                    )
+                )
+                await session.commit()
+                if result.rowcount:
+                    _log.warning(
+                        "Marked %d orphaned running job(s) as failed on worker startup.",
+                        result.rowcount,
+                    )
+        except Exception as exc:  # noqa: BLE001
+            _log.error("Failed to clean up orphaned jobs on startup: %s", exc)
+        finally:
+            await engine.dispose()
+
+    asyncio.run(_reset())
+
 
 celery_app.conf.update(
     task_serializer="json",

@@ -29,13 +29,25 @@ Usage:
     refresher = FirdsRefresher.from_config(config)
     refresher.run_full_refresh()          # Uses most recent Saturday
     refresher.run_delta_refresh()         # Since last processed delta
+
+Progress Tracking:
+    Pass a progress_callback to track multi-phase progress:
+
+    def on_progress(phase: str, percent: int) -> None:
+        print(f"{phase}: {percent}%")
+
+    refresher = FirdsRefresher(
+        cache=cache,
+        progress_callback=on_progress
+    )
+    refresher.run_full_refresh()
 """
 
 import logging
 import tempfile
 from datetime import date, timedelta
 from pathlib import Path
-from typing import List, Optional
+from typing import Callable, List, Optional
 
 from .cache import FirdsCacheManager
 from .client import FirdsApiClient, FirdsFileRecord
@@ -92,6 +104,9 @@ class FirdsRefresher:
         api_client: :class:`~firds.client.FirdsApiClient` for the file index.
         staging_dir: Directory for temporary ZIP / XML files.  A fresh temp
             directory is created per refresh if ``None`` is provided.
+        progress_callback: Optional callable that receives (phase_name: str,
+            phase_percent: int) for multi-phase progress tracking. Called
+            whenever phase progress changes.
     """
 
     def __init__(
@@ -99,11 +114,21 @@ class FirdsRefresher:
         cache: FirdsCacheManager,
         api_client: Optional[FirdsApiClient] = None,
         staging_dir: Optional[Path] = None,
+        progress_callback: Optional[Callable[[str, int], None]] = None,
     ) -> None:
         self._cache = cache
         self._api_client = api_client or FirdsApiClient()
         self._staging_dir = staging_dir
         self._parser = FirdsXmlParser()
+        self._progress_callback = progress_callback
+
+    def _report_progress(self, phase: str, percent: int) -> None:
+        """Report phase progress if a callback is registered."""
+        if self._progress_callback:
+            try:
+                self._progress_callback(phase, max(0, min(100, percent)))
+            except Exception as exc:
+                logger.warning("Progress callback error: %s", exc)
 
     # ------------------------------------------------------------------
     # Public interface
@@ -131,6 +156,7 @@ class FirdsRefresher:
         logger.info("Starting FIRDS full refresh", extra={"target_date": str(target_date)})
 
         result = RefreshResult()
+        self._report_progress("fulins", 0)
 
         with _staging_context(self._staging_dir) as staging_dir:
             downloader = FirdsDownloader(staging_dir)
@@ -147,6 +173,7 @@ class FirdsRefresher:
             total_fulins = len(full_files)
             if not full_files:
                 logger.warning("No in-scope FULINS files found for date", extra={"date": str(target_date)})
+                self._report_progress("fulins", 100)
             else:
                 logger.info("Found %d in-scope FULINS file(s) to process", total_fulins)
                 # Truncate instruments and clear FULL/CANCEL sync_log entries so
@@ -154,26 +181,30 @@ class FirdsRefresher:
                 self._cache.truncate_instruments()
                 self._cache.clear_full_refresh_sync_log()
 
-            for idx, file_record in enumerate(full_files, start=1):
-                logger.info(
-                    "[%d/%d] Downloading FULINS: %s",
-                    idx, total_fulins, file_record.file_name,
-                )
-                file_result = self._process_file(
-                    file_record,
-                    downloader,
-                    sync_type="FULL",
-                    result=result,
-                )
-                if file_result is not None:
+                for idx, file_record in enumerate(full_files, start=1):
                     logger.info(
-                        "[%d/%d] FULINS complete — %s records",
-                        idx, total_fulins, f"{file_result:,}",
+                        "[%d/%d] Downloading FULINS: %s",
+                        idx, total_fulins, file_record.file_name,
                     )
+                    file_result = self._process_file(
+                        file_record,
+                        downloader,
+                        sync_type="FULL",
+                        result=result,
+                    )
+                    # Report progress as percentage of FULINS files completed
+                    fulins_percent = (idx / total_fulins) * 100
+                    self._report_progress("fulins", int(fulins_percent))
+                    if file_result is not None:
+                        logger.info(
+                            "[%d/%d] FULINS complete — %s records",
+                            idx, total_fulins, f"{file_result:,}",
+                        )
 
             # --- FULCAN: cancellations ---
             cancel_files = self._api_client.get_cancellation_files(target_date)
             total_cancel = len(cancel_files)
+            self._report_progress("fulcan", 0)
             if total_cancel:
                 logger.info("Found %d FULCAN cancellation file(s) to process", total_cancel)
             for idx, file_record in enumerate(cancel_files, start=1):
@@ -187,6 +218,12 @@ class FirdsRefresher:
                     sync_type="CANCEL",
                     result=result,
                 )
+                # Report progress as percentage of FULCAN files completed
+                fulcan_percent = (idx / max(total_cancel, 1)) * 100
+                self._report_progress("fulcan", int(fulcan_percent))
+            
+            if not total_cancel:
+                self._report_progress("fulcan", 100)
 
         logger.info("FIRDS full refresh complete", extra={"result": repr(result)})
         return result

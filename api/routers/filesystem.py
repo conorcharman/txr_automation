@@ -18,6 +18,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Query
 
+from api.config import get_settings
 from api.schemas.filesystem import (
     BrowseResponse,
     FileReadResponse,
@@ -30,27 +31,42 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/filesystem", tags=["filesystem"])
 
-# Allowed root directories (container paths).  Any path must resolve to
-# a descendant of one of these to be browseable.
-_ALLOWED_ROOTS: list[Path] = [
-    Path("/app/data"),
-    Path("/app/config"),
-    Path("/app/src"),
-]
+def _allowed_roots() -> list[Path]:
+    """Return the list of allowed root directories, resolved to absolute paths."""
+    data_dir = get_settings().data_dir.resolve()
+    roots = [data_dir]
+    # In Docker the project also mounts /app/config and /app/src; add them
+    # if they exist so that Docker deployments are not broken.
+    for extra in (Path("/app/config"), Path("/app/src"), Path("/app/data")):
+        if extra.exists() and extra not in roots:
+            roots.append(extra)
+    return roots
 
 
 def _is_allowed(resolved: Path) -> bool:
     """Check whether *resolved* is inside one of the allowed roots."""
     return any(
         resolved == root or root in resolved.parents
-        for root in _ALLOWED_ROOTS
+        for root in _allowed_roots()
     )
+
+
+@router.get("/config")
+async def filesystem_config() -> dict[str, str]:
+    """Return the resolved data root directory for use by the frontend.
+
+    Returns:
+        A dict with ``dataRoot`` set to the resolved absolute path of
+        ``settings.data_dir``.
+    """
+    data_dir = get_settings().data_dir.resolve()
+    return {"dataRoot": str(data_dir)}
 
 
 @router.get("/browse", response_model=BrowseResponse)
 async def browse_directory(
     path: str = Query(
-        default="/app/data",
+        default=None,
         description="Absolute directory path to list.",
     ),
 ) -> BrowseResponse:
@@ -68,7 +84,9 @@ async def browse_directory(
         HTTPException 403: If the path is outside the allowed roots.
         HTTPException 404: If the path does not exist or is not a directory.
     """
-    target = Path(path)
+    # Default to the configured data directory when no path is supplied.
+    effective_path = path if path is not None else str(get_settings().data_dir.resolve())
+    target = Path(effective_path)
 
     if not target.is_absolute():
         raise HTTPException(status_code=400, detail="Path must be absolute.")
@@ -81,7 +99,7 @@ async def browse_directory(
     if not _is_allowed(resolved):
         raise HTTPException(
             status_code=403,
-            detail="Browsing is restricted to /app/data, /app/config, and /app/src.",
+            detail="Browsing is restricted to the configured data directory.",
         )
 
     if not resolved.is_dir():
@@ -164,7 +182,7 @@ async def read_file(
     if not _is_allowed(resolved):
         raise HTTPException(
             status_code=403,
-            detail="Reading is restricted to /app/data, /app/config, and /app/src.",
+            detail="Reading is restricted to the configured data directory.",
         )
 
     if resolved.is_dir():
@@ -242,7 +260,7 @@ async def resolve_paths(body: ResolvePathsRequest) -> ResolvedPaths:
                 detail="Invalid fiscal year, quarter, or module value.",
             )
 
-    quarter_root = Path("/app/data") / fy / quarter
+    quarter_root = get_settings().data_dir.resolve() / fy / quarter
     root = quarter_root / module if module else quarter_root
     paths: dict[str, str] = {}
 

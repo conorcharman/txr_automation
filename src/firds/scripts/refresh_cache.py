@@ -24,10 +24,11 @@ Usage:
 
 import argparse
 import logging
+import os
 import sys
 from datetime import date
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, Callable, Dict, Optional
 
 try:
     import yaml
@@ -42,6 +43,7 @@ _REPO_ROOT = Path(__file__).resolve().parents[3]
 if str(_REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "src"))
 
+from core.progress import ProgressTracker
 from firds.cache import FirdsCacheManager
 from firds.client import FirdsApiClient
 from firds.refresher import FirdsRefresher, _most_recent_saturday
@@ -157,15 +159,34 @@ def main() -> None:
     cache = FirdsCacheManager(db_path=db_path)
     cache.initialise_db()
 
+    # Set up progress tracking if job_id is available (e.g., from Celery task)
+    job_id = os.environ.get("JOB_ID")
+    redis_url = os.environ.get("REDIS_URL")
+    progress_tracker: Optional[ProgressTracker] = None
+    progress_callback: Optional[Callable[[str, int], None]] = None
+    
+    if job_id:
+        progress_tracker = ProgressTracker(
+            job_id=job_id,
+            total_phases=2,  # fulins and fulcan
+            redis_url=redis_url,
+        )
+        progress_callback = progress_tracker.report_phase_progress
+
     refresher = FirdsRefresher(
         cache=cache,
         api_client=FirdsApiClient(),
         staging_dir=staging_dir,
+        progress_callback=progress_callback,
     )
 
     target = args.date or _most_recent_saturday()
     _print_banner(f"FIRDS Full Refresh  |  target date: {target}  |  DB: {db_path}")
     result = refresher.run_full_refresh(target_date=target)
+    
+    # Signal completion if progress tracker is active
+    if progress_tracker:
+        progress_tracker.complete()
 
     _print_separator()
     status = "OK" if result.files_failed == 0 else f"FAILED ({result.files_failed} error(s))"

@@ -41,6 +41,7 @@ class Settings(BaseSettings):
     upload_dir: Path = Path("data/uploads")
     firds_db_path: Path = Path("data/firds_cache.db")
     gleif_db_path: Path = Path("data/gleif_cache.db")
+    data_dir: Path = Path("data")
     fca_api_email: str = ""
     fca_api_key: str = ""
     secret_key: str = "dev-secret-key"
@@ -70,3 +71,6 @@ def get_settings() -> Settings:
         A ``Settings`` instance populated from the environment or ``.env``.
     """
     return Settings()
+
+
+

@@ -18,6 +18,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
 from api.schemas.accuracy import (
+    ConsolidatedIncidentDetectRequest,
+    ConsolidatedIncidentDetectResponse,
+    ConsolidatedIncidentStat,
     DiscoveryRequest,
     DiscoveryResponse,
     DiscoveryResult,
@@ -26,7 +29,11 @@ from api.schemas.accuracy import (
     RunValidationRequest,
 )
 from api.schemas.jobs import JobResponse
-from api.services.discovery import INCIDENT_CODE_PATTERNS, discover_incidents
+from api.services.discovery import (
+    INCIDENT_CODE_PATTERNS,
+    detect_consolidated_incidents,
+    discover_incidents,
+)
 from api.services.job_service import job_service
 from api.services.script_runner import ACCURACY_VALIDATION_SCRIPTS, script_runner_service
 from api.tasks.script_tasks import run_incidents, run_script
@@ -196,3 +203,38 @@ async def discover_incident_files(
     ]
     total = len({f for files in raw_results.values() for f in files})
     return DiscoveryResponse(results=results, total_found=total)
+
+
+@router.post(
+    "/accuracy/detect-consolidated-incidents",
+    response_model=ConsolidatedIncidentDetectResponse,
+)
+async def detect_consolidated_incident_stats(
+    body: ConsolidatedIncidentDetectRequest,
+) -> ConsolidatedIncidentDetectResponse:
+    """Detect incident counts from full consolidated Errors/Queries CSV files.
+
+    This endpoint parses full CSV files server-side to avoid frontend truncation
+    when large files exceed filesystem read preview limits.
+    """
+    for path_value in (body.errors_file, body.queries_file):
+        if path_value and ".." in path_value:
+            raise HTTPException(status_code=400, detail="Path traversal not allowed.")
+
+    raw_stats = detect_consolidated_incidents(body.errors_file, body.queries_file)
+    incidents = [
+        ConsolidatedIncidentStat(
+            code=code,
+            description=str(values.get("description", "") or ""),
+            errors_count=int(values.get("errors_count", 0)),
+            queries_count=int(values.get("queries_count", 0)),
+        )
+        for code, values in sorted(
+            raw_stats.items(),
+            key=lambda item: tuple(int(part) for part in item[0].split("_", maxsplit=1)),
+        )
+    ]
+    return ConsolidatedIncidentDetectResponse(
+        incidents=incidents,
+        total_incidents=len(incidents),
+    )

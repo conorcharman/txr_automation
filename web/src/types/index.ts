@@ -124,6 +124,7 @@ export interface BatchModeConfig {
   inputDirectory: string;
   outputDirectory: string;
   templateDirectory: string;
+  incidentCodes?: string[];
   logOutput?: string;
 }
 
@@ -198,6 +199,23 @@ export interface DiscoveryResult {
 export interface DiscoveryResponse {
   results: DiscoveryResult[];
   totalFound: number;
+}
+
+export interface ConsolidatedIncidentDetectRequest {
+  errorsFile?: string | null;
+  queriesFile?: string | null;
+}
+
+export interface ConsolidatedIncidentStat {
+  code: string;
+  description: string;
+  errorsCount: number;
+  queriesCount: number;
+}
+
+export interface ConsolidatedIncidentDetectResponse {
+  incidents: ConsolidatedIncidentStat[];
+  totalIncidents: number;
 }
 
 // Jobs - Last Run
