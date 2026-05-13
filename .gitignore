@@ -131,3 +131,6 @@ data/celerybeat-schedule
 # Processing data
 
 data/FY*
+
+# Generated data directories
+data/output
