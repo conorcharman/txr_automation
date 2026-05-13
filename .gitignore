@@ -126,3 +126,4 @@ data/celerybeat-schedule
 zscaler-ca.crt
 .npmrc
 pip-trusted-certs.pem
+data/celerybeat-schedule
