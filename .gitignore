@@ -87,10 +87,10 @@ config/local*.yaml
 config/environments/local.yaml
 
 # Output files (generated during processing)
-# output/
-# replay_output/
-# *.output.csv
-# *_processed.csv
+
+data/output/
+*.output.csv
+*_processed.csv
 
 # Temporary files
 tmp/
@@ -127,3 +127,7 @@ zscaler-ca.crt
 .npmrc
 pip-trusted-certs.pem
 data/celerybeat-schedule
+
+# Processing data
+
+data/FY*
