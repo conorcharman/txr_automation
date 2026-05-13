@@ -14,6 +14,7 @@ For backward compatibility, this is also re-exported from:
 import logging
 import os
 import json
+import tempfile
 from datetime import datetime
 from typing import Optional, Dict, Any, Protocol
 
@@ -64,10 +65,19 @@ class StructuredLogger:
         """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         log_filename = f"{self.name}_{timestamp}.log"
+
+        resolved_log_dir = self.log_dir
+        try:
+            # Ensure requested log directory exists.
+            os.makedirs(resolved_log_dir, exist_ok=True)
+        except OSError:
+            # In read-only environments (e.g. containerised tests), fall back
+            # to a writable temp directory instead of failing initialisation.
+            resolved_log_dir = os.path.join(tempfile.gettempdir(), "txr_automation_logs")
+            os.makedirs(resolved_log_dir, exist_ok=True)
+
+        self.log_dir = resolved_log_dir
         self.log_filepath = os.path.join(self.log_dir, log_filename)
-        
-        # Ensure log directory exists
-        os.makedirs(self.log_dir, exist_ok=True)
         
         # Create custom formatter for structured logging
         formatter = logging.Formatter(

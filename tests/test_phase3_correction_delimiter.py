@@ -87,9 +87,9 @@ class TestParseCorrectionsColonDelimiter:
         result = index._parse_corrections("No Change", "")
         assert result == {"No Change": "No Change"}
 
-    def test_empty_correction_returns_empty_dict(self, index):
+    def test_empty_correction_returns_no_change_sentinel(self, index):
         result = index._parse_corrections("", "")
-        assert result == {}
+        assert result == {"No Change": "No Change"}
 
     def test_empty_field_str_returns_empty_dict(self, index):
         result = index._parse_corrections("V1:V2", "")
@@ -116,9 +116,9 @@ class TestParseCorrectionsNegationDelimiter:
         result = index._parse_corrections(" V1 ¬ V2 ", " F1 ¬ F2 ")
         assert result == {"F1": "V1", "F2": "V2"}
 
-    def test_empty_correction_negation_returns_empty_dict(self, index):
+    def test_empty_correction_negation_returns_no_change_sentinel(self, index):
         result = index._parse_corrections("", "")
-        assert result == {}
+        assert result == {"No Change": "No Change"}
 
     def test_empty_field_str_negation_returns_empty_dict(self, index):
         """Non-empty ¬-delimited correction but empty field string → still empty dict."""

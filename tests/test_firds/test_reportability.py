@@ -142,8 +142,9 @@ class TestNotInFirds:
     def test_isin_present_wrong_mic(self, db, checker):
         _insert(db, "GB00B3RBWM25", "XLON")
         result = checker.is_reportable("GB00B3RBWM25", date(2025, 6, 15), mic="XPAR")
-        assert result.is_reportable is False
-        assert result.reason == ReportabilityReason.NOT_IN_FIRDS
+        assert result.is_reportable is True
+        assert result.reason == ReportabilityReason.ACTIVE_OTHER_VENUE
+        assert "XLON" in result.matched_mics
 
     def test_isin_not_in_cache_no_mic(self, checker):
         result = checker.is_reportable("ZZNONE000000", date(2025, 6, 15))

@@ -40,7 +40,7 @@ export function useWebSocket(
     onStatusChangeRef.current?.(next);
   }, []);
 
-  const connect = useCallback(() => {
+  const connect = useCallback(function connectWithRetry() {
     if (stoppedRef.current) return;
 
     updateStatus("connecting");
@@ -117,7 +117,7 @@ export function useWebSocket(
       updateStatus("connecting");
 
       retryTimerRef.current = setTimeout(() => {
-        connect();
+        connectWithRetry();
       }, delayMs);
     };
   }, [url, maxRetries, updateStatus]);

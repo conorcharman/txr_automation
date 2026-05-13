@@ -190,3 +190,38 @@ async def test_cancel_job_not_found(client: AsyncClient) -> None:
     response = await client.post(f"/api/jobs/{uuid.uuid4()}/cancel")
 
     assert response.status_code == 404
+
+
+@pytest.mark.anyio
+async def test_last_runs_empty(client: AsyncClient) -> None:
+    """GET /api/jobs/last-runs returns an empty mapping on a fresh database.
+
+    This protects against backend-specific SQL that may fail on SQLite during
+    API tests.
+
+    Args:
+        client: Async HTTP client fixture from conftest.
+    """
+    response = await client.get("/api/jobs/last-runs")
+
+    assert response.status_code == 200
+    assert response.json() == {}
+
+
+@pytest.mark.anyio
+async def test_create_job_replay_phase2_final(client: AsyncClient, mocker) -> None:
+    """POST /api/jobs accepts the replay_phase2_final registered script.
+
+    Args:
+        client: Async HTTP client fixture from conftest.
+        mocker: pytest-mock fixture.
+    """
+    mocker.patch("api.routers.jobs.run_script.delay")
+
+    response = await client.post(
+        "/api/jobs",
+        json={"scriptName": "replay_phase2_final", "config": {}},
+    )
+
+    assert response.status_code == 200
+    assert response.json()["scriptName"] == "replay_phase2_final"

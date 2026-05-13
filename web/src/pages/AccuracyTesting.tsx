@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { useForm, Controller } from "react-hook-form";
+import { useForm, Controller, type Resolver } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -667,9 +667,8 @@ const ExtractGeneratorForm: React.FC = () => {
   const [derivedDirs, setDerivedDirs] = useState<{ sql: string; dtf: string; csv: string } | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { control, register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ExtractGenValues>({
-    resolver: zodResolver(extractGenSchema) as any,
+    resolver: zodResolver(extractGenSchema) as Resolver<ExtractGenValues>,
     defaultValues: loadCache("accuracy_utility_extract_gen", {
       testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
       logLevel: "INFO",

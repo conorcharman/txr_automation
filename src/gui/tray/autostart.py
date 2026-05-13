@@ -15,8 +15,12 @@ from __future__ import annotations
 
 import logging
 import sys
-import winreg
 from pathlib import Path
+
+try:
+    import winreg  # type: ignore[import-not-found]
+except ImportError:  # pragma: no cover - exercised in Linux containers
+    winreg = None  # type: ignore[assignment]
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +62,10 @@ class AutoStartManager:
             ``True`` on success, ``False`` if the registry could not be
             written (e.g. the key is locked by another process).
         """
+        if winreg is None:
+            logger.debug("AutoStart is only supported on Windows.")
+            return False
+
         command = cls._get_exe_path()
         try:
             with winreg.OpenKey(
@@ -81,6 +89,10 @@ class AutoStartManager:
             ``True`` on success or if the entry did not exist, ``False`` on
             unexpected error.
         """
+        if winreg is None:
+            logger.debug("AutoStart is only supported on Windows.")
+            return False
+
         try:
             with winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,
@@ -107,6 +119,9 @@ class AutoStartManager:
             ``True`` when the ``TXRAutomationTray`` value is present under
             the Run key, ``False`` otherwise.
         """
+        if winreg is None:
+            return False
+
         try:
             with winreg.OpenKey(
                 winreg.HKEY_CURRENT_USER,

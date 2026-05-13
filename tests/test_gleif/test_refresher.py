@@ -178,13 +178,15 @@ class TestRunFullRefreshHappyPath:
         # download_and_extract should only have been called once (no ISIN map)
         assert mock_dl.download_and_extract.call_count == 1
 
-    def test_already_processed_file_is_skipped(
+    def test_already_processed_file_is_reprocessed_for_full_refresh(
         self,
         refresher: GleifRefresher,
         cache: GleifCacheManager,
         tmp_path: Path,
     ) -> None:
-        # Simulate the file being in the sync log already
+        # Simulate the file being in the sync log already.
+        # Full refresh now intentionally clears previous FULL entries and
+        # reprocesses the latest Golden Copy.
         cache.log_sync(
             sync_type="FULL",
             file_name="gleif-goldencopy-20260323T000000.zip",
@@ -192,16 +194,23 @@ class TestRunFullRefreshHappyPath:
             status="SUCCESS",
         )
 
-        with patch("gleif.refresher.GleifDownloader") as mock_dl_cls:
+        gc_csv = tmp_path / "lei2.csv"
+        gc_csv.write_text("", encoding="utf-8")
+
+        with (
+            patch("gleif.refresher.GleifDownloader") as mock_dl_cls,
+            patch.object(refresher._parser, "parse", return_value=iter([])),
+        ):
             mock_dl = MagicMock()
             mock_dl_cls.return_value = mock_dl
+            mock_dl.download_and_extract.return_value = _make_download_result([gc_csv])
+            mock_dl.cleanup_file.return_value = None
 
             result = refresher.run_full_refresh(skip_isin_map=True)
 
-        # No download should have occurred
-        mock_dl.download_and_extract.assert_not_called()
-        assert result.files_skipped == 1
-        assert result.files_processed == 0
+        mock_dl.download_and_extract.assert_called_once()
+        assert result.files_skipped == 0
+        assert result.files_processed == 1
 
 
 # ---------------------------------------------------------------------------

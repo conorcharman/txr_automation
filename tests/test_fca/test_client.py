@@ -58,7 +58,7 @@ class TestFcaRegisterClientAuth:
     """Verify authentication headers are set correctly."""
 
     def test_auth_headers_set(self) -> None:
-        """X-AUTH-EMAIL should carry api_key; X-AUTH-KEY should carry api_email."""
+        """X-AUTH-EMAIL should carry api_email; X-AUTH-KEY should carry api_key."""
         session = MagicMock(spec=requests.Session)
         session.headers = MagicMock()
         FcaRegisterClient(
@@ -69,8 +69,8 @@ class TestFcaRegisterClientAuth:
         session.headers.update.assert_called_once_with(
             {
                 "Accept": "application/json",
-                "X-AUTH-EMAIL": "my-api-key",
-                "X-AUTH-KEY": "user@example.com",
+                "X-AUTH-EMAIL": "user@example.com",
+                "X-AUTH-KEY": "my-api-key",
             }
         )
 

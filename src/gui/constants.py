@@ -94,6 +94,7 @@ INCIDENT_SCRIPT_MODULES = {
     "incorrect_net_amount": "accuracy_testing.scripts.incorrect_net_amount_validation",
     "non-zero-qty": "accuracy_testing.scripts.non_zero_net_quantity",
     "non-zero-amt": "accuracy_testing.scripts.non_zero_net_amount",
+    "incorrect-time": "accuracy_testing.scripts.incorrect_time",
     "incorrect_time": "accuracy_testing.scripts.incorrect_time",
     # INCIDENT_SCRIPTS scriptKey values (used by ValidationScriptsPanel._on_run)
     "buyer_id_validation": "accuracy_testing.scripts.buyer_id_validation",

@@ -103,6 +103,8 @@ benchmarks/**/*.csv
 
 # SQLite cache databases (can be very large)
 data/*.db
+data/*.db-shm
+data/*.db-wal
 
 # Documentation (keep only confluence HTML suite)
 documentation/*

@@ -32,8 +32,8 @@ function basename(path: string): string {
 
 const IncidentPreview: React.FC<IncidentPreviewProps> = ({
   configs,
-  fiscalYear: _fiscalYear,
-  quarter: _quarter,
+  fiscalYear,
+  quarter,
 }) => {
   const [open, setOpen] = useState(false);
 
@@ -50,6 +50,9 @@ const IncidentPreview: React.FC<IncidentPreviewProps> = ({
           Preview Selected{" "}
           <span className="text-foreground/70">
             ({configs.length} incident{configs.length !== 1 ? "s" : ""})
+          </span>
+          <span className="ml-2 text-[11px] text-muted-foreground/80">
+            {fiscalYear} {quarter}
           </span>
         </span>
         <span className={cn("transition-transform text-[10px]", open && "rotate-180")}>

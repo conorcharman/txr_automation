@@ -8,11 +8,11 @@ from datetime import datetime
 from pathlib import Path
 
 from src.gui.scheduler.file_naming import AutoFileNamer
-from src.gui.scheduler.models import TestingPeriod, ValidationType
+from src.gui.scheduler.models import TestingPeriod as SchedulerTestingPeriod, ValidationType
 
 
 _TS = datetime(2026, 4, 1, 9, 0, 0)
-_PERIOD = TestingPeriod("FY26", "Q2")
+_PERIOD = SchedulerTestingPeriod("FY26", "Q2")
 
 
 class TestAutoFileNamer:

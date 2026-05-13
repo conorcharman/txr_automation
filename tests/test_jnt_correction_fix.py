@@ -98,7 +98,6 @@ def test_jnt_both_pass_no_correction():
         f"Expected no correction_fields for passing JNT pair, but got: {result.correction_fields}"
     
     print("\n✅ PASS: No false positive correction generated")
-    return True
 
 
 def test_jnt_one_fails_has_correction():
@@ -174,7 +173,6 @@ def test_jnt_one_fails_has_correction():
         f"Expected valid ID in correction, got: {result.correction_output}"
     
     print("\n✅ PASS: Correction properly generated for mixed JNT pair")
-    return True
 
 
 def test_jnt_both_fail_has_correction():
@@ -252,7 +250,6 @@ def test_jnt_both_fail_has_correction():
         f"Expected colon-delimited correction for JNT pair, got: {result.correction_output}"
     
     print("\n✅ PASS: Correction properly generated for both failed JNT pair")
-    return True
 
 
 if __name__ == "__main__":

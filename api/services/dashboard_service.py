@@ -84,7 +84,7 @@ class DashboardService:
         failed_count: int = failed_result.scalar_one() or 0
 
         total_completed = success_count + failed_count
-        success_rate: float = (success_count / total_completed) if total_completed > 0 else 0.0
+        success_rate: float = (success_count / total_completed) if total_completed > 0 else 1.0
 
         # Total saved configurations.
         configs_result = await db.execute(select(func.count(SavedConfig.id)))

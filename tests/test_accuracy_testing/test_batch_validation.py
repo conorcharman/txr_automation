@@ -160,7 +160,7 @@ class TestBuyerBatchValidation:
         2. Template file: {FY} {Q} {incident}.csv (Kaizen template format)
         """
         # Create extract file with new naming convention
-        extract_filename = f"{incident}_{fiscal_year}_{quarter}.csv"
+        extract_filename = f"{incident}_{fiscal_year}_{quarter}_extract.csv"
         extract_filepath = self.template_dir / extract_filename
         
         # Create template file with old naming convention (for Kaizen lookup)
@@ -308,7 +308,7 @@ TXN003,ACC003,,,,,B,11111111,PASSPORT,Bob,Johnson,1992-12-20,M,CA,
             # Create template file
             template_filepath = self.template_dir / f"FY25 Q3 {incident}.csv"
             # Also create extract file
-            extract_filepath = self.template_dir / f"{incident}_FY25_Q3.csv"
+            extract_filepath = self.template_dir / f"{incident}_FY25_Q3_extract.csv"
             
             content = f"""Transaction Ref,Account ID,Col2,Col3,Col4,Person Code,Account Type,ID Value,ID Type,First Name,Surname,DOB,Gender,Primary Nationality,Secondary Nationality
 TXN{i:03d},ACC{i:03d},,,,,B,1234567{i},PASSPORT,Person{i},Name{i},1990-01-01,M,US,
@@ -388,7 +388,7 @@ class TestSellerBatchValidation:
         2. Template file: {FY} {Q} {incident}.csv (Kaizen template format)
         """
         # Create extract file with new naming convention
-        extract_filename = f"{incident}_{fiscal_year}_{quarter}.csv"
+        extract_filename = f"{incident}_{fiscal_year}_{quarter}_extract.csv"
         extract_filepath = self.template_dir / extract_filename
         
         # Create template file with old naming convention (for Kaizen lookup)

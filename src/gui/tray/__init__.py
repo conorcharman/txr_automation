@@ -17,12 +17,27 @@ Exports:
 
 from __future__ import annotations
 
-from src.gui.tray.autostart import AutoStartManager
-from src.gui.tray.notifications import NotificationManager
-from src.gui.tray.tray_app import TrayApp
+from typing import Any
 
 __all__ = [
     "AutoStartManager",
     "NotificationManager",
     "TrayApp",
 ]
+
+
+def __getattr__(name: str) -> Any:
+    """Lazily import tray exports to avoid heavy GUI imports on module load."""
+    if name == "AutoStartManager":
+        from src.gui.tray.autostart import AutoStartManager
+
+        return AutoStartManager
+    if name == "NotificationManager":
+        from src.gui.tray.notifications import NotificationManager
+
+        return NotificationManager
+    if name == "TrayApp":
+        from src.gui.tray.tray_app import TrayApp
+
+        return TrayApp
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")

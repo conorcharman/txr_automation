@@ -19,7 +19,7 @@ from src.gui.scheduler.models import (
     ScheduleFrequency,
     SchedulePeriod,
     StepResult,
-    TestingPeriod,
+    TestingPeriod as SchedulerTestingPeriod,
     ValidationType,
 )
 
@@ -67,8 +67,8 @@ class TestValidationType:
         assert "ftbdm" in ValidationType.FUND_TRADE_BUYER_DM.script_module
 
     def test_enum_count(self) -> None:
-        """Ensure all nine validation types are defined."""
-        assert len(list(ValidationType)) == 9
+        """Ensure all validation types are defined."""
+        assert len(list(ValidationType)) == 10
 
 
 # ---------------------------------------------------------------------------
@@ -77,19 +77,19 @@ class TestValidationType:
 
 class TestTestingPeriod:
     def test_to_dict_round_trip(self) -> None:
-        period = TestingPeriod("FY26", "Q2")
-        restored = TestingPeriod.from_dict(period.to_dict())
+        period = SchedulerTestingPeriod("FY26", "Q2")
+        restored = SchedulerTestingPeriod.from_dict(period.to_dict())
         assert restored.fiscal_year == "FY26"
         assert restored.quarter == "Q2"
 
     def test_from_dict_defaults(self) -> None:
         """Missing keys should fall back to defaults without raising."""
-        restored = TestingPeriod.from_dict({})
+        restored = SchedulerTestingPeriod.from_dict({})
         assert restored.fiscal_year == "FY26"
         assert restored.quarter == "Q1"
 
     def test_to_dict_keys(self) -> None:
-        d = TestingPeriod("FY25", "Q3").to_dict()
+        d = SchedulerTestingPeriod("FY25", "Q3").to_dict()
         assert set(d.keys()) == {"fiscal_year", "quarter"}
 
 
@@ -265,37 +265,21 @@ class TestRunRecord:
 # ---------------------------------------------------------------------------
 
 class TestPipelinePresets:
-    def test_presets_list_not_empty(self) -> None:
-        assert len(PIPELINE_PRESETS) > 0
+    def test_presets_list_empty_in_v2(self) -> None:
+        """Built-in presets were removed in scheduler v2.0."""
+        assert PIPELINE_PRESETS == []
 
-    def test_all_preset_keys_unique(self) -> None:
-        keys = [p.key for p in PIPELINE_PRESETS]
-        assert len(keys) == len(set(keys))
-
-    def test_all_validations_preset_covers_all_types(self) -> None:
-        preset = next(p for p in PIPELINE_PRESETS if p.key == "all_validations")
-        assert set(preset.validation_types) == set(ValidationType)
-
-    def test_all_validations_preset_covers_all_steps(self) -> None:
-        preset = next(p for p in PIPELINE_PRESETS if p.key == "all_validations")
-        assert set(preset.pipeline_steps) == set(PipelineStep)
-
-    def test_decision_maker_preset_validate_only(self) -> None:
-        preset = next(p for p in PIPELINE_PRESETS if p.key == "decision_maker_only")
-        assert preset.pipeline_steps == [PipelineStep.VALIDATE]
-
-    def test_full_buyer_preset(self) -> None:
-        preset = next(p for p in PIPELINE_PRESETS if p.key == "full_buyer")
-        assert ValidationType.BUYER_ID in preset.validation_types
-        assert ValidationType.INCONSISTENT_BUYER_ID in preset.validation_types
-        assert preset.pipeline_steps == list(PipelineStep)
-
-    def test_net_amount_qty_preset(self) -> None:
-        preset = next(p for p in PIPELINE_PRESETS if p.key == "net_amount_qty")
-        assert ValidationType.NON_ZERO_NET_QTY in preset.validation_types
-        assert ValidationType.NON_ZERO_NET_AMT in preset.validation_types
-        assert ValidationType.INCORRECT_NET_AMOUNT in preset.validation_types
-
+    def test_pipeline_preset_dataclass_still_constructible(self) -> None:
+        """PipelinePreset remains available for backwards-compatible data models."""
+        preset = PipelinePreset(
+            key="legacy",
+            display_name="Legacy",
+            description="Legacy preset",
+            validation_types=[ValidationType.BUYER_ID],
+            pipeline_steps=[PipelineStep.VALIDATE],
+        )
+        assert preset.key == "legacy"
+        assert preset.validation_types == [ValidationType.BUYER_ID]
 
 # ---------------------------------------------------------------------------
 # ScheduleFrequency and PipelineStep
@@ -303,7 +287,7 @@ class TestPipelinePresets:
 
 class TestEnums:
     def test_schedule_frequency_values(self) -> None:
-        expected = {"hourly", "daily", "weekly", "monthly", "custom"}
+        expected = {"hourly", "daily", "weekly", "monthly", "quarterly", "custom"}
         assert {f.value for f in ScheduleFrequency} == expected
 
     def test_pipeline_step_order(self) -> None:

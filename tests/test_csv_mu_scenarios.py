@@ -18,7 +18,7 @@ from accuracy_testing.processor import (
 from core import create_logger
 
 @dataclass
-class TestCase:
+class CsvScenarioCase:
     transaction_ref: str
     id_value: str
     id_type: str
@@ -29,21 +29,21 @@ def test_csv_scenarios():
     """Test the three scenarios from user's CSV."""
     
     test_cases = [
-        TestCase(
+        CsvScenarioCase(
             transaction_ref="44625CH6XLW1",
             id_value="MU19900720SHABNIBRAH",
             id_type="",  # Empty - should be auto-detected
             nationality="MU",
             expected_result="Should detect as CONCAT with prefixed_nationality=MU"
         ),
-        TestCase(
+        CsvScenarioCase(
             transaction_ref="44625CH6W1P1",
             id_value="MU19900720SHABNIBRAH",
             id_type="",  # Empty - should be auto-detected
             nationality="MU",
             expected_result="Should detect as CONCAT with prefixed_nationality=MU"
         ),
-        TestCase(
+        CsvScenarioCase(
             transaction_ref="44625CKBJ1Q1",
             id_value="MU2055321",
             id_type="CCPT",  # Already has type

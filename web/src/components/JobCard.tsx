@@ -41,13 +41,13 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick }) => {
     return statusToProgress(job.status);
   });
 
+  const baselineProgress = useMemo(() => statusToProgress(job.status), [job.status]);
+
   useEffect(() => {
-    const baseline = statusToProgress(job.status);
     const cached = getJobProgress(job.id);
-    const next = cached !== null ? Math.max(cached, baseline) : baseline;
-    setProgress(next);
+    const next = cached !== null ? Math.max(cached, baselineProgress) : baselineProgress;
     setJobProgress(job.id, next);
-  }, [job.id, job.status]);
+  }, [job.id, baselineProgress]);
 
   const wsUrl = useMemo(() => buildWsUrl(job.id), [job.id]);
 
@@ -74,6 +74,8 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick }) => {
     onMessage: handleMessage,
     enabled: job.status === "pending" || job.status === "waiting" || job.status === "running",
   });
+
+  const displayProgress = Math.max(progress, baselineProgress);
 
   const elapsed =
     job.startedAt && job.completedAt
@@ -109,16 +111,16 @@ const JobCard: React.FC<JobCardProps> = ({ job, onClick }) => {
         <div className="space-y-1">
           <div className="flex items-center justify-between text-[10px] uppercase tracking-wide text-muted-foreground">
             <span>Progress</span>
-            <span>{progress}%</span>
+            <span>{displayProgress}%</span>
           </div>
           <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
             <div
               className="h-full rounded-full bg-primary transition-all duration-300 ease-out"
-              style={{ width: `${progress}%` }}
+              style={{ width: `${displayProgress}%` }}
               role="progressbar"
               aria-valuemin={0}
               aria-valuemax={100}
-              aria-valuenow={progress}
+              aria-valuenow={displayProgress}
               aria-label={`Progress for ${job.scriptName}`}
             />
           </div>

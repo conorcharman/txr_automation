@@ -24,7 +24,7 @@ from src.gui.scheduler.models import (
     RunStatus,
     ScheduleConfig,
     ScheduleFrequency,
-    TestingPeriod,
+    SchedulePeriod,
     ValidationType,
 )
 
@@ -46,7 +46,7 @@ def _make_config(
         frequency=ScheduleFrequency.DAILY,
         validation_types=[ValidationType.BUYER_ID],
         pipeline_steps=[PipelineStep.VALIDATE],
-        testing_period=TestingPeriod("FY26", "Q1"),
+        schedule_period=SchedulePeriod(fiscal_year="FY26", quarter="Q1"),
         output_directory=output_dir,
     )
 

@@ -21,10 +21,11 @@ more scripts are migrated from the GUI.
 import logging
 
 from fastapi import APIRouter, Depends, HTTPException, WebSocket
-from sqlalchemy import text
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
+from api.models.job import Job
 from api.schemas.common import JobStatus
 from api.schemas.jobs import JobCreate, JobResponse, LastRunInfo
 from api.services.job_service import job_service
@@ -65,6 +66,7 @@ SCRIPT_MODULES: dict[str, str] = {
     "data_push":                         "src.accuracy_testing.scripts.data_push",
     # Replay
     "replay_phase2":                     "src.replay.phase_2_processor",
+    "replay_phase2_final":               "src.replay.phase_2_final_lookup",
     "replay_phase3":                     "src.replay.phase_3_processor",
     "replay_phase3_final":               "src.replay.phase_3_final_lookup",
     "replay_merge_inconsistent":         "src.replay.merge_inconsistent_ids",
@@ -139,18 +141,17 @@ async def last_runs(
     Returns:
         A dictionary mapping script names to their most recent run info.
     """
-    query = text("""
-        SELECT DISTINCT ON (script_name)
-            script_name, status, completed_at
-        FROM jobs
-        WHERE status IN ('success', 'failed')
-        ORDER BY script_name, completed_at DESC
-    """)
-    result = await db.execute(query)
-    rows = result.fetchall()
+    result = await db.execute(
+        select(Job)
+        .where(Job.status.in_(["success", "failed"]))
+        .order_by(Job.script_name.asc(), Job.completed_at.desc())
+    )
+    rows = result.scalars().all()
 
     runs: dict[str, LastRunInfo] = {}
     for row in rows:
+        if row.script_name in runs:
+            continue
         runs[row.script_name] = LastRunInfo(
             script_name=row.script_name,
             status=row.status,

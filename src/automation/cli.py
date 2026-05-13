@@ -39,7 +39,7 @@ from src.gui.scheduler.models import (
     PipelineStep,
     RunStatus,
     ScheduleConfig,
-    TestingPeriod,
+    SchedulePeriod,
     ValidationType,
 )
 
@@ -85,7 +85,7 @@ def cmd_run_pipeline(args: argparse.Namespace) -> int:
         for s in args.steps.split(",")
         if s.strip()
     ]
-    period = TestingPeriod(fiscal_year=args.fiscal_year, quarter=args.quarter)
+    period = SchedulePeriod(fiscal_year=args.fiscal_year, quarter=args.quarter)
 
     if args.dry_run:
         out = {
@@ -105,7 +105,7 @@ def cmd_run_pipeline(args: argparse.Namespace) -> int:
         enabled=True,
         validation_types=vtypes,
         pipeline_steps=steps,
-        testing_period=period,
+        schedule_period=period,
         output_directory=args.output_dir,
     )
 
