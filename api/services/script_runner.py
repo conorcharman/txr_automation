@@ -118,6 +118,23 @@ ACCURACY_VALIDATION_SCRIPTS: frozenset[str] = frozenset(
     }
 )
 
+DEFAULT_INCIDENT_CODES: list[str] = [
+    "7_6",
+    "7_30",
+    "7_35",
+    "7_37",
+    "7_39",
+    "7_42",
+    "7_66",
+    "12_17",
+    "16_19",
+    "16_20",
+    "16_21",
+    "16_23",
+    "21_17",
+    "35_3",
+]
+
 
 # ---------------------------------------------------------------------------
 # Private helpers
@@ -305,6 +322,37 @@ class ScriptRunnerService:
                 "Wrote template generator config to %s.", tmp_path
             )
             return module_path, argv, tpl_config
+
+        # collate_csv_extracts expects a utility-specific YAML shape with
+        # paths.input_dir / paths.output_dir and an incidents list.
+        if req.script_name == "collate_csv_extracts":
+            batch = req.batch_config
+            if batch is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="batch_config is required for collate_csv_extracts.",
+                )
+
+            incident_codes = batch.incident_codes or DEFAULT_INCIDENT_CODES
+            collate_config: dict = {
+                "testing_period": {
+                    "fiscal_year": req.testing_period.fiscal_year,
+                    "quarter": req.testing_period.quarter,
+                },
+                "paths": {
+                    "input_dir": batch.input_directory,
+                    "output_dir": batch.output_directory,
+                    "log_output": batch.log_output,
+                },
+                "processing": {
+                    "dry_run": req.dry_run,
+                },
+                "incidents": incident_codes,
+            }
+            tmp_path = _write_temp_yaml(collate_config)
+            argv = ["--config", tmp_path, "--log-level", req.log_level]
+            logger.debug("Wrote collate config to %s.", tmp_path)
+            return module_path, argv, collate_config
 
         config: dict = {
             "mode": req.mode,
@@ -510,6 +558,23 @@ class ScriptRunnerService:
                     ],
                     "incident_pattern": f"{req.fiscal_year} {req.quarter} *.csv",
                 },
+                "incident_columns": {
+                    "transaction_ref": "Transaction Reference",
+                    "error_flag": "Error",
+                    "correction": "Correction",
+                    "correction_field": "Correction Field",
+                    "agree_with_correction": "Agree With Correction",
+                    "suggested_correction": "Suggested Correction",
+                    "suggested_correction_field": "Suggested Correction Field",
+                    "buyer_id": "Buyer identification code",
+                    "buyer_first_name": "Buyer - First name(s)",
+                    "buyer_last_name": "Buyer - Surname(s)",
+                    "buyer_dob": "Buyer - Date of birth",
+                    "seller_id": "Seller identification code",
+                    "seller_first_name": "Seller - First name(s)",
+                    "seller_last_name": "Seller - Surname(s)",
+                    "seller_dob": "Seller - Date of birth",
+                },
                 "processor": {
                     "batch_size": 50,
                     "log_level": req.log_level,
@@ -538,8 +603,8 @@ class ScriptRunnerService:
                     "input_dir": req.buyer_file,
                 },
                 "files": {
-                    "ids_pattern": "Replay_*_Inconsistent_IDs_Summary_*.csv",
-                    "names_pattern": "Replay_*_Inconsistent_Names_Summary_*.csv",
+                    "ids_pattern": "Replay_*_Inconsistent_IDs_Summary_FINAL.csv",
+                    "names_pattern": "Replay_*_Inconsistent_Names_Summary_FINAL.csv",
                 },
                 "processor": {
                     "log_level": req.log_level,

@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { z } from "zod";
+import { ChevronDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { PathPickerInput } from "@/components/PathPickerInput";
@@ -104,13 +105,51 @@ const AdvancedSection: React.FC<AdvancedSectionProps> = ({ isOpen, onToggle, chi
       className="flex w-full items-center justify-between px-3 py-2 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
     >
       Advanced
-      <span className={cn("transition-transform text-[10px]", isOpen && "rotate-180")}>â–¾</span>
+      <ChevronDown
+        className={cn(
+          "h-3.5 w-3.5 text-muted-foreground transition-transform shrink-0",
+          isOpen && "rotate-180",
+        )}
+      />
     </button>
     {isOpen && (
       <div className="space-y-3 px-3 pb-3 border-t border-border pt-3">{children}</div>
     )}
   </div>
 );
+
+interface CollapsibleInfoPanelProps {
+  title: string;
+  children: React.ReactNode;
+  defaultOpen?: boolean;
+}
+
+const CollapsibleInfoPanel: React.FC<CollapsibleInfoPanelProps> = ({
+  title,
+  children,
+  defaultOpen = true,
+}) => {
+  const [isOpen, setIsOpen] = useState(defaultOpen);
+
+  return (
+    <div className="rounded-md border border-border">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="flex w-full items-center justify-between px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground transition-colors"
+      >
+        <span>{title}</span>
+        <ChevronDown
+          className={cn(
+            "h-3.5 w-3.5 text-muted-foreground transition-transform shrink-0",
+            isOpen && "rotate-180",
+          )}
+        />
+      </button>
+      {isOpen && <div className="space-y-2 border-t border-border px-3 py-3">{children}</div>}
+    </div>
+  );
+};
 
 // ---------------------------------------------------------------------------
 // localStorage helpers
@@ -220,7 +259,7 @@ const Phase2Form: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
       <p className="text-sm text-muted-foreground">
-        Process replay Phase 2 â€” initial replay processing against the input file.
+        Process replay Phase 2 — initial replay processing against the input file.
       </p>
 
       <div>
@@ -244,10 +283,7 @@ const Phase2Form: React.FC = () => {
       />
 
       {sourceFileCount !== null && (
-        <div className="rounded-md border border-border px-3 py-3 space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Source Files (Accuracy Testing â€” Templates)
-          </p>
+        <CollapsibleInfoPanel title="Source Files (Accuracy Testing — Templates)">
           <div className="flex items-center gap-2">
             <span className={cn("h-2 w-2 rounded-full shrink-0", sourceFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
             <span className="text-xs text-muted-foreground shrink-0">Input directory</span>
@@ -255,7 +291,7 @@ const Phase2Form: React.FC = () => {
               {sourceFileCount > 0 ? `${sourceFileCount} file(s) found` : "no files found"}
             </span>
           </div>
-        </div>
+        </CollapsibleInfoPanel>
       )}
 
       <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
@@ -290,7 +326,7 @@ const Phase2Form: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Runningâ€¦" : "Run"}
+        {isPending ? "Running…" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -406,7 +442,7 @@ const Phase2FinalForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
       <p className="text-sm text-muted-foreground">
-        Phase 2 final lookup â€” validate corrections from Phase 2 output against UnaVista
+        Phase 2 final lookup — validate corrections from Phase 2 output against UnaVista
         transaction data and annotate any discrepancies.
       </p>
 
@@ -431,10 +467,7 @@ const Phase2FinalForm: React.FC = () => {
       />
 
       {(outputFileCount !== null || unavistaFileCount !== null) && (
-        <div className="rounded-md border border-border px-3 py-3 space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Discovered Files
-          </p>
+        <CollapsibleInfoPanel title="Discovered Files">
           <div className="space-y-1">
             {outputFileCount !== null && (
               <div className="flex items-center gap-2">
@@ -455,7 +488,7 @@ const Phase2FinalForm: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+        </CollapsibleInfoPanel>
       )}
 
       <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
@@ -499,7 +532,7 @@ const Phase2FinalForm: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Runningâ€¦" : "Run"}
+        {isPending ? "Running…" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -617,7 +650,7 @@ const Phase3Form: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
       <p className="text-sm text-muted-foreground">
-        Process replay Phase 3 â€” incorporate feedback file into replay output.
+        Process replay Phase 3 — incorporate feedback file into replay output.
       </p>
 
       <div>
@@ -641,10 +674,7 @@ const Phase3Form: React.FC = () => {
       />
 
       {(inputFileCount !== null || feedbackFileCount !== null) && (
-        <div className="rounded-md border border-border px-3 py-3 space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Discovered Files
-          </p>
+        <CollapsibleInfoPanel title="Discovered Files">
           <div className="space-y-1">
             {inputFileCount !== null && (
               <div className="flex items-center gap-2">
@@ -665,7 +695,7 @@ const Phase3Form: React.FC = () => {
               </div>
             )}
           </div>
-        </div>
+        </CollapsibleInfoPanel>
       )}
 
       <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
@@ -709,7 +739,7 @@ const Phase3Form: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Runningâ€¦" : "Run"}
+        {isPending ? "Running…" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -814,7 +844,7 @@ const Phase3FinalForm: React.FC = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
       <p className="text-sm text-muted-foreground">
-        Phase 3 final lookup â€” perform final ID resolution pass on the replay output.
+        Phase 3 final lookup — perform final ID resolution pass on the replay output.
       </p>
 
       <div>
@@ -838,10 +868,7 @@ const Phase3FinalForm: React.FC = () => {
       />
 
       {phase3FileCount !== null && (
-        <div className="rounded-md border border-border px-3 py-3 space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Phase 3 Output (replay/output)
-          </p>
+        <CollapsibleInfoPanel title="Phase 3 Output (replay/output)">
           <div className="flex items-center gap-2">
             <span className={cn("h-2 w-2 rounded-full shrink-0", phase3FileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
             <span className="text-xs text-muted-foreground shrink-0">Files</span>
@@ -849,7 +876,7 @@ const Phase3FinalForm: React.FC = () => {
               {phase3FileCount > 0 ? `${phase3FileCount} file(s) found` : "no files found"}
             </span>
           </div>
-        </div>
+        </CollapsibleInfoPanel>
       )}
 
       <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
@@ -884,7 +911,7 @@ const Phase3FinalForm: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Runningâ€¦" : "Run"}
+        {isPending ? "Running…" : "Run"}
       </Button>
 
       {mutation.isError && (
@@ -1018,10 +1045,7 @@ const MergeForm: React.FC = () => {
       />
 
       {mergeFiles !== null && (
-        <div className="rounded-md border border-border px-3 py-3 space-y-2">
-          <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-            Phase 3 Output (replay/output)
-          </p>
+        <CollapsibleInfoPanel title="Phase 3 Output (replay/output)">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className={cn("h-2 w-2 rounded-full shrink-0", mergeFiles.ids ? "bg-green-500" : "bg-orange-400")} />
@@ -1038,7 +1062,7 @@ const MergeForm: React.FC = () => {
               </span>
             </div>
           </div>
-        </div>
+        </CollapsibleInfoPanel>
       )}
 
       <AdvancedSection isOpen={showAdvanced} onToggle={() => setShowAdvanced(!showAdvanced)}>
@@ -1088,7 +1112,7 @@ const MergeForm: React.FC = () => {
       </AdvancedSection>
 
       <Button type="submit" disabled={isPending} className="w-full">
-        {isPending ? "Runningâ€¦" : "Run"}
+        {isPending ? "Running…" : "Run"}
       </Button>
 
       {mutation.isError && (

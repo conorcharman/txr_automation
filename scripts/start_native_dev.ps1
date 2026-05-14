@@ -36,6 +36,7 @@ $Base = @(
     "conda activate txr_automation",
     "`$env:DATABASE_URL  = '$DbUrl'",
     "`$env:REDIS_URL     = '$RedisUrl'",
+    "`$env:PYTHONPATH    = '$Project'",
     "`$env:DATA_DIR      = '$Project\data'",
     "`$env:UPLOAD_DIR    = 'data/uploads'",
     "`$env:FIRDS_DB_PATH = 'data/firds_cache.db'",
@@ -44,6 +45,34 @@ $Base = @(
 
 Write-Host ""
 Write-Host "TXR Automation - Native Dev Startup" -ForegroundColor Green
+
+# ---------------------------------------------------------------------------
+# Ensure Docker Desktop is running before touching any containers
+# ---------------------------------------------------------------------------
+Write-Host "Checking Docker Desktop..."
+$dockerOk = $false
+try { docker info 2>$null | Out-Null ; $dockerOk = $true } catch {}
+
+if (-not $dockerOk) {
+    $dockerExe = "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+    if (Test-Path $dockerExe) {
+        Write-Host "  Docker Desktop not running - starting it..." -ForegroundColor Yellow
+        Start-Process $dockerExe
+        Write-Host "  Waiting for Docker daemon (up to 90 seconds)..." -ForegroundColor Yellow
+        $waited = 0
+        while ($waited -lt 90) {
+            Start-Sleep -Seconds 5
+            $waited += 5
+            try { docker info 2>$null | Out-Null ; $dockerOk = $true ; break } catch {}
+        }
+    }
+    if (-not $dockerOk) {
+        Write-Host "  ERROR: Docker Desktop could not be started. Please start it manually and retry." -ForegroundColor Red
+        exit 1
+    }
+    Write-Host "  Docker Desktop is ready." -ForegroundColor Green
+}
+
 Write-Host "Starting backing services if needed..."
 
 $rJson = docker compose ps redis --format json 2>$null

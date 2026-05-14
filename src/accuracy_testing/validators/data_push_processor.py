@@ -25,6 +25,7 @@ Migrated from: DataPush1_0.vb
 
 import csv
 import logging
+import re
 import shutil
 from datetime import datetime
 from pathlib import Path
@@ -551,19 +552,28 @@ class BatchDataPushProcessor:
                     suffix = name.replace(f"validated_{self.fiscal_year}_{self.quarter}_", "")
                     # Remove _errors_only suffix if present
                     incident = suffix.replace("_errors_only", "")
-                    incidents.add(incident)
+                    incidents.add(self._normalise_incident_code(incident))
                 elif " - " in name:
                     # Pattern: FY25 Q4 - 7_37.csv
                     incident = name.split(" - ")[-1]
-                    incidents.add(incident)
+                    incidents.add(self._normalise_incident_code(incident))
                 elif name.endswith("_validated"):
                     # Pattern: 7_37_validated.csv
                     incident = name.replace("_validated", "")
-                    incidents.add(incident)
+                    incidents.add(self._normalise_incident_code(incident))
         
+        incidents.discard("")
         incidents = sorted(list(incidents))
         self.logger.info(f"Discovered {len(incidents)} incidents: {incidents}")
         return incidents
+
+    @staticmethod
+    def _normalise_incident_code(raw_incident: str) -> str:
+        """Extract the canonical incident code (e.g. 16_20) from a filename fragment."""
+        match = re.search(r"\d+_\d+", raw_incident)
+        if match:
+            return match.group(0)
+        return raw_incident
     
     def process_batch(
         self,
@@ -616,8 +626,8 @@ class BatchDataPushProcessor:
         """
         # Try multiple naming patterns for target file (master tracking files)
         target_patterns = [
-            f"{incident}_{self.fiscal_year}_{self.quarter}.csv",      # Standard format: 7_42_FY25_Q4.csv
-            f"{self.fiscal_year} {self.quarter} {incident}.csv",      # Legacy: FY25 Q4 7_42.csv
+            f"{self.fiscal_year} {self.quarter} {incident}.csv",      # Template generator format
+            f"{incident}_{self.fiscal_year}_{self.quarter}.csv",      # Legacy format
             f"{self.fiscal_year} {self.quarter} - {incident}.csv",    # Legacy with dash
             f"{incident}.csv",                                         # Generic fallback
         ]

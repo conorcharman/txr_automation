@@ -399,6 +399,13 @@ Examples:
         action='store_true',
         help='Enable detailed output'
     )
+
+    parser.add_argument(
+        '--log-level',
+        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+        default='INFO',
+        help='Logging level (default: INFO)'
+    )
     
     parser.add_argument(
         '--gui-mode',

@@ -57,6 +57,7 @@ const IncidentChecklist: React.FC<IncidentChecklistProps> = ({
     [],
   );
   const [expanded, setExpanded] = useState<Set<string>>(initialExpanded);
+  const [isOpen, setIsOpen] = useState(true);
 
   const allIncidents = useMemo(
     () =>
@@ -124,22 +125,35 @@ const IncidentChecklist: React.FC<IncidentChecklistProps> = ({
   );
 
   return (
-    <div className="rounded-lg border border-border p-4 space-y-1">
-      <div className="flex items-center justify-between mb-2">
-        <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-          Incidents
-        </p>
+    <div className="rounded-lg border border-border">
+      <div className="flex items-center justify-between gap-2 px-4 py-3">
+        <button
+          type="button"
+          onClick={() => setIsOpen((prev) => !prev)}
+          disabled={disabled}
+          className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-wide hover:text-foreground disabled:opacity-50"
+        >
+          <span>Incidents</span>
+          <ChevronDown
+            className={cn(
+              "h-3.5 w-3.5 text-muted-foreground transition-transform",
+              isOpen && "rotate-180",
+            )}
+          />
+        </button>
         <button
           type="button"
           onClick={toggleAll}
-          disabled={disabled}
+          disabled={disabled || !isOpen}
           className="text-xs text-primary hover:underline disabled:opacity-50"
         >
           {allSelected ? "Deselect All" : "Select All"}
         </button>
       </div>
 
-      {scripts.map((script) => {
+      {isOpen && (
+        <div className="space-y-1 border-t border-border px-4 py-3">
+          {scripts.map((script) => {
         const isMulti = script.incidents.length > 1;
         const childCodes = script.incidents.map((i) => i.code);
         const selectedCount = childCodes.filter((code) =>
@@ -149,7 +163,7 @@ const IncidentChecklist: React.FC<IncidentChecklistProps> = ({
         const someChildrenSelected = selectedCount > 0 && !allChildrenSelected;
         const isExpanded = expanded.has(script.scriptKey);
 
-        if (!isMulti) {
+            if (!isMulti) {
           // Single-incident: flat row — no expand/collapse.
           const code = childCodes[0];
           return (
@@ -173,10 +187,10 @@ const IncidentChecklist: React.FC<IncidentChecklistProps> = ({
           );
         }
 
-        // Multi-incident: collapsible parent + code-only children.
-        return (
-          <div key={script.scriptKey}>
-            <div className="flex items-center gap-2 py-1">
+            // Multi-incident: collapsible parent + code-only children.
+            return (
+              <div key={script.scriptKey}>
+                <div className="flex items-center gap-2 py-1">
               <input
                 type="checkbox"
                 ref={(el) => {
@@ -203,34 +217,36 @@ const IncidentChecklist: React.FC<IncidentChecklistProps> = ({
                     isExpanded && "rotate-180",
                   )}
                 />
-              </button>
-            </div>
+                  </button>
+                </div>
 
-            {isExpanded && (
-              <div className="ml-6 space-y-0.5 pb-1">
-                {script.incidents.map((incident) => (
-                  <label
-                    key={incident.code}
-                    className={cn(
-                      "flex items-center gap-2 py-0.5 cursor-pointer text-sm",
-                      disabled && "opacity-50 cursor-not-allowed",
-                    )}
-                  >
-                    <input
-                      type="checkbox"
-                      checked={hasSelection(selected, script.scriptKey, incident.code)}
-                      onChange={() => toggleChild(script.scriptKey, incident.code)}
-                      disabled={disabled}
-                      className="accent-primary h-3.5 w-3.5"
-                    />
-                    <span className="font-mono text-xs">{incident.code}</span>
-                  </label>
-                ))}
+                {isExpanded && (
+                  <div className="ml-6 space-y-0.5 pb-1">
+                    {script.incidents.map((incident) => (
+                      <label
+                        key={incident.code}
+                        className={cn(
+                          "flex items-center gap-2 py-0.5 cursor-pointer text-sm",
+                          disabled && "opacity-50 cursor-not-allowed",
+                        )}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={hasSelection(selected, script.scriptKey, incident.code)}
+                          onChange={() => toggleChild(script.scriptKey, incident.code)}
+                          disabled={disabled}
+                          className="accent-primary h-3.5 w-3.5"
+                        />
+                        <span className="font-mono text-xs">{incident.code}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
               </div>
-            )}
-          </div>
-        );
-      })}
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 };

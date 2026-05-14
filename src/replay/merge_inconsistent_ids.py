@@ -526,12 +526,35 @@ def main() -> None:
 
     tasks: List[tuple[Path, str, str]] = []
 
+    def select_preferred_file(matches: List[Path], label: str) -> Path:
+        """Select the preferred summary file when multiple files match."""
+        final_non_phase3 = [
+            path for path in matches
+            if path.name.endswith("_FINAL.csv") and "PHASE 3" not in path.name.upper()
+        ]
+        if len(final_non_phase3) == 1:
+            selected = final_non_phase3[0]
+            logger.info(f"[{label}] Multiple matches found; selected FINAL file: {selected.name}")
+            return selected
+
+        if final_non_phase3:
+            selected = sorted(final_non_phase3)[-1]
+            logger.info(f"[{label}] Multiple FINAL files found; selected latest: {selected.name}")
+            return selected
+
+        selected = sorted(matches)[-1]
+        logger.warning(
+            f"[{label}] Multiple files found without clear FINAL preference; selected latest: {selected.name}"
+        )
+        return selected
+
     if ids_matches:
         if len(ids_matches) > 1:
             logger.warning(
-                f"Multiple files match the IDs pattern '{config.ids_pattern}' — skipping:\n"
+                f"Multiple files match the IDs pattern '{config.ids_pattern}':\n"
                 + "\n".join(f"  {p}" for p in ids_matches)
             )
+            tasks.append((select_preferred_file(ids_matches, "IDs"), config.ids_group_column, "IDs"))
         else:
             tasks.append((ids_matches[0], config.ids_group_column, "IDs"))
     else:
@@ -542,9 +565,10 @@ def main() -> None:
     if names_matches:
         if len(names_matches) > 1:
             logger.warning(
-                f"Multiple files match the Names pattern '{config.names_pattern}' — skipping:\n"
+                f"Multiple files match the Names pattern '{config.names_pattern}':\n"
                 + "\n".join(f"  {p}" for p in names_matches)
             )
+            tasks.append((select_preferred_file(names_matches, "Names"), config.names_group_column, "Names"))
         else:
             tasks.append((names_matches[0], config.names_group_column, "Names"))
     else:
