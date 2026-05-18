@@ -251,6 +251,28 @@ def _validate_paths(config: dict, prefix: str = "") -> dict:
     return config
 
 
+def _normalise_extracts_output_dir(output_dir: str) -> str:
+    """Normalise extract generator output_dir to the extracts base folder.
+
+    The SQL extract generator writes outputs under ``output_dir/sql`` and
+    ``output_dir/dtf`` internally. If callers pass a subdirectory such as
+    ``.../extracts/sql`` this would otherwise produce nested paths like
+    ``.../extracts/sql/sql``.
+
+    Args:
+        output_dir: Requested output directory from API payload.
+
+    Returns:
+        Extracts base directory string.
+    """
+    trimmed = output_dir.rstrip("/\\")
+    lower = trimmed.lower()
+    for suffix in ("/sql", "\\sql", "/dtf", "\\dtf", "/csv", "\\csv"):
+        if lower.endswith(suffix):
+            return trimmed[: -len(suffix)]
+    return trimmed
+
+
 # ---------------------------------------------------------------------------
 # Service
 # ---------------------------------------------------------------------------
@@ -353,6 +375,43 @@ class ScriptRunnerService:
             argv = ["--config", tmp_path, "--log-level", req.log_level]
             logger.debug("Wrote collate config to %s.", tmp_path)
             return module_path, argv, collate_config
+
+        # sql_extract_generator expects a dedicated batch shape with
+        # batch.incidents and batch.paths keys.
+        if req.script_name == "sql_extract_generator":
+            batch = req.batch_config
+            if batch is None:
+                raise HTTPException(
+                    status_code=400,
+                    detail="batch_config is required for sql_extract_generator.",
+                )
+
+            incident_codes = batch.incident_codes or DEFAULT_INCIDENT_CODES
+            normalised_output_dir = _normalise_extracts_output_dir(batch.output_directory)
+            extract_config: dict = {
+                "mode": "batch",
+                "testing_period": {
+                    "fiscal_year": req.testing_period.fiscal_year,
+                    "quarter": req.testing_period.quarter,
+                },
+                "batch": {
+                    "incidents": incident_codes,
+                    "paths": {
+                        "template_dir": batch.template_directory or batch.input_directory,
+                        "output_dir": normalised_output_dir,
+                        "log_output": batch.log_output,
+                    },
+                },
+                "processing": {
+                    "batch_size": 900,
+                    "output_format": "both",
+                    "dry_run": req.dry_run,
+                },
+            }
+            tmp_path = _write_temp_yaml(extract_config)
+            argv = ["--config", tmp_path, "--log-level", req.log_level]
+            logger.debug("Wrote sql_extract_generator config to %s.", tmp_path)
+            return module_path, argv, extract_config
 
         config: dict = {
             "mode": req.mode,

@@ -128,6 +128,20 @@ def _parse_args() -> argparse.Namespace:
         default="INFO",
         help="Logging verbosity (default: INFO).",
     )
+    parser.add_argument(
+        "--api-timeout",
+        type=int,
+        default=30,
+        metavar="SECONDS",
+        help="HTTP timeout for GLEIF API discovery requests (default: 30).",
+    )
+    parser.add_argument(
+        "--download-timeout",
+        type=int,
+        default=300,
+        metavar="SECONDS",
+        help="HTTP timeout for GLEIF ZIP downloads (default: 300).",
+    )
     return parser.parse_args()
 
 
@@ -201,6 +215,7 @@ def main() -> None:
     api_client_kwargs = {}
     if golden_copy_url:
         api_client_kwargs["golden_copy_url"] = golden_copy_url
+    api_client_kwargs["timeout"] = args.api_timeout
     api_client = GleifApiClient(**api_client_kwargs)
 
     # Set up progress tracking if job_id is available (e.g., from Celery task)
@@ -222,6 +237,7 @@ def main() -> None:
         api_client=api_client,
         staging_dir=staging_dir,
         progress_callback=progress_callback,
+        download_timeout=args.download_timeout,
     )
 
     # --- Run refresh ----------------------------------------------------
@@ -254,7 +270,8 @@ def main() -> None:
             "Check the log output above for details.",
             file=sys.stderr,
         )
-        sys.exit(1)
+        if result.critical_failure:
+            sys.exit(1)
 
 
 if __name__ == "__main__":

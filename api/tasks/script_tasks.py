@@ -61,6 +61,42 @@ _TEMPLATE_CODE_RE = re.compile(
 _argv_lock = threading.Lock()
 
 
+class _ThreadOnlyLogFilter(logging.Filter):
+    """Allow log records only from the current task thread."""
+
+    def __init__(self, thread_id: int) -> None:
+        super().__init__()
+        self._thread_id = thread_id
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        return record.thread == self._thread_id
+
+
+def _start_heartbeat(
+    publish_line: Callable[[str], None],
+    stop_event: threading.Event,
+    interval_seconds: float = 10.0,
+) -> threading.Thread:
+    """Start a background heartbeat thread for long-running jobs.
+
+    Args:
+        publish_line: Callback used to emit heartbeat log lines.
+        stop_event: Event used to stop the heartbeat loop.
+        interval_seconds: Interval between heartbeat log lines.
+
+    Returns:
+        Started daemon thread.
+    """
+
+    def _heartbeat_loop() -> None:
+        while not stop_event.wait(interval_seconds):
+            publish_line("Waiting for output...")
+
+    thread = threading.Thread(target=_heartbeat_loop, daemon=True)
+    thread.start()
+    return thread
+
+
 class _ProgressEstimator:
     """Estimate percentage completion from task lifecycle and known log patterns."""
 
@@ -359,10 +395,16 @@ def run_script(
         except Exception as exc:  # noqa: BLE001
             logger.warning("Redis publish failed for job %s: %s", job_id, exc)
 
+    try:
+        redis_client.ping()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Redis ping failed for job %s: %s", job_id, exc)
+
     # ── Mark running ────────────────────────────────────────────────────────
     _sync_update_status(job_id, "running")
     _publish({"type": "status", "data": "running"})
     _publish_progress(_publish, estimator.on_running())
+    _publish({"type": "log", "data": f"Preparing to run module: {module_path}"})
 
     def _publish_log_line(line: str) -> None:
         _publish({"type": "log", "data": line})
@@ -381,6 +423,14 @@ def run_script(
     output_capture = _LiveOutputCapture(_publish_log_line)
     old_stdout = sys.stdout
     old_stderr = sys.stderr
+    root_logger = logging.getLogger()
+    capture_handler = logging.StreamHandler(output_capture)
+    capture_handler.setLevel(logging.NOTSET)
+    capture_handler.setFormatter(
+        logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+    )
+    capture_handler.addFilter(_ThreadOnlyLogFilter(threading.get_ident()))
+    old_root_level = root_logger.level
 
     # Identify temp config files created by ScriptRunnerService so we can
     # clean them up after the script finishes.
@@ -390,15 +440,20 @@ def run_script(
     ]
 
     try:
+        root_logger.addHandler(capture_handler)
+        if old_root_level > logging.INFO:
+            root_logger.setLevel(logging.INFO)
         with contextlib.redirect_stdout(output_capture), contextlib.redirect_stderr(
             output_capture
         ):
+            print(f"Loading module: {module_path}")
             # Evict any cached version and re-import *inside* the redirect so
             # that module-level logging handlers (e.g. StructuredLogger's
             # StreamHandler, which stores sys.stderr at init time) pick up the
             # capture buffer rather than the worker's original stderr.
             sys.modules.pop(module_path, None)
             module = importlib.import_module(module_path)
+            print(f"Starting module main(): {module_path}")
 
             # Protect sys.argv from concurrent task corruption.
             with _argv_lock:
@@ -478,6 +533,9 @@ def run_script(
     finally:
         sys.stdout = old_stdout
         sys.stderr = old_stderr
+        root_logger.removeHandler(capture_handler)
+        root_logger.setLevel(old_root_level)
+        capture_handler.close()
         # Clean up temporary config YAML files written by ScriptRunnerService.
         for tmp in _temp_files:
             try:
@@ -528,9 +586,15 @@ def run_incidents(
         except Exception as exc:  # noqa: BLE001
             logger.warning("Redis publish failed for job %s: %s", job_id, exc)
 
+    try:
+        redis_client.ping()
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Redis ping failed for job %s: %s", job_id, exc)
+
     _sync_update_status(job_id, "running")
     _publish({"type": "status", "data": "running"})
     _publish({"type": "progress", "data": 5})
+    _publish({"type": "log", "data": f"Starting incident run ({len(incident_configs)} incidents)"})
     heartbeat_stop = threading.Event()
     heartbeat_thread = _start_heartbeat(
         lambda line: _publish({"type": "log", "data": line}),
@@ -561,18 +625,31 @@ def run_incidents(
 
         try:
             script_buffer = io.StringIO()
+            root_logger = logging.getLogger()
+            capture_handler = logging.StreamHandler(script_buffer)
+            capture_handler.setLevel(logging.NOTSET)
+            capture_handler.setFormatter(
+                logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s")
+            )
+            capture_handler.addFilter(_ThreadOnlyLogFilter(threading.get_ident()))
+            old_root_level = root_logger.level
 
             with _argv_lock:
                 old_argv = sys.argv
                 sys.argv = [module_path] + argv
             try:
+                root_logger.addHandler(capture_handler)
+                if old_root_level > logging.INFO:
+                    root_logger.setLevel(logging.INFO)
                 with contextlib.redirect_stdout(script_buffer), \
                      contextlib.redirect_stderr(script_buffer):
+                    print(f"Loading module: {module_path}")
                     # Import inside the redirect so module-level logging
                     # handlers (StructuredLogger's StreamHandler) capture to
                     # script_buffer rather than the worker's original stderr.
                     sys.modules.pop(module_path, None)
                     module = importlib.import_module(module_path)
+                    print(f"Starting module main(): {module_path}")
                     module.main()
             except SystemExit as exc:
                 exit_code = exc.code if isinstance(exc.code, int) else 1
@@ -583,6 +660,9 @@ def run_incidents(
             finally:
                 with _argv_lock:
                     sys.argv = old_argv
+                root_logger.removeHandler(capture_handler)
+                root_logger.setLevel(old_root_level)
+                capture_handler.close()
 
             output_text = script_buffer.getvalue()
             for line in output_text.splitlines():

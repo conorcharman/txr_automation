@@ -89,7 +89,7 @@ if (-not $RedisOk -or -not $DbOk) {
 Write-Host "Launching processes..."
 
 Start-NativeWindow "API"    ($Base + @("uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload"))
-Start-NativeWindow "Worker" ($Base + @("celery -A api.tasks.celery_app worker --pool=solo --loglevel=info"))
+Start-NativeWindow "Worker" ($Base + @("celery -A api.tasks.celery_app worker --pool=threads --concurrency=4 --loglevel=info"))
 Start-NativeWindow "Beat"   ($Base + @("celery -A api.tasks.celery_app beat --loglevel=info --schedule data/celerybeat-schedule"))
 
 $webTmp = Join-Path $env:TEMP "txr_Web.ps1"

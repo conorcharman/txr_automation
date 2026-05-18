@@ -952,14 +952,21 @@ const ExtractGeneratorForm: React.FC = () => {
   });
 
   const onSubmit = (values: ExtractGenValues) => {
+    const outputBase =
+      resolvedPaths?.extracts
+      || values.sqlOutputDir?.replace(/[\\/](sql|dtf|csv)$/i, "")
+      || derivedDirs?.sql?.replace(/[\\/]sql$/i, "")
+      || "";
+
     mutation.mutate({
       scriptName: "sql_extract_generator",
       testingPeriod: values.testingPeriod,
       mode: "batch",
       batchConfig: {
-        inputDirectory: resolvedPaths?.extracts ?? "",
-        outputDirectory: values.sqlOutputDir ?? derivedDirs?.sql ?? "",
-        templateDirectory: "",
+        inputDirectory: resolvedPaths?.templates ?? "",
+        outputDirectory: outputBase,
+        templateDirectory: resolvedPaths?.templates ?? "",
+        incidentCodes: selectedIncidents.map((incident) => incident.incidentCode),
         logOutput: resolvedPaths?.logs || defaultLogsDir,
       },
       logLevel: values.logLevel,

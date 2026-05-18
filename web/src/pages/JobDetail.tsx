@@ -20,6 +20,9 @@ const STATUS_CLASSES: Record<JobStatus, string> = {
   cancelled: "bg-gray-200 text-gray-800",
 };
 
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL ?? (import.meta.env.DEV ? "http://127.0.0.1:8000" : "");
+
 function clampProgress(value: number): number {
   return Math.max(0, Math.min(100, Math.round(value)));
 }
@@ -32,6 +35,12 @@ function statusToProgress(status: JobStatus): number {
 }
 
 function buildWsUrl(jobId: string): string {
+  if (API_BASE_URL) {
+    const apiUrl = new URL(API_BASE_URL, window.location.origin);
+    const protocol = apiUrl.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${apiUrl.host}/api/ws/jobs/${jobId}/logs`;
+  }
+
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   return `${protocol}//${window.location.host}/api/ws/jobs/${jobId}/logs`;
 }

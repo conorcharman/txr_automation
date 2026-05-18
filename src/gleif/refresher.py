@@ -84,13 +84,15 @@ class RefreshResult:
         self.files_skipped: int = 0
         self.files_failed: int = 0
         self.total_records: int = 0
+        self.critical_failure: bool = False
 
     def __repr__(self) -> str:
         return (
             f"RefreshResult(processed={self.files_processed}, "
             f"skipped={self.files_skipped}, "
             f"failed={self.files_failed}, "
-            f"records={self.total_records})"
+            f"records={self.total_records}, "
+            f"critical_failure={self.critical_failure})"
         )
 
 
@@ -114,6 +116,7 @@ class GleifRefresher:
         api_client: Optional[GleifApiClient] = None,
         staging_dir: Optional[Path] = None,
         progress_callback: Optional[Callable[[str, int], None]] = None,
+        download_timeout: int = 300,
     ) -> None:
         self._cache = cache
         self._api_client = api_client or GleifApiClient()
@@ -121,6 +124,7 @@ class GleifRefresher:
         self._parser = GleifCsvParser()
         self._isin_parser = GleifIsinMapParser()
         self._progress_callback = progress_callback
+        self._download_timeout = download_timeout
 
     def _report_progress(self, phase: str, percent: int) -> None:
         """Report phase progress if a callback is registered."""
@@ -167,7 +171,7 @@ class GleifRefresher:
         file_name = zip_path.name
 
         with _staging_context(self._staging_dir) as staging_dir:
-            downloader = GleifDownloader(staging_dir)
+            downloader = GleifDownloader(staging_dir, timeout=self._download_timeout)
 
             if self._cache.is_file_processed(file_name):
                 logger.info("Skipping already-processed file: %s", file_name)
@@ -274,7 +278,7 @@ class GleifRefresher:
         self._cache.clear_full_refresh_sync_log()
 
         with _staging_context(self._staging_dir) as staging_dir:
-            downloader = GleifDownloader(staging_dir)
+            downloader = GleifDownloader(staging_dir, timeout=self._download_timeout)
 
             # --- Golden Copy ---
             logger.info(
@@ -297,6 +301,7 @@ class GleifRefresher:
                     status="ERROR",
                 )
                 result.files_failed += 1
+                result.critical_failure = True
             else:
                 total_records = 0
                 try:
@@ -338,6 +343,7 @@ class GleifRefresher:
                         status="ERROR",
                     )
                     result.files_failed += 1
+                    result.critical_failure = True
                 finally:
                     downloader.cleanup_file(gc_result)
 
@@ -458,6 +464,7 @@ class GleifRefresher:
                     status="ERROR",
                 )
                 result.files_failed += 1
+                result.critical_failure = True
             else:
                 total_records = 0
                 try:
@@ -491,6 +498,7 @@ class GleifRefresher:
                         status="ERROR",
                     )
                     result.files_failed += 1
+                    result.critical_failure = True
                 finally:
                     downloader.cleanup_file(delta_result)
 
@@ -515,12 +523,20 @@ class GleifRefresher:
         """
         count = 0
         batch: List[LeiRecord] = []
+        next_progress_log = 100_000
 
         def flush() -> None:
-            nonlocal count
+            nonlocal count, next_progress_log
             if batch:
                 self._cache.bulk_upsert(batch)
                 count += len(batch)
+                while count >= next_progress_log:
+                    logger.info(
+                        "GLEIF ingest progress: %s records processed from %s",
+                        f"{count:,}",
+                        csv_path.name,
+                    )
+                    next_progress_log += 100_000
                 batch.clear()
 
         for record in self._parser.parse(csv_path):
@@ -542,12 +558,20 @@ class GleifRefresher:
         """
         count = 0
         batch = []
+        next_progress_log = 100_000
 
         def flush() -> None:
-            nonlocal count
+            nonlocal count, next_progress_log
             if batch:
                 self._cache.bulk_upsert_isin_map(batch)
                 count += len(batch)
+                while count >= next_progress_log:
+                    logger.info(
+                        "GLEIF ISIN map ingest progress: %s pairs processed from %s",
+                        f"{count:,}",
+                        csv_path.name,
+                    )
+                    next_progress_log += 100_000
                 batch.clear()
 
         for pair in self._isin_parser.parse(csv_path):

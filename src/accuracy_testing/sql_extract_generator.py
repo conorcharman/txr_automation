@@ -448,6 +448,10 @@ class SQLExtractGenerator:
         # SQL files always go to /sql directory (for both 'sql' and 'both' formats)
         sql_dir = parent_dir / 'sql'
         dtf_dir = parent_dir / 'dtf'
+        csv_dir = parent_dir / 'csv'
+
+        # Ensure the CSV directory exists for downstream System i/DTF workflows.
+        csv_dir.mkdir(parents=True, exist_ok=True)
         
         # Create batches
         batches = self.create_batches(transaction_refs)

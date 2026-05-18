@@ -102,6 +102,20 @@ def _parse_args() -> argparse.Namespace:
         default="INFO",
         help="Logging verbosity (default: INFO).",
     )
+    parser.add_argument(
+        "--api-timeout",
+        type=int,
+        default=30,
+        metavar="SECONDS",
+        help="HTTP timeout for FIRDS index API requests (default: 30).",
+    )
+    parser.add_argument(
+        "--download-timeout",
+        type=int,
+        default=120,
+        metavar="SECONDS",
+        help="HTTP timeout for FIRDS ZIP downloads (default: 120).",
+    )
     return parser.parse_args()
 
 
@@ -175,9 +189,10 @@ def main() -> None:
 
     refresher = FirdsRefresher(
         cache=cache,
-        api_client=FirdsApiClient(),
+        api_client=FirdsApiClient(timeout=args.api_timeout),
         staging_dir=staging_dir,
         progress_callback=progress_callback,
+        download_timeout=args.download_timeout,
     )
 
     target = args.date or _most_recent_saturday()

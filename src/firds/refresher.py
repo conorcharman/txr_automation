@@ -115,12 +115,14 @@ class FirdsRefresher:
         api_client: Optional[FirdsApiClient] = None,
         staging_dir: Optional[Path] = None,
         progress_callback: Optional[Callable[[str, int], None]] = None,
+        download_timeout: int = 120,
     ) -> None:
         self._cache = cache
         self._api_client = api_client or FirdsApiClient()
         self._staging_dir = staging_dir
         self._parser = FirdsXmlParser()
         self._progress_callback = progress_callback
+        self._download_timeout = download_timeout
 
     def _report_progress(self, phase: str, percent: int) -> None:
         """Report phase progress if a callback is registered."""
@@ -159,7 +161,7 @@ class FirdsRefresher:
         self._report_progress("fulins", 0)
 
         with _staging_context(self._staging_dir) as staging_dir:
-            downloader = FirdsDownloader(staging_dir)
+            downloader = FirdsDownloader(staging_dir, timeout=self._download_timeout)
 
             # --- FULINS: full instrument reference data ---
             all_full_files = self._api_client.get_latest_full_files(target_date)
@@ -355,12 +357,20 @@ class FirdsRefresher:
         """
         count = 0
         batch: List[InstrumentRecord] = []
+        next_progress_log = 100_000
 
         def flush_batch() -> None:
-            nonlocal count
+            nonlocal count, next_progress_log
             if batch:
                 self._cache.bulk_upsert(batch)
                 count += len(batch)
+                while count >= next_progress_log:
+                    logger.info(
+                        "FIRDS ingest progress: %s records processed from %s",
+                        f"{count:,}",
+                        xml_path.name,
+                    )
+                    next_progress_log += 100_000
                 batch.clear()
 
         for record in self._parser.parse(xml_path):
