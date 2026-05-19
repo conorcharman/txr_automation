@@ -2170,6 +2170,8 @@ class IDValidationProcessor:
                     self.template_type_column, fieldnames, kind="type"
                 )
 
+                fallback_id_col, fallback_type_col = self._get_consolidated_template_fallback_columns(fieldnames)
+
                 if id_col != self.template_id_column and self.logger:
                     self.logger.info(
                         f"Column '{self.template_id_column}' not found; "
@@ -2181,11 +2183,27 @@ class IDValidationProcessor:
                         f"resolved to '{type_col}' via keyword match."
                     )
 
+                if self.logger and (fallback_id_col or fallback_type_col):
+                    self.logger.info(
+                        "Template lookup sources: "
+                        f"primary=({id_col}, {type_col}), "
+                        f"fallback=({fallback_id_col or '<none>'}, {fallback_type_col or '<none>'})"
+                    )
+
                 for row in reader:
                     txn_ref = row.get('Transaction Reference', '').strip()
                     if txn_ref:
                         expected_id = row.get(id_col, '').strip()
                         expected_type = row.get(type_col, '').strip()
+
+                        # Pre-INCIDENT validation columns are intentionally blank
+                        # before data push. Fall back to consolidated columns that
+                        # are appended after INCIDENT_CODE when needed.
+                        if not expected_id and fallback_id_col:
+                            expected_id = row.get(fallback_id_col, '').strip()
+                        if not expected_type and fallback_type_col:
+                            expected_type = row.get(fallback_type_col, '').strip()
+
                         # Store both ID and type for flexible formatting
                         self.template_data[txn_ref] = {
                             'id': expected_id,
@@ -2261,6 +2279,49 @@ class IDValidationProcessor:
 
         # No match found — return configured so the existing error path triggers
         return configured
+
+    def _get_consolidated_template_fallback_columns(
+        self,
+        fieldnames: list[str],
+    ) -> tuple[str, str]:
+        """Resolve consolidated-data fallback columns for template lookup.
+
+        Templates include original consolidated fields after INCIDENT_CODE.
+        Before data push, the left-side validation ID/type columns are blank by
+        design, so lookup should fall back to the consolidated columns.
+
+        Args:
+            fieldnames: Header columns in the template file.
+
+        Returns:
+            Tuple of ``(id_column, type_column)``. Empty strings indicate a
+            fallback column was not found.
+        """
+        if self.client_type == "seller":
+            id_candidates = ["Seller identification code"]
+            type_candidates = ["Type of seller identification code"]
+        else:
+            id_candidates = ["Buyer identification code"]
+            type_candidates = ["Type of buyer identification code"]
+
+        fallback_id = self._resolve_optional_template_column(fieldnames, id_candidates)
+        fallback_type = self._resolve_optional_template_column(fieldnames, type_candidates)
+        return fallback_id, fallback_type
+
+    @staticmethod
+    def _resolve_optional_template_column(
+        fieldnames: list[str],
+        candidates: list[str],
+    ) -> str:
+        """Resolve an optional template column by exact or case-insensitive name."""
+        field_by_lower = {name.lower(): name for name in fieldnames}
+        for candidate in candidates:
+            if candidate in fieldnames:
+                return candidate
+            matched = field_by_lower.get(candidate.lower())
+            if matched:
+                return matched
+        return ""
 
     def _get_tracker_status(self, person_code: str) -> str:
         """
@@ -2402,21 +2463,62 @@ class IDValidationProcessor:
         if template_entry:
             expected_id = template_entry.get('id', '')
             expected_type = template_entry.get('type', '')
+
+            correction_field_tokens = {
+                token.strip().upper()
+                for token in (record.correction_fields or '').split(':')
+                if token.strip()
+            }
+
+            # Default to ID + IDT for backwards compatibility when no
+            # correction field directive is present.
+            if not correction_field_tokens:
+                correction_field_tokens = {"ID", "IDT"}
+
+            wants_id = "ID" in correction_field_tokens
+            wants_type = "IDT" in correction_field_tokens
+
+            correction_id = ""
+            correction_type = ""
+            if record.correction_output:
+                if ":" in record.correction_output:
+                    correction_id, correction_type = record.correction_output.split(":", 1)
+                else:
+                    correction_id = record.correction_output
+
+            if wants_id and wants_type:
+                correction_value_for_compare = record.correction_output.strip()
+            elif wants_id:
+                correction_value_for_compare = correction_id.strip()
+            elif wants_type:
+                correction_value_for_compare = correction_type.strip()
+            else:
+                correction_value_for_compare = ""
             
             # DIAGNOSTIC: Log what we got from template
             if self.logger and record.row_index in [2, 4, 7]:
                 self.logger.info(f"[TEMPLATE] Row {record.row_index} ({record.transaction_ref}): Raw template data - id='{expected_id}', type='{expected_type}'")
             
-            # Build template lookup result (Formula2)
-            if expected_id and expected_type:
-                record.kaizen_error = f"{expected_id}:{expected_type}"
-            elif expected_id:
-                record.kaizen_error = f"{expected_id}:"
-            elif expected_type:
-                record.kaizen_error = f":{expected_type}"
+            # Build template lookup result (Formula2) based on Correction Field.
+            if wants_id and wants_type:
+                if expected_id and expected_type:
+                    record.kaizen_error = f"{expected_id}:{expected_type}"
+                elif expected_id:
+                    record.kaizen_error = f"{expected_id}:"
+                elif expected_type:
+                    record.kaizen_error = f":{expected_type}"
+            elif wants_id:
+                record.kaizen_error = expected_id
+            elif wants_type:
+                record.kaizen_error = expected_type
             
             if self.logger and record.row_index in [2, 4, 7]:
-                self.logger.info(f"[TEMPLATE] Row {record.row_index} ({record.transaction_ref}): Template found - kaizen_error='{record.kaizen_error}', correction_output='{record.correction_output}'")
+                self.logger.info(
+                    f"[TEMPLATE] Row {record.row_index} ({record.transaction_ref}): "
+                    f"Template found - kaizen_error='{record.kaizen_error}', "
+                    f"correction_output='{record.correction_output}', "
+                    f"correction_fields='{record.correction_fields}'"
+                )
         
         # Compare correction output with template lookup (Formula3)
         if record.correction_output:
@@ -2424,7 +2526,7 @@ class IDValidationProcessor:
                 if self.logger and record.row_index in [2, 4, 7]:
                     self.logger.info(f"[TEMPLATE] Row {record.row_index} ({record.transaction_ref}): correction='{record.correction_output}' vs template='{record.kaizen_error}'")
                 
-                if record.correction_output == record.kaizen_error:
+                if correction_value_for_compare == record.kaizen_error:
                     record.match = "TRUE"
                     record.error = "N"
                 else:

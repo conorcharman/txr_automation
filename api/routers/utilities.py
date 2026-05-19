@@ -17,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
 from api.schemas.jobs import JobResponse
-from api.schemas.utilities import XlsxConverterRequest, XmlConverterRequest
+from api.schemas.utilities import SetupDirectoriesRequest, XlsxConverterRequest, XmlConverterRequest
 from api.services.job_service import job_service
 from api.services.script_runner import script_runner_service
 from api.tasks.script_tasks import run_script
@@ -28,6 +28,7 @@ router = APIRouter(tags=["utilities"])
 
 _UTILITY_SCRIPTS: list[str] = sorted(
     [
+        "setup_directories",
         "xlsx_csv_converter",
         "xml_csv_converter",
     ]
@@ -92,5 +93,34 @@ async def xml_convert(
 
     run_script.delay(str(job.id), module_path, argv, config_snapshot)
     logger.info("Dispatched XML converter task for job %s.", job.id)
+
+    return JobResponse.from_orm_job(job)
+
+
+@router.post("/utilities/setup-directories", response_model=JobResponse)
+async def setup_directories(
+    body: SetupDirectoriesRequest,
+    db: AsyncSession = Depends(get_db),
+) -> JobResponse:
+    """Create the standard FY/Q directory hierarchy as a background Celery job.
+
+    Creates all ``accuracy_testing/`` and ``replay/`` subdirectories under
+    ``{data_dir}/{fiscal_year}/{quarter}/``.  The operation is idempotent —
+    existing directories are skipped without error.
+
+    Args:
+        body: Validated ``SetupDirectoriesRequest`` from the request body.
+        db: Async database session injected by FastAPI.
+
+    Returns:
+        A ``JobResponse`` for the newly created pending job.
+    """
+    module_path, argv, config_snapshot = script_runner_service.build_utilities_argv(
+        body, "setup_directories"
+    )
+    job = await job_service.create_job(db, "setup_directories", config_snapshot)
+
+    run_script.delay(str(job.id), module_path, argv, config_snapshot)
+    logger.info("Dispatched setup-directories task for job %s.", job.id)
 
     return JobResponse.from_orm_job(job)

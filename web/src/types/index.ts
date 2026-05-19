@@ -227,7 +227,8 @@ export interface LastRunInfo {
 
 // Replay
 export interface ReplayPhase2Request {
-  inputFile: string;
+  kaizenInput: string;
+  incidentFiles: string;
   outputFile: string;
   fiscalYear: string;
   quarter: string;
@@ -236,8 +237,9 @@ export interface ReplayPhase2Request {
 }
 
 export interface ReplayPhase2FinalRequest {
-  replayOutputFile: string;
+  replayInputFile: string;
   unavistaFiles: string;
+  incidentFiles: string;
   outputFile: string;
   fiscalYear: string;
   quarter: string;
@@ -247,7 +249,7 @@ export interface ReplayPhase2FinalRequest {
 
 export interface ReplayPhase3Request {
   inputFile: string;
-  feedbackFile: string;
+  incidentFiles: string;
   outputFile: string;
   fiscalYear: string;
   quarter: string;
@@ -257,6 +259,8 @@ export interface ReplayPhase3Request {
 
 export interface ReplayPhase3FinalRequest {
   inputFile: string;
+  unavistaFiles: string;
+  incidentFiles: string;
   outputFile: string;
   fiscalYear: string;
   quarter: string;
@@ -471,6 +475,12 @@ export interface XmlConverterRequest {
   inputFile?: string;
   parentDir?: string;
   outputDir?: string;
+  logLevel?: string;
+}
+
+export interface SetupDirectoriesRequest {
+  fiscalYear: string;
+  quarter: string;
   logLevel?: string;
 }
 

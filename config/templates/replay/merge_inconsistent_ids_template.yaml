@@ -9,9 +9,10 @@
 #   merge-inconsistent-summaries --input-dir path/to/phase_iii/output
 
 paths:
-  # Directory containing the Phase III Inconsistent IDs and Names Summary CSV files.
-  # Output .xlsx files are written to this same directory.
-  input_dir: "C:/path/to/phase_iii/output"
+  # Phase 3 Processor output directory (Feedback stage).
+  # Contains the Inconsistent IDs and Names Summary CSV files produced by
+  # phase_3_processor.py. Merged .xlsx files are written to this same directory.
+  input_dir: "/path/to/data/FY26/Q1/replay/phase_3/feedback"
 
 files:
   # Glob patterns used to locate the two summary CSV files within input_dir.

@@ -630,7 +630,7 @@ class Phase2Processor:
         # Ensure directories exist
         os.makedirs(self.path_config.replay_output, exist_ok=True)
         os.makedirs(self.path_config.log_output, exist_ok=True)
-        
+
         # Preload and index all incident files
         self.preload_and_index_incident_files()
         

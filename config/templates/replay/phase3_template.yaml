@@ -3,17 +3,20 @@
 # Copy this file and modify paths and patterns as needed
 
 paths:
-  # Input replay files (CSV format)
-  replay_input: 'C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii\FY25\Q4\csv'
-  
-  # Incident code reference files (CSV format)
-  incident_files: 'C:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis'
-  
-  # Output directory for processed replay files
-  replay_output: 'C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii\FY25\Q4\output'
-  
-  # Log output directory
-  log_output: 'C:\Users\ccharm\Desktop\Data\txr_replay_automation\phase_iii\FY25\Q4\output\logs'
+  # Input: analyst-prepared Phase III Inconsistent IDs/Names Summary CSVs.
+  # Place files matching the replay_patterns below into this directory.
+  replay_input: "/path/to/data/FY26/Q1/replay/shared/extracts"
+
+  # Incident code reference files — point to the accuracy_testing templates
+  # directory, which is the single source of truth for incident template CSVs
+  # (e.g. "FY26 Q1 7_66.csv"). No separate replay/templates folder is needed.
+  incident_files: "/path/to/data/FY26/Q1/accuracy_testing/templates"
+
+  # Output directory for Phase III processed replay files (Feedback stage).
+  replay_output: "/path/to/data/FY26/Q1/replay/phase_3/feedback"
+
+  # Log output directory.
+  log_output: "/path/to/data/FY26/Q1/replay/phase_3/logs"
 
 files:
   # REQUIRED: Replay file patterns (glob syntax supported)

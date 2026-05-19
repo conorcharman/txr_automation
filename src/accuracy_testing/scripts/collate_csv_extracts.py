@@ -117,17 +117,39 @@ class CSVExtractCollator:
             fiscal_year: Fiscal year for filename pattern (e.g., 'FY26')
             quarter: Quarter for filename pattern (e.g., 'Q1')
         """
-        self.input_dir = Path(input_dir)
-        self.output_dir = Path(output_dir) if output_dir else self.input_dir
+        input_path = Path(input_dir)
+        output_path = Path(output_dir) if output_dir else input_path
+        
+        if not input_path.exists():
+            raise ValueError(f"Input directory does not exist: {input_path}")
+        
+        # Check if a 'csv' subdirectory exists
+        csv_subdir = input_path / "csv"
+        has_csv_subdir = csv_subdir.exists() and csv_subdir.is_dir()
+        
+        # Resolve input directory
+        if has_csv_subdir:
+            self.input_dir = csv_subdir
+            if logger:
+                logger.debug(f"Using CSV subdirectory for input: {self.input_dir}")
+        else:
+            self.input_dir = input_path
+        
+        # Resolve output directory
+        # If output and input point to the same directory and we found a csv subdirectory, use it for output too
+        if output_path == input_path and has_csv_subdir:
+            self.output_dir = csv_subdir
+            if logger:
+                logger.debug(f"Using CSV subdirectory for output: {self.output_dir}")
+        else:
+            self.output_dir = output_path
+        
         self.logger = logger
         self.dry_run = dry_run
         self.force = force
         self.delete_originals = delete_originals
         self.fiscal_year = fiscal_year
         self.quarter = quarter
-        
-        if not self.input_dir.exists():
-            raise ValueError(f"Input directory does not exist: {self.input_dir}")
     
     def _build_file_pattern(self, incident_code: str) -> str:
         """
@@ -612,6 +634,12 @@ def main() -> int:
     except ValueError as e:
         print(f"Error: {e}")
         return 1
+    
+    # Log the actual directories being used (after collator resolves csv subdirectory)
+    if str(collator.input_dir) != input_dir:
+        logger.info(f"Resolved input directory:  {collator.input_dir}")
+    if str(collator.output_dir) != output_dir:
+        logger.info(f"Resolved output directory: {collator.output_dir}")
     
     # Single incident with specific output file
     if args.incident and args.output:

@@ -71,6 +71,44 @@ from core import (
 )
 from core.data import ClientErrorColumns
 
+try:
+    import openpyxl
+    _OPENPYXL_AVAILABLE = True
+except ImportError:
+    _OPENPYXL_AVAILABLE = False
+
+
+def _read_rows(file_path: str) -> List[List[str]]:
+    """Read a CSV or XLSX file and return all rows as lists of strings.
+
+    Args:
+        file_path: Absolute path to the file. Files ending ``.xlsx`` are read
+            with ``openpyxl``; all other files are treated as CSV.
+
+    Returns:
+        List of rows (header as row 0, data rows following).
+
+    Raises:
+        ImportError: If the file is ``.xlsx`` but ``openpyxl`` is not installed.
+    """
+    if str(file_path).lower().endswith('.xlsx'):
+        if not _OPENPYXL_AVAILABLE:
+            raise ImportError(
+                "openpyxl is required to read .xlsx files: pip install openpyxl"
+            )
+        wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+        ws = wb.active
+        rows = [
+            [str(cell) if cell is not None else "" for cell in row]
+            for row in ws.iter_rows(values_only=True)
+        ]
+        wb.close()
+        return rows
+    else:
+        f, _ = safe_open_csv(Path(file_path), 'r', newline='')
+        with f:
+            return list(csv.reader(f))
+
 
 class IncidentColumnMapper:
     """Maps column names to indices in incident template files."""
@@ -641,11 +679,8 @@ class Phase3Processor:
             replay_filepath = os.path.join(self.path_config.replay_input, replay_filename)
             if os.path.exists(replay_filepath):
                 try:
-                    f, encoding = safe_open_csv(Path(replay_filepath), 'r', newline='')
-                    with f:
-                        reader = csv.reader(f)
-                        rows = list(reader)
-                    
+                    rows = _read_rows(replay_filepath)
+
                     for row in rows[1:]:  # Skip header
                         if len(row) > 4 and row[4].strip():
                             codes = [code.strip() for code in row[4].split('|') if code.strip()]
@@ -960,11 +995,8 @@ class Phase3Processor:
         
         try:
             # Read file
-            f, encoding = safe_open_csv(Path(input_filepath), 'r', newline='')
-            with f:
-                reader = csv.reader(f)
-                rows = list(reader)
-            
+            rows = _read_rows(input_filepath)
+
             if len(rows) < 2:
                 self.logger.warning(f"No data rows in {filename}")
                 return

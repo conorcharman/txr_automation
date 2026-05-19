@@ -7,25 +7,26 @@
 # Copy this template to config/local/replay/phase2_final.yaml and adjust paths.
 
 paths:
-  # Phase 2 PROCESSOR OUTPUT directory (the Feedback stage output — source of truth).
+  # Phase 2 Processor output directory (Feedback stage — source of truth).
   # These are the processed replay files written by phase_2_processor.py.
-  replay_output: "/path/to/data/output/phase_ii"
+  replay_output: "/path/to/data/FY26/Q1/replay/phase_2/feedback"
 
   # UnaVista reference files (CSV only — convert XLSX upstream before running).
-  unavista_files: "/path/to/data/sample/unavista"
+  unavista_files: "/path/to/data/FY26/Q1/replay/shared/unavista"
 
   # Output directory for the annotated UnaVista CSV produced by Final Lookup.
   # Defaults to replay_output if not specified.
-  output: "/path/to/data/output/phase_ii_final_lookup"
+  output: "/path/to/data/FY26/Q1/replay/phase_2/final_lookup"
 
-  # Log output directory
-  log_output: "/path/to/data/output/logs"
+  # Log output directory.
+  log_output: "/path/to/data/FY26/Q1/replay/phase_2/logs"
 
   # OPTIONAL: Incident code reference files for cross-reference.
   # If omitted, cross-reference annotations are skipped; testing still runs.
   # Cross-reference compares the Phase 2 output correction (source of truth)
   # against the source incident file and flags any discrepancy in test_result.
-  incident_files: "/path/to/data/incident_code_files"
+  # Uses the accuracy_testing templates directory — same files as accuracy testing.
+  incident_files: "/path/to/data/FY26/Q1/accuracy_testing/templates"
 
 files:
   # Glob patterns for Phase 2 output replay files in replay_output directory.

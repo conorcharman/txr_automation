@@ -360,7 +360,7 @@ class AccuracyTemplateGenerator:
         txn_ref_col_idx = None
         if 'Transaction reference number' in self.consolidated_header:
             txn_ref_col_idx = self.consolidated_header.index('Transaction reference number')
-        
+
         data_rows = []
         
         for record in records:
@@ -423,32 +423,64 @@ class AccuracyTemplateGenerator:
         
         return output_path
     
+    def _create_pipeline_directories(self, base_dir: Path) -> None:
+        """
+        Create all directories required by downstream pipeline scripts.
+
+        Args:
+            base_dir: Base accuracy_testing directory (parent of templates/)
+        """
+        pipeline_dirs = [
+            base_dir / "output",
+            base_dir / "logs",
+            base_dir / "extracts" / "csv",
+            base_dir / "extracts" / "dtf",
+            base_dir / "extracts" / "sql",
+        ]
+        created = []
+        for directory in pipeline_dirs:
+            if not directory.exists():
+                directory.mkdir(parents=True, exist_ok=True)
+                created.append(directory.relative_to(base_dir))
+        if created:
+            print(f"  Created pipeline directories: {', '.join(str(d) for d in created)}")
+
     def generate_templates(self, output_dir: str, fiscal_year: str = None, quarter: str = None) -> Dict[str, Path]:
         """
         Generate all template files.
-        
+
+        Also creates all directories required by downstream pipeline scripts
+        (output/, logs/, extracts/csv/, extracts/dtf/, extracts/sql/) as
+        siblings of the templates output directory.
+
         Args:
             output_dir: Output directory for template files
             fiscal_year: Fiscal year (e.g., "FY25")
             quarter: Quarter (e.g., "Q3")
-            
+
         Returns:
             Dictionary mapping incident codes to template file paths
         """
         output_path = Path(output_dir)
-        
+
+        # Always create the templates directory, even when there are no records
+        output_path.mkdir(parents=True, exist_ok=True)
+
+        # Create all sibling directories required by downstream scripts
+        self._create_pipeline_directories(output_path.parent)
+
         fy_q_label = f"{fiscal_year} {quarter}" if (fiscal_year and quarter) else "templates"
         print(f"\nGenerating {fy_q_label} templates in {output_path}...")
-        
+
         generated_files = {}
-        
+
         # Sort incident codes for consistent output
         for incident_code in sorted(self.incident_records.keys()):
             template_path = self.generate_template(incident_code, output_path, fiscal_year, quarter)
             generated_files[incident_code] = template_path
-        
+
         print(f"\n✓ Generated {len(generated_files)} template files")
-        
+
         return generated_files
     
     def get_summary(self) -> Dict[str, int]:

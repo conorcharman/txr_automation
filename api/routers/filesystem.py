@@ -223,6 +223,83 @@ async def read_file(
 _STAGE_DIRS = ("kaizen", "extracts", "templates", "output", "logs")
 
 
+def _default_stage_path(root: Path, module: str | None, stage: str) -> Path:
+    """Return the default path for a stage under a resolved root.
+
+    Each module can override the default flat ``root/stage`` layout:
+
+    - ``accuracy_testing``: extract CSVs live under ``extracts/csv``.
+    - Replay workflow modules each have a dedicated stage map:
+
+      ========================  =========  ================================
+      module                    stage      resolved sub-path
+      ========================  =========  ================================
+      replay_phase2_feedback    kaizen     phase_2/feedback/kaizen
+      replay_phase2_feedback    output     phase_2/feedback/output
+      replay_phase2_final       kaizen     phase_2/feedback/output
+      replay_phase2_final       extracts   phase_2/final_lookup/unavista
+      replay_phase2_final       output     phase_2/final_lookup/output
+      replay_phase3_feedback    kaizen     phase_3/feedback/kaizen
+      replay_phase3_feedback    output     phase_3/feedback/output
+      replay_phase3_final       kaizen     phase_3/feedback/output
+      replay_phase3_final       extracts   phase_3/final_lookup/unavista
+      replay_phase3_final       output     phase_3/final_lookup/output
+      replay_phase3_merge       kaizen     phase_3/final_lookup/output
+      replay_phase3_merge       output     phase_3/merged
+      ========================  =========  ================================
+
+      All replay modules share a ``logs`` stage mapped to their respective
+      ``phase_N/logs`` sub-path.
+
+    Args:
+        root: Base root directory for the requested FY/Q/module.
+        module: Optional module name from the request.
+        stage: Stage key (``kaizen``, ``extracts``, ``templates``, ``output``,
+            or ``logs``).
+
+    Returns:
+        The default filesystem path for the requested stage.
+    """
+    if module == "accuracy_testing" and stage == "extracts":
+        return root / "extracts" / "csv"
+
+    _REPLAY_MODULE_STAGE_MAPS: dict[str, dict[str, str]] = {
+        "replay_phase2_feedback": {
+            "kaizen": "phase_2/feedback/kaizen",
+            "output": "phase_2/feedback/output",
+            "logs":   "phase_2/logs",
+        },
+        "replay_phase2_final": {
+            "kaizen":   "phase_2/feedback/output",
+            "extracts": "phase_2/final_lookup/unavista",
+            "output":   "phase_2/final_lookup/output",
+            "logs":     "phase_2/logs",
+        },
+        "replay_phase3_feedback": {
+            "kaizen": "phase_3/feedback/kaizen",
+            "output": "phase_3/feedback/output",
+            "logs":   "phase_3/logs",
+        },
+        "replay_phase3_final": {
+            "kaizen":   "phase_3/feedback/output",
+            "extracts": "phase_3/final_lookup/unavista",
+            "output":   "phase_3/final_lookup/output",
+            "logs":     "phase_3/logs",
+        },
+        "replay_phase3_merge": {
+            "kaizen": "phase_3/final_lookup/output",
+            "output": "phase_3/merged",
+            "logs":   "phase_3/logs",
+        },
+    }
+
+    if module in _REPLAY_MODULE_STAGE_MAPS:
+        stage_map = _REPLAY_MODULE_STAGE_MAPS[module]
+        return root / Path(stage_map.get(stage, stage))
+
+    return root / stage
+
+
 @router.post("/resolve-paths", response_model=ResolvedPaths)
 async def resolve_paths(body: ResolvePathsRequest) -> ResolvedPaths:
     """Derive standard directory paths from a fiscal year and quarter.
@@ -286,7 +363,7 @@ async def resolve_paths(body: ResolvePathsRequest) -> ResolvedPaths:
                 )
             paths[stage] = str(resolved_override)
         else:
-            paths[stage] = str(root / stage)
+            paths[stage] = str(_default_stage_path(root, module, stage))
 
     # Create all directories (including the root).
     for dir_path in paths.values():

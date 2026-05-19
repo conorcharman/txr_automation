@@ -53,3 +53,17 @@ class XmlConverterRequest(_CamelModel):
     input_file: str
     output_file: str
     log_level: str = "INFO"
+
+
+class SetupDirectoriesRequest(_CamelModel):
+    """Request body for creating the standard FY/Q directory hierarchy.
+
+    Attributes:
+        fiscal_year: Fiscal year identifier, e.g. ``"FY26"``.
+        quarter: Quarter identifier, e.g. ``"Q1"``.
+        log_level: Logging verbosity (default: ``"INFO"``).
+    """
+
+    fiscal_year: str
+    quarter: str
+    log_level: str = "INFO"

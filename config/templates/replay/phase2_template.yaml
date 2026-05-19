@@ -3,17 +3,28 @@
 # Copy this file and modify paths and patterns as needed
 
 paths:
-  # Input replay files (CSV format)
-  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_ii"
-  
-  # Incident code reference files (CSV format)
-  incident_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/incident_code_files"
-  
-  # Output directory for processed replay files
-  replay_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_ii"
-  
-  # Log output directory
-  log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
+  # Input replay files (CSV or xlsx format).
+  # Place original extract files here for Phase II processing.
+  replay_input: "/path/to/data/FY26/Q1/replay/shared/extracts"
+
+  # Incident code reference files — point to the accuracy_testing templates
+  # directory, which is the single source of truth for incident template CSVs
+  # (e.g. "FY26 Q1 7_39.csv"). No separate replay/templates folder is needed.
+  incident_files: "/path/to/data/FY26/Q1/accuracy_testing/templates"
+
+  # Output directory for Phase II processed replay files (Feedback stage).
+  replay_output: "/path/to/data/FY26/Q1/replay/phase_2/feedback"
+
+  # Log output directory.
+  log_output: "/path/to/data/FY26/Q1/replay/phase_2/logs"
+
+# Optional: extra directories to pre-create at startup beyond the standard set.
+# The processor automatically creates the full pipeline tree
+# (phase_2/final_lookup, phase_3/feedback, phase_3/final_lookup,
+#  phase_3/merged, phase_3/logs, shared/extracts, shared/unavista)
+# derived from the replay_output path above.
+# Only add entries here if you need additional non-standard directories.
+ensure_dirs: []
 
 files:
   # REQUIRED: Replay file patterns (glob syntax supported)

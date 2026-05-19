@@ -112,7 +112,7 @@ services:
       dockerfile: Dockerfile.web
     restart: unless-stopped
     ports:
-      - "3000:80"
+      - "5173:80"
     depends_on:
       - api
     networks:

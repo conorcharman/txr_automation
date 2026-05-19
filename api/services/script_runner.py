@@ -48,7 +48,7 @@ from api.schemas.replay import (
     ReplayPhase3FinalRequest,
     ReplayPhase3Request,
 )
-from api.schemas.utilities import XlsxConverterRequest, XmlConverterRequest
+from api.schemas.utilities import SetupDirectoriesRequest, XlsxConverterRequest, XmlConverterRequest
 
 logger = logging.getLogger(__name__)
 
@@ -95,6 +95,7 @@ _SCRIPT_MODULES: dict[str, str] = {
     # Utilities
     "xlsx_csv_converter":                "src.utils.xlsx_csv_converter",
     "xml_csv_converter":                 "src.utils.xml_csv_converter",
+    "setup_directories":                 "src.utils.setup_directories",
 }
 
 #: Script names accepted by the ``/api/accuracy/run`` endpoint.
@@ -560,14 +561,15 @@ class ScriptRunnerService:
         if isinstance(req, ReplayPhase2FinalRequest):
             config = {
                 "paths": {
-                    "replay_output": req.replay_output_file,
+                    "replay_output": req.replay_input_file,
                     "unavista_files": req.unavista_files,
+                    "incident_files": req.incident_files,
                     "output": req.output_file,
                     "log_output": req.log_output,
                 },
                 "files": {
                     "replay_patterns": ["*.csv"],
-                    "unavista_pattern": "UnaVista_MiFIR_Manual_Corrections_*.csv",
+                    "unavista_pattern": "UnaVista_MiFIR_Manual_Corrections_*.*",
                     "incident_pattern": f"{req.fiscal_year} {req.quarter} *.csv",
                 },
                 "processor": {
@@ -578,8 +580,8 @@ class ScriptRunnerService:
         elif isinstance(req, ReplayPhase2Request):
             config = {
                 "paths": {
-                    "replay_input": req.input_file,
-                    "incident_files": req.input_file,
+                    "replay_input": req.kaizen_input,
+                    "incident_files": req.incident_files,
                     "replay_output": req.output_file,
                     "log_output": req.log_output,
                 },
@@ -606,7 +608,7 @@ class ScriptRunnerService:
             config = {
                 "paths": {
                     "replay_input": req.input_file,
-                    "incident_files": req.feedback_file,
+                    "incident_files": req.incident_files,
                     "replay_output": req.output_file,
                     "log_output": req.log_output,
                 },
@@ -643,12 +645,17 @@ class ScriptRunnerService:
         elif isinstance(req, ReplayPhase3FinalRequest):
             config = {
                 "paths": {
-                    "replay_input": req.input_file,                    "incident_files": req.input_file,                    "replay_output": req.output_file,
+                    "replay_input": req.input_file,
+                    "unavista_files": req.unavista_files,
+                    "incident_files": req.incident_files,
+                    "replay_output": req.output_file,
                     "log_output": req.log_output,
                 },
                 "files": {
-                    "replay_ids_pattern": "Replay_*_Inconsistent_IDs_Summary_*.csv",
-                    "replay_names_pattern": "Replay_*_Inconsistent_Names_Summary_*.csv",
+                    "replay_ids_pattern": "Replay_*_Inconsistent_IDs_Summary_FINAL.*",
+                    "replay_names_pattern": "Replay_*_Inconsistent_Names_Summary_FINAL.*",
+                    "unavista_pattern": "UnaVista_MiFIR_Manual_Corrections_*.*",
+                    "incident_pattern": f"{req.fiscal_year} {req.quarter} *.csv",
                 },
                 "processor": {
                     "batch_size": 100,
@@ -916,7 +923,7 @@ class ScriptRunnerService:
 
     def build_utilities_argv(
         self,
-        req: Union[XlsxConverterRequest, XmlConverterRequest],
+        req: Union[XlsxConverterRequest, XmlConverterRequest, SetupDirectoriesRequest],
         script_name: str,
     ) -> tuple[str, list[str], dict]:
         """Build argv for a file conversion utility script.
@@ -960,6 +967,19 @@ class ScriptRunnerService:
                 argv.append("--dry-run")
             if req.force:
                 argv.append("--force")
+
+        elif isinstance(req, SetupDirectoriesRequest):
+            data_dir = str(Path(get_settings().data_dir))
+            config = {
+                "setup": {
+                    "fiscal_year": req.fiscal_year,
+                    "quarter": req.quarter,
+                    "data_dir": data_dir,
+                },
+                "processor": {"log_level": req.log_level},
+            }
+            tmp_path = _write_temp_yaml(config)
+            argv = ["--config", tmp_path, "--log-level", req.log_level]
 
         else:  # XmlConverterRequest
             config = {

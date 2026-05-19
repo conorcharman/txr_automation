@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { PathPickerInput } from "@/components/PathPickerInput";
 import LastRunBadge from "@/components/LastRunBadge";
 import Field from "@/components/Field";
-import { xlsxConvert, xmlConvert } from "@/api/utilities";
+import { xlsxConvert, xmlConvert, setupDirectories } from "@/api/utilities";
 import { cn } from "@/lib/utils";
 
 // ---------------------------------------------------------------------------
@@ -19,11 +19,12 @@ import { cn } from "@/lib/utils";
 
 const LOG_LEVELS = ["DEBUG", "INFO", "WARNING", "ERROR"] as const;
 
-type UtilSection = "xlsx" | "xml";
+type UtilSection = "xlsx" | "xml" | "setup_dirs";
 
 const SECTIONS: Array<{ key: UtilSection; label: string }> = [
   { key: "xlsx", label: "XLSX Converter" },
   { key: "xml", label: "XML Converter" },
+  { key: "setup_dirs", label: "Setup Directories" },
 ];
 
 // ---------------------------------------------------------------------------
@@ -397,12 +398,115 @@ const XmlForm: React.FC = () => {
 };
 
 // ---------------------------------------------------------------------------
+// Setup Directories Form
+// ---------------------------------------------------------------------------
+
+const QUARTERS = ["Q1", "Q2", "Q3", "Q4"] as const;
+
+const setupDirSchema = z.object({
+  fiscalYear: z.string().min(1, "Required"),
+  quarter: z.enum(QUARTERS),
+  logLevel: z.string(),
+});
+
+type SetupDirFormValues = z.infer<typeof setupDirSchema>;
+
+function currentFY(): string {
+  return `FY${String(new Date().getFullYear()).slice(-2)}`;
+}
+
+const SetupDirsForm: React.FC = () => {
+  const navigate = useNavigate();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<SetupDirFormValues>({
+    resolver: zodResolver(setupDirSchema),
+    defaultValues: {
+      fiscalYear: currentFY(),
+      quarter: "Q1",
+      logLevel: "INFO",
+    },
+  });
+
+  const mutation = useMutation({
+    mutationFn: setupDirectories,
+    onSuccess: (job) => navigate(`/jobs/${job.id}`),
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Failed to start job");
+    },
+  });
+
+  const onSubmit = (values: SetupDirFormValues) => {
+    mutation.mutate({
+      fiscalYear: values.fiscalYear,
+      quarter: values.quarter,
+      logLevel: values.logLevel,
+    });
+  };
+
+  const isPending = mutation.isPending;
+
+  return (
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
+      <p className="text-sm text-muted-foreground">
+        Create the standard directory structure for both accuracy testing and replay
+        for a given fiscal year and quarter. The operation is idempotent — existing
+        directories are preserved.
+      </p>
+
+      <Field label="Fiscal Year" error={errors.fiscalYear?.message}>
+        <input
+          {...register("fiscalYear")}
+          className={inputCls}
+          placeholder="FY26"
+          disabled={isPending}
+        />
+      </Field>
+
+      <Field label="Quarter" error={errors.quarter?.message}>
+        <select {...register("quarter")} className={selectCls} disabled={isPending}>
+          {QUARTERS.map((q) => (
+            <option key={q} value={q}>
+              {q}
+            </option>
+          ))}
+        </select>
+      </Field>
+
+      <Field label="Log Level" error={errors.logLevel?.message}>
+        <select {...register("logLevel")} className={selectCls} disabled={isPending}>
+          {LOG_LEVELS.map((l) => (
+            <option key={l} value={l}>
+              {l}
+            </option>
+          ))}
+        </select>
+      </Field>
+
+      <Button type="submit" disabled={isPending} className="w-full">
+        {isPending ? "Running\u2026" : "Create Directories"}
+      </Button>
+
+      {mutation.isError && (
+        <p className="text-sm text-destructive">
+          {mutation.error instanceof Error ? mutation.error.message : "An error occurred"}
+        </p>
+      )}
+    </form>
+  );
+};
+
+// ---------------------------------------------------------------------------
 // Main Utilities page
 // ---------------------------------------------------------------------------
 
 const FORM_COMPONENTS: Record<UtilSection, React.FC> = {
   xlsx: XlsxForm,
   xml: XmlForm,
+  setup_dirs: SetupDirsForm,
 };
 
 const Utilities: React.FC = () => {
@@ -440,7 +544,13 @@ const Utilities: React.FC = () => {
           <div className="flex items-center justify-between mb-5">
             <h2 className="text-lg font-semibold">{activeLabel}</h2>
             <LastRunBadge
-              scriptName={selected === "xlsx" ? "xlsx_csv_converter" : "xml_csv_converter"}
+              scriptName={
+                selected === "xlsx"
+                  ? "xlsx_csv_converter"
+                  : selected === "xml"
+                    ? "xml_csv_converter"
+                    : "setup_directories"
+              }
             />
           </div>
           <ActiveForm key={selected} />

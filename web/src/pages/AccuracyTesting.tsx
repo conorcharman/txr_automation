@@ -280,6 +280,15 @@ function loadCache<T>(key: string, fallback: T): T {
   }
 }
 
+function useDefaultLogsDir(): string {
+  const { data: fsConfig } = useQuery({
+    queryKey: ["filesystem-config"],
+    queryFn: getFilesystemConfig,
+    staleTime: Infinity,
+  });
+  return `${fsConfig?.dataRoot ?? "/app/data"}/logs`;
+}
+
 // ---------------------------------------------------------------------------
 // Unified Validation Form (incident-level)
 // ---------------------------------------------------------------------------
@@ -305,13 +314,6 @@ const UnifiedValidationForm: React.FC = () => {
   const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
   const [discoveryResult, setDiscoveryResult] = useState<DiscoveryResponse | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-
-  const { data: fsConfig } = useQuery({
-    queryKey: ["filesystem-config"],
-    queryFn: getFilesystemConfig,
-    staleTime: Infinity,
-  });
-  const defaultLogsDir = `${fsConfig?.dataRoot ?? "/app/data"}/logs`;
 
   const {
     control,
@@ -588,6 +590,7 @@ const TemplateGeneratorForm: React.FC = () => {
   const [detectedIncidentCount, setDetectedIncidentCount] = useState<number>(0);
   const [detectedIncidentStats, setDetectedIncidentStats] = useState<DetectedIncidentStat[]>([]);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const defaultLogsDir = useDefaultLogsDir();
 
   const { control, register, handleSubmit, watch, formState: { errors } } = useForm<UtilityBaseValues>({
     resolver: zodResolver(utilityBaseSchema),
@@ -902,6 +905,7 @@ const ExtractGeneratorForm: React.FC = () => {
   const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
   const [derivedDirs, setDerivedDirs] = useState<{ sql: string; dtf: string; csv: string } | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const defaultLogsDir = useDefaultLogsDir();
 
   const { control, register, handleSubmit, watch, setValue, formState: { errors } } = useForm<ExtractGenValues>({
     resolver: zodResolver(extractGenSchema) as Resolver<ExtractGenValues>,
@@ -1132,6 +1136,7 @@ const CollateExtractsForm: React.FC = () => {
   const [incidentConfigs, setIncidentConfigs] = useState<IncidentRunConfig[]>([]);
   const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const defaultLogsDir = useDefaultLogsDir();
 
   const { control, register, handleSubmit, watch, formState: { errors } } = useForm<UtilityBaseValues>({
     resolver: zodResolver(utilityBaseSchema),
@@ -1249,6 +1254,7 @@ const DataPushForm: React.FC = () => {
   const [incidentConfigs, setIncidentConfigs] = useState<IncidentRunConfig[]>([]);
   const [resolvedPaths, setResolvedPaths] = useState<ResolvedPaths | null>(null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const defaultLogsDir = useDefaultLogsDir();
 
   const { control, register, handleSubmit, watch, formState: { errors } } = useForm<UtilityBaseValues>({
     resolver: zodResolver(utilityBaseSchema),

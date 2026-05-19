@@ -170,7 +170,8 @@ function loadCache<T>(key: string, fallback: T): T {
 
 const phase2Schema = z.object({
   testingPeriod: z.object({ fiscalYear: z.string(), quarter: z.string() }),
-  inputFile: z.string().min(1, "Required"),
+  kaizenInput: z.string().min(1, "Required"),
+  incidentFiles: z.string().min(1, "Required"),
   outputFile: z.string().min(1, "Required"),
   logLevel: z.string(),
 });
@@ -179,7 +180,8 @@ type Phase2FormValues = z.infer<typeof phase2Schema>;
 
 const PHASE2_DEFAULTS: Phase2FormValues = {
   testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
-  inputFile: "",
+  kaizenInput: "",
+  incidentFiles: "",
   outputFile: "",
   logLevel: "INFO",
 };
@@ -217,11 +219,12 @@ const Phase2Form: React.FC = () => {
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
       resolvedLogPath.current = paths.logs;
+      if (!watch("kaizenInput")) setValue("kaizenInput", paths.kaizen);
       if (!watch("outputFile")) setValue("outputFile", paths.output);
       const { fiscalYear, quarter } = watch("testingPeriod");
       try {
         const atPaths = await resolvePaths({ fiscalYear, quarter, module: "accuracy_testing" });
-        if (!watch("inputFile")) setValue("inputFile", atPaths.templates);
+        if (!watch("incidentFiles")) setValue("incidentFiles", atPaths.templates);
         const res = await browseDirectory(atPaths.templates);
         setSourceFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
@@ -245,7 +248,8 @@ const Phase2Form: React.FC = () => {
 
   const onSubmit = (values: Phase2FormValues) => {
     mutation.mutate({
-      inputFile: values.inputFile,
+      kaizenInput: values.kaizenInput,
+      incidentFiles: values.incidentFiles,
       outputFile: values.outputFile,
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
@@ -276,8 +280,9 @@ const Phase2Form: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
-        module="replay"
+        module="replay_phase2_feedback"
         visibleStages={["kaizen", "output", "logs"]}
+        stageLabels={{ kaizen: "Kaizen Input", output: "Feedback Output" }}
         onChange={handlePathsResolved}
         disabled={isPending}
       />
@@ -300,16 +305,25 @@ const Phase2Form: React.FC = () => {
             {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         </Field>
-        <Field label="Input Directory" hint="Override: directory containing Phase 2 replay source CSV files (auto-resolved from accuracy_testing/templates)." error={errors.inputFile?.message}>
+        <Field label="Kaizen Input Directory" hint="Override: directory containing the Phase 2 Kaizen export source files (auto-resolved from replay/phase_2/feedback/kaizen)." error={errors.kaizenInput?.message}>
           <PathPickerInput
-            value={watch("inputFile") ?? ""}
-            onChange={(v) => setValue("inputFile", v)}
+            value={watch("kaizenInput") ?? ""}
+            onChange={(v) => setValue("kaizenInput", v)}
             mode="directory"
-            placeholder="auto-resolved"
+            placeholder="auto-resolved from replay/phase_2/feedback/kaizen"
             disabled={isPending}
           />
         </Field>
-        <Field label="Output Directory" hint="Override: directory for Phase 2 processed output files (auto-resolved from replay/output)." error={errors.outputFile?.message}>
+        <Field label="Incident Templates Directory" hint="Override: accuracy_testing templates directory containing incident reference CSVs (auto-resolved from accuracy_testing/templates)." error={errors.incidentFiles?.message}>
+          <PathPickerInput
+            value={watch("incidentFiles") ?? ""}
+            onChange={(v) => setValue("incidentFiles", v)}
+            mode="directory"
+            placeholder="auto-resolved from accuracy_testing/templates"
+            disabled={isPending}
+          />
+        </Field>
+        <Field label="Output Directory" hint="Override: directory for Phase 2 Feedback output files (auto-resolved from replay/phase_2/feedback/output)." error={errors.outputFile?.message}>
           <PathPickerInput
             value={watch("outputFile") ?? ""}
             onChange={(v) => setValue("outputFile", v)}
@@ -344,8 +358,9 @@ const Phase2Form: React.FC = () => {
 
 const phase2FinalSchema = z.object({
   testingPeriod: z.object({ fiscalYear: z.string(), quarter: z.string() }),
-  replayOutputFile: z.string().min(1, "Required"),
+  replayInputFile: z.string().min(1, "Required"),
   unavistaFiles: z.string().min(1, "Required"),
+  incidentFiles: z.string().min(1, "Required"),
   outputFile: z.string().min(1, "Required"),
   logLevel: z.string(),
 });
@@ -354,8 +369,9 @@ type Phase2FinalFormValues = z.infer<typeof phase2FinalSchema>;
 
 const PHASE2FINAL_DEFAULTS: Phase2FinalFormValues = {
   testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
-  replayOutputFile: "",
+  replayInputFile: "",
   unavistaFiles: "",
+  incidentFiles: "",
   outputFile: "",
   logLevel: "INFO",
 };
@@ -394,17 +410,22 @@ const Phase2FinalForm: React.FC = () => {
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
       resolvedLogPath.current = paths.logs;
-      if (!watch("replayOutputFile")) setValue("replayOutputFile", paths.output);
+      if (!watch("replayInputFile")) setValue("replayInputFile", paths.kaizen);
+      if (!watch("unavistaFiles")) setValue("unavistaFiles", paths.extracts);
       if (!watch("outputFile")) setValue("outputFile", paths.output);
-      if (!watch("unavistaFiles")) setValue("unavistaFiles", paths.kaizen);
+      const { fiscalYear, quarter } = watch("testingPeriod");
       try {
-        const res = await browseDirectory(paths.output);
+        const atPaths = await resolvePaths({ fiscalYear, quarter, module: "accuracy_testing" });
+        if (!watch("incidentFiles")) setValue("incidentFiles", atPaths.templates);
+      } catch { /* ignore */ }
+      try {
+        const res = await browseDirectory(paths.kaizen);
         setOutputFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
         setOutputFileCount(0);
       }
       try {
-        const res = await browseDirectory(paths.kaizen);
+        const res = await browseDirectory(paths.extracts);
         setUnavistaFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
         setUnavistaFileCount(0);
@@ -427,8 +448,9 @@ const Phase2FinalForm: React.FC = () => {
 
   const onSubmit = (values: Phase2FinalFormValues) => {
     mutation.mutate({
-      replayOutputFile: values.replayOutputFile,
+      replayInputFile: values.replayInputFile,
       unavistaFiles: values.unavistaFiles,
+      incidentFiles: values.incidentFiles,
       outputFile: values.outputFile,
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
@@ -460,8 +482,9 @@ const Phase2FinalForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
-        module="replay"
-        visibleStages={["kaizen", "output", "logs"]}
+        module="replay_phase2_final"
+        visibleStages={["kaizen", "extracts", "output", "logs"]}
+        stageLabels={{ kaizen: "Feedback Input", extracts: "UnaVista Files", output: "Final Lookup Output" }}
         onChange={handlePathsResolved}
         disabled={isPending}
       />
@@ -472,7 +495,7 @@ const Phase2FinalForm: React.FC = () => {
             {outputFileCount !== null && (
               <div className="flex items-center gap-2">
                 <span className={cn("h-2 w-2 rounded-full shrink-0", outputFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
-                <span className="text-xs text-muted-foreground shrink-0">Phase 2 output</span>
+                <span className="text-xs text-muted-foreground shrink-0">Phase 2 Feedback output</span>
                 <span className="truncate text-xs font-mono text-foreground/80">
                   {outputFileCount > 0 ? `${outputFileCount} file(s) found` : "no files found"}
                 </span>
@@ -481,7 +504,7 @@ const Phase2FinalForm: React.FC = () => {
             {unavistaFileCount !== null && (
               <div className="flex items-center gap-2">
                 <span className={cn("h-2 w-2 rounded-full shrink-0", unavistaFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
-                <span className="text-xs text-muted-foreground shrink-0">UnaVista (replay/kaizen)</span>
+                <span className="text-xs text-muted-foreground shrink-0">UnaVista (replay/phase_2/final_lookup/unavista)</span>
                 <span className="truncate text-xs font-mono text-foreground/80">
                   {unavistaFileCount > 0 ? `${unavistaFileCount} file(s) found` : "no files found"}
                 </span>
@@ -497,30 +520,39 @@ const Phase2FinalForm: React.FC = () => {
             {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         </Field>
-        <Field label="UnaVista Files" hint="Override: directory containing UnaVista transaction CSV files (auto-resolved from replay/kaizen)." error={errors.unavistaFiles?.message}>
+        <Field label="UnaVista Files" hint="Override: directory containing UnaVista reference files (auto-resolved from replay/phase_2/final_lookup/unavista)." error={errors.unavistaFiles?.message}>
           <PathPickerInput
             value={watch("unavistaFiles") ?? ""}
             onChange={(v) => setValue("unavistaFiles", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/kaizen"
+            placeholder="auto-resolved from replay/phase_2/final_lookup/unavista"
             disabled={isPending}
           />
         </Field>
-        <Field label="Phase 2 Output Directory" hint="Override: directory containing Phase 2 processor output CSV files." error={errors.replayOutputFile?.message}>
+        <Field label="Feedback Input Directory" hint="Override: directory containing Phase 2 Feedback output files (auto-resolved from replay/phase_2/feedback/output)." error={errors.replayInputFile?.message}>
           <PathPickerInput
-            value={watch("replayOutputFile") ?? ""}
-            onChange={(v) => setValue("replayOutputFile", v)}
+            value={watch("replayInputFile") ?? ""}
+            onChange={(v) => setValue("replayInputFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/output"
+            placeholder="auto-resolved from replay/phase_2/feedback/output"
             disabled={isPending}
           />
         </Field>
-        <Field label="Output Directory" hint="Override: directory for Phase 2 final lookup annotated output files." error={errors.outputFile?.message}>
+        <Field label="Incident Templates Directory" hint="Override: accuracy_testing templates directory containing incident reference CSVs (auto-resolved from accuracy_testing/templates)." error={errors.incidentFiles?.message}>
+          <PathPickerInput
+            value={watch("incidentFiles") ?? ""}
+            onChange={(v) => setValue("incidentFiles", v)}
+            mode="directory"
+            placeholder="auto-resolved from accuracy_testing/templates"
+            disabled={isPending}
+          />
+        </Field>
+        <Field label="Output Directory" hint="Override: directory for Phase 2 final lookup annotated output files (auto-resolved from replay/phase_2/final_lookup/output)." error={errors.outputFile?.message}>
           <PathPickerInput
             value={watch("outputFile") ?? ""}
             onChange={(v) => setValue("outputFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/output"
+            placeholder="auto-resolved from replay/phase_2/final_lookup/output"
             disabled={isPending}
           />
         </Field>
@@ -551,7 +583,7 @@ const Phase2FinalForm: React.FC = () => {
 const phase3Schema = z.object({
   testingPeriod: z.object({ fiscalYear: z.string(), quarter: z.string() }),
   inputFile: z.string().min(1, "Required"),
-  feedbackFile: z.string().min(1, "Required"),
+  incidentFiles: z.string().min(1, "Required"),
   outputFile: z.string().min(1, "Required"),
   logLevel: z.string(),
 });
@@ -561,7 +593,7 @@ type Phase3FormValues = z.infer<typeof phase3Schema>;
 const PHASE3_DEFAULTS: Phase3FormValues = {
   testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
   inputFile: "",
-  feedbackFile: "",
+  incidentFiles: "",
   outputFile: "",
   logLevel: "INFO",
 };
@@ -593,17 +625,17 @@ const Phase3Form: React.FC = () => {
 
   const testingPeriod = watch("testingPeriod");
   const [inputFileCount, setInputFileCount] = useState<number | null>(null);
-  const [feedbackFileCount, setFeedbackFileCount] = useState<number | null>(null);
+  const [incidentFileCount, setIncidentFileCount] = useState<number | null>(null);
   const dataRoot = useDataRoot();
   const resolvedLogPath = useRef<string>("");
 
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
       resolvedLogPath.current = paths.logs;
-      if (!watch("inputFile")) setValue("inputFile", paths.output);
+      if (!watch("inputFile")) setValue("inputFile", paths.kaizen);
       if (!watch("outputFile")) setValue("outputFile", paths.output);
       try {
-        const res = await browseDirectory(paths.output);
+        const res = await browseDirectory(paths.kaizen);
         setInputFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
         setInputFileCount(0);
@@ -611,11 +643,11 @@ const Phase3Form: React.FC = () => {
       const { fiscalYear, quarter } = watch("testingPeriod");
       try {
         const atPaths = await resolvePaths({ fiscalYear, quarter, module: "accuracy_testing" });
-        if (!watch("feedbackFile")) setValue("feedbackFile", atPaths.templates);
+        if (!watch("incidentFiles")) setValue("incidentFiles", atPaths.templates);
         const res = await browseDirectory(atPaths.templates);
-        setFeedbackFileCount(res.entries.filter((e) => !e.isDir).length);
+        setIncidentFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
-        setFeedbackFileCount(0);
+        setIncidentFileCount(0);
       }
     },
     [setValue, watch],
@@ -636,7 +668,7 @@ const Phase3Form: React.FC = () => {
   const onSubmit = (values: Phase3FormValues) => {
     mutation.mutate({
       inputFile: values.inputFile,
-      feedbackFile: values.feedbackFile,
+      incidentFiles: values.incidentFiles,
       outputFile: values.outputFile,
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
@@ -667,30 +699,31 @@ const Phase3Form: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
-        module="replay"
+        module="replay_phase3_feedback"
         visibleStages={["kaizen", "output", "logs"]}
+        stageLabels={{ kaizen: "Kaizen Input", output: "Feedback Output" }}
         onChange={handlePathsResolved}
         disabled={isPending}
       />
 
-      {(inputFileCount !== null || feedbackFileCount !== null) && (
+      {(inputFileCount !== null || incidentFileCount !== null) && (
         <CollapsibleInfoPanel title="Discovered Files">
           <div className="space-y-1">
             {inputFileCount !== null && (
               <div className="flex items-center gap-2">
                 <span className={cn("h-2 w-2 rounded-full shrink-0", inputFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
-                <span className="text-xs text-muted-foreground shrink-0">Phase 2 output</span>
+                <span className="text-xs text-muted-foreground shrink-0">Kaizen input</span>
                 <span className="truncate text-xs font-mono text-foreground/80">
                   {inputFileCount > 0 ? `${inputFileCount} file(s) found` : "no files found"}
                 </span>
               </div>
             )}
-            {feedbackFileCount !== null && (
+            {incidentFileCount !== null && (
               <div className="flex items-center gap-2">
-                <span className={cn("h-2 w-2 rounded-full shrink-0", feedbackFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
-                <span className="text-xs text-muted-foreground shrink-0">Feedback (AT Templates)</span>
+                <span className={cn("h-2 w-2 rounded-full shrink-0", incidentFileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
+                <span className="text-xs text-muted-foreground shrink-0">Incident templates (AT Templates)</span>
                 <span className="truncate text-xs font-mono text-foreground/80">
-                  {feedbackFileCount > 0 ? `${feedbackFileCount} file(s) found` : "no files found"}
+                  {incidentFileCount > 0 ? `${incidentFileCount} file(s) found` : "no files found"}
                 </span>
               </div>
             )}
@@ -704,30 +737,30 @@ const Phase3Form: React.FC = () => {
             {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         </Field>
-        <Field label="Input Directory" hint="Override: directory containing Phase 3 replay input CSV files (auto-resolved from replay/output)." error={errors.inputFile?.message}>
+        <Field label="Kaizen Input Directory" hint="Override: directory containing Phase 3 Kaizen export source files (auto-resolved from replay/phase_3/feedback/kaizen)." error={errors.inputFile?.message}>
           <PathPickerInput
             value={watch("inputFile") ?? ""}
             onChange={(v) => setValue("inputFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/output"
+            placeholder="auto-resolved from replay/phase_3/feedback/kaizen"
             disabled={isPending}
           />
         </Field>
-        <Field label="Feedback Directory" hint="Override: directory containing incident template CSV files (auto-resolved from accuracy_testing/templates)." error={errors.feedbackFile?.message}>
+        <Field label="Incident Templates Directory" hint="Override: accuracy_testing templates directory containing incident reference CSVs (auto-resolved from accuracy_testing/templates)." error={errors.incidentFiles?.message}>
           <PathPickerInput
-            value={watch("feedbackFile") ?? ""}
-            onChange={(v) => setValue("feedbackFile", v)}
+            value={watch("incidentFiles") ?? ""}
+            onChange={(v) => setValue("incidentFiles", v)}
             mode="directory"
             placeholder="auto-resolved from accuracy_testing/templates"
             disabled={isPending}
           />
         </Field>
-        <Field label="Output Directory" hint="Override: directory for Phase 3 processed output files (auto-resolved from replay/output)." error={errors.outputFile?.message}>
+        <Field label="Output Directory" hint="Override: directory for Phase 3 Feedback output files (auto-resolved from replay/phase_3/feedback/output)." error={errors.outputFile?.message}>
           <PathPickerInput
             value={watch("outputFile") ?? ""}
             onChange={(v) => setValue("outputFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/output"
+            placeholder="auto-resolved from replay/phase_3/feedback/output"
             disabled={isPending}
           />
         </Field>
@@ -758,6 +791,8 @@ const Phase3Form: React.FC = () => {
 const phase3FinalSchema = z.object({
   testingPeriod: z.object({ fiscalYear: z.string(), quarter: z.string() }),
   inputFile: z.string().min(1, "Required"),
+  unavistaFiles: z.string().min(1, "Required"),
+  incidentFiles: z.string().min(1, "Required"),
   outputFile: z.string().min(1, "Required"),
   logLevel: z.string(),
 });
@@ -767,6 +802,8 @@ type Phase3FinalFormValues = z.infer<typeof phase3FinalSchema>;
 const PHASE3FINAL_DEFAULTS: Phase3FinalFormValues = {
   testingPeriod: { fiscalYear: currentFY(), quarter: "Q1" },
   inputFile: "",
+  unavistaFiles: "",
+  incidentFiles: "",
   outputFile: "",
   logLevel: "INFO",
 };
@@ -804,10 +841,18 @@ const Phase3FinalForm: React.FC = () => {
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
       resolvedLogPath.current = paths.logs;
-      if (!watch("inputFile")) setValue("inputFile", paths.output);
+      if (!watch("inputFile")) setValue("inputFile", paths.kaizen);
+      if (!watch("unavistaFiles")) setValue("unavistaFiles", paths.extracts);
       if (!watch("outputFile")) setValue("outputFile", paths.output);
+      if (!watch("incidentFiles")) {
+        const { fiscalYear, quarter } = watch("testingPeriod");
+        try {
+          const atPaths = await resolvePaths({ fiscalYear, quarter, module: "accuracy_testing" });
+          setValue("incidentFiles", atPaths.templates);
+        } catch { /* ignore */ }
+      }
       try {
-        const res = await browseDirectory(paths.output);
+        const res = await browseDirectory(paths.kaizen);
         setPhase3FileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
         setPhase3FileCount(0);
@@ -831,6 +876,8 @@ const Phase3FinalForm: React.FC = () => {
   const onSubmit = (values: Phase3FinalFormValues) => {
     mutation.mutate({
       inputFile: values.inputFile,
+      unavistaFiles: values.unavistaFiles,
+      incidentFiles: values.incidentFiles,
       outputFile: values.outputFile,
       fiscalYear: values.testingPeriod.fiscalYear,
       quarter: values.testingPeriod.quarter,
@@ -861,14 +908,15 @@ const Phase3FinalForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
-        module="replay"
-        visibleStages={["kaizen", "output", "logs"]}
+        module="replay_phase3_final"
+        visibleStages={["kaizen", "extracts", "output", "logs"]}
+        stageLabels={{ kaizen: "Feedback Input", extracts: "UnaVista Files", output: "Final Lookup Output" }}
         onChange={handlePathsResolved}
         disabled={isPending}
       />
 
       {phase3FileCount !== null && (
-        <CollapsibleInfoPanel title="Phase 3 Output (replay/output)">
+        <CollapsibleInfoPanel title="Phase 3 Feedback Output (replay/phase_3/feedback/output)">
           <div className="flex items-center gap-2">
             <span className={cn("h-2 w-2 rounded-full shrink-0", phase3FileCount > 0 ? "bg-green-500" : "bg-orange-400")} />
             <span className="text-xs text-muted-foreground shrink-0">Files</span>
@@ -885,21 +933,39 @@ const Phase3FinalForm: React.FC = () => {
             {LOG_LEVELS.map((l) => <option key={l} value={l}>{l}</option>)}
           </select>
         </Field>
-        <Field label="Input Directory" hint="Override: Phase 3 output directory containing inconsistent summary files (auto-resolved from replay/output)." error={errors.inputFile?.message}>
+        <Field label="Feedback Input Directory" hint="Override: directory containing Phase 3 Feedback output summary files (auto-resolved from replay/phase_3/feedback/output)." error={errors.inputFile?.message}>
           <PathPickerInput
             value={watch("inputFile") ?? ""}
             onChange={(v) => setValue("inputFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/output"
+            placeholder="auto-resolved from replay/phase_3/feedback/output"
             disabled={isPending}
           />
         </Field>
-        <Field label="Output Directory" hint="Override: directory for Phase 3 final lookup output files (auto-resolved from replay/output)." error={errors.outputFile?.message}>
+        <Field label="UnaVista Files" hint="Override: directory containing UnaVista reference files (auto-resolved from replay/phase_3/final_lookup/unavista)." error={errors.unavistaFiles?.message}>
+          <PathPickerInput
+            value={watch("unavistaFiles") ?? ""}
+            onChange={(v) => setValue("unavistaFiles", v)}
+            mode="directory"
+            placeholder="auto-resolved from replay/phase_3/final_lookup/unavista"
+            disabled={isPending}
+          />
+        </Field>
+        <Field label="Incident Templates Directory" hint="Override: accuracy_testing/templates directory containing incident CSVs (auto-resolved)." error={errors.incidentFiles?.message}>
+          <PathPickerInput
+            value={watch("incidentFiles") ?? ""}
+            onChange={(v) => setValue("incidentFiles", v)}
+            mode="directory"
+            placeholder="auto-resolved to accuracy_testing/templates"
+            disabled={isPending}
+          />
+        </Field>
+        <Field label="Output Directory" hint="Override: directory for Phase 3 final lookup output files (auto-resolved from replay/phase_3/final_lookup/output)." error={errors.outputFile?.message}>
           <PathPickerInput
             value={watch("outputFile") ?? ""}
             onChange={(v) => setValue("outputFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/output"
+            placeholder="auto-resolved from replay/phase_3/final_lookup/output"
             disabled={isPending}
           />
         </Field>
@@ -977,11 +1043,11 @@ const MergeForm: React.FC = () => {
 
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
-      if (!watch("buyerFile")) setValue("buyerFile", paths.output);
-      if (!watch("sellerFile")) setValue("sellerFile", paths.output);
+      if (!watch("buyerFile")) setValue("buyerFile", paths.kaizen);
+      if (!watch("sellerFile")) setValue("sellerFile", paths.kaizen);
       if (!watch("outputFile")) setValue("outputFile", paths.output);
       try {
-        const res = await browseDirectory(paths.output);
+        const res = await browseDirectory(paths.kaizen);
         const files = res.entries.filter((e) => !e.isDir).map((e) => e.path);
         const idsFile = files.find((f) => /inconsistent.*id/i.test(f)) ?? "";
         const namesFile = files.find((f) => /inconsistent.*name/i.test(f)) ?? "";
@@ -1038,14 +1104,15 @@ const MergeForm: React.FC = () => {
       <SmartPathConfig
         fiscalYear={testingPeriod.fiscalYear}
         quarter={testingPeriod.quarter}
-        module="replay"
+        module="replay_phase3_merge"
         visibleStages={["kaizen", "output", "logs"]}
+        stageLabels={{ kaizen: "Final Lookup Input", output: "Merged Output" }}
         onChange={handlePathsResolved}
         disabled={isPending}
       />
 
       {mergeFiles !== null && (
-        <CollapsibleInfoPanel title="Phase 3 Output (replay/output)">
+        <CollapsibleInfoPanel title="Phase 3 Final Lookup Output (replay/phase_3/final_lookup/output)">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className={cn("h-2 w-2 rounded-full shrink-0", mergeFiles.ids ? "bg-green-500" : "bg-orange-400")} />
@@ -1077,30 +1144,30 @@ const MergeForm: React.FC = () => {
             Dry Run
           </label>
         </div>
-        <Field label="Inconsistent IDs Directory" hint="Override: directory containing Inconsistent IDs summary CSV files (auto-resolved from replay/output)." error={errors.buyerFile?.message}>
+        <Field label="Inconsistent IDs Directory" hint="Override: directory containing Inconsistent IDs summary CSV files (auto-resolved from replay/phase_3/final_lookup/output)." error={errors.buyerFile?.message}>
           <PathPickerInput
             value={watch("buyerFile") ?? ""}
             onChange={(v) => setValue("buyerFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/output"
+            placeholder="auto-resolved from replay/phase_3/final_lookup/output"
             disabled={isPending}
           />
         </Field>
-        <Field label="Inconsistent Names Directory" hint="Override: directory containing Inconsistent Names summary CSV files (auto-resolved from replay/output)." error={errors.sellerFile?.message}>
+        <Field label="Inconsistent Names Directory" hint="Override: directory containing Inconsistent Names summary CSV files (auto-resolved from replay/phase_3/final_lookup/output)." error={errors.sellerFile?.message}>
           <PathPickerInput
             value={watch("sellerFile") ?? ""}
             onChange={(v) => setValue("sellerFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/output"
+            placeholder="auto-resolved from replay/phase_3/final_lookup/output"
             disabled={isPending}
           />
         </Field>
-        <Field label="Output Directory" hint="Override: directory for merged output files (auto-resolved from replay/output)." error={errors.outputFile?.message}>
+        <Field label="Output Directory" hint="Override: directory for merged output files (auto-resolved from replay/phase_3/merged)." error={errors.outputFile?.message}>
           <PathPickerInput
             value={watch("outputFile") ?? ""}
             onChange={(v) => setValue("outputFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/output"
+            placeholder="auto-resolved from replay/phase_3/merged"
             disabled={isPending}
           />
         </Field>

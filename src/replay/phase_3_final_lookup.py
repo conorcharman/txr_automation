@@ -20,6 +20,12 @@ import argparse
 import re
 from pathlib import Path
 
+try:
+    import openpyxl
+    _OPENPYXL_AVAILABLE = True
+except ImportError:
+    _OPENPYXL_AVAILABLE = False
+
 # Import from core library
 from core import (
     ProcessingStats,
@@ -39,6 +45,45 @@ from .phase_3_processor import (
     IncidentFileIndex as IncidentIdentityIndex,
     IncidentColumnMapper as IncidentIdentityColumnMapper,
 )
+
+# ============================================================================
+# File Reading Helper
+# ============================================================================
+
+
+def _read_rows(file_path: str) -> List[List[str]]:
+    """Read a CSV or XLSX file and return all rows as lists of strings.
+
+    Args:
+        file_path: Absolute path to the file. Files ending ``.xlsx`` are read
+            with ``openpyxl``; all other files are treated as CSV.
+
+    Returns:
+        List of rows, where each row is a list of cell values converted to
+        strings.  The first row is the header; subsequent rows are data.
+
+    Raises:
+        ImportError: If the file is ``.xlsx`` but ``openpyxl`` is not installed.
+        FileNotFoundError: If the file does not exist.
+    """
+    if str(file_path).lower().endswith('.xlsx'):
+        if not _OPENPYXL_AVAILABLE:
+            raise ImportError(
+                "openpyxl is required to read .xlsx files: pip install openpyxl"
+            )
+        wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+        ws = wb.active
+        rows = [
+            [str(cell) if cell is not None else "" for cell in row]
+            for row in ws.iter_rows(values_only=True)
+        ]
+        wb.close()
+        return rows
+    else:
+        f, _ = safe_open_csv(Path(file_path), 'r', newline='')
+        with f:
+            return list(csv.reader(f))
+
 
 # ============================================================================
 # Data Classes
@@ -218,10 +263,7 @@ class UnaVistaIndex:
         global_idx = 0
         for file_path in self.file_paths:
             try:
-                f, encoding = safe_open_csv(file_path, 'r', newline='')
-                with f:
-                    reader = csv.reader(f)
-                    rows = list(reader)
+                rows = _read_rows(file_path)
                 
                 if len(rows) < 2:
                     self.logger.warning(f"UnaVista file is empty or has no data rows: {os.path.basename(file_path)}")
@@ -469,10 +511,7 @@ class ReplayRecordIndex:
             file_type: 'IDs' or 'Names'
         """
         try:
-            f, encoding = safe_open_csv(Path(file_path), 'r', newline='')
-            with f:
-                reader = csv.reader(f)
-                rows = list(reader)
+            rows = _read_rows(file_path)
             
             if len(rows) < 2:
                 self.logger.warning(f"Replay file {file_type} is empty")

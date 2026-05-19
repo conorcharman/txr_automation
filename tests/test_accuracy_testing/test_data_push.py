@@ -631,6 +631,50 @@ class TestDataPushProcessor:
 
 
 # =============================================================================
+# Test: BatchDataPushProcessor
+# =============================================================================
+
+class TestBatchDataPushProcessor:
+    """Tests for BatchDataPushProcessor."""
+
+    def test_process_batch_resolves_incident_first_validated_pattern(self, temp_dir):
+        """Should resolve source files named incident_FY_Q_validated.csv in batch mode."""
+        source_dir = temp_dir / "output"
+        target_dir = temp_dir / "templates"
+        source_dir.mkdir()
+        target_dir.mkdir()
+
+        source_path = source_dir / "7_37_FY26_Q1_validated.csv"
+        target_path = target_dir / "FY26 Q1 7_37.csv"
+
+        with open(source_path, "w", encoding="utf-8") as f:
+            f.write("Transaction Reference,Error\n")
+            f.write("TXN001,Y\n")
+
+        with open(target_path, "w", encoding="utf-8") as f:
+            f.write("Transaction Reference,Error\n")
+            f.write("TXN001,\n")
+
+        processor = BatchDataPushProcessor(
+            base_source_dir=source_dir,
+            base_target_dir=target_dir,
+            fiscal_year="FY26",
+            quarter="Q1",
+        )
+
+        results = processor.process_batch(
+            incidents=["7_37"],
+            dry_run=True,
+            backup=False,
+        )
+
+        assert "7_37" in results
+        assert results["7_37"].errors == 0
+        assert results["7_37"].total_source == 1
+        assert results["7_37"].matched == 1
+
+
+# =============================================================================
 # Test: Edge Cases
 # =============================================================================
 

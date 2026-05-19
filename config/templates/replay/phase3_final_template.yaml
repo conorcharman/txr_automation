@@ -2,23 +2,24 @@
 # Copy this file and modify paths as needed
 
 paths:
-  # Input replay files (CSV format)
-  replay_input: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii"
-  
-  # UnaVista reference files (CSV format)
-  unavista_files: "/Users/conorcharman/Documents/GitHub/txr_automation/data/sample/phase_iii_final_lookup"
-  
-  # Output directory for processed replay files
-  replay_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/phase_iii_final_lookup"
-  
-  # Log output directory
-  log_output: "/Users/conorcharman/Documents/GitHub/txr_automation/data/output/logs"
+  # Input: Phase 3 Processor output directory (Feedback stage).
+  replay_input: "/path/to/data/FY26/Q1/replay/phase_3/feedback"
+
+  # UnaVista reference files (CSV format — shared with Phase 2 Final Lookup).
+  unavista_files: "/path/to/data/FY26/Q1/replay/shared/unavista"
+
+  # Output directory for Phase III Final Lookup results.
+  replay_output: "/path/to/data/FY26/Q1/replay/phase_3/final_lookup"
+
+  # Log output directory.
+  log_output: "/path/to/data/FY26/Q1/replay/phase_3/logs"
 
   # OPTIONAL: Incident code reference files for cross-reference.
   # If omitted, cross-reference annotations are skipped; testing still runs.
   # Cross-reference compares Phase 3 output corrections (source of truth) against
   # the source incident file and flags discrepancies in test_result.
-  # incident_files: "/path/to/incident_code_files"
+  # Uses the accuracy_testing templates directory — same files as accuracy testing.
+  # incident_files: "/path/to/data/FY26/Q1/accuracy_testing/templates"
 
 files:
   # File patterns for discovery (using glob)

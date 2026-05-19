@@ -26,6 +26,12 @@ interface SmartPathConfigProps {
    * Defaults to all five stages when omitted.
    */
   visibleStages?: readonly ("kaizen" | "extracts" | "templates" | "output" | "logs")[];
+  /**
+   * Custom display labels for stage keys shown in the summary and override panels.
+   * Keys are stage names; values replace the default capitalised stage key.
+   * e.g. ``{ kaizen: "Kaizen Input", output: "Feedback Output" }``
+   */
+  stageLabels?: Partial<Record<string, string>>;
   /** Called when resolved paths change. */
   onChange: (paths: ResolvedPaths) => void;
   /** Disable all inputs. */
@@ -52,6 +58,7 @@ const SmartPathConfig: React.FC<SmartPathConfigProps> = ({
   quarter,
   module,
   visibleStages,
+  stageLabels,
   onChange,
   disabled = false,
 }) => {
@@ -123,7 +130,7 @@ const SmartPathConfig: React.FC<SmartPathConfigProps> = ({
             {stages.map((stage) => (
               <Label
                 key={stage}
-                text={stage.charAt(0).toUpperCase() + stage.slice(1)}
+                text={stageLabels?.[stage] ?? (stage.charAt(0).toUpperCase() + stage.slice(1))}
                 value={overrides[stage] || resolved[stage]}
               />
             ))}
@@ -152,7 +159,7 @@ const SmartPathConfig: React.FC<SmartPathConfigProps> = ({
               (stage) => (
                 <div key={stage} className="flex flex-col gap-1">
                   <label className="text-xs font-medium text-muted-foreground capitalize">
-                    {stage}
+                    {stageLabels?.[stage] ?? stage}
                   </label>
                   <PathPickerInput
                     value={overrides[stage] ?? ""}

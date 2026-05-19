@@ -21,6 +21,7 @@ Key design decisions:
 - Transaction reference is used as the primary lookup key throughout (not client identity).
 
 Version 1.0 - Initial implementation (April 2026)
+Version 1.1 - Added XLSX support for Phase 2 output and UnaVista files (May 2026)
 """
 
 import csv
@@ -33,6 +34,12 @@ from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Set, Tuple
+
+try:
+    import openpyxl
+    _OPENPYXL_AVAILABLE = True
+except ImportError:
+    _OPENPYXL_AVAILABLE = False
 
 # Core library imports
 from core import (
@@ -51,6 +58,43 @@ from .phase_2_processor import IncidentColumnMapper, IncidentFileIndex
 
 # Reuse UnaVista field mapping and test result structure from Phase 3 Final Lookup
 from .phase_3_final_lookup import FieldMapper, TestResult
+
+
+# ============================================================================
+# File Reading Helper
+# ============================================================================
+
+
+def _read_rows(file_path: str) -> List[List[str]]:
+    """Read a CSV or XLSX file and return all rows as lists of strings.
+
+    Args:
+        file_path: Absolute path to the file. Files ending ``.xlsx`` are read
+            with ``openpyxl``; all other files are treated as CSV.
+
+    Returns:
+        List of rows (header as row 0, data rows following).
+
+    Raises:
+        ImportError: If the file is ``.xlsx`` but ``openpyxl`` is not installed.
+    """
+    if str(file_path).lower().endswith('.xlsx'):
+        if not _OPENPYXL_AVAILABLE:
+            raise ImportError(
+                "openpyxl is required to read .xlsx files: pip install openpyxl"
+            )
+        wb = openpyxl.load_workbook(file_path, read_only=True, data_only=True)
+        ws = wb.active
+        rows = [
+            [str(cell) if cell is not None else "" for cell in row]
+            for row in ws.iter_rows(values_only=True)
+        ]
+        wb.close()
+        return rows
+    else:
+        f, _ = safe_open_csv(Path(file_path), 'r', newline='')
+        with f:
+            return list(csv.reader(f))
 
 
 # ============================================================================
@@ -251,10 +295,7 @@ class Phase2ReplayIndex:
         min_cols = max(col_map.values()) + 1
 
         try:
-            f, _ = safe_open_csv(Path(file_path), 'r', newline='')
-            with f:
-                reader = csv.reader(f)
-                rows = list(reader)
+            rows = _read_rows(file_path)
 
             if len(rows) < 2:
                 self.logger.warning(f"No data rows in {filename}")
@@ -323,10 +364,7 @@ class UnaVistaTransactionIndex:
         global_idx = 0
         for file_path in file_paths:
             try:
-                f, _ = safe_open_csv(file_path, 'r', newline='')
-                with f:
-                    reader = csv.reader(f)
-                    rows = list(reader)
+                rows = _read_rows(file_path)
 
                 if len(rows) < 2:
                     self.logger.warning(

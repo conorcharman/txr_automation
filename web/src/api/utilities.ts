@@ -1,4 +1,4 @@
-import type { JobResponse, XlsxConverterRequest, XmlConverterRequest } from "@/types";
+import type { JobResponse, SetupDirectoriesRequest, XlsxConverterRequest, XmlConverterRequest } from "@/types";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "";
 
@@ -25,6 +25,15 @@ export async function xlsxConvert(req: XlsxConverterRequest): Promise<JobRespons
 
 export async function xmlConvert(req: XmlConverterRequest): Promise<JobResponse> {
   const res = await fetch(`${BASE_URL}/api/utilities/xml-convert`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  return handleResponse<JobResponse>(res);
+}
+
+export async function setupDirectories(req: SetupDirectoriesRequest): Promise<JobResponse> {
+  const res = await fetch(`${BASE_URL}/api/utilities/setup-directories`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(req),

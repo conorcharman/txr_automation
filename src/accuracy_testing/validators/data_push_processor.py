@@ -648,6 +648,7 @@ class BatchDataPushProcessor:
         # Try multiple naming patterns for source file (validation outputs)
         source_patterns = [
             f"validated_{self.fiscal_year}_{self.quarter}_{incident}.csv",  # New validation output format
+            f"{incident}_{self.fiscal_year}_{self.quarter}_validated.csv",  # Current validation output format
             f"{self.fiscal_year} {self.quarter} - {incident}.csv",          # Legacy/template format
             f"{incident}_validated.csv",                                     # Generic fallback
         ]
