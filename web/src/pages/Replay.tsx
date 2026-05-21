@@ -1106,13 +1106,13 @@ const MergeForm: React.FC = () => {
         quarter={testingPeriod.quarter}
         module="replay_phase3_merge"
         visibleStages={["kaizen", "output", "logs"]}
-        stageLabels={{ kaizen: "Final Lookup Input", output: "Merged Output" }}
+        stageLabels={{ kaizen: "Feedback Input", output: "Merged Output" }}
         onChange={handlePathsResolved}
         disabled={isPending}
       />
 
       {mergeFiles !== null && (
-        <CollapsibleInfoPanel title="Phase 3 Final Lookup Output (replay/phase_3/final_lookup/output)">
+        <CollapsibleInfoPanel title="Phase 3 Feedback Output (replay/phase_3/feedback/output)">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
               <span className={cn("h-2 w-2 rounded-full shrink-0", mergeFiles.ids ? "bg-green-500" : "bg-orange-400")} />
@@ -1144,30 +1144,30 @@ const MergeForm: React.FC = () => {
             Dry Run
           </label>
         </div>
-        <Field label="Inconsistent IDs Directory" hint="Override: directory containing Inconsistent IDs summary CSV files (auto-resolved from replay/phase_3/final_lookup/output)." error={errors.buyerFile?.message}>
+        <Field label="Inconsistent IDs Directory" hint="Override: directory containing Inconsistent IDs summary CSV files (auto-resolved from replay/phase_3/feedback/output)." error={errors.buyerFile?.message}>
           <PathPickerInput
             value={watch("buyerFile") ?? ""}
             onChange={(v) => setValue("buyerFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/phase_3/final_lookup/output"
+            placeholder="auto-resolved from replay/phase_3/feedback/output"
             disabled={isPending}
           />
         </Field>
-        <Field label="Inconsistent Names Directory" hint="Override: directory containing Inconsistent Names summary CSV files (auto-resolved from replay/phase_3/final_lookup/output)." error={errors.sellerFile?.message}>
+        <Field label="Inconsistent Names Directory" hint="Override: directory containing Inconsistent Names summary CSV files (auto-resolved from replay/phase_3/feedback/output)." error={errors.sellerFile?.message}>
           <PathPickerInput
             value={watch("sellerFile") ?? ""}
             onChange={(v) => setValue("sellerFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/phase_3/final_lookup/output"
+            placeholder="auto-resolved from replay/phase_3/feedback/output"
             disabled={isPending}
           />
         </Field>
-        <Field label="Output Directory" hint="Override: directory for merged output files (auto-resolved from replay/phase_3/merged)." error={errors.outputFile?.message}>
+        <Field label="Output Directory" hint="Override: directory for merged output files (auto-resolved from replay/phase_3/feedback/merged)." error={errors.outputFile?.message}>
           <PathPickerInput
             value={watch("outputFile") ?? ""}
             onChange={(v) => setValue("outputFile", v)}
             mode="directory"
-            placeholder="auto-resolved from replay/phase_3/merged"
+            placeholder="auto-resolved from replay/phase_3/feedback/merged"
             disabled={isPending}
           />
         </Field>

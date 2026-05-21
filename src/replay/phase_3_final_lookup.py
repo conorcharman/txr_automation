@@ -85,6 +85,28 @@ def _read_rows(file_path: str) -> List[List[str]]:
             return list(csv.reader(f))
 
 
+def _make_output_filename(input_path: str) -> str:
+    """Derive the output CSV filename from a UnaVista input file path.
+
+    Replaces whatever text is inside the first set of parentheses in the stem
+    with ``AJB``.  If the stem contains no parentheses, ``(AJB)`` is appended
+    to the stem.  The output extension is always ``.csv``.
+
+    Examples::
+
+        UnaVista_MiFIR_Manual_Corrections_423_20180406.(TBD2).xlsx
+          -> UnaVista_MiFIR_Manual_Corrections_423_20180406.(AJB).csv
+
+        UnaVista_MiFIR_Manual_Corrections_423_20180406.csv
+          -> UnaVista_MiFIR_Manual_Corrections_423_20180406(AJB).csv
+    """
+    stem = Path(input_path).stem
+    new_stem = re.sub(r'\([^)]*\)', '(AJB)', stem)
+    if new_stem == stem:  # no parentheses found
+        new_stem = stem + '(AJB)'
+    return new_stem + '.csv'
+
+
 # ============================================================================
 # Data Classes
 # ============================================================================
@@ -157,10 +179,18 @@ class FieldMapper:
         'Buy decision maker - Surname(s)': ('buyer_dm', 'Surname'),
         'Buy decision maker - Date of birth': ('buyer_dm', 'Date of Birth'),
         'Seller decision maker code': ('seller_dm', 'ID'),
+        # Variants for 'Type of seller decision maker code' — field appears
+        # with both capitalisation styles across different source files.
         'Type of Seller decision maker code': ('seller_dm', 'ID Sub Type'),
+        'Type of seller decision maker code': ('seller_dm', 'ID Sub Type'),
+        # Abbreviated 'Sell' prefix (legacy)
         'Sell decision maker - First name(s)': ('seller_dm', 'First Name'),
         'Sell decision maker - Surname(s)': ('seller_dm', 'Surname'),
         'Sell decision maker - Date of birth': ('seller_dm', 'Date of Birth'),
+        # Full 'Seller' prefix variants
+        'Seller decision maker - First name(s)': ('seller_dm', 'First Name'),
+        'Seller decision maker - Surname(s)': ('seller_dm', 'Surname'),
+        'Seller decision maker - Date of birth': ('seller_dm', 'Date of Birth'),
     }
     
     # UnaVista column indices
@@ -1340,23 +1370,29 @@ class Phase3FinalLookup:
             raise ValueError("UnaVista index not loaded")
         
         matches = {}
-        
+
         for client_type in client_types:
-            # Try ID match first
+            # Collect results from both ID and name lookups, then deduplicate by
+            # row_index.  Using both sources is necessary because the same person
+            # may appear in UnaVista with different ID types across transactions
+            # (e.g. CONCAT for some transactions, CCPT/NIDN for others), or because
+            # UnaVista already carries the corrected ID while the replay file still
+            # references the original one.
+            seen: Dict[int, UnaVistaTransaction] = {}
+
             if record.client_id:
-                transactions = self.unavista_index.lookup_by_id(record.client_id, client_type)
-                if transactions:
-                    matches[client_type] = transactions
-                    continue
-            
-            # Fallback to name match
+                for txn in self.unavista_index.lookup_by_id(record.client_id, client_type):
+                    seen[txn.row_index] = txn
+
             if record.first_name and record.surname:
-                transactions = self.unavista_index.lookup_by_name(
+                for txn in self.unavista_index.lookup_by_name(
                     record.first_name, record.surname, record.date_of_birth, client_type
-                )
-                if transactions:
-                    matches[client_type] = transactions
-        
+                ):
+                    seen[txn.row_index] = txn
+
+            if seen:
+                matches[client_type] = list(seen.values())
+
         return matches
     
     def merge_duplicate_records(self, records: List[ReplayRecord]) -> Tuple[Dict[str, str], List[str]]:
@@ -1574,72 +1610,88 @@ class Phase3FinalLookup:
 
         return transaction_results
     
-    def generate_output(self):
-        """Generate output UnaVista file with test results"""
-        self.logger.info("Generating output file...")
-        
+    def generate_output(self) -> str:
+        """Generate one annotated UnaVista output CSV per input UnaVista file.
+
+        Each output file mirrors its corresponding UnaVista input: the stem
+        is taken from the input filename with whatever is inside parentheses
+        replaced by ``AJB``, and the extension is always ``.csv``.
+
+        Returns:
+            Output filename(s) written — a single filename if one input file
+            was provided, or a comma-separated list if multiple.
+        """
+        self.logger.info("Generating output files...")
+
         if not self.unavista_paths:
             raise ValueError("UnaVista paths not set")
         if not self.replay_index:
             raise ValueError("Replay index not loaded")
-        
-        # Create test results for all transactions
-        transaction_test_results = {}  # transaction_index -> test_result_string
-        
-        processed_clients = set()
-        
+
+        # Build test results for all transactions across all UnaVista files
+        transaction_test_results: Dict[int, str] = {}
+
+        processed_clients: set = set()
+
         for client_key, records in self.replay_index.client_records.items():
             if client_key in processed_clients:
                 self.stats.increment('skipped_duplicates')
                 continue
-            
+
             processed_clients.add(client_key)
             results = self.process_client(client_key, records)
             if results:
                 transaction_test_results.update(results)
-        
-        # Write output file
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_filename = f"output_UnaVista_final_lookup_{timestamp}.csv"
-        output_filepath = os.path.join(self.output_path, output_filename)
-        
-        # Read and concatenate all UnaVista files in the same order they were indexed
-        all_data_rows: List[List[str]] = []
-        header: List[str] = []
+
+        # Write one output file per UnaVista input file
+        os.makedirs(self.output_path, exist_ok=True)
+
+        output_filenames: List[str] = []
+        global_offset = 0
+        header: Optional[List[str]] = None
+        client_not_found_total = 0
+
         for path in self.unavista_paths:
-            with open(path, 'r', encoding='utf-8', newline='') as f_in:
-                file_rows = list(csv.reader(f_in))
-            if not header and len(file_rows) >= 1:
-                header = file_rows[0]
-            all_data_rows.extend(file_rows[1:])
-        
-        # Insert test_result column after Transaction Reference Number (index 1)
-        header.insert(2, 'test_result')
-        
-        output_rows = [header]
-        
-        client_not_found_count = 0
-        for i, row in enumerate(all_data_rows):
-            # UnaVista rows with no matching replay record are annotated as "Client not found"
-            test_result = transaction_test_results.get(i, "Client not found")
-            if test_result == "Client not found":
-                client_not_found_count += 1
-            row.insert(2, test_result)
-            output_rows.append(row)
-        
-        if client_not_found_count:
-            self.logger.info(
-                f"{client_not_found_count} UnaVista transactions had no matching replay record "
-                f"and were annotated as 'Client not found'"
-            )
-        
-        # Write output
-        with open(output_filepath, 'w', encoding='utf-8', newline='') as f_out:
-            writer = csv.writer(f_out)
-            writer.writerows(output_rows)
-        
-        self.logger.info(f"Output written to: {output_filename}")
-        return output_filename
+            file_rows = _read_rows(path)
+            if not file_rows:
+                continue
+
+            if header is None:
+                header = list(file_rows[0])
+
+            data_rows = file_rows[1:]
+
+            out_header = list(header)
+            out_header.insert(2, 'test_result')
+            output_rows: List[List[str]] = [out_header]
+
+            client_not_found_count = 0
+            for local_i, row in enumerate(data_rows):
+                global_i = global_offset + local_i
+                test_result = transaction_test_results.get(global_i, "Client not found")
+                if test_result == "Client not found":
+                    client_not_found_count += 1
+                row = list(row)
+                row.insert(2, test_result)
+                output_rows.append(row)
+
+            if client_not_found_count:
+                self.logger.info(
+                    f"{os.path.basename(path)}: {client_not_found_count} UnaVista transactions "
+                    "had no matching replay record and were annotated as 'Client not found'"
+                )
+            client_not_found_total += client_not_found_count
+            global_offset += len(data_rows)
+
+            output_filename = _make_output_filename(path)
+            output_filepath = os.path.join(self.output_path, output_filename)
+            with open(output_filepath, 'w', encoding='utf-8', newline='') as f_out:
+                csv.writer(f_out).writerows(output_rows)
+
+            self.logger.info(f"Output written to: {output_filename}")
+            output_filenames.append(output_filename)
+
+        return output_filenames[0] if len(output_filenames) == 1 else ', '.join(output_filenames)
     
     def generate_summary(self):
         """Generate processing summary"""

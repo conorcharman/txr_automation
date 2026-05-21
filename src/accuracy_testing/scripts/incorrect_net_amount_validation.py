@@ -225,18 +225,33 @@ class IncorrectNetAmountValidationScript:
                 reader = csv.reader(f)
                 header = next(reader)  # Skip header row
 
+                # Detect optional SEDOL and INSTRUMENT columns by name
+                header_lower = [h.strip().lower() for h in header]
+                sedol_col: int | None = None
+                instrument_col: int | None = None
+                for i, h in enumerate(header_lower):
+                    if h in ('sedol', 'asset'):
+                        sedol_col = i
+                    elif h in ('instrument', 'instrument classification'):
+                        instrument_col = i
+
                 for row_idx, row in enumerate(reader, start=2):  # Start at 2 (after header)
                     if len(row) < 4:  # Minimum required columns
                         self.logger.warning(f"Row {row_idx} has insufficient columns, skipping")
                         continue
 
                     try:
-                        # Create record from row data (input only has 4 columns)
+                        sedol_val = row[sedol_col].strip() if sedol_col is not None and sedol_col < len(row) else None
+                        instrument_val = row[instrument_col].strip() if instrument_col is not None and instrument_col < len(row) else None
+
+                        # Create record from row data
                         record = IncorrectNetAmountRecord(
                             transaction_ref=row[self.COL_TRANSACTION_REF].strip() if row[self.COL_TRANSACTION_REF] else "",
                             net_amount=_to_decimal(row[self.COL_NET_AMOUNT], "Net Amount", row_idx),
                             consideration=_to_decimal(row[self.COL_CONSIDERATION], "Consideration", row_idx),
                             interest=_to_decimal(row[self.COL_INTEREST], "Interest", row_idx),
+                            sedol=sedol_val or None,
+                            instrument_classification=instrument_val or None,
                             correction=None,
                             correction_field=None,
                             comments=None
@@ -266,37 +281,43 @@ class IncorrectNetAmountValidationScript:
         # Ensure output directory exists
         self.output_file.parent.mkdir(parents=True, exist_ok=True)
         
-        # Define output columns (10 columns)
+        # Define output columns (13 columns)
         output_columns = [
-            "Transaction Reference",  # Col 0
-            "Net Amount",             # Col 1
-            "Consideration",          # Col 2
-            "Interest",               # Col 3
-            "Total",                  # Col 4
-            "Expected Interest",      # Col 5
-            "Net Difference",         # Col 6
-            "Correction",             # Col 7
-            "Correction Field",       # Col 8
-            "Error"                   # Col 9
+            "Transaction Reference",   # Col 0
+            "SEDOL",                   # Col 1
+            "Instrument Classification",  # Col 2
+            "Instrument Type",         # Col 3
+            "Net Amount",              # Col 4
+            "Consideration",           # Col 5
+            "Interest",                # Col 6
+            "Total",                   # Col 7
+            "Expected Interest",       # Col 8
+            "Net Difference",          # Col 9
+            "Error",                   # Col 10
+            "Correction",              # Col 11
+            "Correction Field",        # Col 12
         ]
-        
+
         try:
             with open(self.output_file, 'w', encoding='utf-8', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow(output_columns)
-                
+
                 for record in records:
                     output_row = [
                         record.transaction_ref,
+                        record.sedol or "",
+                        record.instrument_classification or "",
+                        record.instrument_type or "",
                         f"{record.net_amount:.2f}",
                         f"{record.consideration:.2f}",
                         f"{record.interest:.2f}",
                         f"{record.total:.2f}",
                         f"{record.expected_interest:.2f}",
                         f"{record.net_difference:.2f}",
+                        record.error,
                         record.correction or "",
                         record.correction_field or "",
-                        record.error
                     ]
                     writer.writerow(output_row)
             

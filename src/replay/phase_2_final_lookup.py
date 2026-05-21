@@ -101,6 +101,29 @@ def _read_rows(file_path: str) -> List[List[str]]:
 # Module-level helpers
 # ============================================================================
 
+
+def _make_output_filename(input_path: str) -> str:
+    """Derive the output CSV filename from a UnaVista input file path.
+
+    Replaces whatever text is inside the first set of parentheses in the stem
+    with ``AJB``.  If the stem contains no parentheses, ``(AJB)`` is appended
+    to the stem.  The output extension is always ``.csv``.
+
+    Examples::
+
+        UnaVista_MiFIR_Manual_Corrections_423_20180406.(TBD2).xlsx
+          -> UnaVista_MiFIR_Manual_Corrections_423_20180406.(AJB).csv
+
+        UnaVista_MiFIR_Manual_Corrections_423_20180406.csv
+          -> UnaVista_MiFIR_Manual_Corrections_423_20180406(AJB).csv
+    """
+    stem = Path(input_path).stem
+    new_stem = re.sub(r'\([^)]*\)', '(AJB)', stem)
+    if new_stem == stem:  # no parentheses found
+        new_stem = stem + '(AJB)'
+    return new_stem + '.csv'
+
+
 def _split_correction_parts(raw: str) -> List[str]:
     """Split a correction value or field string on the appropriate delimiter.
 
@@ -349,6 +372,8 @@ class UnaVistaTransactionIndex:
         self.transactions: List[List[str]] = []
         self.header: List[str] = []
         self.transaction_ref_index: Dict[str, int] = {}
+        # Each entry: (file_path, start_global_idx, row_count)
+        self.file_slices: List[tuple] = []
         self.logger = logger
 
     def load_files(self, file_paths: List[str]) -> None:
@@ -380,12 +405,14 @@ class UnaVistaTransactionIndex:
                     f"Loading {len(data_rows)} rows from {os.path.basename(file_path)}"
                 )
 
+                start_idx = global_idx
                 for row in data_rows:
                     txn_ref = row[1].strip() if len(row) > 1 else ""
                     if txn_ref and txn_ref not in self.transaction_ref_index:
                         self.transaction_ref_index[txn_ref] = global_idx
                     self.transactions.append(row)
                     global_idx += 1
+                self.file_slices.append((file_path, start_idx, len(data_rows)))
 
             except Exception as e:
                 self.logger.error(
@@ -910,58 +937,62 @@ class Phase2FinalLookup:
     # Output generation
     # ------------------------------------------------------------------ #
 
-    def generate_output(self) -> str:
-        """Generate the annotated UnaVista output CSV.
+    def generate_output(self) -> List[str]:
+        """Generate one annotated UnaVista output CSV per input UnaVista file.
 
-        Iterates all UnaVista rows, looks up each transaction reference against
-        the Phase 2 replay index, runs the correction test, and inserts a
-        ``test_result`` column at position 2.
+        Each output file mirrors its corresponding UnaVista input: the stem
+        is taken from the input filename with whatever is inside parentheses
+        replaced by ``AJB``, and the extension is always ``.csv``.
 
         Returns:
-            Filename of the generated output CSV.
+            List of output filenames written (one per UnaVista input file).
         """
-        self.logger.info("Generating output file...")
-        not_found_count = 0
-
+        self.logger.info("Generating output files...")
         os.makedirs(self.output_path, exist_ok=True)
 
         header = list(self.unavista_index.header)
-        header.insert(2, 'test_result')
+        output_header = header[:2] + ['test_result'] + header[2:]
 
-        output_rows: List[List[str]] = [header]
+        output_filenames: List[str] = []
+        not_found_total = 0
 
-        for row_idx, row_data in enumerate(self.unavista_index.transactions):
-            txn_ref = row_data[1].strip() if len(row_data) > 1 else ''
-            record = self.replay_index.records.get(txn_ref)
+        for file_path, start_idx, row_count in self.unavista_index.file_slices:
+            not_found_count = 0
+            output_rows: List[List[str]] = [output_header]
 
-            if record is None:
-                test_result = 'Transaction not found'
-                not_found_count += 1
-                self.stats.increment('not_found')
-            else:
-                test_result = self.process_transaction(record, row_data)
-                self.stats.increment('processed_records')
+            for row_idx in range(start_idx, start_idx + row_count):
+                row_data = self.unavista_index.transactions[row_idx]
+                txn_ref = row_data[1].strip() if len(row_data) > 1 else ''
+                record = self.replay_index.records.get(txn_ref)
 
-            row = list(row_data)
-            row.insert(2, test_result)
-            output_rows.append(row)
+                if record is None:
+                    test_result = 'Transaction not found'
+                    not_found_count += 1
+                    self.stats.increment('not_found')
+                else:
+                    test_result = self.process_transaction(record, row_data)
+                    self.stats.increment('processed_records')
 
-        if not_found_count:
-            self.logger.info(
-                f"{not_found_count} UnaVista transactions had no matching "
-                "Phase 2 replay record"
-            )
+                row = list(row_data)
+                row.insert(2, test_result)
+                output_rows.append(row)
 
-        timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        output_filename = f'output_Phase2_final_lookup_{timestamp}.csv'
-        output_filepath = os.path.join(self.output_path, output_filename)
+            if not_found_count:
+                self.logger.info(
+                    f"{os.path.basename(file_path)}: {not_found_count} transactions "
+                    "had no matching Phase 2 replay record"
+                )
+            not_found_total += not_found_count
 
-        with open(output_filepath, 'w', encoding='utf-8', newline='') as f_out:
-            writer = csv.writer(f_out)
-            writer.writerows(output_rows)
+            output_filename = _make_output_filename(file_path)
+            output_filepath = os.path.join(self.output_path, output_filename)
+            with open(output_filepath, 'w', encoding='utf-8', newline='') as f_out:
+                csv.writer(f_out).writerows(output_rows)
 
-        self.logger.info(f"Output written to: {output_filename}")
-        return output_filename
+            self.logger.info(f"Output written to: {output_filename}")
+            output_filenames.append(output_filename)
+
+        return output_filenames
 
     # ------------------------------------------------------------------ #
     # Main execution

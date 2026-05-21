@@ -102,9 +102,13 @@ class TestTemplateFormat:
     def test_get_validation_columns_incorrect_net_amount(self):
         """Test incorrect net amount validation columns."""
         cols = TemplateFormat.get_validation_columns('incorrect_net_amount')
-        assert len(cols) == 10
+        assert len(cols) == 13
         assert cols[0] == 'Transaction Reference'
+        assert 'SEDOL' in cols
+        assert 'Instrument Classification' in cols
+        assert 'Instrument Type' in cols
         assert 'Net Amount' in cols
+        assert 'Error' in cols
     
     def test_get_validation_columns_default(self):
         """Test default validation columns."""
@@ -281,7 +285,7 @@ class TestAccuracyTemplateGenerator:
         
         header = generator.create_template_header('35_3')
         
-        assert len(header) == 10 + 3 + len(SAMPLE_CONSOLIDATED_HEADER)
+        assert len(header) == 13 + 3 + len(SAMPLE_CONSOLIDATED_HEADER)
         assert header[0] == 'Transaction Reference'
     
     def test_create_template_header_default(self):
@@ -334,8 +338,8 @@ class TestAccuracyTemplateGenerator:
         
         # Verify it matches the transaction reference in consolidated data
         # Header has 'Transaction reference number' at index 3
-        # 10 validation + 3 comparison + index 3
-        txn_ref_col = 10 + 3 + 3
+        # 13 validation + 3 comparison + index 3
+        txn_ref_col = 13 + 3 + 3
         assert len(rows[0]) > txn_ref_col
         assert rows[0][txn_ref_col] == 'TXN004'
     

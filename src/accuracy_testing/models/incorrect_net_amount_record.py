@@ -40,18 +40,23 @@ class IncorrectNetAmountRecord:
     
     # Primary identifier
     transaction_ref: str
-    
+
     # Input fields (from database/CSV)
     net_amount: Decimal
     consideration: Decimal
     interest: Decimal
-    
+
+    # Instrument classification fields (from SECFIG via CONTCT.ASSET)
+    sedol: Optional[str] = None
+    instrument_classification: Optional[str] = None
+    instrument_type: Optional[str] = None  # "Debt", "Equity", or None
+
     # Output fields (calculated - initialized to 0)
     total: Decimal = field(default_factory=lambda: Decimal('0'))
     expected_interest: Decimal = field(default_factory=lambda: Decimal('0'))
     net_difference: Decimal = field(default_factory=lambda: Decimal('0'))
     error: str = field(default="N")
-    
+
     # Static/optional fields
     correction: Optional[str] = None
     correction_field: Optional[str] = None
@@ -120,12 +125,20 @@ class IncorrectNetAmountRecord:
         net_amount = Decimal(str(data.get('NETAMT') or data.get('net_amount', 0)))
         consideration = Decimal(str(data.get('CLICSD') or data.get('consideration', 0)))
         interest = Decimal(str(data.get('INTRST') or data.get('interest', 0)))
-        
+
+        raw_sedol = data.get('ASSET') or data.get('sedol') or data.get('SEDOL')
+        sedol = str(raw_sedol).strip() if raw_sedol is not None else None
+
+        raw_instrument = data.get('INSTRUMENT') or data.get('instrument_classification') or data.get('Instrument Classification')
+        instrument_classification = str(raw_instrument).strip() if raw_instrument is not None else None
+
         return cls(
             transaction_ref=transaction_ref,
             net_amount=net_amount,
             consideration=consideration,
-            interest=interest
+            interest=interest,
+            sedol=sedol,
+            instrument_classification=instrument_classification,
         )
     
     def to_dict(self) -> Dict[str, Any]:
@@ -146,16 +159,19 @@ class IncorrectNetAmountRecord:
         """
         return {
             'Transaction Reference': self.transaction_ref,
-            'Error': self.error,
-            'Correction': self.correction or '',
-            'Correction Field': self.correction_field or '',
-            'Comments': self.comments or '',
+            'SEDOL': self.sedol or '',
+            'Instrument Classification': self.instrument_classification or '',
+            'Instrument Type': self.instrument_type or '',
             'Net Amount': float(self.net_amount),
             'Consideration': float(self.consideration),
             'Interest': float(self.interest),
             'Total': float(self.total),
             'Expected Interest': float(self.expected_interest),
-            'Net Difference': float(self.net_difference)
+            'Net Difference': float(self.net_difference),
+            'Error': self.error,
+            'Correction': self.correction or '',
+            'Correction Field': self.correction_field or '',
+            'Comments': self.comments or '',
         }
     
     def __repr__(self) -> str:

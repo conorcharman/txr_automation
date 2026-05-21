@@ -90,7 +90,10 @@ const INCIDENT_SCRIPTS: IncidentScriptDef[] = [
   {
     scriptKey: "incorrect_net_amount_validation",
     displayLabel: "Incorrect Net Amount",
-    incidents: [{ code: "35_3", label: "Incorrect Net Amount" }],
+    incidents: [
+      { code: "35_3", label: "Incorrect Net Amount" },
+      { code: "35_10", label: "Suspected Incorrect Net Amount" },
+    ],
   },
   {
     scriptKey: "non_zero_net_quantity",

@@ -32,10 +32,10 @@ Directories created under ``{data_dir}/{fiscal_year}/{quarter}/``:
                 kaizen/
                 output/
             final_lookup/
+                merged/
                 output/
                 unavista/
             logs/
-            merged/
 
 Usage:
     python -m src.utils.setup_directories --fiscal-year FY26 --quarter Q1
@@ -73,10 +73,10 @@ DIRECTORY_TREE: List[str] = [
     # Replay — Phase 3
     "replay/phase_3/feedback/kaizen",
     "replay/phase_3/feedback/output",
+    "replay/phase_3/feedback/merged",
     "replay/phase_3/final_lookup/output",
     "replay/phase_3/final_lookup/unavista",
     "replay/phase_3/logs",
-    "replay/phase_3/merged",
 ]
 
 
@@ -149,8 +149,9 @@ def main() -> int:
     quarter: str     = args.quarter     or setup.get("quarter", "")
     data_dir: str    = args.data_dir    or setup.get("data_dir", "/app/data")
     log_level: str   = args.log_level   or config.get("processor", {}).get("log_level", "INFO")
+    log_dir: str     = config.get("paths", {}).get("log_output", "/app/data/logs")
 
-    logger = create_logger(name="setup_directories", log_level=log_level)
+    logger = create_logger("setup_directories", log_dir, log_level)
 
     if not fiscal_year or not quarter:
         logger.error(

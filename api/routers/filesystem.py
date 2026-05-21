@@ -222,6 +222,50 @@ async def read_file(
 
 _STAGE_DIRS = ("kaizen", "extracts", "templates", "output", "logs")
 
+#: Maps logical module names to the actual on-disk directory under FY/Q/.
+#: All replay workflow modules share a single ``replay/`` root directory;
+#: using the logical module name (e.g. ``replay_phase3_final``) directly
+#: would create a spurious top-level directory instead of resolving under it.
+_MODULE_DIRS: dict[str, str] = {
+    "replay_phase2_feedback": "replay",
+    "replay_phase2_final":    "replay",
+    "replay_phase3_feedback": "replay",
+    "replay_phase3_final":    "replay",
+    "replay_phase3_merge":    "replay",
+}
+
+#: Per-workflow stage → sub-path map for all replay modules.
+#: Only stages listed here will have directories auto-created by resolve_paths.
+_REPLAY_MODULE_STAGE_MAPS: dict[str, dict[str, str]] = {
+    "replay_phase2_feedback": {
+        "kaizen": "phase_2/feedback/kaizen",
+        "output": "phase_2/feedback/output",
+        "logs":   "phase_2/logs",
+    },
+    "replay_phase2_final": {
+        "kaizen":   "phase_2/feedback/output",
+        "extracts": "phase_2/final_lookup/unavista",
+        "output":   "phase_2/final_lookup/output",
+        "logs":     "phase_2/logs",
+    },
+    "replay_phase3_feedback": {
+        "kaizen": "phase_3/feedback/kaizen",
+        "output": "phase_3/feedback/output",
+        "logs":   "phase_3/logs",
+    },
+    "replay_phase3_final": {
+        "kaizen":   "phase_3/feedback/output",
+        "extracts": "phase_3/final_lookup/unavista",
+        "output":   "phase_3/final_lookup/output",
+        "logs":     "phase_3/logs",
+    },
+    "replay_phase3_merge": {
+        "kaizen": "phase_3/feedback/output",
+        "output": "phase_3/feedback/merged",
+        "logs":   "phase_3/logs",
+    },
+}
+
 
 def _default_stage_path(root: Path, module: str | None, stage: str) -> Path:
     """Return the default path for a stage under a resolved root.
@@ -244,8 +288,8 @@ def _default_stage_path(root: Path, module: str | None, stage: str) -> Path:
       replay_phase3_final       kaizen     phase_3/feedback/output
       replay_phase3_final       extracts   phase_3/final_lookup/unavista
       replay_phase3_final       output     phase_3/final_lookup/output
-      replay_phase3_merge       kaizen     phase_3/final_lookup/output
-      replay_phase3_merge       output     phase_3/merged
+      replay_phase3_merge       kaizen     phase_3/feedback/output
+      replay_phase3_merge       output     phase_3/feedback/merged
       ========================  =========  ================================
 
       All replay modules share a ``logs`` stage mapped to their respective
@@ -262,36 +306,6 @@ def _default_stage_path(root: Path, module: str | None, stage: str) -> Path:
     """
     if module == "accuracy_testing" and stage == "extracts":
         return root / "extracts" / "csv"
-
-    _REPLAY_MODULE_STAGE_MAPS: dict[str, dict[str, str]] = {
-        "replay_phase2_feedback": {
-            "kaizen": "phase_2/feedback/kaizen",
-            "output": "phase_2/feedback/output",
-            "logs":   "phase_2/logs",
-        },
-        "replay_phase2_final": {
-            "kaizen":   "phase_2/feedback/output",
-            "extracts": "phase_2/final_lookup/unavista",
-            "output":   "phase_2/final_lookup/output",
-            "logs":     "phase_2/logs",
-        },
-        "replay_phase3_feedback": {
-            "kaizen": "phase_3/feedback/kaizen",
-            "output": "phase_3/feedback/output",
-            "logs":   "phase_3/logs",
-        },
-        "replay_phase3_final": {
-            "kaizen":   "phase_3/feedback/output",
-            "extracts": "phase_3/final_lookup/unavista",
-            "output":   "phase_3/final_lookup/output",
-            "logs":     "phase_3/logs",
-        },
-        "replay_phase3_merge": {
-            "kaizen": "phase_3/final_lookup/output",
-            "output": "phase_3/merged",
-            "logs":   "phase_3/logs",
-        },
-    }
 
     if module in _REPLAY_MODULE_STAGE_MAPS:
         stage_map = _REPLAY_MODULE_STAGE_MAPS[module]
@@ -338,7 +352,8 @@ async def resolve_paths(body: ResolvePathsRequest) -> ResolvedPaths:
             )
 
     quarter_root = get_settings().data_dir.resolve() / fy / quarter
-    root = quarter_root / module if module else quarter_root
+    module_dir = _MODULE_DIRS.get(module, module) if module else None
+    root = quarter_root / module_dir if module_dir else quarter_root
     paths: dict[str, str] = {}
 
     for stage in _STAGE_DIRS:
@@ -365,8 +380,13 @@ async def resolve_paths(body: ResolvePathsRequest) -> ResolvedPaths:
         else:
             paths[stage] = str(_default_stage_path(root, module, stage))
 
-    # Create all directories (including the root).
-    for dir_path in paths.values():
+    # Create directories — but only for stages that are actually in this
+    # module's stage map.  Unmapped stages (e.g. 'templates' for replay
+    # modules) would otherwise create spurious directories under the root.
+    module_stage_map = _REPLAY_MODULE_STAGE_MAPS.get(module, {}) if module else {}
+    for stage, dir_path in paths.items():
+        if module in _REPLAY_MODULE_STAGE_MAPS and stage not in module_stage_map:
+            continue
         Path(dir_path).mkdir(parents=True, exist_ok=True)
 
     return ResolvedPaths(

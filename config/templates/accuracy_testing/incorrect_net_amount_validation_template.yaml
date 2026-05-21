@@ -34,6 +34,8 @@ testing_period:
 # Specify exact file paths for one incident
 single:
   # Incident code to validate
+  # Options: "35_3" (Incorrect Net Amount)
+  #          "35_10" (Suspected Incorrect Net Amount)
   incident_code: "35_3"
   
   paths:
@@ -62,7 +64,8 @@ batch:
   # Incident codes for auto-discovery mode
   # Used when incidents: "auto" is specified
   auto_incidents:
-    - "35_3"  # Incorrect Value Compensation for Trading Positions
+    - "35_3"   # Incorrect Net Amount
+    - "35_10"  # Suspected Incorrect Net Amount
   
   paths:
     # Directory containing template files (Kaizen expected values)
@@ -110,13 +113,25 @@ processor:
 # =============================================================================
 # Supported Incident Codes
 # =============================================================================
-# This script handles pricing validation:
-#   - 35_3: Incorrect Value Compensation for Trading Positions
+# This script handles pricing validation for the following incidents:
+#   - 35_3:  Incorrect Net Amount
+#   - 35_10: Suspected Incorrect Net Amount
 #
-# Note: Pricing validation is unique - it has NO separate extract or template
-# Kaizen lookup files. The "template" file IS the input data source.
-# Validation checks:
-#   - Net Amount calculations
-#   - Consideration calculations  
+# Both incidents share the same validation pipeline:
+#   1. Instrument pre-validation: classifies each transaction as Debt or Equity
+#      using the SECFIG.INSTRUMENT code retrieved via CONTCT.ASSET (SEDOL).
+#      Equity records are flagged Error=Y and bypass further arithmetic.
+#   2. Net-amount arithmetic (35_3 logic): validates Net Amount = Consideration
+#      + Interest for Debt and unclassified records.
+#
+# SQL templates:
+#   - 35_3:  SCR_pricing_data_v1.0.sql / IncorrectNetAmount_period.sql
+#   - 35_10: IncorrectNetAmount.sql
+#
+# Output columns (13 validation + 3 comparison):
+#   Transaction Reference, SEDOL, Instrument Classification, Instrument Type,
+#   Net Amount, Consideration, Interest, Total, Expected Interest,
+#   Net Difference, Error, Correction, Correction Field,
+#   Agree With Correction, Suggested Correction, Suggested Correction Field
 #   - Interest calculations
 #   - Total = Net Amount + Consideration + Interest

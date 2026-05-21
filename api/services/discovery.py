@@ -23,7 +23,7 @@ INCIDENT_CODE_PATTERNS: dict[str, list[str]] = {
     "inconsistent_seller_id_validation": ["16_20"],
     "validate_ftbdm": ["12_17"],
     "validate_ftsdm": ["21_17"],
-    "incorrect_net_amount_validation": ["35_3"],
+    "incorrect_net_amount_validation": ["35_3", "35_10"],
     "non_zero_net_quantity": ["7_6"],
     "non_zero_net_amount": ["7_42"],
     "incorrect_time": ["7_30"],

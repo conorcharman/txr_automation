@@ -54,7 +54,7 @@ class TemplateFormat:
     SELLER_INCIDENTS = {'16_19', '16_21', '16_23', '16_20'}
     
     # Incorrect net amount validation incidents
-    INCORRECT_NET_AMOUNT_INCIDENTS = {'35_3'}
+    INCORRECT_NET_AMOUNT_INCIDENTS = {'35_3', '35_10'}
     
     # Net quantity validation incidents
     NET_QUANTITY_INCIDENTS = {'7_6'}
@@ -107,16 +107,19 @@ class TemplateFormat:
         "Tracker Status"
     ]
     
-    # Incorrect net amount validation template columns
+    # Incorrect net amount validation template columns (Incidents 35_3 and 35_10)
     INCORRECT_NET_AMOUNT_VALIDATION_COLS = [
         "Transaction Reference",
-        "Error",
+        "SEDOL",
+        "Instrument Classification",
+        "Instrument Type",
         "Net Amount",
         "Consideration",
         "Interest",
         "Total",
         "Expected Interest",
         "Net Difference",
+        "Error",
         "Correction",
         "Correction Field"
     ]
