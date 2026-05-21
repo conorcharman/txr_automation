@@ -34,16 +34,63 @@ from __future__ import annotations
 import argparse
 import logging
 import sys
+from dataclasses import dataclass
 from datetime import date, datetime
+from enum import Enum
 from pathlib import Path
 
 # Add project root to sys.path (same pattern as other scripts in this package).
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.gui.scheduler.file_naming import AutoFileNamer
-from src.gui.scheduler.models import PeriodType, SchedulePeriod, ValidationType
 from src.accuracy_testing.core.dtf_runner import DTFRunner
+
+
+# ---------------------------------------------------------------------------
+# Enums and data types (formerly in src.gui.scheduler.models / file_naming)
+# ---------------------------------------------------------------------------
+
+class ValidationType(Enum):  # noqa: D101
+    BUYER_ID = "buyer_id"
+    SELLER_ID = "seller_id"
+    INCONSISTENT_BUYER_ID = "inconsistent_buyer_id"
+    INCONSISTENT_SELLER_ID = "inconsistent_seller_id"
+    FUND_TRADE_BUYER_DM = "fund_trade_buyer_dm"
+    FUND_TRADE_SELLER_DM = "fund_trade_seller_dm"
+    NON_ZERO_NET_QTY = "non_zero_net_qty"
+    NON_ZERO_NET_AMT = "non_zero_net_amt"
+    INCORRECT_NET_AMOUNT = "incorrect_net_amount"
+    INCORRECT_TIME = "incorrect_time"
+
+    @property
+    def display_name(self) -> str:  # noqa: D102
+        return self.value.replace("_", " ").title()
+
+
+class PeriodType(Enum):  # noqa: D101
+    FISCAL_QUARTER = "fiscal_quarter"
+
+
+@dataclass
+class SchedulePeriod:  # noqa: D101
+    fiscal_year: str
+    quarter: str
+    period_type: PeriodType = PeriodType.FISCAL_QUARTER
+
+    def to_date_range(self) -> tuple[date, date]:  # noqa: D102
+        return fiscal_period_to_dates(self.fiscal_year, self.quarter)
+
+
+def _generate_extract_path(
+    vtype: ValidationType,
+    period: SchedulePeriod,
+    output_dir: Path,
+    timestamp: datetime,
+) -> Path:
+    """Return the output CSV path for a period extract."""
+    ts = timestamp.strftime("%Y%m%d_%H%M")
+    filename = f"{vtype.value}_{period.fiscal_year}_{period.quarter}_{ts}_extract.csv"
+    return output_dir / filename
 
 # ---------------------------------------------------------------------------
 # Mapping tables
@@ -212,7 +259,7 @@ def main() -> None:
 
     timestamp = datetime.now()
     output_dir = Path(args.output_dir)
-    csv_path = AutoFileNamer.generate_extract_path(vtype, period, output_dir, timestamp)
+    csv_path = _generate_extract_path(vtype, period, output_dir, timestamp)
     dtf_path = csv_path.with_suffix(".dtf")
 
     sql_template_name = SQL_TEMPLATE_MAP[vtype]

@@ -22,10 +22,10 @@ from src.accuracy_testing.core.dtf_runner import DTFRunner
 from src.accuracy_testing.scripts.period_extract_generator import (
     VALIDATION_TYPE_MAP,
     SQL_TEMPLATE_MAP,
+    ValidationType,
     fiscal_period_to_dates,
     main,
 )
-from src.gui.scheduler.models import ValidationType
 
 
 # ---------------------------------------------------------------------------
