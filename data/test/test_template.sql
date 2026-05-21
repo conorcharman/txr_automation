@@ -1,3 +1,0 @@
-SELECT * FROM table WHERE ref IN (
-    -- TRANSACTION REFERENCES --
-)
