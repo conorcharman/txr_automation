@@ -134,3 +134,4 @@ data/FY*
 
 # Generated data directories
 data/output
+data/celerybeat-schedule.dat
