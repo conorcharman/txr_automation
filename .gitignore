@@ -119,7 +119,8 @@ Thumbs.db
 
 # Celery
 
-celerybeat-schedule
+*celerybeat-schedule
+data/celerybeat-schedule
 data/celerybeat-schedule
 
 # Machine-specific corporate proxy config (do not commit)
