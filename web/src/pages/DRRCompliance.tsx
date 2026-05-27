@@ -27,11 +27,14 @@ import {
 } from "@/components/ui/collapsible";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ChevronDown, CheckCircle2, XCircle, AlertTriangle, BookOpen } from "lucide-react";
-import { listDRRRules, runComplianceCheck, listDRRSubmissions } from "@/api/drr";
+import { listDRRRules, runComplianceCheck, listDRRSubmissions, runCdmReport } from "@/api/drr";
 import type {
   DRRComplianceCheckRequest,
   DRRComplianceCheckResponse,
+  DRRCdmReportResponse,
   DRRRuleResult,
+  LeiEnrichment,
+  InstrumentEnrichment,
 } from "@/types";
 
 // ---------------------------------------------------------------------------
@@ -392,7 +395,265 @@ function RuleCatalogueTab() {
 }
 
 // ---------------------------------------------------------------------------
-// Submission History tab
+// CDM Report tab
+// ---------------------------------------------------------------------------
+
+function LeiCard({ label, data }: { label: string; data: LeiEnrichment | null }) {
+  if (!data) return (
+    <Card className="border-dashed">
+      <CardContent className="pt-4 text-sm text-muted-foreground">{label}: no enrichment data</CardContent>
+    </Card>
+  );
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">{label}</CardTitle>
+        <CardDescription className="font-mono text-xs">{data.lei}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-1 text-sm">
+        <div className="flex items-center gap-2">
+          <StatusBadge status={data.isValid ? "pass" : "fail"} />
+          <span className="text-muted-foreground text-xs">{data.reason}</span>
+        </div>
+        {data.legalName && <p><span className="text-muted-foreground">Name:</span> {data.legalName}</p>}
+        {data.entityStatus && <p><span className="text-muted-foreground">Status:</span> {data.entityStatus}</p>}
+        {data.registrationStatus && <p><span className="text-muted-foreground">Registration:</span> {data.registrationStatus}</p>}
+        {data.legalAddressCountry && <p><span className="text-muted-foreground">Country:</span> {data.legalAddressCountry}</p>}
+      </CardContent>
+    </Card>
+  );
+}
+
+function InstrumentCard({ data }: { data: InstrumentEnrichment | null }) {
+  if (!data) return (
+    <Card className="border-dashed">
+      <CardContent className="pt-4 text-sm text-muted-foreground">Instrument: no enrichment data</CardContent>
+    </Card>
+  );
+  return (
+    <Card>
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-medium">Instrument</CardTitle>
+        <CardDescription className="font-mono text-xs">{data.isin}</CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-1 text-sm">
+        <StatusBadge status={data.found ? "pass" : "fail"} />
+        {data.fullName && <p><span className="text-muted-foreground">Name:</span> {data.fullName}</p>}
+        {data.cfiCode && <p><span className="text-muted-foreground">CFI:</span> <span className="font-mono">{data.cfiCode}</span></p>}
+        {data.mic && <p><span className="text-muted-foreground">MIC:</span> <span className="font-mono">{data.mic}</span></p>}
+      </CardContent>
+    </Card>
+  );
+}
+
+function CdmReportTab() {
+  const [form, setForm] = useState<DRRComplianceCheckRequest>({
+    transactionRef: "",
+    buyerId: "",
+    buyerIdType: "LEI",
+    sellerId: "",
+    sellerIdType: "LEI",
+    tradingDateTime: "",
+    quantity: null,
+    netAmount: null,
+    venue: "",
+    isin: "",
+    investmentDecisionMaker: "",
+  });
+  const [result, setResult] = useState<DRRCdmReportResponse | null>(null);
+
+  const mutation = useMutation({
+    mutationFn: runCdmReport,
+    onSuccess: (data) => setResult(data),
+  });
+
+  const set = (key: keyof DRRComplianceCheckRequest, value: string | number | null) =>
+    setForm((f) => ({ ...f, [key]: value }));
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    mutation.mutate(form);
+  };
+
+  return (
+    <div className="space-y-6">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Transaction fields</CardTitle>
+          <CardDescription>
+            Generate a CDM-shaped <code className="text-xs bg-muted px-1 rounded">TransactionReportInstruction</code> with
+            GLEIF and FIRDS enrichment.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="col-span-2 space-y-1">
+                <Label>Transaction reference *</Label>
+                <Input
+                  required
+                  value={form.transactionRef}
+                  onChange={(e) => set("transactionRef", e.target.value)}
+                  placeholder="e.g. TXN-2024-00001"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Buyer ID (Field 7)</Label>
+                <Input
+                  value={form.buyerId ?? ""}
+                  onChange={(e) => set("buyerId", e.target.value)}
+                  placeholder="LEI / CONCAT / NIDN..."
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Buyer ID type</Label>
+                <select
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  value={form.buyerIdType ?? "LEI"}
+                  onChange={(e) => set("buyerIdType", e.target.value)}
+                >
+                  {ID_TYPES.map((t) => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Seller ID (Field 16)</Label>
+                <Input
+                  value={form.sellerId ?? ""}
+                  onChange={(e) => set("sellerId", e.target.value)}
+                  placeholder="LEI / CONCAT / NIDN..."
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Seller ID type</Label>
+                <select
+                  className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm"
+                  value={form.sellerIdType ?? "LEI"}
+                  onChange={(e) => set("sellerIdType", e.target.value)}
+                >
+                  {ID_TYPES.map((t) => <option key={t}>{t}</option>)}
+                </select>
+              </div>
+
+              <div className="space-y-1">
+                <Label>Trading date time (Field 28)</Label>
+                <Input
+                  value={form.tradingDateTime ?? ""}
+                  onChange={(e) => set("tradingDateTime", e.target.value)}
+                  placeholder="2024-01-15T09:30:00"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>ISIN (Field 41)</Label>
+                <Input
+                  value={form.isin ?? ""}
+                  onChange={(e) => set("isin", e.target.value)}
+                  placeholder="GB0001234567"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Quantity (Field 30)</Label>
+                <Input
+                  type="number"
+                  value={form.quantity ?? ""}
+                  onChange={(e) => set("quantity", e.target.value ? parseFloat(e.target.value) : null)}
+                  placeholder="1000"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Net amount / price (Field 33)</Label>
+                <Input
+                  type="number"
+                  value={form.netAmount ?? ""}
+                  onChange={(e) => set("netAmount", e.target.value ? parseFloat(e.target.value) : null)}
+                  placeholder="10500.00"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label>Venue MIC (Field 36)</Label>
+                <Input
+                  value={form.venue ?? ""}
+                  onChange={(e) => set("venue", e.target.value)}
+                  placeholder="XLON"
+                />
+              </div>
+              <div className="space-y-1">
+                <Label>Investment decision maker (Field 57)</Label>
+                <Input
+                  value={form.investmentDecisionMaker ?? ""}
+                  onChange={(e) => set("investmentDecisionMaker", e.target.value)}
+                  placeholder="ALGO / person code"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end pt-2">
+              <Button type="submit" disabled={mutation.isPending}>
+                {mutation.isPending ? "Generating…" : "Generate CDM report"}
+              </Button>
+            </div>
+          </form>
+        </CardContent>
+      </Card>
+
+      {mutation.isError && (
+        <Card className="border-red-200 bg-red-50">
+          <CardContent className="pt-4 text-red-700 text-sm">
+            {String(mutation.error)}
+          </CardContent>
+        </Card>
+      )}
+
+      {result && (
+        <div className="space-y-4">
+          {/* Compliance summary */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-base">Compliance summary — {result.transactionRef}</CardTitle>
+              <OverallBadge status={result.complianceStatus} />
+            </CardHeader>
+            <CardContent className="flex gap-6 text-sm">
+              <span className="text-green-700 font-medium">{result.passed} passed</span>
+              <span className="text-red-700 font-medium">{result.failed} failed</span>
+              <span className="text-amber-700 font-medium">{result.warnings} warnings</span>
+            </CardContent>
+          </Card>
+
+          {/* Enrichment panel */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">Entity &amp; instrument enrichment</CardTitle>
+              <CardDescription>GLEIF Golden Copy and FIRDS cache lookups (best-effort)</CardDescription>
+            </CardHeader>
+            <CardContent className="grid grid-cols-3 gap-4">
+              <LeiCard label="Buyer" data={result.enrichment.buyer} />
+              <LeiCard label="Seller" data={result.enrichment.seller} />
+              <InstrumentCard data={result.enrichment.instrument} />
+            </CardContent>
+          </Card>
+
+          {/* CDM JSON viewer */}
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base">CDM JSON — TransactionReportInstruction</CardTitle>
+              <CardDescription>MiFIR RTS 22 structured output per ISDA Common Domain Model</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <pre className="text-xs bg-muted rounded-md p-4 overflow-auto max-h-[500px] leading-relaxed">
+                {JSON.stringify(result.cdmJson, null, 2)}
+              </pre>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // ---------------------------------------------------------------------------
 
 function SubmissionHistoryTab() {
@@ -479,6 +740,7 @@ const DRRCompliance: React.FC = () => (
         <TabsTrigger value="check">Compliance check</TabsTrigger>
         <TabsTrigger value="catalogue">Rule catalogue</TabsTrigger>
         <TabsTrigger value="history">History</TabsTrigger>
+        <TabsTrigger value="cdm">CDM Report</TabsTrigger>
       </TabsList>
       <TabsContent value="check" className="mt-4">
         <ComplianceCheckTab />
@@ -488,6 +750,9 @@ const DRRCompliance: React.FC = () => (
       </TabsContent>
       <TabsContent value="history" className="mt-4">
         <SubmissionHistoryTab />
+      </TabsContent>
+      <TabsContent value="cdm" className="mt-4">
+        <CdmReportTab />
       </TabsContent>
     </Tabs>
   </div>

@@ -1,4 +1,5 @@
 import type {
+  DRRCdmReportResponse,
   DRRComplianceCheckRequest,
   DRRComplianceCheckResponse,
   DRRRuleCatalogueEntry,
@@ -29,6 +30,17 @@ export async function runComplianceCheck(
     body: JSON.stringify(req),
   });
   return handleResponse<DRRComplianceCheckResponse>(res);
+}
+
+export async function runCdmReport(
+  req: DRRComplianceCheckRequest
+): Promise<DRRCdmReportResponse> {
+  const res = await fetch(`${BASE_URL}/api/drr/cdm-report`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(req),
+  });
+  return handleResponse<DRRCdmReportResponse>(res);
 }
 
 export async function listDRRSubmissions(): Promise<DRRSubmissionSummary[]> {

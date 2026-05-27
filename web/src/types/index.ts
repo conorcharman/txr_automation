@@ -635,3 +635,42 @@ export interface DRRSubmissionSummary {
   failed: number;
   warnings: number;
 }
+
+// ---------------------------------------------------------------------------
+// DRR CDM Report
+// ---------------------------------------------------------------------------
+
+export interface LeiEnrichment {
+  lei: string;
+  found: boolean;
+  isValid: boolean;
+  reason: string;
+  legalName: string | null;
+  entityStatus: string | null;
+  registrationStatus: string | null;
+  legalAddressCountry: string | null;
+}
+
+export interface InstrumentEnrichment {
+  isin: string;
+  found: boolean;
+  fullName: string | null;
+  cfiCode: string | null;
+  mic: string | null;
+}
+
+export interface DRREnrichmentSummary {
+  buyer: LeiEnrichment | null;
+  seller: LeiEnrichment | null;
+  instrument: InstrumentEnrichment | null;
+}
+
+export interface DRRCdmReportResponse {
+  transactionRef: string;
+  cdmJson: Record<string, unknown>;
+  enrichment: DRREnrichmentSummary;
+  complianceStatus: "pass" | "fail" | "warning";
+  passed: number;
+  failed: number;
+  warnings: number;
+}

@@ -59,6 +59,7 @@ async def client() -> AsyncGenerator[AsyncClient, None]:
 
     # Create schema in the test database.
     # Import models to ensure their metadata is registered with Base.
+    import api.models.drr_submission  # noqa: F401
     import api.models.job  # noqa: F401
     import api.models.saved_config  # noqa: F401
 

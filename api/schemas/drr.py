@@ -91,3 +91,67 @@ class DRRRuleCatalogueEntry(_CamelModel):
     field_name: str
     regulation: str
     provision: str
+
+
+# ---------------------------------------------------------------------------
+# CDM report schemas
+# ---------------------------------------------------------------------------
+
+
+class LeiEnrichment(_CamelModel):
+    """GLEIF enrichment result for a single LEI."""
+
+    lei: str
+    found: bool
+    is_valid: bool
+    reason: str
+    legal_name: str | None = None
+    entity_status: str | None = None
+    registration_status: str | None = None
+    legal_address_country: str | None = None
+
+
+class InstrumentEnrichment(_CamelModel):
+    """FIRDS enrichment result for a single ISIN."""
+
+    isin: str
+    found: bool
+    full_name: str | None = None
+    cfi_code: str | None = None
+    mic: str | None = None
+
+
+class DRREnrichmentSummary(_CamelModel):
+    """Aggregated enrichment for a single transaction."""
+
+    buyer: LeiEnrichment | None = None
+    seller: LeiEnrichment | None = None
+    instrument: InstrumentEnrichment | None = None
+
+
+class DRRCdmReportRequest(_CamelModel):
+    """Request body for POST /api/drr/cdm-report (same fields as compliance-check)."""
+
+    transaction_ref: str = Field(..., description="Unique reference for this transaction")
+    buyer_id: str | None = Field(None, description="Buyer identification code")
+    buyer_id_type: str | None = Field(None, description="Buyer ID type (LEI, CONCAT, NIDN, etc.)")
+    seller_id: str | None = Field(None, description="Seller identification code")
+    seller_id_type: str | None = Field(None, description="Seller ID type")
+    trading_date_time: str | None = Field(None, description="ISO 8601 trade datetime")
+    quantity: float | None = Field(None, description="Number of units / notional")
+    net_amount: float | None = Field(None, description="Net monetary amount")
+    venue: str | None = Field(None, description="ISO 10383 MIC code")
+    isin: str | None = Field(None, description="ISIN of the financial instrument")
+    investment_decision_maker: str | None = Field(None, description="Decision maker code")
+
+
+class DRRCdmReportResponse(_CamelModel):
+    """Response body for POST /api/drr/cdm-report."""
+
+    transaction_ref: str
+    cdm_json: dict = Field(description="CDM TransactionReportInstruction JSON")
+    enrichment: DRREnrichmentSummary
+    compliance_status: str  # pass | fail | warning
+    passed: int
+    failed: int
+    warnings: int

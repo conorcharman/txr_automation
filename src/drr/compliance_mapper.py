@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import re
 from dataclasses import dataclass, field
-from datetime import datetime
+from datetime import UTC, datetime
 from enum import Enum
 
 from src.drr.rule_catalogue import CATALOGUE, RuleReference
@@ -272,7 +272,7 @@ def check_transaction(
     """
     report = ComplianceReport(
         transaction_ref=transaction_ref,
-        checked_at=datetime.utcnow(),
+        checked_at=datetime.now(UTC),
     )
 
     report.results.append(
