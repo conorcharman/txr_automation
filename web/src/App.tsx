@@ -15,6 +15,7 @@ import Utilities from "@/pages/Utilities";
 import Scheduler from "@/pages/Scheduler";
 import ReconciliationPage from "@/pages/ReconciliationPage";
 import FileBrowser from "@/pages/FileBrowser";
+import DRRCompliance from "@/pages/DRRCompliance";
 import NotFound from "@/pages/NotFound";
 
 const queryClient = new QueryClient({
@@ -38,6 +39,7 @@ export default function App() {
             <Route path="scheduler" element={<Scheduler />} />
             <Route path="reconciliation" element={<ReconciliationPage />} />
             <Route path="files" element={<FileBrowser />} />
+            <Route path="drr" element={<DRRCompliance />} />
             <Route path="jobs" element={<Jobs />} />
             <Route path="jobs/:jobId" element={<JobDetail />} />
           </Route>

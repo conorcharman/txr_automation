@@ -11,6 +11,7 @@ import {
   CalendarClock,
   FileCheck,
   ShieldCheck,
+  Scale,
   FolderOpen,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,7 @@ const navItems: NavItem[] = [
   { label: "Utilities", to: "/utilities", icon: <Wrench size={18} /> },
   { label: "Scheduler", to: "/scheduler", icon: <CalendarClock size={18} /> },
   { label: "Reconciliation", to: "/reconciliation", icon: <FileCheck size={18} /> },
+  { label: "DRR Compliance", to: "/drr", icon: <Scale size={18} /> },
   { label: "Output Files", to: "/files", icon: <FolderOpen size={18} /> },
   { label: "Job History", to: "/jobs", icon: <History size={18} /> },
 ];

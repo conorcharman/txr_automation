@@ -52,6 +52,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     import api.models.reconciliation  # noqa: F401
     import api.models.saved_config  # noqa: F401
     import api.models.schedule  # noqa: F401
+    import api.models.drr_submission  # noqa: F401
 
     from api.database import Base, get_engine
 
@@ -108,6 +109,7 @@ from api.routers.pipeline import router as pipeline_router  # noqa: E402
 from api.routers.reconciliation import router as reconciliation_router  # noqa: E402
 from api.routers.scheduler import router as scheduler_router  # noqa: E402
 from api.routers.utilities import router as utilities_router  # noqa: E402
+from api.routers.drr import router as drr_router  # noqa: E402
 
 app.include_router(health_router, prefix="/api")
 app.include_router(jobs_router, prefix="/api")
@@ -123,3 +125,4 @@ app.include_router(filesystem_router, prefix="/api")
 app.include_router(pipeline_router, prefix="/api")
 app.include_router(reconciliation_router, prefix="/api")
 app.include_router(scheduler_router, prefix="/api")
+app.include_router(drr_router, prefix="/api")

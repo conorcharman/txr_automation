@@ -575,3 +575,63 @@ export interface ReconciliationScheduleUpdate {
   stopOnError?: boolean;
   isActive?: boolean;
 }
+
+// ---------------------------------------------------------------------------
+// DRR — Digital Regulatory Reporting (MiFIR RTS 22)
+// ---------------------------------------------------------------------------
+
+export interface DRRRuleCatalogueEntry {
+  ruleName: string;
+  fieldNumber: string;
+  fieldName: string;
+  regulation: string;
+  provision: string;
+}
+
+export interface DRRRuleResult {
+  ruleName: string;
+  fieldNumber: string;
+  fieldName: string;
+  regulation: string;
+  provision: string;
+  status: "pass" | "fail" | "warning" | "not_checked";
+  value: string | null;
+  error: string | null;
+}
+
+export interface DRRComplianceCheckRequest {
+  transactionRef: string;
+  buyerId?: string | null;
+  buyerIdType?: string | null;
+  sellerId?: string | null;
+  sellerIdType?: string | null;
+  tradingDateTime?: string | null;
+  quantity?: number | null;
+  netAmount?: number | null;
+  venue?: string | null;
+  isin?: string | null;
+  investmentDecisionMaker?: string | null;
+}
+
+export interface DRRComplianceCheckResponse {
+  submissionId: string;
+  transactionRef: string;
+  checkedAt: string;
+  overallStatus: "pass" | "fail" | "warning";
+  results: DRRRuleResult[];
+  totalRules: number;
+  passed: number;
+  failed: number;
+  warnings: number;
+}
+
+export interface DRRSubmissionSummary {
+  submissionId: string;
+  transactionRef: string;
+  checkedAt: string;
+  overallStatus: "pass" | "fail" | "warning";
+  totalRules: number;
+  passed: number;
+  failed: number;
+  warnings: number;
+}
