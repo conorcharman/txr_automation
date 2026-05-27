@@ -2090,6 +2090,10 @@ class IDValidationProcessor:
             except Exception as e:
                 record.validation_error = f"Processing error: {str(e)}"
                 record.actions_taken.append(f"ERROR: {str(e)}")
+                # Keep output schema stable even on per-record failures.
+                record.error = "Y"
+                record.match = ""
+                record.kaizen_error = ""
                 self.stats.errors += 1
                 processed.append(record)
         
@@ -2191,18 +2195,24 @@ class IDValidationProcessor:
                     )
 
                 for row in reader:
-                    txn_ref = row.get('Transaction Reference', '').strip()
+                    txn_ref = self._normalize_template_txn_ref(
+                        row.get('Transaction Reference', '')
+                    )
                     if txn_ref:
-                        expected_id = row.get(id_col, '').strip()
-                        expected_type = row.get(type_col, '').strip()
+                        expected_id = self._normalize_template_value(row.get(id_col, ''))
+                        expected_type = self._normalize_template_value(row.get(type_col, ''))
 
                         # Pre-INCIDENT validation columns are intentionally blank
                         # before data push. Fall back to consolidated columns that
                         # are appended after INCIDENT_CODE when needed.
                         if not expected_id and fallback_id_col:
-                            expected_id = row.get(fallback_id_col, '').strip()
+                            expected_id = self._normalize_template_value(
+                                row.get(fallback_id_col, '')
+                            )
                         if not expected_type and fallback_type_col:
-                            expected_type = row.get(fallback_type_col, '').strip()
+                            expected_type = self._normalize_template_value(
+                                row.get(fallback_type_col, '')
+                            )
 
                         # Store both ID and type for flexible formatting
                         self.template_data[txn_ref] = {
@@ -2221,6 +2231,19 @@ class IDValidationProcessor:
         except Exception as e:
             if self.logger:
                 self.logger.warning(f"Failed to load template file: {e}")
+
+    @staticmethod
+    def _normalize_template_txn_ref(value: str) -> str:
+        """Normalize transaction reference keys for stable template lookups."""
+        return str(value or "").strip().upper()
+
+    @staticmethod
+    def _normalize_template_value(value: str) -> str:
+        """Normalize template cell values and coerce common NA sentinels to blank."""
+        normalized = str(value or "").strip()
+        if normalized.upper() in {"NA", "N/A", "NONE", "NULL", "#N/A", "NAN"}:
+            return ""
+        return normalized
 
     @staticmethod
     def _resolve_template_column(
@@ -2455,14 +2478,16 @@ class IDValidationProcessor:
             return
         
         # Look up expected ID from template by transaction reference
-        template_entry = self.template_data.get(record.transaction_ref)
+        normalized_txn_ref = self._normalize_template_txn_ref(record.transaction_ref)
+        template_entry = self.template_data.get(normalized_txn_ref)
+        correction_value_for_compare = ""
         
         if self.logger and record.row_index in [2, 4, 7]:
             self.logger.info(f"[TEMPLATE] Row {record.row_index}: txn_ref='{record.transaction_ref}', found={template_entry is not None}")
         
         if template_entry:
-            expected_id = template_entry.get('id', '')
-            expected_type = template_entry.get('type', '')
+            expected_id = self._normalize_template_value(template_entry.get('id', ''))
+            expected_type = self._normalize_template_value(template_entry.get('type', ''))
 
             correction_field_tokens = {
                 token.strip().upper()
@@ -2526,7 +2551,7 @@ class IDValidationProcessor:
                 if self.logger and record.row_index in [2, 4, 7]:
                     self.logger.info(f"[TEMPLATE] Row {record.row_index} ({record.transaction_ref}): correction='{record.correction_output}' vs template='{record.kaizen_error}'")
                 
-                if correction_value_for_compare == record.kaizen_error:
+                if correction_value_for_compare.strip() == record.kaizen_error.strip():
                     record.match = "TRUE"
                     record.error = "N"
                 else:

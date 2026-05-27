@@ -101,6 +101,17 @@ options:
   show_progress: true
 
 # =============================================================================
+# Processing Configuration
+# =============================================================================
+processing:
+  # Set to false when the input CSV has no header row.
+  # AS/400 System i Data Transfer extract files are headerless; set this to
+  # false when feeding collated SQL extract output directly into this script.
+  # When false, SEDOL and Instrument Classification are read from fixed
+  # column positions (4 and 5) matching the IncorrectNetAmount.sql output order.
+  has_header: true
+
+# =============================================================================
 # Processor Configuration
 # =============================================================================
 processor:

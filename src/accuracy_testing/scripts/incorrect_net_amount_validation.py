@@ -132,6 +132,12 @@ class IncorrectNetAmountValidationScript:
     COL_NET_AMOUNT = 1
     COL_CONSIDERATION = 2
     COL_INTEREST = 3
+
+    # Optional column positions in headerless SQL extract (IncorrectNetAmount.sql order)
+    # Column 4: t2.ASSET  (SEDOL code)
+    # Column 5: t3.INSTCLASS  (Instrument Classification)
+    COL_SEDOL_EXTRACT = 4
+    COL_INSTCLASS_EXTRACT = 5
     
     # Output CSV will have additional columns:
     # Error (N or TBC), Total, Expected Interest, Net Difference, Correction, Correction Field, Comments
@@ -184,6 +190,11 @@ class IncorrectNetAmountValidationScript:
         self.input_file = Path(self.path_config.input_file)
         self.output_file = Path(self.path_config.output_file)
         
+        # Header mode: True = first row is a header, False = first row is data
+        # Set False when reading AS/400 System i Data Transfer headerless extract CSVs.
+        processing = self.config.get('processing', {})
+        self.has_header: bool = processing.get('has_header', True)
+
         # Statistics
         self.stats = IncorrectNetAmountStats()
     
@@ -223,19 +234,28 @@ class IncorrectNetAmountValidationScript:
         try:
             with f:
                 reader = csv.reader(f)
-                header = next(reader)  # Skip header row
 
-                # Detect optional SEDOL and INSTRUMENT columns by name
-                header_lower = [h.strip().lower() for h in header]
-                sedol_col: int | None = None
-                instrument_col: int | None = None
-                for i, h in enumerate(header_lower):
-                    if h in ('sedol', 'asset'):
-                        sedol_col = i
-                    elif h in ('instrument', 'instrument classification'):
-                        instrument_col = i
+                if self.has_header:
+                    header = next(reader)  # Read and skip header row
+                    # Detect optional SEDOL and INSTRUMENT columns by name
+                    header_lower = [h.strip().lower() for h in header]
+                    sedol_col: int | None = None
+                    instrument_col: int | None = None
+                    for i, h in enumerate(header_lower):
+                        if h in ('sedol', 'asset'):
+                            sedol_col = i
+                        elif h in ('instrument', 'instrument classification'):
+                            instrument_col = i
+                    first_data_row = 2
+                else:
+                    # Headerless extract (AS/400 Data Transfer output):
+                    # SEDOL and Instrument Classification are at fixed SQL column positions.
+                    self.logger.info("Header mode: HEADERLESS — using fixed SQL extract column positions")
+                    sedol_col: int | None = self.COL_SEDOL_EXTRACT
+                    instrument_col: int | None = self.COL_INSTCLASS_EXTRACT
+                    first_data_row = 1
 
-                for row_idx, row in enumerate(reader, start=2):  # Start at 2 (after header)
+                for row_idx, row in enumerate(reader, start=first_data_row):
                     if len(row) < 4:  # Minimum required columns
                         self.logger.warning(f"Row {row_idx} has insufficient columns, skipping")
                         continue
@@ -588,6 +608,12 @@ Examples:
     )
     
     parser.add_argument(
+        '--no-header',
+        action='store_true',
+        help='Input CSV has no header row (e.g. AS/400 System i Data Transfer extract files)'
+    )
+
+    parser.add_argument(
         '--gui-mode',
         action='store_true',
         help=argparse.SUPPRESS,
@@ -639,6 +665,12 @@ def main():
             if 'processor' not in config:
                 config['processor'] = {}
             config['processor']['log_level'] = args.log_level
+
+        # Apply --no-header flag to config
+        if getattr(args, 'no_header', False):
+            if 'processing' not in config:
+                config['processing'] = {}
+            config['processing']['has_header'] = False
         
         # Check if batch mode
         is_batch_mode = 'incidents' in config and 'testing_period' in config

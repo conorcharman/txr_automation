@@ -68,6 +68,42 @@ _COL_IS_REPORTABLE = "is_reportable"
 _COL_REASON = "reportability_reason"
 _COL_MATCHED_MICS = "matched_mics"
 
+
+def _canonical_header(value: str) -> str:
+    """Return a canonical header token for resilient column matching.
+
+    Normalises casing, trims whitespace, strips UTF-8 BOM, and collapses
+    internal spacing/underscores so variants like "Instrument ID",
+    " instrument_id ", and "INSTRUMENT   ID" compare equally.
+
+    Args:
+        value: Raw CSV header value.
+
+    Returns:
+        Canonicalised header token.
+    """
+    token = (value or "").replace("\ufeff", "").strip().lower()
+    token = " ".join(token.replace("_", " ").split())
+    return token
+
+
+def _resolve_column(fieldnames: List[str], aliases: List[str]) -> Optional[str]:
+    """Resolve a CSV column by canonical aliases.
+
+    Args:
+        fieldnames: Raw header names from CSV.
+        aliases: Accepted alias names for the same semantic column.
+
+    Returns:
+        The original matching header name, preserving exact token for DictReader.
+    """
+    canonical_map = {_canonical_header(name): name for name in fieldnames}
+    for alias in aliases:
+        match = canonical_map.get(_canonical_header(alias))
+        if match:
+            return match
+    return None
+
 logger = logging.getLogger(__name__)
 
 
@@ -435,24 +471,50 @@ def _process_file(
             print(f"Error: '{input_path.name}' has no headers — skipping.", file=sys.stderr)
             return None, 0, 0
 
-        fieldnames_lower = {name.lower(): name for name in reader.fieldnames}
-        isin_col = fieldnames_lower.get("isin")
-        date_col = fieldnames_lower.get("trade_date")
-        mic_col = fieldnames_lower.get("mic")
+        fieldnames = list(reader.fieldnames)
+
+        isin_col = _resolve_column(
+            fieldnames,
+            ["isin", "instrument id", "instrument identifier", "instrumentid"],
+        )
+        date_col = _resolve_column(
+            fieldnames,
+            ["trade_date", "trade date", "transaction date"],
+        )
+        mic_col = _resolve_column(
+            fieldnames,
+            ["mic", "trading venue", "venue"],
+        )
+
+        if isin_col and _canonical_header(isin_col) != "isin":
+            logger.info(
+                "Resolved ISIN column alias %r in file %s.",
+                isin_col,
+                input_path.name,
+            )
+        if date_col and _canonical_header(date_col) != "trade date":
+            logger.info(
+                "Resolved trade date column alias %r in file %s.",
+                date_col,
+                input_path.name,
+            )
 
         if not isin_col:
             print(
-                f"Error: '{input_path.name}' has no 'isin' column — skipping.",
+                f"Error: '{input_path.name}' has no recognised ISIN column — skipping. "
+                "Accepted aliases: isin, instrument id, instrument identifier.",
                 file=sys.stderr,
             )
+            logger.error("Available headers for %s: %s", input_path.name, fieldnames)
             return None, 0, 0
 
         if date_col is None and file_date is None:
             print(
-                f"Error: '{input_path.name}' has no 'trade_date' column and no "
+                f"Error: '{input_path.name}' has no recognised trade date column and no "
                 "DD-MM-YYYY date could be found in the filename — skipping.",
                 file=sys.stderr,
             )
+            logger.error("Available headers for %s: %s", input_path.name, fieldnames)
             return None, 0, 0
 
         for row in reader:

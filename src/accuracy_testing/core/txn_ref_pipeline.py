@@ -519,7 +519,7 @@ class TransactionRefPipelineExecutor:
             )
             stats = collator.collate_incident(incident_code)
             sr.status = StepStatus.SUCCESS
-            sr.message = f"Collated {stats.files_merged} files → {stats.output_file}"
+            sr.message = f"Collated {stats.input_files} files → {stats.output_file}"
             if stats.output_file:
                 sr.output_files.append(str(stats.output_file))
             self._on_output(sr.message)

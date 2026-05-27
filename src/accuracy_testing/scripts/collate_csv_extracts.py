@@ -33,11 +33,12 @@ Usage:
 
 import argparse
 import csv
+import re
 import sys
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
 from typing import Dict, List, Optional, Set
-from datetime import datetime
 
 from core import ConfigManager, create_logger
 from core.data.incident_codes import get_all_incident_codes, INCIDENT_CODE_MATRIX
@@ -101,8 +102,10 @@ class CSVExtractCollator:
         dry_run: bool = False,
         force: bool = False,
         delete_originals: bool = False,
+        reconcile_existing: bool = False,
         fiscal_year: Optional[str] = None,
-        quarter: Optional[str] = None
+        quarter: Optional[str] = None,
+        has_header: bool = True,
     ):
         """
         Initialize the CSV collator.
@@ -114,8 +117,14 @@ class CSVExtractCollator:
             dry_run: Preview mode - don't write files
             force: Overwrite existing output files
             delete_originals: Delete original split files after successful merge
+            reconcile_existing: If output exists, safely delete stale split files
+                after compatibility checks
             fiscal_year: Fiscal year for filename pattern (e.g., 'FY26')
             quarter: Quarter for filename pattern (e.g., 'Q1')
+            has_header: When True (default), treat the first row of each CSV as a
+                header; skip and deduplicate it across files.  Set to False for
+                headerless SQL-extract CSVs produced by AS/400 System i Data
+                Transfer — every row is data and must not be skipped.
         """
         input_path = Path(input_dir)
         output_path = Path(output_dir) if output_dir else input_path
@@ -148,8 +157,78 @@ class CSVExtractCollator:
         self.dry_run = dry_run
         self.force = force
         self.delete_originals = delete_originals
+        self.reconcile_existing = reconcile_existing
         self.fiscal_year = fiscal_year
         self.quarter = quarter
+        self.has_header = has_header
+
+    @staticmethod
+    def _canonical_header_token(token: str) -> str:
+        """Normalize a single header token for resilient comparisons."""
+        clean = (token or "").replace("\ufeff", "").strip().lower()
+        return " ".join(clean.split())
+
+    @classmethod
+    def _canonicalize_header(cls, header_row: List[str]) -> List[str]:
+        """Normalize a CSV header row for compatibility checks."""
+        return [cls._canonical_header_token(col) for col in header_row]
+
+    def _headers_compatible(self, expected: List[str], observed: List[str]) -> bool:
+        """Return True when two headers are equivalent after normalization."""
+        if len(expected) != len(observed):
+            return False
+        return self._canonicalize_header(expected) == self._canonicalize_header(observed)
+
+    def _read_header(self, file_path: Path) -> List[str]:
+        """Read and return the first CSV row (header) as a list of strings."""
+        with open(file_path, 'r', encoding='utf-8-sig', newline='') as fh:
+            reader = csv.reader(fh)
+            return next(reader, [])
+
+    def _reconcile_existing_output(self, out_path: Path, input_files: List[Path], stats: CollationStats) -> bool:
+        """Safely remove stale split files when a collated output already exists."""
+        if not self.reconcile_existing or not self.delete_originals:
+            return False
+
+        if self.dry_run:
+            if self.logger:
+                self.logger.info(
+                    f"  [DRY RUN] Would reconcile existing output and delete {len(input_files)} split files"
+                )
+            return True
+
+        try:
+            output_mtime = out_path.stat().st_mtime
+            if any(p.stat().st_mtime > output_mtime for p in input_files):
+                if self.logger:
+                    self.logger.warning("  Reconcile skipped: one or more split files are newer than output")
+                return False
+
+            output_header = self._read_header(out_path)
+            if not output_header:
+                if self.logger:
+                    self.logger.warning("  Reconcile skipped: output file has no header")
+                return False
+
+            for src in input_files:
+                src_header = self._read_header(src)
+                if not self._headers_compatible(output_header, src_header):
+                    if self.logger:
+                        self.logger.warning(
+                            f"  Reconcile skipped: header mismatch between {out_path.name} and {src.name}"
+                        )
+                    return False
+
+            self._delete_source_files(stats, input_files)
+            if self.logger:
+                self.logger.info(
+                    f"  ✓ Reconciled existing output: deleted {stats.files_deleted} split file(s)"
+                )
+            return True
+        except OSError as exc:
+            if self.logger:
+                self.logger.warning(f"  Reconcile skipped due to file error: {exc}")
+            return False
     
     def _build_file_pattern(self, incident_code: str) -> str:
         """
@@ -172,7 +251,17 @@ class CSVExtractCollator:
         Returns files sorted by extract number.
         """
         pattern = self._build_file_pattern(incident_code)
-        files = list(self.input_dir.glob(pattern))
+        candidate_files = list(self.input_dir.glob(pattern))
+        incident_re = re.compile(rf"(?<!\d){re.escape(incident_code)}(?!\d)", re.IGNORECASE)
+        split_re = re.compile(r"extract\d+", re.IGNORECASE)
+
+        # Filter out loosely matched incidents (e.g. 7_6 matching 7_66)
+        # and ignore collated outputs that only contain "extract" without
+        # an extract batch number.
+        files = [
+            p for p in candidate_files
+            if incident_re.search(p.stem) and split_re.search(p.stem)
+        ]
         
         # Also check for single file (no split)
         if not files:
@@ -247,16 +336,23 @@ class CSVExtractCollator:
             out_path = self.output_dir / self._build_output_filename(incident_code)
         
         stats.output_file = str(out_path)
+
+        # Store source files for potential deletion/reconciliation.
+        stats.source_files = input_files.copy()
         
         # Check if output exists
         if out_path.exists() and not self.force:
             stats.error_message = "Output file exists (use --force to overwrite)"
+            reconciled = self._reconcile_existing_output(out_path, input_files, stats)
+            if reconciled:
+                stats.success = True
+                stats.error_message = ""
             if self.logger:
-                self.logger.warning(f"  Output exists: {out_path.name} (skipping)")
+                if reconciled:
+                    self.logger.info(f"  Output exists: {out_path.name} (reconciled)")
+                else:
+                    self.logger.warning(f"  Output exists: {out_path.name} (skipping)")
             return stats
-        
-        # Store source files for potential deletion
-        stats.source_files = input_files.copy()
         
         # Single file - just copy/rename
         if len(input_files) == 1:
@@ -301,12 +397,12 @@ class CSVExtractCollator:
             total = 0
             for i, f in enumerate(input_files):
                 rows = self._count_rows(f)
-                if i > 0:
-                    rows -= 1  # Subtract header
+                if self.has_header and i > 0:
+                    rows -= 1  # Subtract duplicate header row
                 total += rows
             
             stats.total_rows = total
-            stats.header_rows_skipped = len(input_files) - 1
+            stats.header_rows_skipped = (len(input_files) - 1) if self.has_header else 0
             stats.success = True
             return stats
         
@@ -325,22 +421,37 @@ class CSVExtractCollator:
                     reader = csv.reader(in_file)
                     
                     for row_idx, row in enumerate(reader):
-                        if row_idx == 0:
+                        if self.has_header and row_idx == 0:
                             if i == 0:
                                 # First file - write header
                                 header = row
                                 writer = csv.writer(out_file)
                                 writer.writerow(row)
                             else:
-                                # Subsequent files - skip header
+                                # Subsequent files - skip duplicate header
                                 headers_skipped += 1
                                 # Validate header matches
-                                if row != header:
+                                if not self._headers_compatible(header or [], row):
                                     if self.logger:
+                                        mismatch_details = []
+                                        if len(row) != len(header or []):
+                                            mismatch_details.append(
+                                                f"column count differs ({len(row)} vs {len(header or [])})"
+                                            )
+                                        for idx, (left, right) in enumerate(zip(header or [], row)):
+                                            if self._canonical_header_token(left) != self._canonical_header_token(right):
+                                                mismatch_details.append(
+                                                    f"col[{idx}] '{left}' != '{right}'"
+                                                )
+                                            if len(mismatch_details) >= 3:
+                                                break
+                                        details = "; ".join(mismatch_details) if mismatch_details else "schema differs"
                                         self.logger.warning(
-                                            f"  ⚠ Header mismatch in {input_file.name}"
+                                            f"  ⚠ Header mismatch in {input_file.name}: {details}"
                                         )
                         else:
+                            if writer is None:
+                                writer = csv.writer(out_file)
                             writer.writerow(row)
                             total_rows += 1
         
@@ -374,9 +485,9 @@ class CSVExtractCollator:
                     self.logger.warning(f"    Failed to delete {f.name}: {e}")
     
     def _count_rows(self, file_path: Path) -> int:
-        """Count rows in a CSV file (excluding header)."""
+        """Count rows in a CSV file (excluding header if has_header=True)."""
         with open(file_path, 'r', encoding='utf-8-sig', newline='') as f:
-            return sum(1 for _ in f) - 1  # Subtract header
+            return sum(1 for _ in f) - (1 if self.has_header else 0)
     
     def collate_all(self, incident_codes: List[str]) -> CollationResult:
         """
@@ -503,7 +614,24 @@ Examples:
         action='store_true',
         help='Delete original split files after successful merge'
     )
-    
+
+    parser.add_argument(
+        '--reconcile-existing',
+        action='store_true',
+        help='When output exists, safely reconcile by deleting stale split files'
+    )
+
+    parser.add_argument(
+        '--no-header',
+        action='store_false',
+        dest='has_header',
+        default=True,
+        help=(
+            'Treat extract files as headerless (no column-name row). '
+            'Use for SQL extract CSVs produced by AS/400 System i Data Transfer.'
+        ),
+    )
+
     parser.add_argument(
         '--log-level',
         choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
@@ -571,6 +699,10 @@ def main() -> int:
     dry_run = args.dry_run or processing.get('dry_run', False)
     force = args.force or processing.get('force', False)
     delete_originals = args.delete_originals or processing.get('delete_originals', False)
+    reconcile_existing = args.reconcile_existing or processing.get('reconcile_existing', False)
+    # CLI --no-header flag stores False in args.has_header; config key has_header defaults to True.
+    # CLI wins when it was explicitly set (args.has_header is False); otherwise defer to config.
+    has_header: bool = args.has_header and processing.get('has_header', True)
     
     # Determine incident codes
     incidents = []
@@ -617,6 +749,10 @@ def main() -> int:
         logger.info("Force overwrite:  ENABLED")
     if delete_originals:
         logger.info("Delete originals: ENABLED")
+    if reconcile_existing:
+        logger.info("Reconcile existing: ENABLED")
+    if not has_header:
+        logger.info("Header mode:        HEADERLESS (no column-name row)")
     logger.info("-" * 70)
     
     # Create collator
@@ -628,8 +764,10 @@ def main() -> int:
             dry_run=dry_run,
             force=force,
             delete_originals=delete_originals,
+            reconcile_existing=reconcile_existing,
             fiscal_year=fiscal_year,
-            quarter=quarter
+            quarter=quarter,
+            has_header=has_header,
         )
     except ValueError as e:
         print(f"Error: {e}")

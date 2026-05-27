@@ -894,9 +894,32 @@ class ScriptRunnerService:
 
         Raises:
             HTTPException: 400 if the request is malformed.
+
+        Note:
+            FCA credential validation is intentionally deferred to the script layer so
+            that a job row is always created and any failure is visible in Job History.
+            If ``FCA_API_EMAIL`` or ``FCA_API_KEY`` are not set the fca-check script will
+            exit with a clear error message that is captured by the Celery task and stored
+            in the job's ``error_message`` field.
         """
         module_path = _resolve_module("fca_check")
+        settings = get_settings()
+        if not settings.fca_api_email or not settings.fca_api_key:
+            logger.warning(
+                "FCA credentials (FCA_API_EMAIL / FCA_API_KEY) are not configured. "
+                "The fca-check script will fail and the error will appear in Job History."
+            )
+
         config: dict = {
+            "fca": {
+                "api_email": settings.fca_api_email,
+                "api_key": settings.fca_api_key,
+                "request_delay_seconds": 0.2,
+            },
+            "batch": {
+                "input_file": req.input_file,
+                "output_file": req.output_file,
+            },
             "check": {
                 "mode": req.mode,
                 "frn": req.frn,
@@ -907,7 +930,8 @@ class ScriptRunnerService:
             },
             "processor": {"log_level": req.log_level},
         }
-        argv: list[str] = ["--log-level", req.log_level]
+        tmp_path = _write_temp_yaml(config)
+        argv: list[str] = ["--config", tmp_path, "--log-level", req.log_level]
         if req.frn:
             argv.extend(["--frn", req.frn])
         if req.name:

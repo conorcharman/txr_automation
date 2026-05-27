@@ -5,6 +5,7 @@ Tests for Incorrect Net Amount Validation
 Unit and integration tests for incorrect net amount validation (Incident Code 35_3).
 """
 
+import csv
 import pytest
 from decimal import Decimal
 from pathlib import Path
@@ -18,6 +19,9 @@ from src.accuracy_testing.models.incorrect_net_amount_record import IncorrectNet
 from src.accuracy_testing.validators.incorrect_net_amount_validator import (
     IncorrectNetAmountValidator,
     INSTRUMENT_TYPE_MAP,
+)
+from src.accuracy_testing.scripts.incorrect_net_amount_validation import (
+    IncorrectNetAmountValidationScript,
 )
 
 
@@ -513,6 +517,160 @@ class TestIncident35_10Registration:
         """35_10 must appear in the backend INCIDENT_CODE_PATTERNS"""
         from api.services.discovery import INCIDENT_CODE_PATTERNS
         assert "35_10" in INCIDENT_CODE_PATTERNS["incorrect_net_amount_validation"]
+
+
+def _make_script(tmp_path: Path, input_csv: Path, has_header: bool) -> IncorrectNetAmountValidationScript:
+    """Build a minimal IncorrectNetAmountValidationScript for read_input_csv testing."""
+    output_csv = tmp_path / "output.csv"
+    config = {
+        'paths': {
+            'input_file': str(input_csv),
+            'output_file': str(output_csv),
+            'log_output': str(tmp_path / 'logs'),
+        },
+        'processor': {
+            'log_level': 'WARNING',
+            'verbose': False,
+            'batch_size': 1000,
+        },
+        'processing': {
+            'has_header': has_header,
+        },
+    }
+    return IncorrectNetAmountValidationScript(config_dict=config)
+
+
+class TestReadInputCsvHasHeader:
+    """Tests for read_input_csv() with has_header=True (default behaviour)."""
+
+    def test_header_row_is_skipped(self, tmp_path):
+        """First row treated as header and excluded from records."""
+        csv_file = tmp_path / "input.csv"
+        csv_file.write_text(
+            "Transaction Reference,Net Amount,Consideration,Interest\n"
+            "TXN001,1000.00,900.00,100.00\n"
+            "TXN002,2000.00,1800.00,200.00\n",
+            encoding='utf-8',
+        )
+        script = _make_script(tmp_path, csv_file, has_header=True)
+        records = script.read_input_csv()
+
+        assert len(records) == 2
+        assert records[0].transaction_ref == "TXN001"
+
+    def test_sedol_detected_by_column_name(self, tmp_path):
+        """SEDOL column located by header name 'asset'."""
+        csv_file = tmp_path / "input.csv"
+        csv_file.write_text(
+            "Transaction Reference,Net Amount,Consideration,Interest,Asset\n"
+            "TXN001,1000.00,900.00,100.00,B0YQ5W0\n",
+            encoding='utf-8',
+        )
+        script = _make_script(tmp_path, csv_file, has_header=True)
+        records = script.read_input_csv()
+
+        assert len(records) == 1
+        assert records[0].sedol == "B0YQ5W0"
+
+    def test_has_header_default_is_true(self, tmp_path):
+        """has_header defaults to True when not set in config."""
+        csv_file = tmp_path / "input.csv"
+        csv_file.write_text(
+            "Transaction Reference,Net Amount,Consideration,Interest\n"
+            "TXN001,500.00,400.00,100.00\n",
+            encoding='utf-8',
+        )
+        output_csv = tmp_path / "output.csv"
+        config = {
+            'paths': {
+                'input_file': str(csv_file),
+                'output_file': str(output_csv),
+                'log_output': str(tmp_path / 'logs'),
+            },
+            'processor': {'log_level': 'WARNING', 'verbose': False, 'batch_size': 1000},
+            # No 'processing' key — should default has_header=True
+        }
+        script = IncorrectNetAmountValidationScript(config_dict=config)
+        assert script.has_header is True
+        records = script.read_input_csv()
+        assert len(records) == 1
+
+
+class TestReadInputCsvHeaderless:
+    """Tests for read_input_csv() with has_header=False (AS/400 extract files)."""
+
+    def _write_headerless_csv(self, path: Path, rows: list[list[str]]) -> None:
+        with path.open('w', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerows(rows)
+
+    def test_no_rows_dropped(self, tmp_path):
+        """With has_header=False every row is read as data — none silently discarded."""
+        csv_file = tmp_path / "extract.csv"
+        self._write_headerless_csv(csv_file, [
+            ["TXN001", "1000.00", "900.00", "100.00", "B0YQ5W0", "DB"],
+            ["TXN002", "2000.00", "1800.00", "200.00", "B1234567", "DA"],
+        ])
+        script = _make_script(tmp_path, csv_file, has_header=False)
+        records = script.read_input_csv()
+
+        assert len(records) == 2
+        assert records[0].transaction_ref == "TXN001"
+        assert records[1].transaction_ref == "TXN002"
+
+    def test_sedol_read_from_fixed_column_4(self, tmp_path):
+        """SEDOL is read from column index 4 (t2.ASSET in IncorrectNetAmount.sql)."""
+        csv_file = tmp_path / "extract.csv"
+        self._write_headerless_csv(csv_file, [
+            ["TXN001", "1000.00", "900.00", "100.00", "B0YQ5W0", "DB"],
+        ])
+        script = _make_script(tmp_path, csv_file, has_header=False)
+        records = script.read_input_csv()
+
+        assert len(records) == 1
+        assert records[0].sedol == "B0YQ5W0"
+
+    def test_instrument_classification_read_from_fixed_column_5(self, tmp_path):
+        """Instrument classification is read from column index 5 (t3.INSTCLASS)."""
+        csv_file = tmp_path / "extract.csv"
+        self._write_headerless_csv(csv_file, [
+            ["TXN001", "1000.00", "900.00", "100.00", "B0YQ5W0", "DAFEQ"],
+        ])
+        script = _make_script(tmp_path, csv_file, has_header=False)
+        records = script.read_input_csv()
+
+        assert len(records) == 1
+        assert records[0].instrument_classification == "DAFEQ"
+
+    def test_financial_fields_positionally_correct(self, tmp_path):
+        """Core financial columns map to correct positions (SQL column order)."""
+        csv_file = tmp_path / "extract.csv"
+        self._write_headerless_csv(csv_file, [
+            ["TXN_REF", "1500.00", "1200.00", "300.00", "", ""],
+        ])
+        script = _make_script(tmp_path, csv_file, has_header=False)
+        records = script.read_input_csv()
+
+        assert len(records) == 1
+        r = records[0]
+        assert r.transaction_ref == "TXN_REF"
+        assert r.net_amount == Decimal("1500.00")
+        assert r.consideration == Decimal("1200.00")
+        assert r.interest == Decimal("300.00")
+
+    def test_headerless_four_column_file_no_sedol(self, tmp_path):
+        """4-column headerless file (no SEDOL/INSTCLASS) reads correctly with None optional fields."""
+        csv_file = tmp_path / "extract.csv"
+        # Fewer columns than COL_SEDOL_EXTRACT — optional fields absent
+        self._write_headerless_csv(csv_file, [
+            ["TXN001", "1000.00", "800.00", "200.00"],
+        ])
+        script = _make_script(tmp_path, csv_file, has_header=False)
+        records = script.read_input_csv()
+
+        assert len(records) == 1
+        assert records[0].sedol is None
+        assert records[0].instrument_classification is None
 
 
 if __name__ == "__main__":

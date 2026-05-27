@@ -432,16 +432,19 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
     """
     # Map incident types to SQL templates (based on INCIDENT_CODE_MATRIX)
     # Standard buyer (7_35, 7_37, 7_39) → BuyerID.sql
-    # Standard seller (16_19, 16_21, 16_23) → SellerID.sql  
-    # Pricing (35_3) → SCR_pricing_data_v1.0.sql
+    # Standard seller (16_19, 16_21, 16_23) → SellerID.sql
+    # Incorrect / suspected net amount (35_3, 35_10) → IncorrectNetAmount.sql
     # Inconsistent buyer (7_66) → InconsistentBuyerID.sql
     # Inconsistent seller (16_20) → InconsistentSellerID.sql
     # Decision maker buyer (12_17) → FTBDM.sql
     # Decision maker seller (21_17) → FTSDM.sql
-    
-    # Pricing incidents
-    if incident_code == '35_3':
-        template_path = sql_template_dir / "SCR_pricing_data_v1.0.sql"
+
+    # Incorrect / suspected net amount incidents
+    # Note: do NOT use the legacy SCR_pricing_data_v1.0.sql; IncorrectNetAmount.sql
+    # includes the LEFT JOIN to SECFIG that returns the INSTRUMENT column needed for
+    # net-amount validation.
+    if incident_code in {'35_3', '35_10'}:
+        template_path = sql_template_dir / "IncorrectNetAmount.sql"
     # Non-zero net quantity — uses VALUES block CTE, not an IN-clause
     elif incident_code == '7_6':
         template_path = sql_template_dir / "NonZeroNetQuantity.sql"
@@ -538,10 +541,12 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
         incidents = []
     
     # Get paths from batch configuration
+    # Use `or` fallback so empty strings / null YAML values don't resolve to
+    # Path(".") (current directory), which is the classic silent-failure trap.
     paths = batch_config.get('paths', {})
-    template_dir = Path(paths.get('template_dir', 'data/templates'))
-    output_dir = Path(paths.get('output_dir', 'data/sql_extracts'))
-    sql_template_dir = Path(paths.get('sql_template_dir', 'src/accuracy_testing/sql_templates'))
+    template_dir = Path(paths.get('template_dir') or 'data/templates')
+    output_dir = Path(paths.get('output_dir') or 'data/sql_extracts')
+    sql_template_dir = Path(paths.get('sql_template_dir') or 'src/accuracy_testing/sql_templates')
     dtf_template_path = paths.get('dtf_template_file')
     
     # Get filename patterns from batch configuration
@@ -558,7 +563,12 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     processing = config.get('processing', {})
     batch_size = processing.get('batch_size', 900)
     placeholder = processing.get('placeholder_pattern', '-- TRANSACTION REFERENCES --')
-    transaction_column = processing.get('transaction_column', 'Transaction reference number')
+    # 'Transaction Reference' matches the column-0 header written by
+    # AccuracyTemplateGenerator for every template type (buyer, seller,
+    # incorrect_net_amount, net_quantity, net_amount, default).
+    # 'Transaction reference number' was the old default that matched the
+    # raw consolidated CSV, not the generated template — keep as fallback.
+    transaction_column = processing.get('transaction_column', 'Transaction Reference')
     output_format = processing.get('output_format', 'both')
     
     if not incidents:
@@ -568,14 +578,23 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     print(f"\n{'='*70}")
     print(f"BATCH SQL EXTRACT GENERATION - {fiscal_year} {quarter}")
     print(f"{'='*70}")
-    print(f"Template directory:       {template_dir}")
+    print(f"Template directory:       {template_dir.resolve()}")
     print(f"SQL template directory:   {sql_template_dir}")
-    print(f"Output directory:         {output_dir}")
+    print(f"Output directory:         {output_dir.resolve()}")
     print(f"Output format:            {output_format}")
     print(f"Incidents:                {', '.join(incidents)}")
     print(f"Batch size:               {batch_size} records per file")
     print(f"{'='*70}\n")
     
+    # Validate template directory exists before starting the batch loop so we
+    # fail fast with a clear message instead of silently skipping every incident.
+    if not template_dir.exists():
+        print(
+            f"ERROR: Template directory does not exist: {template_dir.resolve()}\n"
+            f"       Check 'batch.paths.template_dir' in your YAML config."
+        )
+        return 1
+
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
     
@@ -602,7 +621,9 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
             
             # Check if template CSV exists
             if not template_path.exists():
-                print(f"⚠️  Template not found: {template_path}")
+                print(f"⚠️  Template not found: {template_path.resolve()}")
+                print(f"   Expected pattern : batch.filename_patterns.template = '{template_pattern}'")
+                print(f"   Template directory: {template_dir.resolve()}")
                 print(f"   Skipping incident {incident}")
                 total_failed += 1
                 continue
@@ -611,14 +632,23 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
             refs = []
             with open(template_path, 'r', encoding='cp1252') as f:
                 reader = csv.DictReader(f)
-                if transaction_column not in reader.fieldnames:
+                fieldnames = reader.fieldnames or []
+                # Case-insensitive fallback: find the column even if the exact
+                # casing in the file differs from the configured name.
+                actual_column = next(
+                    (col for col in fieldnames
+                     if col.strip().lower() == transaction_column.lower()),
+                    None,
+                )
+                if actual_column is None:
                     print(f"⚠️  Column '{transaction_column}' not found in {template_filename}")
-                    print(f"   Available columns: {', '.join(reader.fieldnames)}")
+                    print(f"   Available columns: {', '.join(fieldnames)}")
+                    print(f"   Set processing.transaction_column in your YAML config to match.")
                     total_failed += 1
                     continue
                 
                 for row in reader:
-                    ref = row[transaction_column].strip()
+                    ref = row[actual_column].strip()
                     if ref:
                         refs.append(ref)
             
