@@ -601,16 +601,38 @@ export interface DRRRuleResult {
 
 export interface DRRComplianceCheckRequest {
   transactionRef: string;
+  reportStatus?: string | null;
+  executingEntityId?: string | null;
+  isInvestmentFirm?: string | null;
   buyerId?: string | null;
   buyerIdType?: string | null;
   sellerId?: string | null;
   sellerIdType?: string | null;
+  transmissionOfOrder?: string | null;
   tradingDateTime?: string | null;
+  tradingCapacity?: string | null;
   quantity?: number | null;
   netAmount?: number | null;
   venue?: string | null;
   isin?: string | null;
+  instrumentFullName?: string | null;
+  instrumentClassification?: string | null;
+  notionalCurrency1?: string | null;
+  priceMultiplier?: number | null;
+  maturityDate?: string | null;
   investmentDecisionMaker?: string | null;
+  investmentDecisionCountry?: string | null;
+  executionWithinFirm?: string | null;
+  executionCountry?: string | null;
+  sftIndicator?: string | null;
+}
+
+export interface DRRBulkComplianceCheckResponse {
+  totalRows: number;
+  passedRows: number;
+  failedRows: number;
+  warningRows: number;
+  results: DRRComplianceCheckResponse[];
 }
 
 export interface DRRComplianceCheckResponse {

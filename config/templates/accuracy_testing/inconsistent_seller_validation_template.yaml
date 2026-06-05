@@ -59,10 +59,6 @@ single:
     # Example: validated_FY26_Q1_16_20.csv
     output_file: "data/validated/validated_FY26_Q1_16_20.csv"
     
-    # Optional: Tracker files for additional validation context
-    # italian_tracker: "data/trackers/italian_tracker.csv"
-    # main_tracker: "data/trackers/main_tracker.csv"
-    
     # Log output directory
     log_output: "logs"
 

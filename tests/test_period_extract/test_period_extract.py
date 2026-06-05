@@ -133,6 +133,85 @@ class TestDTFRunnerGenerateDtf:
 
 
 # ---------------------------------------------------------------------------
+# Path conversion for Windows DTF compatibility
+# ---------------------------------------------------------------------------
+
+class TestDTFRunnerPathConversion:
+    """Verify Linux-to-Windows path conversion for DTF compatibility."""
+
+    def test_convert_path_windows_path_unchanged(self) -> None:
+        """Windows paths should be returned unchanged."""
+        win_path = r"C:\Users\ccharm\Documents\data\FY26\Q2\extract.csv"
+        result = DTFRunner._convert_path_to_windows(win_path)
+        assert result == win_path
+
+    def test_convert_path_linux_app_data(self) -> None:
+        """Linux /app/data paths should be converted to Windows format."""
+        linux_path = "/app/data/FY26/Q2/accuracy_testing/extracts/csv/extract.csv"
+        result = DTFRunner._convert_path_to_windows(linux_path)
+        # Should convert to Windows path
+        assert "\\" in result or ":" in result
+        # Should preserve the relative subdirectory structure
+        assert "FY26" in result and "Q2" in result and "extract.csv" in result
+        # Should not contain forward slashes from the /app/data prefix
+        assert not result.startswith("/app")
+
+    def test_convert_path_linux_app_only(self) -> None:
+        """Linux /app paths (not /app/data) should be converted to Windows format."""
+        linux_path = "/app/src/accuracy_testing/file.py"
+        result = DTFRunner._convert_path_to_windows(linux_path)
+        # Should convert to Windows path
+        assert "\\" in result or ":" in result
+        # Should preserve the relative subdirectory structure
+        assert "accuracy_testing" in result and "file.py" in result
+        # Should not be a Linux path
+        assert not result.startswith("/")
+
+    def test_convert_path_with_env_override(self) -> None:
+        """Should use DTF_WINDOWS_APP_DATA_PATH environment variable if set."""
+        import os
+        from unittest.mock import patch
+
+        linux_path = "/app/data/FY26/Q2/extract.csv"
+        custom_base = r"D:\custom\data\location"
+        
+        with patch.dict(os.environ, {"DTF_WINDOWS_APP_DATA_PATH": custom_base}):
+            result = DTFRunner._convert_path_to_windows(linux_path)
+            assert result.startswith(r"D:\custom")
+            assert "FY26" in result and "Q2" in result
+
+    def test_generate_dtf_converts_linux_paths_to_windows(self, tmp_path: Path) -> None:
+        """When given a Linux path, generate_dtf should write Windows path to DTF."""
+        runner = DTFRunner()
+        
+        # Simulate a Docker container Linux path for the CSV output
+        linux_csv_path = "/app/data/FY26/Q2/accuracy_testing/extracts/csv/extract.csv"
+        dtf_output = tmp_path / "test.dtf"
+        
+        # Generate DTF with a simple SQL query
+        runner.generate_dtf(
+            sql_query="SELECT * FROM GLDATA/TXNREPESMA",
+            output_csv_path=linux_csv_path,
+            dtf_output_path=dtf_output,
+        )
+        
+        # Read the generated DTF and verify it contains a Windows path
+        dtf_content = dtf_output.read_text(encoding="utf-8")
+        
+        # The PCFile should contain a Windows path, not the Linux path
+        assert "PCFile=" in dtf_content
+        
+        # Extract the PCFile line
+        pcfile_line = [l for l in dtf_content.split("\n") if l.startswith("PCFile=")][0]
+        pcfile_value = pcfile_line.split("=", 1)[1].strip()
+        
+        # Verify it's a Windows path (has backslashes or drive letter) and not the Linux path
+        assert "\\" in pcfile_value or ":" in pcfile_value, f"Expected Windows path, got: {pcfile_value}"
+        assert not pcfile_value.startswith("/app"), f"Should not contain Linux path, got: {pcfile_value}"
+        assert "FY26" in pcfile_value and "Q2" in pcfile_value
+
+
+# ---------------------------------------------------------------------------
 # SQL_TEMPLATE_MAP / VALIDATION_TYPE_MAP coverage
 # ---------------------------------------------------------------------------
 

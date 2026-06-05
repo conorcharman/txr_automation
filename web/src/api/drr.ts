@@ -1,4 +1,5 @@
 import type {
+  DRRBulkComplianceCheckResponse,
   DRRCdmReportResponse,
   DRRComplianceCheckRequest,
   DRRComplianceCheckResponse,
@@ -41,6 +42,18 @@ export async function runCdmReport(
     body: JSON.stringify(req),
   });
   return handleResponse<DRRCdmReportResponse>(res);
+}
+
+export async function runBulkComplianceCheck(
+  file: File
+): Promise<DRRBulkComplianceCheckResponse> {
+  const formData = new FormData();
+  formData.append("file", file);
+  const res = await fetch(`${BASE_URL}/api/drr/compliance-check/bulk`, {
+    method: "POST",
+    body: formData,
+  });
+  return handleResponse<DRRBulkComplianceCheckResponse>(res);
 }
 
 export async function listDRRSubmissions(): Promise<DRRSubmissionSummary[]> {

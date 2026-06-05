@@ -61,7 +61,6 @@ Output CSV adds:
     - Correction (ID:TYPE format from prior valid)
     - Correction Field
     - Correction Source (where the correction came from)
-    - Tracker Status
     - Pass/Fail
     - Failure Reason
     - Actions Taken
@@ -172,8 +171,6 @@ class InconsistentBuyerIDValidator:
             client_type="buyer",
             logger=self.logger,
             verbose=self.proc_config.verbose,
-            italian_tracker_path=self.path_config.italian_tracker,
-            main_tracker_path=self.path_config.main_tracker,
             template_path=self.path_config.template_file,
             template_id_column=self.path_config.template_id_column,
             template_type_column=self.path_config.template_type_column
@@ -277,7 +274,6 @@ class InconsistentBuyerIDValidator:
             "Correction",
             "Correction Field",
             "Correction Source",
-            "Tracker Status",
             "Pass/Fail",
             "Failure Reason",
             "Actions Taken",
@@ -341,7 +337,6 @@ class InconsistentBuyerIDValidator:
                         record.correction_output or "",
                         record.correction_fields or "",
                         record.correction_source or "",
-                        record.tracker_status or "",
                         f"Format: {record.format_status} | Logic: {record.logic_status}" if record.format_status else "",
                         record.failure_reason or "",
                         " | ".join(record.actions_taken) if record.actions_taken else "",
@@ -406,7 +401,6 @@ class InconsistentBuyerIDValidator:
             "Correction",
             "Correction Field",
             "Correction Source",
-            "Tracker Status",
             "Pass/Fail",
             "Failure Reason",
             "Actions Taken",
@@ -457,7 +451,6 @@ class InconsistentBuyerIDValidator:
                         record.correction_output or "",
                         record.correction_fields or "",
                         record.correction_source or "",
-                        record.tracker_status or "",
                         f"Format: {record.format_status} | Logic: {record.logic_status}" if record.format_status else "",
                         record.failure_reason or "",
                         " | ".join(record.actions_taken) if record.actions_taken else "",

@@ -82,8 +82,7 @@ class TemplateFormat:
         "Error",
         "Failure Reason",
         "Correction",
-        "Correction Field",
-        "Tracker Status"
+        "Correction Field"
     ]
     
     # Seller validation template columns
@@ -103,8 +102,7 @@ class TemplateFormat:
         "Error",
         "Failure Reason",
         "Correction",
-        "Correction Field",
-        "Tracker Status"
+        "Correction Field"
     ]
     
     # Incorrect net amount validation template columns (Incidents 35_3 and 35_10)

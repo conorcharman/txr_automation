@@ -1,0 +1,14 @@
+{
+  "name": "txr-automation",
+  "version": "1.0.0",
+  "description": "Transaction Reporting Automation - Full-stack application",
+  "scripts": {
+    "build": "cd web && npm run build",
+    "dev": "cd web && npm run dev",
+    "preview": "cd web && npm run preview",
+    "test": "cd web && npm run test",
+    "lint": "cd web && npm run lint",
+    "install-web": "cd web && npm install"
+  },
+  "private": true
+}

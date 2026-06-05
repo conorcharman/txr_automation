@@ -16,18 +16,30 @@ Business Rules:
        - If DM Code equals Party Code → Error, provide correct LEI
        - If DM Code is different from Party Code → No error
 
-Version: 1.0
+Version: 1.1
 Migrated from: ValidateFTBDM3_0.vb, ValidateFTSDM3_0.vb
 """
 
-import re
 import csv
 import logging
+import re
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
 from dataclasses import dataclass, field
 
 from ..models.decision_maker_record import DecisionMakerRecord, determine_product
+
+# Import shared core library for ID format validation
+try:
+    from src.core.data.id_formats import id_format_manager
+    _CORE_FORMAT_MANAGER_AVAILABLE = True
+except ImportError:
+    try:
+        from core.data.id_formats import id_format_manager
+        _CORE_FORMAT_MANAGER_AVAILABLE = True
+    except ImportError:
+        _CORE_FORMAT_MANAGER_AVAILABLE = False
+        id_format_manager = None
 
 
 # LEI format pattern (ISO 17442): 18 alphanumeric + 2 digit checksum
@@ -146,56 +158,10 @@ class IDFormatValidator:
     """
     Validate and classify identification codes.
 
-    Checks ID codes against regex patterns to determine their type
-    (LEI, NIDN, CONCAT, etc.).
+    Delegates to the shared core library ``id_format_manager`` so that all
+    validators use the same canonical regex patterns.  LEI is checked first
+    (as before) because it is the most common type for decision-maker codes.
     """
-
-    def __init__(self, patterns: Optional[Dict[str, str]] = None):
-        """
-        Initialize validator with ID patterns.
-
-        Args:
-            patterns: Dictionary mapping ID type name to regex pattern string
-        """
-        self._patterns: Dict[str, re.Pattern] = {}
-
-        if patterns:
-            for id_type, pattern_str in patterns.items():
-                try:
-                    self._patterns[id_type] = re.compile(pattern_str)
-                except re.error as e:
-                    logging.warning(f"Invalid pattern for {id_type}: {e}")
-
-    @classmethod
-    def from_csv(cls, csv_path: Path) -> "IDFormatValidator":
-        """
-        Load ID patterns from CSV file.
-
-        Args:
-            csv_path: Path to CSV file with columns: Country, ID Type, Pattern
-
-        Returns:
-            IDFormatValidator instance
-        """
-        patterns: Dict[str, str] = {}
-
-        if not csv_path.exists():
-            logging.warning(f"ID formats file not found: {csv_path}")
-            return cls(patterns)
-
-        with open(csv_path, "r", encoding="utf-8") as f:
-            reader = csv.reader(f)
-            header = next(reader, None)
-
-            for row in reader:
-                if len(row) >= 3:
-                    id_type = str(row[1]).strip()
-                    pattern = str(row[2]).strip()
-                    if id_type and pattern:
-                        patterns[id_type] = pattern
-
-        logging.info(f"Loaded {len(patterns)} ID format patterns from {csv_path}")
-        return cls(patterns)
 
     def validate(self, id_code: str) -> str:
         """
@@ -205,21 +171,28 @@ class IDFormatValidator:
             id_code: The identification code to validate
 
         Returns:
-            ID type string if matched, empty string if no match
+            ID type string ("LEI", "NIDN", "CONCAT", "CCPT") if matched,
+            empty string if no match.
         """
         if not id_code or not id_code.strip():
             return ""
 
-        id_code = id_code.strip()
+        id_code = id_code.strip().upper()
 
         # Check LEI first (most common for decision maker codes)
         if LEI_PATTERN.match(id_code):
             return "LEI"
 
-        # Check other patterns
-        for id_type, pattern in self._patterns.items():
-            if pattern.match(id_code):
-                return id_type
+        # Delegate remaining type detection to the core library
+        if _CORE_FORMAT_MANAGER_AVAILABLE and id_format_manager is not None:
+            detected = id_format_manager.validate_any_type("", id_code)
+            if detected:
+                return detected
+            # If no country-specific match, try common cross-country types
+            for id_type in ("NIDN", "CONCAT", "CCPT"):
+                patterns = id_format_manager.get_patterns_for_type(id_type)
+                if any(p.matches(id_code) for p in patterns):
+                    return id_type
 
         return ""
 
@@ -442,7 +415,6 @@ class DecisionMakerProcessor:
         self.party_type = party_type
         self.logger = logger or logging.getLogger(__name__)
         self.lei_lookup: Optional[LEILookupManager] = None
-        self.id_validator: Optional[IDFormatValidator] = None
         self.validator: Optional[DecisionMakerValidator] = None
         self.records: List[DecisionMakerRecord] = []
 
@@ -455,16 +427,6 @@ class DecisionMakerProcessor:
         """
         self.lei_lookup = LEILookupManager.from_csv(lei_path)
         self.logger.info(f"Loaded {len(self.lei_lookup)} LEI mappings")
-
-    def load_id_formats(self, formats_path: Path) -> None:
-        """
-        Load ID format patterns.
-
-        Args:
-            formats_path: Path to ID formats CSV file
-        """
-        self.id_validator = IDFormatValidator.from_csv(formats_path)
-        self.logger.info("Loaded ID format patterns")
 
     def load_input_csv(self, input_path: Path) -> int:
         """
@@ -510,10 +472,10 @@ class DecisionMakerProcessor:
         if not self.lei_lookup:
             raise ValueError("LEI data not loaded. Call load_lei_data() first.")
 
-        # Initialize validator
+        # Initialize validator (IDFormatValidator uses core library)
         self.validator = DecisionMakerValidator(
             lei_lookup=self.lei_lookup,
-            id_validator=self.id_validator,
+            id_validator=IDFormatValidator(),
             party_type=self.party_type,
             logger=self.logger,
         )

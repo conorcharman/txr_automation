@@ -279,9 +279,9 @@
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Function LookupItalianTracker()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">
-<code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._load_italian_tracker()</code><br /><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._apply_italian_tracker_logic()</code>
+<em>Removed</em> — Italian NIDN validation is handled by <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDLogicValidator._validate_italian_nidn()</code> (algorithmic, no tracker file required)
 </td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Compare IT NIDN against confirmed fiscal codes in tracker CSV</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Italian fiscal code structure validated algorithmically from the ID string; external tracker CSV no longer used</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">Function TemplateLookup()</code></td>

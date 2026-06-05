@@ -58,13 +58,8 @@ def lei_manager(sample_lei_lookup) -> LEILookupManager:
 
 @pytest.fixture
 def id_validator() -> IDFormatValidator:
-    """ID format validator with common patterns."""
-    patterns = {
-        "NIDN_GB": r"^[A-Z]{2}\d{6}[A-Z]$",  # UK National Insurance
-        "NIDN_SE": r"^\d{10,12}$",  # Swedish Personnummer
-        "CONCAT": r"^[A-Z]+#[A-Z]+#.*$",  # Concatenated format
-    }
-    return IDFormatValidator(patterns)
+    """ID format validator backed by core library."""
+    return IDFormatValidator()
 
 
 @pytest.fixture
@@ -398,13 +393,9 @@ class TestIDFormatValidator:
         assert id_validator.validate("   ") == ""
         assert id_validator.validate(None) == ""
 
-    def test_custom_patterns(self, id_validator):
-        """Test custom pattern matching."""
-        # UK NI format
-        assert id_validator.validate("AB123456C") == "NIDN_GB"
-        
-        # Swedish personnummer
-        assert id_validator.validate("1234567890") == "NIDN_SE"
+    def test_unknown_id_returns_empty(self, id_validator):
+        """Test that an unrecognised code returns empty string."""
+        assert id_validator.validate("XXXXXXXXXX") == ""
 
 
 # =============================================================================

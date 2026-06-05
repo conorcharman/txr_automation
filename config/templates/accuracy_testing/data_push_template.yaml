@@ -196,10 +196,6 @@ batch:
       target: "Failure Reason"
       description: "Specific reason for validation failure"
 
-    # Tracker status (exists in both)
-    - source: "Tracker Status"
-      target: "Tracker Status"
-
     # -------------------------------------------------------------------------
     # 7_6 (Non-Zero Net Quantity) columns
     # These columns are only present in 7_6 source files and will be skipped

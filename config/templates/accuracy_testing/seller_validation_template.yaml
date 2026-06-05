@@ -50,10 +50,6 @@ single:
     # Output file (validation results)
     output_file: "data/validated/validated_FY26_Q1_16_21.csv"
     
-    # Optional: Tracker files for additional validation context
-    # italian_tracker: "data/trackers/italian_tracker.csv"
-    # main_tracker: "data/trackers/main_tracker.csv"
-    
     # Log output directory
     log_output: "logs"
 
@@ -85,10 +81,6 @@ batch:
     
     # Directory for output files (validation results)
     output_dir: "data/validated/FY26/Q1"
-    
-    # Optional: Tracker files (same for all incidents)
-    # italian_tracker: "data/trackers/italian_tracker.csv"
-    # main_tracker: "data/trackers/main_tracker.csv"
     
     # Log output directory
     log_output: "logs"

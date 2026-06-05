@@ -326,7 +326,6 @@ DEFAULT_COLUMN_MAPPINGS = [
     ColumnMapping("Suggested Correction", "Suggested Correction", "Analyst suggested alternative correction"),
     ColumnMapping("Suggested Correction Field", "Suggested Correction Field", "Fields for analyst correction"),
     # Status columns
-    ColumnMapping("Tracker Status", "Tracker Status", "Status from tracker system"),
     ColumnMapping("Pass/Fail", "Pass/Fail", "Format and logic validation result"),
     ColumnMapping("Actions Taken", "Actions Taken", "Actions taken on this record"),
     # Match columns

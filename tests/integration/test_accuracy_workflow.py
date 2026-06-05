@@ -420,7 +420,6 @@ class TestTemplateColumnIntegrity:
             "Failure Reason",
             "Correction",
             "Correction Field",
-            "Tracker Status",
         ]
         
         for col in required:

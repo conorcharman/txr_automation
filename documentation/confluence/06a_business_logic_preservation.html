@@ -1,8 +1,8 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Business Logic Preservation — TXR Automation</title>
+    <title>Business Logic Preservation â€” TXR Automation</title>
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 960px; margin: 0 auto; padding: 20px; color: #172B4D; }
         h1, h2, h3, h4 { color: #172B4D; }
@@ -73,13 +73,13 @@
 <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDFormatManager.validate(country, id_type, value)</code> in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/data/id_formats.py</code>
 </td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py</code></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“ Verified</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Auto-detect ID type when type field is missing or ambiguous</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDFormatManager.validate_any_type(country, value)</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py</code></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“ Verified</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Validate LEI format (20-character alphanumeric)</td>
@@ -87,7 +87,7 @@
 <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidator.validate_lei(lei_value)</code> in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/id_validation.py</code>
 </td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py</code></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“ Verified</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Country code validation (249 countries, EEA flag)</td>
@@ -95,26 +95,26 @@
 <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">CountryDataManager.validate_code(code)</code> in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">core/data/country_codes.py</code>
 </td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_country_codes.py</code></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“ Verified</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">EEA membership check for routing decisions</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">CountryDataManager.is_eea(code)</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_country_codes.py</code></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“ Verified</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">GB NIDN (UK National Insurance Number) with forbidden prefix exclusions (BG, GB, KN, NK, NT, TN, ZZ)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Regex: <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">^(?!BG|GB|KN|NK|NT|TN|ZZ)[A-CEGH-PR-TW-Z][A-CEGH-NP-TW-Z]\d{6}[A-NP-Z]$</code>
 </td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py::test_validate_gb_nidn_valid</code></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“ Verified</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Detailed mismatch reason generation when ID fails format check</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDPattern.get_mismatch_reason(value)</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_id_formats.py</code></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓ Verified</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“ Verified</td>
 </tr>
 </tbody>
 </table></div>
@@ -169,105 +169,105 @@
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (YYMMDD), gender (odd/even sequence), modulus 97 check digit with 2000+ century handling</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_belgian_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 97</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">BG (Bulgaria)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (YYMMDD), gender (odd/even), weighted checksum</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_bulgarian_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Weighted sum</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">CZ (Czech Republic)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (YYMMDD), gender (month +50 for females), modulus check</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_czech_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">DK (Denmark)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (DDMMYY), century code mapping</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_danish_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">&mdash;</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">EE (Estonia)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Century digit, DOB (YYMMDD), gender (odd=M, even=F)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_estonian_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Weighted sum</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">FI (Finland)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">DOB (DDMMYY), century separator (+/-/A), gender (odd/even), modulus 31 check character</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_finnish_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 31 (char map)</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">IS (Iceland)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (DDMMYY), century digit, modulus 11 check</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_icelandic_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">IT (Italy)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Fiscal code: surname consonant extraction, name consonant extraction, DOB with Italian month encoding (A=Jan, B=Feb...), gender (day +40 for females)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_italian_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Luhn variant</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">LT (Lithuania)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Century digit, DOB (YYMMDD), gender</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_lithuanian_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Weighted sum</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">LV (Latvia)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (DDMMYY), century code, modulus check</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_latvian_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">NO (Norway)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (DDMMYY), gender (odd/even), two check digits (modulus 11)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_norwegian_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11 (&times;2)</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">RO (Romania)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Century digit, DOB (YYMMDD), gender, county code</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_romanian_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Weighted sum</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">SE (Sweden)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (YYMMDD or YYYYMMDD), gender (odd/even), Luhn check digit</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_swedish_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Luhn</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">SI (Slovenia)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (DDMMYYY), gender encoding, modulus 11 check</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_slovenian_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 <tr>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">SK (Slovakia)</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Extract DOB (YYMMDD), gender (month +50 for females), divisibility check</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">_validate_slovak_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Mod 11</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">✓</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">âœ“</td>
 </tr>
 </tbody>
 </table></div>
@@ -450,9 +450,9 @@
 <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">record.error_flag = &ldquo;Y&rdquo;</code> on failure</td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_error_flag_logic.py</code></td>
 </tr>
-<tr>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Italian tracker lookup for fiscal code cross-referencing</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDValidationProcessor._check_italian_tracker()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top">Italian fiscal code algorithmic validation</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDLogicValidator._validate_italian_nidn()</code></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><em>Removed</em> &mdash; superseded by algorithmic validation in <code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">IDLogicValidator._validate_italian_nidn()</code></td>
 <td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;vertical-align: top;" class="confluenceTd" valign="top"><code style="background: rgb(244,245,247);padding: 2.0px 6.0px;border-radius: 3.0px;font-size: 0.9em;">test_buyer_id_validation.py</code></td>
 </tr>
 <tr>

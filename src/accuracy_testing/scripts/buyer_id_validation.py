@@ -148,8 +148,6 @@ class BuyerIDValidator:
             client_type="buyer",
             logger=self.logger,
             verbose=self.proc_config.verbose,
-            italian_tracker_path=self.path_config.italian_tracker,
-            main_tracker_path=self.path_config.main_tracker,
             template_path=self.path_config.template_file,
             template_id_column=self.path_config.template_id_column,
             template_type_column=self.path_config.template_type_column
@@ -306,7 +304,6 @@ class BuyerIDValidator:
             "Secondary Nationality",
             "Correction",  # VBA format: "ID:TYPE"
             "Correction Field",  # VBA: "ID:IDT"
-            "Tracker Status",  # Tracker system status
             "Pass/Fail",  # Format and logic validation status
             "Failure Reason",  # Specific reason for validation failure
             "Actions Taken",
@@ -369,7 +366,6 @@ class BuyerIDValidator:
                         secondary_nat,
                         record.correction_output or "",  # ID:TYPE format
                         record.correction_fields or "",  # Fields corrected
-                        record.tracker_status or "",  # Tracker status
                         f"Format: {record.format_status} | Logic: {record.logic_status}" if record.format_status else "",  # Pass/Fail status
                         record.failure_reason or "",  # Failure reason
                         " | ".join(record.actions_taken) if record.actions_taken else "",
@@ -436,7 +432,6 @@ class BuyerIDValidator:
             "Secondary Nationality",
             "Correction",
             "Correction Field",
-            "Tracker Status",
             "Pass/Fail",
             "Failure Reason",
             "Actions Taken",
@@ -482,7 +477,6 @@ class BuyerIDValidator:
                         secondary_nat,
                         record.correction_output or "",
                         record.correction_fields or "",
-                        record.tracker_status or "",
                         f"Format: {record.format_status} | Logic: {record.logic_status}" if record.format_status else "",
                         record.failure_reason or "",
                         " | ".join(record.actions_taken) if record.actions_taken else "",

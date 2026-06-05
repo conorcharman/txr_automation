@@ -41,7 +41,7 @@ import sys
 import csv
 import argparse
 from pathlib import Path
-from typing import List, Dict
+from typing import List, Dict, Optional
 from datetime import datetime
 from decimal import Decimal
 
@@ -58,21 +58,7 @@ from src.accuracy_testing.processor import (
 )
 
 # Import core utilities
-try:
-    from core import create_logger, StructuredLogger, safe_open_csv
-except ImportError:
-    # Fallback if core not available
-    import logging
-    def create_logger(name, log_dir, log_level='INFO'):
-        logger = logging.getLogger(name)
-        logger.setLevel(getattr(logging, log_level))
-        handler = logging.StreamHandler()
-        handler.setFormatter(logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s'))
-        logger.addHandler(handler)
-        return logger
-    
-    def safe_open_csv(file_path, mode, newline=''):
-        return open(file_path, mode, encoding='utf-8', newline=newline), 'utf-8'
+from core import create_logger, StructuredLogger, safe_open_csv
 
 
 class IncorrectNetAmountStats:
@@ -144,8 +130,8 @@ class IncorrectNetAmountValidationScript:
     
     def __init__(
         self,
-        config_path: str = None,
-        config_dict: dict = None,
+        config_path: Optional[str] = None,
+        config_dict: Optional[dict] = None,
         dry_run: bool = False,
         show_progress: bool = False
     ):
@@ -351,7 +337,12 @@ class IncorrectNetAmountValidationScript:
         """Execute the validation workflow."""
         start_time = datetime.now()
         
-        self.logger.log_header("INCORRECT NET AMOUNT VALIDATION v1.0")
+        if hasattr(self.logger, 'log_header'):
+            self.logger.log_header("INCORRECT NET AMOUNT VALIDATION v1.0")
+        else:
+            self.logger.info("=" * 70)
+            self.logger.info("INCORRECT NET AMOUNT VALIDATION v1.0")
+            self.logger.info("=" * 70)
         self.logger.info(f"Input file: {self.input_file}")
         self.logger.info(f"Output file: {self.output_file}")
         if self.dry_run:
@@ -366,18 +357,22 @@ class IncorrectNetAmountValidationScript:
             return
         
         # Step 2: Validate records
-        self.logger.log_header("VALIDATING PRICING DATA")
+        if hasattr(self.logger, 'log_header'):
+            self.logger.log_header("VALIDATING PRICING DATA")
+        else:
+            self.logger.info("=" * 70)
+            self.logger.info("VALIDATING PRICING DATA")
+            self.logger.info("=" * 70)
         
         # Setup progress bar if requested
+        record_iter = records
         if self.show_progress:
             try:
-                from tqdm import tqdm
+                from tqdm import tqdm  # type: ignore
                 record_iter = tqdm(records, desc="Validating records", unit="rec")
             except ImportError:
                 self.logger.warning("tqdm not installed - progress bar disabled. Install with: pip install tqdm")
                 record_iter = records
-        else:
-            record_iter = records
         
         # Validate each record
         for record in record_iter:
@@ -397,6 +392,12 @@ class IncorrectNetAmountValidationScript:
             # Show sample of what would be written
             if records:
                 sample_record = records[0]
+                if hasattr(self.logger, 'log_header'):
+                    self.logger.log_header("Sample Output (First Record)")
+                else:
+                    self.logger.info("=" * 70)
+                    self.logger.info("Sample Output (First Record)")
+                    self.logger.info("=" * 70)
                 self.logger.info("Sample output (first record):")
                 self.logger.info(f"  Transaction Ref: {sample_record.transaction_ref}")
                 self.logger.info(f"  Net Amount: {sample_record.net_amount}")
@@ -628,6 +629,7 @@ def main():
     
     try:
         # Determine configuration source
+        config: dict | None = None
         if args.use_env:
             print("Loading configuration from environment variables...")
             config = AccuracyConfigManager.load_from_env("TXR_ACCURACY_")
@@ -659,6 +661,11 @@ def main():
                 print("Error: No configuration specified and default config not found")
                 print("Use --config, --use-env, or provide input_file and output_file arguments")
                 return 1
+        
+        # Ensure config was loaded
+        if config is None:
+            print("Error: Configuration could not be loaded")
+            return 1
         
         # Override log level if specified
         if args.log_level:

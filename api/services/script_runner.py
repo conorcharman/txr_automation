@@ -614,8 +614,8 @@ class ScriptRunnerService:
                 },
                 "files": {
                     "replay_patterns": [
-                        "Replay_*_PHASE 3_Inconsistent_IDs_Summary_FINAL.csv",
-                        "Replay_*_PHASE 3_Inconsistent_Names_Summary_FINAL.csv",
+                        "Replay_*_PHASE 3_Inconsistent_IDs_Summary_FINAL.*",
+                        "Replay_*_PHASE 3_Inconsistent_Names_Summary_FINAL.*",
                     ],
                     "incident_pattern": f"{req.fiscal_year} {req.quarter} *.csv",
                 },

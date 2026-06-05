@@ -11,7 +11,6 @@ This module provides:
 - CONCAT generation from client data
 - Processing statistics and reporting
 - Configuration management for accuracy testing
-- Italian tracker logic for fiscal code validation
 - Joint account aggregation for JNT accounts
 - Kaizen error lookup validation
 
@@ -64,17 +63,13 @@ class AccuracyPathConfig:
         input_file: Path to input CSV file
         output_file: Path to output CSV file
         log_output: Directory for log files
-        italian_tracker: Path to Italian tracker Excel file (optional)
-        main_tracker: Path to main tracker Excel file (optional)
-        template_file: Path to template Excel file for Kaizen lookup (optional)
+        template_file: Path to template CSV file for Kaizen lookup (optional)
         template_id_column: Column name for expected ID in template (default: auto-detect based on client_type)
         template_type_column: Column name for expected type in template (default: auto-detect based on client_type)
     """
     input_file: str
     output_file: str
     log_output: str = "logs"
-    italian_tracker: str = ""
-    main_tracker: str = ""
     template_file: str = ""
     template_id_column: str = ""
     template_type_column: str = ""
@@ -205,8 +200,6 @@ class AccuracyConfigManager:
             input_file=paths['input_file'],
             output_file=paths['output_file'],
             log_output=paths.get('log_output', 'logs'),
-            italian_tracker=paths.get('italian_tracker', ''),
-            main_tracker=paths.get('main_tracker', ''),
             template_file=paths.get('template_file', ''),
             template_id_column=paths.get('template_id_column', ''),
             template_type_column=paths.get('template_type_column', '')
@@ -268,7 +261,6 @@ class ClientRecord:
     correction_type: str = ""
     correction_output: str = ""  # Formatted as "ID:TYPE"
     correction_fields: str = ""  # Fields that were corrected (e.g., "ID:IDT")
-    tracker_status: str = ""  # Tracker system status
     actions_taken: List[str] = field(default_factory=list)
     
     # Kaizen template validation fields
@@ -320,7 +312,6 @@ class ProcessingStats:
         self.errors_by_country = defaultdict(int)  # Country code -> count
         self.errors_by_type = defaultdict(int)  # ID type -> count
         self.errors_by_reason = defaultdict(int)  # Failure reason -> count
-        self.italian_tracker_actions = defaultdict(int)  # Tracker action -> count
     
     def track_error(self, country_code: str, id_type: str, reason: str):
         """Track detailed error information."""
@@ -330,11 +321,6 @@ class ProcessingStats:
             self.errors_by_type[id_type] += 1
         if reason:
             self.errors_by_reason[reason] += 1
-    
-    def track_italian_action(self, action: str):
-        """Track Italian tracker actions."""
-        if action and "Checked Tracker" in action:
-            self.italian_tracker_actions[action] += 1
     
     def print_summary(self, logger=None):
         """
@@ -369,11 +355,6 @@ class ProcessingStats:
                 logger.info("\nERRORS BY ID TYPE:")
                 for id_type, count in sorted(self.errors_by_type.items(), key=lambda x: x[1], reverse=True):
                     logger.info(f"  {id_type}: {count}")
-            
-            if self.italian_tracker_actions:
-                logger.info("\nITALIAN TRACKER ACTIONS:")
-                for action, count in sorted(self.italian_tracker_actions.items()):
-                    logger.info(f"  {action}: {count}")
         else:
             # Fallback to print
             print(f"\n{'='*70}")
@@ -400,11 +381,6 @@ class ProcessingStats:
                 print("\nERRORS BY ID TYPE:")
                 for id_type, count in sorted(self.errors_by_type.items(), key=lambda x: x[1], reverse=True):
                     print(f"  {id_type}: {count}")
-            
-            if self.italian_tracker_actions:
-                print("\nITALIAN TRACKER ACTIONS:")
-                for action, count in sorted(self.italian_tracker_actions.items()):
-                    print(f"  {action}: {count}")
 
 
 # ============================================================================
@@ -1229,9 +1205,9 @@ class IDValidationProcessor:
     Uses Phase 1 core library for validation logic.
     """
     
-    def __init__(self, client_type: str = "buyer", logger=None, verbose: bool = False, 
-                 italian_tracker_path: str = "", main_tracker_path: str = "", template_path: str = "",
-                 template_id_column: str = "", template_type_column: str = ""):
+    def __init__(self, client_type: str = "buyer", logger=None, verbose: bool = False,
+                 template_path: str = "", template_id_column: str = "",
+                 template_type_column: str = ""):
         """
         Initialize processor.
         
@@ -1239,16 +1215,14 @@ class IDValidationProcessor:
             client_type: Either "buyer" or "seller"
             logger: Optional StructuredLogger instance
             verbose: Enable verbose output (fallback if no logger)
-            italian_tracker_path: Path to Italian tracker Excel file (optional)
-            main_tracker_path: Path to main tracker Excel file (optional)
-            template_path: Path to template Excel file for Kaizen lookup (optional)
+            template_path: Path to template CSV file for Kaizen lookup (optional)
+            template_id_column: Column name for expected ID in template
+            template_type_column: Column name for expected type in template
         """
         self.client_type = client_type.lower()
         self.logger = logger
         self.verbose = verbose
         self.stats = ProcessingStats()
-        self.italian_tracker_path = italian_tracker_path
-        self.main_tracker_path = main_tracker_path
         self.template_path = template_path
         
         # Auto-detect column names based on client type if not provided
@@ -1263,15 +1237,9 @@ class IDValidationProcessor:
         # Initialize ID logic validator
         self.id_logic_validator = IDLogicValidator(verbose=verbose)
         
-        # Load tracker data if paths provided and Excel support available
-        self.italian_tracker_data = {}
-        self.main_tracker_data = {}
+        # Load template data for Kaizen lookup
         self.template_data = {}
         
-        if italian_tracker_path and Path(italian_tracker_path).exists():
-            self._load_italian_tracker(italian_tracker_path)
-        if main_tracker_path and Path(main_tracker_path).exists():
-            self._load_main_tracker(main_tracker_path)
         if template_path and Path(template_path).exists():
             self._load_template(template_path)
     
@@ -1412,14 +1380,6 @@ class IDValidationProcessor:
                                     if self.verbose and self.logger:
                                         self.logger.warning(f"Could not normalize SE NIDN: {e}")
                     
-                    # Apply Italian tracker logic for valid IT records
-                    self._apply_italian_tracker_logic(record, country_code)
-                    
-                    # Track Italian tracker actions
-                    if record.actions_taken:
-                        for action in record.actions_taken:
-                            self.stats.track_italian_action(action)
-                    
                     # Perform template validation for valid records
                     self._perform_template_validation(record)
                     
@@ -1492,10 +1452,7 @@ class IDValidationProcessor:
             record.actions_taken.append(debug_msg)
             self.stats.no_correction_possible += 1
         
-        # Step 3: Apply Italian tracker logic (if applicable)
-        self._apply_italian_tracker_logic(record, country_code)
-        
-        # Step 4: Perform Kaizen template validation (if template loaded)
+        # Step 3: Perform Kaizen template validation (if template loaded)
         self._perform_template_validation(record)
         
         return record
@@ -2099,54 +2056,8 @@ class IDValidationProcessor:
         
         return processed    
     # ============================================================================
-    # Tracker and Template Lookup Methods
+    # Template Lookup Methods
     # ============================================================================
-    
-    def _load_italian_tracker(self, file_path: str):
-        """Load Italian tracker data from CSV file."""
-        try:
-            if self.logger:
-                self.logger.info(f"Loading Italian tracker: {file_path}")
-            
-            with open(file_path, 'r', encoding='utf-8') as f:
-                reader = csv.reader(f)
-                next(reader)  # Skip header
-                
-                # Italian tracker: Column C (index 2) = Person Code, Column G (index 6) = Status
-                for row in reader:
-                    if len(row) >= 7 and row[2]:
-                        person_code = row[2].strip()
-                        status = row[6].strip() if row[6] else "Not On tracker"
-                        self.italian_tracker_data[person_code] = status
-            
-            if self.logger:
-                self.logger.info(f"Loaded {len(self.italian_tracker_data)} Italian tracker records")
-        except Exception as e:
-            if self.logger:
-                self.logger.warning(f"Failed to load Italian tracker: {e}")
-    
-    def _load_main_tracker(self, file_path: str):
-        """Load main tracker data from CSV file."""
-        try:
-            if self.logger:
-                self.logger.info(f"Loading main tracker: {file_path}")
-            
-            with open(file_path, 'r', encoding='utf-8') as f:
-                reader = csv.reader(f)
-                next(reader)  # Skip header
-                
-                # Main tracker: Column J (index 9) = Person Code, Column N (index 13) = Status
-                for row in reader:
-                    if len(row) >= 14 and row[9]:
-                        person_code = row[9].strip()
-                        status = row[13].strip() if row[13] else "Not On tracker"
-                        self.main_tracker_data[person_code] = status
-            
-            if self.logger:
-                self.logger.info(f"Loaded {len(self.main_tracker_data)} main tracker records")
-        except Exception as e:
-            if self.logger:
-                self.logger.warning(f"Failed to load main tracker: {e}")
     
     def _load_template(self, file_path: str):
         """Load template data from CSV file for Kaizen error lookup."""
@@ -2346,113 +2257,6 @@ class IDValidationProcessor:
                 return matched
         return ""
 
-    def _get_tracker_status(self, person_code: str) -> str:
-        """
-        Get tracker status for a person code.
-        Checks Italian tracker first, then main tracker.
-        
-        Args:
-            person_code: Client person code
-            
-        Returns:
-            Tracker status or "Not On tracker"
-        """
-        # Check Italian tracker first (higher priority)
-        if person_code in self.italian_tracker_data:
-            return self.italian_tracker_data[person_code]
-        
-        # Check main tracker
-        if person_code in self.main_tracker_data:
-            return self.main_tracker_data[person_code]
-        
-        return "Not On tracker"
-    
-    def _apply_italian_tracker_logic(self, record: ClientRecord, country_code: str):
-        """
-        Apply Italian tracker logic for IT fiscal codes.
-        
-        Logic:
-        - Populate tracker status for all records (for reporting)
-        - For IT records that passed validation:
-          - If tracker status is "Not On Tracker" or "#N/A" → Replace with fallback
-          - Else if tracker status is an IT NIDN:
-            - Compare with record's NIDN (ISO-2 stripped)
-            - If match → "Checked Tracker - NIDN Confirmed"
-            - If no match → "Checked Tracker - NIDN Updated"
-        
-        Args:
-            record: Client record
-            country_code: Country code
-        """
-        # Always get and populate tracker status (for all records, for reporting)
-        tracker_status = self._get_tracker_status(record.person_code)
-        record.tracker_status = tracker_status
-        
-        # Only apply Italian-specific logic for IT country code
-        if country_code != "IT":
-            return
-        
-        # Only process IT records that passed validation (not failed records)
-        if not record.is_valid:
-            return
-        
-        # Normalize tracker status
-        normalized_status = tracker_status.strip()
-        
-        # Check if tracker status indicates "not found" (includes #N/A variants)
-        if normalized_status.upper().replace("#", "").replace("/", "").replace(" ", "") in ["NA", "NOTONTRACKER"]:
-            # Replace with fallback ID (no colon between ISO-2 and person code)
-            fallback_id = country_code.upper() + record.person_code.strip()
-            record.correction = fallback_id
-            record.correction_type = "NIDN"
-            record.correction_output = f"{fallback_id}:NIDN"
-            record.correction_fields = "ID:IDT"
-            record.actions_taken = ["Checked Tracker - Replaced With Fallback"]
-            self.stats.corrected_records += 1
-            return
-        
-        # If we have a non-empty tracker status, assume it's an IT NIDN (without ISO-2 prefix)
-        if normalized_status and len(normalized_status) >= 11:  # IT NIDN is 16 chars, but be lenient
-            # Prepend ISO-2 code to tracker NIDN for comparison with record ID
-            tracker_nidn_with_prefix = country_code.upper() + normalized_status
-            
-            # Compare tracker NIDN (with prefix) with record NIDN (case-insensitive)
-            if tracker_nidn_with_prefix.upper() == record.id_value.upper():
-                # NIDN matches - confirmed
-                record.actions_taken = ["Checked Tracker - NIDN Confirmed"]
-                record.correction = ""
-                record.correction_type = ""
-                record.correction_output = ""
-                record.correction_fields = ""
-                return  # Exit early - no correction needed
-            else:
-                # NIDN doesn't match - update with tracker value (prepend ISO-2, no colon)
-                corrected_id = tracker_nidn_with_prefix
-                record.correction = corrected_id
-                record.correction_type = "NIDN"
-                record.correction_output = f"{corrected_id}:NIDN"
-                record.correction_fields = "ID:IDT"
-                record.actions_taken = ["Checked Tracker - NIDN Updated"]
-                self.stats.corrected_records += 1
-                return  # Exit early - correction applied
-        
-        # Handle case where there's a correction but country is IT
-        # This covers situations where tracker might have provided a corrected NIDN
-        if country_code == "IT" and record.correction and record.correction_type:
-            # If we have a correction for IT client, it came from tracker or alternative validation
-            if "Replaced With CONCAT" in " | ".join(record.actions_taken):
-                # Keep CONCAT message as-is
-                pass
-            elif "Replaced With fallback" in " | ".join(record.actions_taken):
-                # Change to tracker-checked fallback
-                record.actions_taken = ["Checked Tracker - Replaced With Fallback"]
-            elif record.correction == record.id_value:
-                # Tracker lookup result matches the ID on record - confirmed
-                record.actions_taken = ["Checked Tracker - NIDN Confirmed"]
-            elif record.correction != record.id_value:
-                # Different ID found - likely from tracker or validation
-                record.actions_taken = ["Checked Tracker - NIDN Updated"]
-    
     def _perform_template_validation(self, record: ClientRecord) -> None:
         """
         Perform Kaizen template validation by comparing correction output
@@ -2720,8 +2524,7 @@ class IDValidationProcessor:
             rec1.correction_output = ""
             rec1.correction_fields = ""
         
-        # Aggregate tracker status and actions
-        rec1.tracker_status = combine_with_pipe(rec1.tracker_status, rec2.tracker_status)
+        # Aggregate actions
         rec1.actions_taken = [
             combine_with_pipe(
                 " | ".join(rec1.actions_taken) if rec1.actions_taken else "",

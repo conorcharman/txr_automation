@@ -80,7 +80,6 @@ from src.accuracy_testing.processor import (
 from src.accuracy_testing.validators.decision_maker_validator import (
     DecisionMakerProcessor,
     LEILookupManager,
-    IDFormatValidator,
     ValidationStats,
 )
 
@@ -105,7 +104,6 @@ class BuyerDecisionMakerValidator:
         input_file: Optional[str] = None,
         output_file: Optional[str] = None,
         lei_data_file: Optional[str] = None,
-        id_formats_file: Optional[str] = None,
         log_dir: Optional[str] = None,
         log_level: str = "INFO",
         dry_run: bool = False,
@@ -120,7 +118,6 @@ class BuyerDecisionMakerValidator:
             input_file: Input CSV file path (overrides config)
             output_file: Output CSV file path (overrides config)
             lei_data_file: LEI lookup CSV file path (overrides config)
-            id_formats_file: ID formats CSV file path (overrides config)
             log_dir: Log output directory
             log_level: Logging level (DEBUG, INFO, WARNING, ERROR)
             dry_run: If True, preview changes without writing output
@@ -149,8 +146,6 @@ class BuyerDecisionMakerValidator:
             paths["output_file"] = output_file
         if lei_data_file:
             paths["lei_data_file"] = lei_data_file
-        if id_formats_file:
-            paths["id_formats_file"] = id_formats_file
         if log_dir:
             paths["log_output"] = log_dir
         self.config["paths"] = paths
@@ -172,9 +167,6 @@ class BuyerDecisionMakerValidator:
         self.input_file = Path(paths.get("input_file", ""))
         self.output_file = Path(paths.get("output_file", ""))
         self.lei_data_file = Path(paths.get("lei_data_file", ""))
-        # Only create Path for id_formats_file if it exists in config
-        id_formats_str = paths.get("id_formats_file", "")
-        self.id_formats_file = Path(id_formats_str) if id_formats_str else None
 
         # Initialize processor
         self.processor = DecisionMakerProcessor(
@@ -218,10 +210,6 @@ class BuyerDecisionMakerValidator:
         if not self.lei_data_file or not self.lei_data_file.exists():
             errors.append(f"LEI data file not found: {self.lei_data_file}")
 
-        # ID formats file is optional
-        if self.id_formats_file and not self.id_formats_file.exists():
-            self.logger.warning(f"ID formats file not found: {self.id_formats_file}")
-
         if errors:
             for error in errors:
                 self.logger.error(error)
@@ -251,10 +239,6 @@ class BuyerDecisionMakerValidator:
 
         # Load LEI reference data
         self.processor.load_lei_data(self.lei_data_file)
-
-        # Load ID formats (optional)
-        if self.id_formats_file and self.id_formats_file.exists():
-            self.processor.load_id_formats(self.id_formats_file)
 
         # Load input data
         record_count = self.processor.load_input_csv(self.input_file)
@@ -345,14 +329,6 @@ Examples:
         help="Path to LEI lookup CSV file",
     )
     parser.add_argument(
-        "--id-formats",
-        type=str,
-        dest="id_formats_file",
-        help="Path to ID formats CSV file (optional)",
-    )
-
-    # Logging
-    parser.add_argument(
         "--log-dir",
         type=str,
         help="Directory for log files",
@@ -408,7 +384,6 @@ def main() -> int:
             input_file=args.input_file,
             output_file=args.output_file,
             lei_data_file=args.lei_data_file,
-            id_formats_file=args.id_formats_file,
             log_dir=args.log_dir,
             log_level=args.log_level,
             dry_run=args.dry_run,

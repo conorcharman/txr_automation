@@ -67,6 +67,8 @@ class DTFRunner:
         Args:
             sql_query: The SQL SELECT statement to inject into the DTF.
             output_csv_path: Where System i Data Transfer should write the CSV.
+                If a Linux path is detected (e.g., /app/data), it is converted
+                to a Windows UNC or local path for IBM Data Transfer compatibility.
             dtf_output_path: Where to save the generated .dtf file.
             template_path: Override the default template path.
 
@@ -75,7 +77,12 @@ class DTFRunner:
         """
         template = Path(template_path or self.TEMPLATE_PATH)
         content = template.read_text(encoding="utf-8")
-        content = content.replace("{OUTPUT_PATH}", str(output_csv_path))
+        
+        # Convert Linux paths to Windows paths for DTF compatibility.
+        # IBM Data Transfer runs on Windows and needs Windows-format paths.
+        dtf_output_path_for_dtf = self._convert_path_to_windows(str(output_csv_path))
+        
+        content = content.replace("{OUTPUT_PATH}", dtf_output_path_for_dtf)
         content = content.replace("{SQL_QUERY}", self._flatten_sql(sql_query))
         output = Path(dtf_output_path)
         output.parent.mkdir(parents=True, exist_ok=True)
@@ -105,6 +112,62 @@ class DTFRunner:
         # Join and collapse whitespace
         flat = " ".join(stripped)
         return re.sub(r"\s+", " ", flat).strip()
+
+    @staticmethod
+    def _convert_path_to_windows(path_str: str) -> str:
+        """Convert a Linux container path to a Windows path for DTF compatibility.
+
+        IBM Data Transfer for System i runs on Windows and requires Windows-format
+        paths (backslashes and drive letters). This method detects and converts common
+        Docker volume mappings to their Windows equivalents.
+
+        Mappings supported (configurable via environment variables):
+        - ``/app/data`` → ``DTF_WINDOWS_APP_DATA_PATH`` or auto-detect
+        - ``/app`` → ``DTF_WINDOWS_APP_PATH`` or auto-detect
+
+        If the path is already a Windows path, it is returned unchanged.
+        If a Linux path cannot be mapped, it is returned as-is (may fail at DTF runtime).
+
+        Args:
+            path_str: Path that may be Linux or Windows format.
+
+        Returns:
+            Windows-format path string.
+        """
+        # If already a Windows path (contains backslash or drive letter), return as-is.
+        if "\\" in path_str or (len(path_str) > 1 and path_str[1] == ":"):
+            return path_str
+
+        # Detect Linux path patterns and map to Windows equivalents.
+        if path_str.startswith("/app/data"):
+            # Check for environment variable override first.
+            win_base = os.environ.get("DTF_WINDOWS_APP_DATA_PATH")
+            if win_base:
+                # Replace /app/data with the configured Windows path.
+                relative = path_str[len("/app/data"):].lstrip("/")
+                return (Path(win_base) / relative).as_posix().replace("/", "\\")
+
+            # Auto-detect: common installation pattern.
+            # Assume /app/data → C:\Users\<user>\Documents\GitHub\txr_automation\data
+            # (or wherever the repo is checked out).
+            default_base = r"C:\Users\ccharm\Documents\GitHub\txr_automation\data"
+            relative = path_str[len("/app/data"):].lstrip("/")
+            return (Path(default_base) / relative).as_posix().replace("/", "\\")
+
+        elif path_str.startswith("/app"):
+            # Map /app to the app root.
+            win_base = os.environ.get("DTF_WINDOWS_APP_PATH")
+            if win_base:
+                relative = path_str[len("/app"):].lstrip("/")
+                return (Path(win_base) / relative).as_posix().replace("/", "\\")
+
+            # Auto-detect: use repo root + txr_automation.
+            default_base = r"C:\Users\ccharm\Documents\GitHub\txr_automation"
+            relative = path_str[len("/app"):].lstrip("/")
+            return (Path(default_base) / relative).as_posix().replace("/", "\\")
+
+        # For other Linux paths or unmapped patterns, return as-is.
+        return path_str
 
     def generate_dtf_from_template(
         self,
