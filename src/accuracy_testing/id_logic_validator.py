@@ -612,7 +612,8 @@ class IDLogicValidator:
     
     def _validate_lithuanian_nidn(self, nidn: str, provided_dob: str, provided_gender: str) -> bool:
         """
-        Lithuanian NIDN: Gender code (3/5=M, 4/6=F) + YYMMDD + sequence.
+        Lithuanian NIDN: Gender code (1/3/5=M, 2/4/6=F) + YYMMDD + sequence + check digit.
+        Gender codes: 1=M 1800s, 2=F 1800s, 3=M 1900s, 4=F 1900s, 5=M 2000s, 6=F 2000s
         """
         if len(nidn) != 11 or not nidn.isdigit():
             return True
@@ -620,12 +621,22 @@ class IDLogicValidator:
         try:
             # Gender and century code
             gender_code = int(nidn[0])
-            if gender_code in [3, 5]:
+            if gender_code in [1, 3, 5]:
                 extracted_gender = 'M'
-                century = 1900 if gender_code == 3 else 2000
-            elif gender_code in [4, 6]:
+                if gender_code == 1:
+                    century = 1800
+                elif gender_code == 3:
+                    century = 1900
+                else:  # gender_code == 5
+                    century = 2000
+            elif gender_code in [2, 4, 6]:
                 extracted_gender = 'F'
-                century = 1900 if gender_code == 4 else 2000
+                if gender_code == 2:
+                    century = 1800
+                elif gender_code == 4:
+                    century = 1900
+                else:  # gender_code == 6
+                    century = 2000
             else:
                 return True
             

@@ -525,7 +525,7 @@ countries:
         regex: "^[3456]\\d{10}$"
         conditions:
           - "Total length: 11 digits"
-          - "Position 1 (G): Gender (3 or 5 for males, 4 or 6 for females)"
+          - "Position 1 (G): Gender and Century Code (1=male 1800–1899, 2=female 1800–1899, 3=male 1900–1999, 4=female 1900–1999, 5=male 2000–2099, 6=female 2000–2099)"
           - "Positions 2-3: Year of birth (YY)"
           - "Positions 4-5: Month of birth (MM)"
           - "Positions 6-7: Day of birth (DD)"
@@ -675,14 +675,14 @@ countries:
     name: "Norway"
     identifiers:
       - type: "11-Digit Personal ID (Fødselsnummer)"
-        format: "11 numeric digits: DDMMYY + 5 digits"
+        format: "11 numeric digits: DDMMYY + 5 digits (positions 7-11 contain identification and check digits)"
         regex: "^\\d{11}$"
         conditions:
           - "Total length: 11 digits"
           - "Positions 1-2: Day of birth (DD)"
           - "Positions 3-4: Month of birth (MM)"
           - "Positions 5-6: Year of birth (YY)"
-          - "Positions 7-11: Identification and check digits"
+          - "Positions 7-11: Identification number and check digits"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
         regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"

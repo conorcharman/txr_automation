@@ -219,19 +219,18 @@ const Phase2Form: React.FC = () => {
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
       resolvedLogPath.current = paths.logs;
-      if (!watch("kaizenInput")) setValue("kaizenInput", paths.kaizen);
-      if (!watch("outputFile")) setValue("outputFile", paths.output);
-      const { fiscalYear, quarter } = watch("testingPeriod");
+      setValue("kaizenInput", paths.kaizen);
+      setValue("outputFile", paths.output);
       try {
-        const atPaths = await resolvePaths({ fiscalYear, quarter, module: "accuracy_testing" });
-        if (!watch("incidentFiles")) setValue("incidentFiles", atPaths.templates);
+        const atPaths = await resolvePaths({ fiscalYear: testingPeriod.fiscalYear, quarter: testingPeriod.quarter, module: "accuracy_testing" });
+        setValue("incidentFiles", atPaths.templates);
         const res = await browseDirectory(atPaths.templates);
         setSourceFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
         setSourceFileCount(0);
       }
     },
-    [setValue, watch],
+    [setValue, testingPeriod],
   );
 
   const handleLoadConfig = (config: Record<string, unknown>) => {
@@ -410,13 +409,12 @@ const Phase2FinalForm: React.FC = () => {
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
       resolvedLogPath.current = paths.logs;
-      if (!watch("replayInputFile")) setValue("replayInputFile", paths.kaizen);
-      if (!watch("unavistaFiles")) setValue("unavistaFiles", paths.extracts);
-      if (!watch("outputFile")) setValue("outputFile", paths.output);
-      const { fiscalYear, quarter } = watch("testingPeriod");
+      setValue("replayInputFile", paths.kaizen);
+      setValue("unavistaFiles", paths.extracts);
+      setValue("outputFile", paths.output);
       try {
-        const atPaths = await resolvePaths({ fiscalYear, quarter, module: "accuracy_testing" });
-        if (!watch("incidentFiles")) setValue("incidentFiles", atPaths.templates);
+        const atPaths = await resolvePaths({ fiscalYear: testingPeriod.fiscalYear, quarter: testingPeriod.quarter, module: "accuracy_testing" });
+        setValue("incidentFiles", atPaths.templates);
       } catch { /* ignore */ }
       try {
         const res = await browseDirectory(paths.kaizen);
@@ -431,7 +429,7 @@ const Phase2FinalForm: React.FC = () => {
         setUnavistaFileCount(0);
       }
     },
-    [setValue, watch],
+    [setValue, testingPeriod],
   );
 
   const handleLoadConfig = (config: Record<string, unknown>) => {
@@ -632,25 +630,24 @@ const Phase3Form: React.FC = () => {
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
       resolvedLogPath.current = paths.logs;
-      if (!watch("inputFile")) setValue("inputFile", paths.kaizen);
-      if (!watch("outputFile")) setValue("outputFile", paths.output);
+      setValue("inputFile", paths.kaizen);
+      setValue("outputFile", paths.output);
       try {
         const res = await browseDirectory(paths.kaizen);
         setInputFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
         setInputFileCount(0);
       }
-      const { fiscalYear, quarter } = watch("testingPeriod");
       try {
-        const atPaths = await resolvePaths({ fiscalYear, quarter, module: "accuracy_testing" });
-        if (!watch("incidentFiles")) setValue("incidentFiles", atPaths.templates);
+        const atPaths = await resolvePaths({ fiscalYear: testingPeriod.fiscalYear, quarter: testingPeriod.quarter, module: "accuracy_testing" });
+        setValue("incidentFiles", atPaths.templates);
         const res = await browseDirectory(atPaths.templates);
         setIncidentFileCount(res.entries.filter((e) => !e.isDir).length);
       } catch {
         setIncidentFileCount(0);
       }
     },
-    [setValue, watch],
+    [setValue, testingPeriod],
   );
 
   const handleLoadConfig = (config: Record<string, unknown>) => {
@@ -841,16 +838,13 @@ const Phase3FinalForm: React.FC = () => {
   const handlePathsResolved = useCallback(
     async (paths: ResolvedPaths) => {
       resolvedLogPath.current = paths.logs;
-      if (!watch("inputFile")) setValue("inputFile", paths.kaizen);
-      if (!watch("unavistaFiles")) setValue("unavistaFiles", paths.extracts);
-      if (!watch("outputFile")) setValue("outputFile", paths.output);
-      if (!watch("incidentFiles")) {
-        const { fiscalYear, quarter } = watch("testingPeriod");
-        try {
-          const atPaths = await resolvePaths({ fiscalYear, quarter, module: "accuracy_testing" });
-          setValue("incidentFiles", atPaths.templates);
-        } catch { /* ignore */ }
-      }
+      setValue("inputFile", paths.kaizen);
+      setValue("unavistaFiles", paths.extracts);
+      setValue("outputFile", paths.output);
+      try {
+        const atPaths = await resolvePaths({ fiscalYear: testingPeriod.fiscalYear, quarter: testingPeriod.quarter, module: "accuracy_testing" });
+        setValue("incidentFiles", atPaths.templates);
+      } catch { /* ignore */ }
       try {
         const res = await browseDirectory(paths.kaizen);
         setPhase3FileCount(res.entries.filter((e) => !e.isDir).length);
@@ -858,7 +852,7 @@ const Phase3FinalForm: React.FC = () => {
         setPhase3FileCount(0);
       }
     },
-    [setValue, watch],
+    [setValue, testingPeriod],
   );
 
   const handleLoadConfig = (config: Record<string, unknown>) => {

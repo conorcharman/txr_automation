@@ -988,7 +988,13 @@ class Phase3Processor:
         output_filename = filename
         if self.replace_from and self.replace_to:
             output_filename = filename.replace(self.replace_from, self.replace_to)
-        
+
+        # Output is always written as CSV — normalise the extension so that
+        # .xlsx input files don't produce a corrupt "xlsx" file whose content
+        # is actually CSV text.
+        if output_filename.lower().endswith('.xlsx'):
+            output_filename = output_filename[:-5] + '.csv'
+
         output_filepath = os.path.join(self.path_config.replay_output, output_filename)
         
         self.logger.info(f"Processing replay file: {filename}")
