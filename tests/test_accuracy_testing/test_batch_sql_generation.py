@@ -40,6 +40,7 @@ class TestSQLTemplateMapping:
             "FTSDM.sql",
             "NonZeroNetQuantity.sql",
             "NonZeroNetAmount.sql",
+            "IncorrectNetAmount.sql",
         ]
         
         for template in templates:
@@ -69,9 +70,9 @@ class TestSQLTemplateMapping:
             assert result.name == "SellerID.sql", f"Incident {incident} should map to SellerID.sql"
     
     def test_pricing_incident_mapping(self):
-        """Should map pricing incident to SCR_pricing_data_v1.0.sql."""
+        """Should map pricing incident 35_3 to IncorrectNetAmount.sql."""
         result = get_sql_template_for_incident('35_3', self.sql_dir)
-        assert result.name == "SCR_pricing_data_v1.0.sql"
+        assert result.name == "IncorrectNetAmount.sql"
     
     def test_inconsistent_buyer_mapping(self):
         """Should map inconsistent buyer incidents to InconsistentBuyerID.sql."""
@@ -164,7 +165,7 @@ class TestBatchSQLGeneration:
         templates = {
             "BuyerID.sql": "SELECT * FROM buyer WHERE ref IN (\n-- TRANSACTION REFERENCES --\n)",
             "SellerID.sql": "SELECT * FROM seller WHERE ref IN (\n-- TRANSACTION REFERENCES --\n)",
-            "SCR_pricing_data_v1.0.sql": "SELECT * FROM pricing WHERE ref IN (\n-- TRANSACTION REFERENCES --\n)"
+            "IncorrectNetAmount.sql": "SELECT * FROM incorrect_net WHERE ref IN (\n-- TRANSACTION REFERENCES --\n)"
         }
         
         for name, content in templates.items():

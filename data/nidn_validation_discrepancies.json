@@ -1,0 +1,2093 @@
+﻿[
+  {
+    "client_id": "",
+    "country_code": "BE",
+    "national_identifier": "BE03112421738",
+    "expected_is_valid": true,
+    "actual_is_valid": false,
+    "discrepancy": true,
+    "difference_type": [
+      "incorrect_rule_application"
+    ],
+    "expected_failed_rules": [],
+    "actual_failed_rules": [
+      "DOB mismatch (ID: 2003-11-24, Client: 2003-11-23)"
+    ],
+    "analysis": "YAML format check passes for '03112421738' (BE) but Python embedded-logic validator returns False. Python failure reason: DOB mismatch (ID: 2003-11-24, Client: 2003-11-23). Possible over-validation: check-digit, DOB, or gender logic mismatch.",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BE",
+    "national_identifier": "BE592571405762",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{11}$' value='592571405762' [Belgian National Number: 11 numeric digits (YYMMDD+3order+2check)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BE. When the ID does not match the expected structure, Python's BE handler (or absence of one) returns True by default. YAML requires: Belgian National Number: 11 numeric digits (YYMMDD+3order+2check) (source: YAML regex ^\\d{6}(\\d{3}|\\d{3})\\d{2}$ = 11 digits). Stripped ID '592571405762' failed: Regex check failed: pattern='^\\d{11}$' value='592571405762' [Belgian National Number: 11 numeric digits (YYMMDD+3order+2check)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BE",
+    "national_identifier": "BE592755149630",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{11}$' value='592755149630' [Belgian National Number: 11 numeric digits (YYMMDD+3order+2check)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BE. When the ID does not match the expected structure, Python's BE handler (or absence of one) returns True by default. YAML requires: Belgian National Number: 11 numeric digits (YYMMDD+3order+2check) (source: YAML regex ^\\d{6}(\\d{3}|\\d{3})\\d{2}$ = 11 digits). Stripped ID '592755149630' failed: Regex check failed: pattern='^\\d{11}$' value='592755149630' [Belgian National Number: 11 numeric digits (YYMMDD+3order+2check)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BE",
+    "national_identifier": "BE592897633738",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{11}$' value='592897633738' [Belgian National Number: 11 numeric digits (YYMMDD+3order+2check)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BE. When the ID does not match the expected structure, Python's BE handler (or absence of one) returns True by default. YAML requires: Belgian National Number: 11 numeric digits (YYMMDD+3order+2check) (source: YAML regex ^\\d{6}(\\d{3}|\\d{3})\\d{2}$ = 11 digits). Stripped ID '592897633738' failed: Regex check failed: pattern='^\\d{11}$' value='592897633738' [Belgian National Number: 11 numeric digits (YYMMDD+3order+2check)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BE",
+    "national_identifier": "BEEM251228",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{11}$' value='EM251228' [Belgian National Number: 11 numeric digits (YYMMDD+3order+2check)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BE. When the ID does not match the expected structure, Python's BE handler (or absence of one) returns True by default. YAML requires: Belgian National Number: 11 numeric digits (YYMMDD+3order+2check) (source: YAML regex ^\\d{6}(\\d{3}|\\d{3})\\d{2}$ = 11 digits). Stripped ID 'EM251228' failed: Regex check failed: pattern='^\\d{11}$' value='EM251228' [Belgian National Number: 11 numeric digits (YYMMDD+3order+2check)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BE",
+    "national_identifier": "BEGA6144956",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{11}$' value='GA6144956' [Belgian National Number: 11 numeric digits (YYMMDD+3order+2check)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BE. When the ID does not match the expected structure, Python's BE handler (or absence of one) returns True by default. YAML requires: Belgian National Number: 11 numeric digits (YYMMDD+3order+2check) (source: YAML regex ^\\d{6}(\\d{3}|\\d{3})\\d{2}$ = 11 digits). Stripped ID 'GA6144956' failed: Regex check failed: pattern='^\\d{11}$' value='GA6144956' [Belgian National Number: 11 numeric digits (YYMMDD+3order+2check)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG386279967",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='386279967' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '386279967' failed: Regex check failed: pattern='^\\d{10}$' value='386279967' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG386538586",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='386538586' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '386538586' failed: Regex check failed: pattern='^\\d{10}$' value='386538586' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG386661424",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='386661424' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '386661424' failed: Regex check failed: pattern='^\\d{10}$' value='386661424' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG387684475",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='387684475' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '387684475' failed: Regex check failed: pattern='^\\d{10}$' value='387684475' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG387783114",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='387783114' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '387783114' failed: Regex check failed: pattern='^\\d{10}$' value='387783114' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG387856103",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='387856103' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '387856103' failed: Regex check failed: pattern='^\\d{10}$' value='387856103' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG388659371",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='388659371' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '388659371' failed: Regex check failed: pattern='^\\d{10}$' value='388659371' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG388750784",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='388750784' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '388750784' failed: Regex check failed: pattern='^\\d{10}$' value='388750784' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG389258738",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='389258738' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '389258738' failed: Regex check failed: pattern='^\\d{10}$' value='389258738' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG389313145",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='389313145' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '389313145' failed: Regex check failed: pattern='^\\d{10}$' value='389313145' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG389549439",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='389549439' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '389549439' failed: Regex check failed: pattern='^\\d{10}$' value='389549439' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG389590035",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='389590035' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '389590035' failed: Regex check failed: pattern='^\\d{10}$' value='389590035' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG644192025",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='644192025' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '644192025' failed: Regex check failed: pattern='^\\d{10}$' value='644192025' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG646498453",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='646498453' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '646498453' failed: Regex check failed: pattern='^\\d{10}$' value='646498453' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG646503041",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='646503041' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '646503041' failed: Regex check failed: pattern='^\\d{10}$' value='646503041' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG647849317",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='647849317' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '647849317' failed: Regex check failed: pattern='^\\d{10}$' value='647849317' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG648366553",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='648366553' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '648366553' failed: Regex check failed: pattern='^\\d{10}$' value='648366553' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG648366553",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='648366553' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '648366553' failed: Regex check failed: pattern='^\\d{10}$' value='648366553' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG648419193",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='648419193' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '648419193' failed: Regex check failed: pattern='^\\d{10}$' value='648419193' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG648533608",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='648533608' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '648533608' failed: Regex check failed: pattern='^\\d{10}$' value='648533608' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG650821157",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='650821157' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '650821157' failed: Regex check failed: pattern='^\\d{10}$' value='650821157' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG652031562",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='652031562' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '652031562' failed: Regex check failed: pattern='^\\d{10}$' value='652031562' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "BG",
+    "national_identifier": "BG652096576",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='652096576' [Bulgarian Personal Number: 10 numeric digits]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for BG. When the ID does not match the expected structure, Python's BG handler (or absence of one) returns True by default. YAML requires: Bulgarian Personal Number: 10 numeric digits (source: YAML regex ^\\d{10}$). Stripped ID '652096576' failed: Regex check failed: pattern='^\\d{10}$' value='652096576' [Bulgarian Personal Number: 10 numeric digits]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK130919701182",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='130919701182' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '130919701182' failed: Regex check failed: pattern='^\\d{10}$' value='130919701182' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK160819911126",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='160819911126' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '160819911126' failed: Regex check failed: pattern='^\\d{10}$' value='160819911126' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK205395259",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='205395259' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '205395259' failed: Regex check failed: pattern='^\\d{10}$' value='205395259' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK208211663",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='208211663' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '208211663' failed: Regex check failed: pattern='^\\d{10}$' value='208211663' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK208947598",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='208947598' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '208947598' failed: Regex check failed: pattern='^\\d{10}$' value='208947598' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK210176293",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='210176293' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '210176293' failed: Regex check failed: pattern='^\\d{10}$' value='210176293' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK211022968",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='211022968' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '211022968' failed: Regex check failed: pattern='^\\d{10}$' value='211022968' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK212077394",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='212077394' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '212077394' failed: Regex check failed: pattern='^\\d{10}$' value='212077394' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK212198766",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='212198766' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '212198766' failed: Regex check failed: pattern='^\\d{10}$' value='212198766' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK212666554",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='212666554' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '212666554' failed: Regex check failed: pattern='^\\d{10}$' value='212666554' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK213801760",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='213801760' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '213801760' failed: Regex check failed: pattern='^\\d{10}$' value='213801760' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK214181091",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='214181091' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '214181091' failed: Regex check failed: pattern='^\\d{10}$' value='214181091' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "DK",
+    "national_identifier": "DK215381903",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{10}$' value='215381903' [Danish CPR: 10 numeric digits (DDMMYY+4)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for DK. When the ID does not match the expected structure, Python's DK handler (or absence of one) returns True by default. YAML requires: Danish CPR: 10 numeric digits (DDMMYY+4) (source: YAML regex ^\\d{10}$). Stripped ID '215381903' failed: Regex check failed: pattern='^\\d{10}$' value='215381903' [Danish CPR: 10 numeric digits (DDMMYY+4)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "EE",
+    "national_identifier": "EEAC1519816",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^[1-6]\\d{10}$' value='AC1519816' [Estonian Isikukood: 11 digits, first digit 1-6]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for EE. When the ID does not match the expected structure, Python's EE handler (or absence of one) returns True by default. YAML requires: Estonian Isikukood: 11 digits, first digit 1-6 (source: YAML regex ^[1-6]\\d{10}$). Stripped ID 'AC1519816' failed: Regex check failed: pattern='^[1-6]\\d{10}$' value='AC1519816' [Estonian Isikukood: 11 digits, first digit 1-6]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "EE",
+    "national_identifier": "EESL648211D",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^[1-6]\\d{10}$' value='SL648211D' [Estonian Isikukood: 11 digits, first digit 1-6]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for EE. When the ID does not match the expected structure, Python's EE handler (or absence of one) returns True by default. YAML requires: Estonian Isikukood: 11 digits, first digit 1-6 (source: YAML regex ^[1-6]\\d{10}$). Stripped ID 'SL648211D' failed: Regex check failed: pattern='^[1-6]\\d{10}$' value='SL648211D' [Estonian Isikukood: 11 digits, first digit 1-6]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ES20160322OSCARANDRE",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='20160322OSCARANDRE' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID '20160322OSCARANDRE' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='20160322OSCARANDRE' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ES2956355345",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='2956355345' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID '2956355345' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='2956355345' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ES7108860305",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='7108860305' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID '7108860305' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='7108860305' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESABF7YW",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ABF7YW' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'ABF7YW' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ABF7YW' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESABQQNR",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ABQQNR' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'ABQQNR' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ABQQNR' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESABQQNT",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ABQQNT' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'ABQQNT' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ABQQNT' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESABT7NH",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ABT7NH' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'ABT7NH' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ABT7NH' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESADF6VY",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ADF6VY' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'ADF6VY' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ADF6VY' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESADH8XG",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ADH8XG' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'ADH8XG' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ADH8XG' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESHN112088A",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='HN112088A' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'HN112088A' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='HN112088A' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESJZ973893B",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='JZ973893B' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'JZ973893B' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='JZ973893B' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESPA843942C",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='PA843942C' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'PA843942C' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='PA843942C' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESPAN308072",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='PAN308072' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'PAN308072' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='PAN308072' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESPX458322C",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='PX458322C' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'PX458322C' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='PX458322C' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESRE201508166160",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='RE201508166160' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'RE201508166160' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='RE201508166160' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESSC680594C",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SC680594C' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'SC680594C' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SC680594C' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESSE906888A",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SE906888A' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'SE906888A' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SE906888A' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESSG238279D",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SG238279D' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'SG238279D' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SG238279D' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESSN836727D",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SN836727D' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'SN836727D' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SN836727D' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESSP161476A",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SP161476A' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'SP161476A' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SP161476A' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESSR209219D",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SR209219D' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'SR209219D' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SR209219D' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESST620138C",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ST620138C' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'ST620138C' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='ST620138C' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESSY212617B",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SY212617B' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'SY212617B' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SY212617B' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESSY553193B",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SY553193B' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'SY553193B' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SY553193B' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESSY698589B",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SY698589B' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'SY698589B' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='SY698589B' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESUNKNOWN",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='UNKNOWN' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'UNKNOWN' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='UNKNOWN' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESXB6KNJ",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='XB6KNJ' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'XB6KNJ' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='XB6KNJ' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESXB6MWD",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='XB6MWD' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'XB6MWD' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='XB6MWD' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "ES",
+    "national_identifier": "ESY5298217C",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='Y5298217C' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for ES. When the ID does not match the expected structure, Python's ES handler (or absence of one) returns True by default. YAML requires: Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð) (source: YAML regex ^\\d{8}[A-HJ-NP-TV-Z]$). Stripped ID 'Y5298217C' failed: Regex check failed: pattern='^\\d{8}[A-HJ-NP-TV-Z]$' value='Y5298217C' [Spanish NIF: 8 digits + 1 control letter (not I,O,U,N,Ð)]",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "FI",
+    "national_identifier": "FI548659502",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='548659502' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for FI. When the ID does not match the expected structure, Python's FI handler (or absence of one) returns True by default. YAML requires: Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check] (source: YAML regex ^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$). Stripped ID '548659502' failed: Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='548659502' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "FI",
+    "national_identifier": "FICP2514205",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='CP2514205' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for FI. When the ID does not match the expected structure, Python's FI handler (or absence of one) returns True by default. YAML requires: Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check] (source: YAML regex ^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$). Stripped ID 'CP2514205' failed: Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='CP2514205' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "FI",
+    "national_identifier": "FIFP4563575",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='FP4563575' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for FI. When the ID does not match the expected structure, Python's FI handler (or absence of one) returns True by default. YAML requires: Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check] (source: YAML regex ^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$). Stripped ID 'FP4563575' failed: Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='FP4563575' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "FI",
+    "national_identifier": "FIFP4695137",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='FP4695137' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for FI. When the ID does not match the expected structure, Python's FI handler (or absence of one) returns True by default. YAML requires: Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check] (source: YAML regex ^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$). Stripped ID 'FP4695137' failed: Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='FP4695137' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "FI",
+    "national_identifier": "FIFP5598859",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='FP5598859' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for FI. When the ID does not match the expected structure, Python's FI handler (or absence of one) returns True by default. YAML requires: Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check] (source: YAML regex ^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$). Stripped ID 'FP5598859' failed: Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='FP5598859' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "FI",
+    "national_identifier": "FIFP5907779",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='FP5907779' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for FI. When the ID does not match the expected structure, Python's FI handler (or absence of one) returns True by default. YAML requires: Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check] (source: YAML regex ^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$). Stripped ID 'FP5907779' failed: Regex check failed: pattern='^\\d{6}[+\\-A]\\d{3}[0-9A-Y]$' value='FP5907779' [Finnish Personal Identity Code: DDMMYY[+/-/A]NNN[check]]",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GB20090824JESAMHODDE",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Regex check failed: pattern='^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$' value='20090824JESAMHODDE' [UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D)]"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID '20090824JESAMHODDE' failed: Regex check failed: pattern='^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$' value='20090824JESAMHODDE' [UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D)]",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR045092B",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR045092B' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR046855A",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR046855A' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR047864D",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR047864D' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR049533D",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR049533D' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR050908D",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR050908D' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR053834B",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR053834B' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR057635A",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR057635A' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR058018D",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR058018D' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR058584A",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR058584A' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR058977A",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR058977A' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR062083B",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR062083B' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR063419B",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR063419B' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR064999A",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR064999A' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR066002A",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR066002A' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      ""
+    ]
+  },
+  {
+    "client_id": "",
+    "country_code": "GB",
+    "national_identifier": "GBCR088899C",
+    "expected_is_valid": false,
+    "actual_is_valid": true,
+    "discrepancy": true,
+    "difference_type": [
+      "missing_rule_application"
+    ],
+    "expected_failed_rules": [
+      "Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])"
+    ],
+    "actual_failed_rules": [],
+    "analysis": "Python validator does not enforce format/length requirements for GB. When the ID does not match the expected structure, Python's GB handler (or absence of one) returns True by default. YAML requires: UK NINO: 2 prefix letters + 6 digits + 1 suffix (A-D) (source: YAML regex ^(?![DF QUI])[A-Z](?![DFIO])[A-Z]\\d{6}[A-D]$). Stripped ID 'CR088899C' failed: Invalid GB NINO administrative prefix 'CR' (YAML conditions: invalid prefixes = ['CR', 'FY', 'MW', 'NC', 'OO', 'PP', 'PZ', 'TN'])",
+    "sample_transaction_refs": [
+      "",
+      "",
+      "",
+      "",
+      ""
+    ]
+  }
+]

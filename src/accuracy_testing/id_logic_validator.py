@@ -27,6 +27,9 @@ logger = logging.getLogger(__name__)
 class IDLogicValidator:
     """Validates ID codes by extracting and comparing embedded information."""
     
+    # Spanish NIF/NIE check-letter table (mod 23 index)
+    SPANISH_NIF_CHARS = "TRWAGMYFPDXBNJZSQVHLCKE"
+
     # Italian fiscal code month encoding
     ITALIAN_MONTHS = {
         'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'H': 6,
@@ -101,6 +104,7 @@ class IDLogicValidator:
             "LV": self._validate_latvian_nidn,
             "NO": self._validate_norwegian_nidn,
             "RO": self._validate_romanian_nidn,
+            "ES": self._validate_spanish_nidn,
             "SE": self._validate_swedish_nidn,
             "SI": self._validate_slovenian_nidn,
             "SK": self._validate_slovak_nidn,
@@ -1030,6 +1034,57 @@ class IDLogicValidator:
             self._log_validation_exception("SK", nidn, e, "Slovak NIDN validation")
             return True  # Pass with warning logged
     
+    # ========================================================================
+    # SPANISH NIDN VALIDATION (ES)
+    # Format: 8 digits + check letter (NIF) or L/K + 7 digits + check letter
+    # ========================================================================
+
+    def _validate_spanish_nidn(self, nidn: str, provided_dob: str, provided_gender: str) -> bool:
+        """
+        Spanish NIF/NIE: check-letter validation via modulus-23 table.
+
+        Spanish NIF does not embed DOB or gender; only the check letter is
+        validated.  Three formats are accepted by the format layer:
+
+        - Standard NIF:  8 digits + 1 letter  (e.g. ``12345678Z``)
+        - K-prefix NIF:  K + 7 digits + letter (minors born abroad)
+        - L-prefix NIF:  L + 7 digits + letter (residents without NIF)
+
+        Algorithm:
+            ``SPANISH_NIF_CHARS[number % 23]`` where *number* is the numeric
+            portion of the identifier.
+        """
+        # Standard NIF: 8 digits + letter
+        if len(nidn) == 9 and nidn[:8].isdigit() and nidn[8].isalpha():
+            number = int(nidn[:8])
+            expected = self.SPANISH_NIF_CHARS[number % 23]
+            if nidn[8].upper() != expected:
+                self.last_failure_reason = (
+                    f"NIF check letter failed (expected: {expected}, actual: {nidn[8].upper()})"
+                )
+                return False
+            return True
+
+        # K/L-prefix NIF: 1 letter + 7 digits + check letter
+        if (
+            len(nidn) == 9
+            and nidn[0].upper() in ("K", "L")
+            and nidn[1:8].isdigit()
+            and nidn[8].isalpha()
+        ):
+            number = int(nidn[1:8])
+            expected = self.SPANISH_NIF_CHARS[number % 23]
+            if nidn[8].upper() != expected:
+                self.last_failure_reason = (
+                    f"NIF ({nidn[0].upper()}-prefix) check letter failed "
+                    f"(expected: {expected}, actual: {nidn[8].upper()})"
+                )
+                return False
+            return True
+
+        # Unrecognised format — format layer handles rejection; pass here
+        return True
+
     # ========================================================================
     # HELPER METHODS
     # ========================================================================

@@ -163,9 +163,10 @@ class TestIntegrationValidation:
         assert manager.validate("GB", "NIDN", "CE123456D")
         assert manager.validate("GB", "NIDN", "GH500496A")
         
-        # Invalid prefixes
+        # Invalid prefixes (HMRC-disallowed administrative prefixes)
         assert not manager.validate("GB", "NIDN", "OO123456C")
-        assert not manager.validate("GB", "NIDN", "CR123456C")
+        # CR is a valid NINO prefix per HMRC — previously excluded in error
+        assert manager.validate("GB", "NIDN", "CR123456C")
 
 
 if __name__ == "__main__":
