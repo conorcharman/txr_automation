@@ -55,10 +55,10 @@ from openpyxl.styles import Alignment, Font, PatternFill
 
 from core import create_logger
 
-
 # ---------------------------------------------------------------------------
 # Data models
 # ---------------------------------------------------------------------------
+
 
 @dataclass
 class MergeConfig:
@@ -81,14 +81,15 @@ class MergeStats:
 
     input_rows: int = 0
     output_rows: int = 0
-    groups_merged: int = 0          # groups that had more than one row
-    groups_single: int = 0          # groups that were already unique
-    columns_stacked: int = 0        # individual cell values that were stacked
+    groups_merged: int = 0  # groups that had more than one row
+    groups_single: int = 0  # groups that were already unique
+    columns_stacked: int = 0  # individual cell values that were stacked
 
 
 # ---------------------------------------------------------------------------
 # Configuration loading
 # ---------------------------------------------------------------------------
+
 
 class MergeConfigManager:
     """Loads MergeConfig from a YAML file, with optional CLI overrides."""
@@ -153,8 +154,12 @@ class MergeConfigManager:
             input_dir=Path(input_dir_raw),
             ids_pattern=files.get("ids_pattern", self.DEFAULT_IDS_PATTERN),
             names_pattern=files.get("names_pattern", self.DEFAULT_NAMES_PATTERN),
-            ids_group_column=merge.get("ids_group_column", self.DEFAULT_IDS_GROUP_COLUMN),
-            names_group_column=merge.get("names_group_column", self.DEFAULT_NAMES_GROUP_COLUMN),
+            ids_group_column=merge.get(
+                "ids_group_column", self.DEFAULT_IDS_GROUP_COLUMN
+            ),
+            names_group_column=merge.get(
+                "names_group_column", self.DEFAULT_NAMES_GROUP_COLUMN
+            ),
             separator=merge.get("separator", self.DEFAULT_SEPARATOR),
             dry_run=cli_dry_run or options.get("dry_run", False),
             verbose=cli_verbose or options.get("verbose", False),
@@ -165,6 +170,7 @@ class MergeConfigManager:
 # ---------------------------------------------------------------------------
 # Core merge logic
 # ---------------------------------------------------------------------------
+
 
 class RowMerger:
     """
@@ -370,7 +376,9 @@ class ExcelExporter:
         # --- Set column widths ---
         for col_idx, col_name in enumerate(columns, start=1):
             width = self._estimate_col_width(df[col_name], col_name)
-            ws.column_dimensions[ws.cell(row=1, column=col_idx).column_letter].width = width
+            ws.column_dimensions[ws.cell(row=1, column=col_idx).column_letter].width = (
+                width
+            )
 
         # --- Freeze the header row ---
         ws.freeze_panes = "A2"
@@ -381,6 +389,7 @@ class ExcelExporter:
 # ---------------------------------------------------------------------------
 # CLI interface
 # ---------------------------------------------------------------------------
+
 
 def create_argument_parser() -> argparse.ArgumentParser:
     """
@@ -455,6 +464,7 @@ Examples:
 # Entry point
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     """
     Main entry point for the merge-inconsistent-summaries console script.
@@ -467,10 +477,13 @@ def main() -> None:
 
     # ---- Resolve config path (fall back to default local config if not specified) ----
     config_file = args.config
-    if not config_file and not getattr(args, 'gui_mode', False):
+    if not config_file and not getattr(args, "gui_mode", False):
         default_config = (
             Path(__file__).parent.parent.parent
-            / "config" / "local" / "replay" / "merge_inconsistent_ids.yaml"
+            / "config"
+            / "local"
+            / "replay"
+            / "merge_inconsistent_ids.yaml"
         )
         if default_config.exists():
             print(f"Loading default configuration from {default_config}...")
@@ -529,17 +542,22 @@ def main() -> None:
     def select_preferred_file(matches: List[Path], label: str) -> Path:
         """Select the preferred summary file when multiple files match."""
         final_non_phase3 = [
-            path for path in matches
+            path
+            for path in matches
             if path.name.endswith("_FINAL.csv") and "PHASE 3" not in path.name.upper()
         ]
         if len(final_non_phase3) == 1:
             selected = final_non_phase3[0]
-            logger.info(f"[{label}] Multiple matches found; selected FINAL file: {selected.name}")
+            logger.info(
+                f"[{label}] Multiple matches found; selected FINAL file: {selected.name}"
+            )
             return selected
 
         if final_non_phase3:
             selected = sorted(final_non_phase3)[-1]
-            logger.info(f"[{label}] Multiple FINAL files found; selected latest: {selected.name}")
+            logger.info(
+                f"[{label}] Multiple FINAL files found; selected latest: {selected.name}"
+            )
             return selected
 
         selected = sorted(matches)[-1]
@@ -554,7 +572,13 @@ def main() -> None:
                 f"Multiple files match the IDs pattern '{config.ids_pattern}':\n"
                 + "\n".join(f"  {p}" for p in ids_matches)
             )
-            tasks.append((select_preferred_file(ids_matches, "IDs"), config.ids_group_column, "IDs"))
+            tasks.append(
+                (
+                    select_preferred_file(ids_matches, "IDs"),
+                    config.ids_group_column,
+                    "IDs",
+                )
+            )
         else:
             tasks.append((ids_matches[0], config.ids_group_column, "IDs"))
     else:
@@ -568,7 +592,13 @@ def main() -> None:
                 f"Multiple files match the Names pattern '{config.names_pattern}':\n"
                 + "\n".join(f"  {p}" for p in names_matches)
             )
-            tasks.append((select_preferred_file(names_matches, "Names"), config.names_group_column, "Names"))
+            tasks.append(
+                (
+                    select_preferred_file(names_matches, "Names"),
+                    config.names_group_column,
+                    "Names",
+                )
+            )
         else:
             tasks.append((names_matches[0], config.names_group_column, "Names"))
     else:
@@ -593,7 +623,7 @@ def main() -> None:
             df = pd.read_csv(
                 input_file,
                 encoding="utf-8",
-                dtype=str,              # Keep all values as strings; avoid type coercion
+                dtype=str,  # Keep all values as strings; avoid type coercion
                 keep_default_na=False,  # Treat empty cells as "" not NaN
             )
         except Exception as exc:  # noqa: BLE001

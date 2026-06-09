@@ -2,9 +2,12 @@
 """Test auto-detection of column names based on client_type."""
 
 from pathlib import Path
+
 from src.accuracy_testing.processor import ClientRecord, IDValidationProcessor
 
-template_file = Path(r'c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 - 7_35.csv')
+template_file = Path(
+    r"c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 - 7_35.csv"
+)
 
 # Create a test record
 test_record = ClientRecord(
@@ -21,7 +24,7 @@ test_record = ClientRecord(
     gender="M",
     primary_nationality="GB",
     secondary_nationality="",
-    original_row=[]
+    original_row=[],
 )
 
 print("=" * 80)
@@ -33,7 +36,7 @@ print("=" * 80)
 processor = IDValidationProcessor(
     client_type="buyer",
     verbose=False,
-    template_path=str(template_file)
+    template_path=str(template_file),
     # NO template_id_column or template_type_column specified!
 )
 

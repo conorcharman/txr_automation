@@ -261,9 +261,7 @@ class GleifRefresher:
 
         # Discover the current Golden Copy publish date and download URL
         gc_info = self._api_client.get_latest_golden_copy_info()
-        logger.info(
-            "Golden Copy publish date: %s", gc_info.publish_date
-        )
+        logger.info("Golden Copy publish date: %s", gc_info.publish_date)
         self._report_progress("download_gc", 10)
 
         # Use a deterministic file name derived from the publish date so that
@@ -281,9 +279,7 @@ class GleifRefresher:
             downloader = GleifDownloader(staging_dir, timeout=self._download_timeout)
 
             # --- Golden Copy ---
-            logger.info(
-                "Downloading GLEIF Golden Copy from: %s", gc_info.download_url
-            )
+            logger.info("Downloading GLEIF Golden Copy from: %s", gc_info.download_url)
             gc_result = downloader.download_and_extract(
                 gc_info.download_url, golden_copy_file_name
             )
@@ -291,9 +287,7 @@ class GleifRefresher:
             self._report_progress("ingest_gc", 0)
 
             if not gc_result.success:
-                logger.error(
-                    "Failed to download Golden Copy: %s", gc_result.error
-                )
+                logger.error("Failed to download Golden Copy: %s", gc_result.error)
                 self._cache.log_sync(
                     sync_type="FULL",
                     file_name=golden_copy_file_name,
@@ -386,8 +380,12 @@ class GleifRefresher:
                             for idx, csv_path in enumerate(isin_result.csv_paths, 1):
                                 count = self._ingest_isin_map_csv(csv_path)
                                 total_isin += count
-                                ingest_percent = (idx / max(len(isin_result.csv_paths), 1)) * 90
-                                self._report_progress("ingest_isin", int(ingest_percent))
+                                ingest_percent = (
+                                    idx / max(len(isin_result.csv_paths), 1)
+                                ) * 90
+                                self._report_progress(
+                                    "ingest_isin", int(ingest_percent)
+                                )
                                 logger.info(
                                     "ISIN mapping CSV ingested: %s pairs from %s",
                                     f"{count:,}",

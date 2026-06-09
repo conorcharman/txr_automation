@@ -10,7 +10,7 @@ parent order quantity.
 
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 # Number of characters used to derive the bulk reference from parent_ref.
 # e.g. parent_ref "44625CPNJMN1G01" → bulk_ref "44625CPNJMN" (first 10 chars)
@@ -58,12 +58,12 @@ class NetQuantityRecord:
     trade_date_time: str
 
     # Derived field — set automatically from parent_ref in __post_init__
-    bulk_ref: str = field(default='', init=False)
+    bulk_ref: str = field(default="", init=False)
 
     # Output fields (calculated by validator — initialised to defaults)
-    bulk_qty: Decimal = field(default_factory=lambda: Decimal('0'))
-    net_qty: Decimal = field(default_factory=lambda: Decimal('0'))
-    difference: Decimal = field(default_factory=lambda: Decimal('0'))
+    bulk_qty: Decimal = field(default_factory=lambda: Decimal("0"))
+    net_qty: Decimal = field(default_factory=lambda: Decimal("0"))
+    difference: Decimal = field(default_factory=lambda: Decimal("0"))
     error: str = field(default="N")
 
     def __post_init__(self) -> None:
@@ -71,7 +71,7 @@ class NetQuantityRecord:
         self.bulk_ref = self.parent_ref[:BULK_REF_LENGTH]
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'NetQuantityRecord':
+    def from_dict(cls, data: Dict[str, Any]) -> "NetQuantityRecord":
         """
         Create a NetQuantityRecord from a dictionary (e.g. a CSV row dict).
 
@@ -100,25 +100,32 @@ class NetQuantityRecord:
             ... }
             >>> record = NetQuantityRecord.from_dict(row)
         """
+
         def _decimal(value: Any) -> Decimal:
-            if value is None or str(value).strip() == '':
-                return Decimal('0')
+            if value is None or str(value).strip() == "":
+                return Decimal("0")
             try:
                 return Decimal(str(value).strip())
             except InvalidOperation:
-                return Decimal('0')
+                return Decimal("0")
 
         return cls(
-            child_ref=str(data.get('child_ref') or data.get('CHILD_REF', '')).strip(),
-            child_qty=_decimal(data.get('child_qty') or data.get('CHILD_QTY')),
-            parent_ref=str(data.get('parent_ref') or data.get('PARENT_REF', '')).strip(),
-            parent_qty=_decimal(data.get('parent_qty') or data.get('PARENT_QTY')),
-            report_status=str(data.get('report_status') or data.get('REPORT_STATUS', '')).strip(),
-            trade_date_time=str(data.get('trade_date_time') or data.get('TRADE_DATE_TIME', '')).strip(),
+            child_ref=str(data.get("child_ref") or data.get("CHILD_REF", "")).strip(),
+            child_qty=_decimal(data.get("child_qty") or data.get("CHILD_QTY")),
+            parent_ref=str(
+                data.get("parent_ref") or data.get("PARENT_REF", "")
+            ).strip(),
+            parent_qty=_decimal(data.get("parent_qty") or data.get("PARENT_QTY")),
+            report_status=str(
+                data.get("report_status") or data.get("REPORT_STATUS", "")
+            ).strip(),
+            trade_date_time=str(
+                data.get("trade_date_time") or data.get("TRADE_DATE_TIME", "")
+            ).strip(),
         )
 
     @classmethod
-    def from_row(cls, row: list, row_index: int = 0) -> 'NetQuantityRecord':
+    def from_row(cls, row: list, row_index: int = 0) -> "NetQuantityRecord":
         """
         Create a NetQuantityRecord from a positional CSV row.
 
@@ -148,21 +155,21 @@ class NetQuantityRecord:
             )
 
         def _decimal(value: str) -> Decimal:
-            stripped = value.strip() if value else ''
+            stripped = value.strip() if value else ""
             if not stripped:
-                return Decimal('0')
+                return Decimal("0")
             try:
                 return Decimal(stripped)
             except InvalidOperation:
-                return Decimal('0')
+                return Decimal("0")
 
         return cls(
-            child_ref=row[0].strip() if row[0] else '',
+            child_ref=row[0].strip() if row[0] else "",
             child_qty=_decimal(row[1]),
-            parent_ref=row[2].strip() if row[2] else '',
+            parent_ref=row[2].strip() if row[2] else "",
             parent_qty=_decimal(row[3]),
-            report_status=row[4].strip() if row[4] else '',
-            trade_date_time=row[5].strip() if row[5] else '',
+            report_status=row[4].strip() if row[4] else "",
+            trade_date_time=row[5].strip() if row[5] else "",
         )
 
     def to_dict(self) -> Dict[str, Any]:
@@ -176,15 +183,15 @@ class NetQuantityRecord:
             Ordered dictionary of field name → value
         """
         return {
-            'child_ref': self.child_ref,
-            'child_qty': str(self.child_qty),
-            'parent_ref': self.parent_ref,
-            'parent_qty': str(self.parent_qty),
-            'bulk_ref': self.bulk_ref,
-            'bulk_qty': str(self.bulk_qty),
-            'report_status': self.report_status,
-            'trade_date_time': self.trade_date_time,
-            'net_qty': str(self.net_qty),
-            'difference': str(self.difference),
-            'error': self.error,
+            "child_ref": self.child_ref,
+            "child_qty": str(self.child_qty),
+            "parent_ref": self.parent_ref,
+            "parent_qty": str(self.parent_qty),
+            "bulk_ref": self.bulk_ref,
+            "bulk_qty": str(self.bulk_qty),
+            "report_status": self.report_status,
+            "trade_date_time": self.trade_date_time,
+            "net_qty": str(self.net_qty),
+            "difference": str(self.difference),
+            "error": self.error,
         }

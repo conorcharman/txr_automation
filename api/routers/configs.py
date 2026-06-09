@@ -18,7 +18,11 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
-from api.schemas.configs import SavedConfigCreate, SavedConfigResponse, SavedConfigUpdate
+from api.schemas.configs import (
+    SavedConfigCreate,
+    SavedConfigResponse,
+    SavedConfigUpdate,
+)
 from api.services.config_service import config_service
 
 logger = logging.getLogger(__name__)

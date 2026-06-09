@@ -7,9 +7,9 @@ enabling the Run All orchestrator to preview which validations have
 matching input data.
 """
 
+import csv
 import logging
 import re
-import csv
 from pathlib import Path
 
 logger = logging.getLogger(__name__)
@@ -50,7 +50,11 @@ def _iter_incident_rows(file_path: Path) -> list[tuple[list[str], list[str]]]:
 
         upper = [col.strip().upper() for col in header]
         code_idx = upper.index("INCIDENT_CODE") if "INCIDENT_CODE" in upper else -1
-        desc_idx = upper.index("INCIDENT_DESCRIPTION") if "INCIDENT_DESCRIPTION" in upper else -1
+        desc_idx = (
+            upper.index("INCIDENT_DESCRIPTION")
+            if "INCIDENT_DESCRIPTION" in upper
+            else -1
+        )
         if code_idx < 0:
             return rows
 
@@ -95,7 +99,11 @@ def detect_consolidated_incidents(
             for idx, code in enumerate(codes):
                 if not pattern.match(code):
                     continue
-                desc = descriptions[idx] if idx < len(descriptions) else (descriptions[0] if descriptions else "")
+                desc = (
+                    descriptions[idx]
+                    if idx < len(descriptions)
+                    else (descriptions[0] if descriptions else "")
+                )
                 if code not in stats:
                     stats[code] = {
                         "description": desc,
@@ -104,7 +112,9 @@ def detect_consolidated_incidents(
                     }
                 if not stats[code]["description"] and desc:
                     stats[code]["description"] = desc
-                count_key = "errors_count" if source_key == "errors" else "queries_count"
+                count_key = (
+                    "errors_count" if source_key == "errors" else "queries_count"
+                )
                 stats[code][count_key] = int(stats[code][count_key]) + 1
 
     _merge(errors_file, "errors")

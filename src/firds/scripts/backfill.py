@@ -126,7 +126,7 @@ def _parse_args() -> argparse.Namespace:
         required=True,
         metavar="CSV_PATH",
         help="Output CSV path.  All original columns are preserved; "
-             "is_reportable, reportability_reason, and matched_mics columns are appended.",
+        "is_reportable, reportability_reason, and matched_mics columns are appended.",
     )
     parser.add_argument(
         "--format",
@@ -386,9 +386,7 @@ def _annotate_trades(
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8", newline="") as fh:
-        writer = csv.DictWriter(
-            fh, fieldnames=out_fieldnames, extrasaction="ignore"
-        )
+        writer = csv.DictWriter(fh, fieldnames=out_fieldnames, extrasaction="ignore")
         writer.writeheader()
 
         for row in trades:

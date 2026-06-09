@@ -15,7 +15,6 @@ from gleif.lookup import (
 )
 from gleif.parser import LeiRecord
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -86,7 +85,9 @@ def lookup(populated_cache: GleifCacheManager) -> GleifLookup:
 
 class TestGleifLookupConstructor:
     def test_requires_db_path_or_cache(self) -> None:
-        with pytest.raises(ValueError, match="Either db_path or cache must be provided"):
+        with pytest.raises(
+            ValueError, match="Either db_path or cache must be provided"
+        ):
             GleifLookup()
 
     def test_accepts_db_path(self, tmp_path: Path) -> None:
@@ -121,7 +122,9 @@ class TestLookupLei:
         result = lookup.lookup_lei("5493001kjtiigc8y1r12")
         assert result.is_valid is True
 
-    def test_lapsed_lei_without_trade_date_is_invalid(self, lookup: GleifLookup) -> None:
+    def test_lapsed_lei_without_trade_date_is_invalid(
+        self, lookup: GleifLookup
+    ) -> None:
         result = lookup.lookup_lei("213800WAVVOPS85N2205")
         assert result.is_valid is False
         assert result.reason == LeiLookupReason.LAPSED
@@ -132,7 +135,9 @@ class TestLookupLei:
         assert result.is_valid is True
         assert result.reason == LeiLookupReason.LAPSED_VALID_AT_TRADE_DATE
 
-    def test_lapsed_lei_after_renewal_date_is_invalid(self, lookup: GleifLookup) -> None:
+    def test_lapsed_lei_after_renewal_date_is_invalid(
+        self, lookup: GleifLookup
+    ) -> None:
         result = lookup.lookup_lei("213800WAVVOPS85N2205", trade_date=date(2024, 8, 1))
         assert result.is_valid is False
         assert result.reason == LeiLookupReason.LAPSED

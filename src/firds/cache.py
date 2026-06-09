@@ -192,7 +192,9 @@ class FirdsCacheManager:
             conn.execute(_CREATE_SYNC_LOG)
             conn.execute(_CREATE_INDEX_ISIN)
             conn.commit()
-        logger.info("FIRDS cache database initialised", extra={"db_path": str(self._db_path)})
+        logger.info(
+            "FIRDS cache database initialised", extra={"db_path": str(self._db_path)}
+        )
 
     def truncate_instruments(self) -> None:
         """Delete all rows from the ``instruments`` table.
@@ -296,7 +298,12 @@ class FirdsCacheManager:
         with self._connect() as conn:
             result = conn.execute(
                 _APPLY_TERMINATION,
-                {"isin": isin, "mic": mic, "termination_date": termination_date, "last_updated": now},
+                {
+                    "isin": isin,
+                    "mic": mic,
+                    "termination_date": termination_date,
+                    "last_updated": now,
+                },
             )
             if result.rowcount == 0:
                 # Row did not exist – insert a minimal record
@@ -332,12 +339,22 @@ class FirdsCacheManager:
         with self._connect() as conn:
             result = conn.execute(
                 _APPLY_CANCELLATION,
-                {"isin": isin, "mic": mic, "cancelled_date": cancelled_date, "last_updated": now},
+                {
+                    "isin": isin,
+                    "mic": mic,
+                    "cancelled_date": cancelled_date,
+                    "last_updated": now,
+                },
             )
             if result.rowcount == 0:
                 conn.execute(
                     _UPSERT_CANCELLED_INSTRUMENT,
-                    {"isin": isin, "mic": mic, "cancelled_date": cancelled_date, "last_updated": now},
+                    {
+                        "isin": isin,
+                        "mic": mic,
+                        "cancelled_date": cancelled_date,
+                        "last_updated": now,
+                    },
                 )
             conn.commit()
 
@@ -417,7 +434,9 @@ class FirdsCacheManager:
             Row dict or ``None`` if not found.
         """
         with self._connect() as conn:
-            row = conn.execute(_SELECT_BY_ISIN_MIC, {"isin": isin, "mic": mic}).fetchone()
+            row = conn.execute(
+                _SELECT_BY_ISIN_MIC, {"isin": isin, "mic": mic}
+            ).fetchone()
             return _row_to_dict(row) if row else None
 
     # ------------------------------------------------------------------
@@ -447,6 +466,7 @@ class FirdsCacheManager:
 # ---------------------------------------------------------------------------
 # Utility functions
 # ---------------------------------------------------------------------------
+
 
 def _utc_now() -> str:
     """Return the current UTC time as an ISO 8601 string.

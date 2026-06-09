@@ -17,18 +17,18 @@ Data source: ISO 3166-1 country codes (249 countries)
 try:
     # When imported as installed package (accuracy_testing.core.country_codes)
     from core.data.country_codes import (
+        COUNTRIES,
         Country,
         CountryDataManager,
         country_manager,
-        COUNTRIES,
     )
 except ImportError:
     # When imported from workspace root (src.accuracy_testing.core.country_codes)
     from src.core.data.country_codes import (
+        COUNTRIES,
         Country,
         CountryDataManager,
         country_manager,
-        COUNTRIES,
     )
 
 __all__ = [

@@ -23,7 +23,7 @@ class TestConverterStats:
     def test_default_values(self):
         """Test that ConverterStats initializes with zero values."""
         stats = ConverterStats()
-        
+
         assert stats.processed_files == 0
         assert stats.successful_conversions == 0
         assert stats.errors == 0
@@ -32,11 +32,11 @@ class TestConverterStats:
     def test_increment_values(self):
         """Test that stats can be incremented."""
         stats = ConverterStats()
-        
+
         stats.processed_files += 10
         stats.successful_conversions += 8
         stats.errors += 2
-        
+
         assert stats.processed_files == 10
         assert stats.successful_conversions == 8
         assert stats.errors == 2
@@ -49,14 +49,14 @@ class TestConverterStats:
             errors=2,
             skipped=0,
         )
-        
+
         mock_logger = MagicMock()
         stats.print_summary(mock_logger)
-        
+
         # Verify logger.info was called
         mock_logger.info.assert_called_once()
         call_arg = mock_logger.info.call_args[0][0]
-        
+
         assert "Processed files: 10" in call_arg
         assert "Successful conversions: 8" in call_arg
         assert "Errors: 2" in call_arg
@@ -69,9 +69,9 @@ class TestConverterStats:
             errors=0,
             skipped=0,
         )
-        
+
         stats.print_summary()
-        
+
         captured = capsys.readouterr()
         assert "Processed files: 5" in captured.out
         assert "Successful conversions: 5" in captured.out
@@ -100,7 +100,7 @@ class TestXLSXConverterInit:
                 parent_dir=Path(tmpdir),
                 logger=MagicMock(),
             )
-            
+
             assert converter.parent_dir == Path(tmpdir)
             assert converter.input_dir is None
             assert isinstance(converter.stats, ConverterStats)
@@ -112,13 +112,13 @@ class TestXLSXConverterInit:
             output_dir = Path(tmpdir) / "output"
             input_dir.mkdir()
             output_dir.mkdir()
-            
+
             converter = XLSXConverter(
                 input_dir=input_dir,
                 output_dir=output_dir,
                 logger=MagicMock(),
             )
-            
+
             assert converter.input_dir == input_dir
             assert converter.output_dir == output_dir
 
@@ -130,14 +130,14 @@ class TestXLSXConverterMultilineProcessing:
         """Test that rows without newlines are returned unchanged."""
         row = ["A", "B", "C"]
         result = XLSXConverter.split_multiline_row(row)
-        
+
         assert result == [["A", "B", "C"]]
 
     def test_split_multiline_row_with_newlines(self):
         """Test that rows with newlines are split correctly."""
         row = ["A\nB", "1\n2", "X"]
         result = XLSXConverter.split_multiline_row(row)
-        
+
         # Should produce 2 rows
         assert len(result) == 2
         assert result[0] == ["A", "1", "X"]
@@ -148,7 +148,7 @@ class TestXLSXConverterMultilineProcessing:
         """Test splitting with uneven number of lines in cells."""
         row = ["A\nB\nC", "1", "X\nY"]
         result = XLSXConverter.split_multiline_row(row)
-        
+
         # Should produce 3 rows (max lines across cells)
         assert len(result) == 3
         assert result[0] == ["A", "1", "X"]
@@ -160,7 +160,7 @@ class TestXLSXConverterMultilineProcessing:
         """Test splitting with empty cells."""
         row = ["A\nB", "", "X"]
         result = XLSXConverter.split_multiline_row(row)
-        
+
         assert len(result) == 2
         assert result[0] == ["A", "", "X"]
         # Empty cell and single-value cell repeat
@@ -170,7 +170,7 @@ class TestXLSXConverterMultilineProcessing:
         """Test splitting with None values."""
         row = ["A\nB", None, "X"]
         result = XLSXConverter.split_multiline_row(row)
-        
+
         # None should not be split
         assert len(result) == 2
 
@@ -183,17 +183,17 @@ class TestXLSXConverterFiltering:
         """Create a temporary directory structure for testing."""
         with tempfile.TemporaryDirectory() as tmpdir:
             base = Path(tmpdir)
-            
+
             # Create directory structure
             (base / "FY25" / "Q1").mkdir(parents=True)
             (base / "FY25" / "Q2").mkdir(parents=True)
             (base / "FY26" / "Q1").mkdir(parents=True)
-            
+
             # Create test files
             (base / "FY25" / "Q1" / "test1.xlsx").write_text("")
             (base / "FY25" / "Q2" / "test2.xlsx").write_text("")
             (base / "FY26" / "Q1" / "test3.xlsx").write_text("")
-            
+
             yield base
 
     def test_find_xlsx_files_recursive(self, temp_structure):
@@ -203,7 +203,7 @@ class TestXLSXConverterFiltering:
             recursive=True,
             logger=MagicMock(),
         )
-        
+
         files = converter.find_xlsx_files()
         assert len(files) == 3
 
@@ -215,7 +215,7 @@ class TestXLSXConverterFiltering:
             filter_year="FY25",
             logger=MagicMock(),
         )
-        
+
         files = converter.find_xlsx_files()
         assert len(files) == 2
         assert all("FY25" in str(f) for f in files)
@@ -228,7 +228,7 @@ class TestXLSXConverterFiltering:
             filter_quarter="Q1",
             logger=MagicMock(),
         )
-        
+
         files = converter.find_xlsx_files()
         assert len(files) == 2
         assert all("Q1" in str(f) for f in files)
@@ -242,17 +242,17 @@ class TestXLSXConverterDryRun:
         with tempfile.TemporaryDirectory() as tmpdir:
             base = Path(tmpdir)
             csv_file = base / "test.csv"
-            
+
             converter = XLSXConverter(
                 input_dir=base,
                 logger=MagicMock(),
                 dry_run=True,
             )
-            
+
             # Verify stats initialized correctly
             assert converter.stats.successful_conversions == 0
             assert converter.dry_run is True
-            
+
             # In dry run, no file should be created even if method is called
             assert not csv_file.exists()
 
@@ -263,18 +263,18 @@ class TestXLSXConverterImport:
     def test_converter_stats_importable(self):
         """Test that ConverterStats can be imported."""
         from utils.xlsx_csv_converter import ConverterStats
-        
+
         assert ConverterStats is not None
         stats = ConverterStats()
-        assert hasattr(stats, 'processed_files')
-        assert hasattr(stats, 'successful_conversions')
-        assert hasattr(stats, 'errors')
-        assert hasattr(stats, 'skipped')
+        assert hasattr(stats, "processed_files")
+        assert hasattr(stats, "successful_conversions")
+        assert hasattr(stats, "errors")
+        assert hasattr(stats, "skipped")
 
     def test_xlsx_converter_importable(self):
         """Test that XLSXConverter can be imported."""
         from utils.xlsx_csv_converter import XLSXConverter
-        
+
         assert XLSXConverter is not None
 
     def test_converter_uses_stats(self):
@@ -284,6 +284,6 @@ class TestXLSXConverterImport:
                 input_dir=Path(tmpdir),
                 logger=MagicMock(),
             )
-            
+
             assert isinstance(converter.stats, ConverterStats)
             assert converter.stats.processed_files == 0

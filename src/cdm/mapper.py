@@ -109,10 +109,15 @@ def build_transaction_report(
         ]
     if net_amount is not None:
         price_quantity["price"] = [
-            {"value": {"amount": net_amount, "currency": "GBP"}, "priceType": "NET_PRICE"}
+            {
+                "value": {"amount": net_amount, "currency": "GBP"},
+                "priceType": "NET_PRICE",
+            }
         ]
 
-    trade_lot: list[dict] = [{"priceQuantity": [price_quantity]}] if price_quantity else []
+    trade_lot: list[dict] = (
+        [{"priceQuantity": [price_quantity]}] if price_quantity else []
+    )
 
     # ── Execution details ──────────────────────────────────────────────────
     trade: dict = {
@@ -141,9 +146,7 @@ def build_transaction_report(
             "proposedEvent": {
                 "intent": "ContractFormation",
                 "eventDate": _parse_event_date(trading_date_time),
-                "instruction": [
-                    {"before": {"trade": trade}}
-                ],
+                "instruction": [{"before": {"trade": trade}}],
             }
         },
         "reportingSide": {

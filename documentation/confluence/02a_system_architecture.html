@@ -24,8 +24,8 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; System Architecture</p>
-<p class="last-updated">Last updated: 15 April 2026</p>
-<h1 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-SystemArchitecture">System Architecture</h1>
+<p class="last-updated">Last updated: 9 June 2026</p>
+<h1 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-SystemArchitecture">System Architecture (Phase 6)</h1>
 <h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-TableofContents">Table of Contents</h2>
 <ul>
 <li><a href="#overview" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Architecture Overview</a></li>
@@ -36,108 +36,85 @@
 <li><a href="#entry-points" rel="nofollow" style="color: rgb(0,82,204);text-decoration: none;">Entry Points (27 CLI + 2 GUI)</a></li>
 </ul>
 <span class="confluence-anchor-link" id="id-2a.SystemArchitecture-overview"><span class="confluence-anchor-link" id="overview" /></span><h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-ArchitectureOverview">Architecture Overview</h2>
-<p>TXR Automation follows a <strong>six-layer architecture</strong> with clear separation of concerns. The core library provides shared functionality consumed by all processing modules, which are exposed through CLI scripts, a PySide6 desktop GUI, a React web application, and a FastAPI backend with Celery task queue.</p>
+<p>TXR Automation follows a <strong>modern three-tier web architecture</strong> with clear separation of concerns:</p>
+<ul>
+<li><strong>Frontend:</strong> React 19 SPA with TypeScript, Tailwind CSS, and real-time WebSocket updates</li>
+<li><strong>API Layer:</strong> FastAPI with 12+ routers, async PostgreSQL, Celery task queue, and WebSocket support</li>
+<li><strong>Processing Layer:</strong> Python validation engine (accuracy_testing, replay, firds, gleif) + SQLite caches</li>
+</ul>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
-<strong>Design Philosophy:</strong> Minimise external dependencies, maximise code reuse through a shared core library,
-    use dataclasses for all data transfer, CSV-first I/O (no Excel), and singleton reference data managers for performance.
+<strong>Design Philosophy:</strong> Async-first for scalability, CSV-first I/O (no Excel), type-safe with TypeScript (frontend) and type hints (backend),
+    shared core library for validation logic reuse, and modern DevOps with Docker Compose and nginx.
 </div>
-<span class="confluence-anchor-link" id="id-2a.SystemArchitecture-layers"><span class="confluence-anchor-link" id="layers" /></span><h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-LayeredArchitecture">Layered Architecture</h2>
+<span class="confluence-anchor-link" id="id-2a.SystemArchitecture-layers"><span class="confluence-anchor-link" id="layers" /></span><h2 style="color: rgb(23,43,77);" id="id-2a.SystemArchitecture-LayeredArchitecture">Layered Architecture (3-Tier)</h2>
 <div class="code panel pdl" style="border-width: 1px;"><div class="codeContent panelContent pdl">
 <pre class="syntaxhighlighter-pre" data-syntaxhighlighter-params="brush: text; gutter: false; theme: Confluence" data-theme="Confluence">
 +-------------------------------------------------------------------+
-|                    Web Application Layer                           |
+|                 Frontend Layer (React 19 SPA)                      |
 |                                                                    |
 |  +------------------------------------------------------------+   |
-|  |  React 19 SPA (web/)                                       |   |
-|  |  * TypeScript + Vite 8       * Tailwind CSS 4 + shadcn/ui  |   |
-|  |  * Zustand state management  * TanStack React Query         |   |
-|  |  * WebSocket log streaming   * React Hook Form + Zod        |   |
+|  |  web/src/                                                  |   |
+|  |  * pages/ (Dashboard, AccuracyTester, Scheduler, Settings) |   |
+|  |  * components/ (reusable UI widgets)                       |   |
+|  |  * services/ (API client, WebSocket client)                |   |
+|  |  * stores/ (Zustand state: jobs, UI, config)              |   |
+|  |  * hooks/ (custom React hooks: useQuery, useWebSocket)     |   |
 |  +------------------------------------------------------------+   |
+|  TypeScript • Vite • React Router • TanStack Query • Zustand      |
+|  Tailwind CSS • shadcn/ui • WebSocket streaming                   |
 +-------------------------------------------------------------------+
-                                 |
-                                 v
+                              ↕️ REST API + WebSocket
 +-------------------------------------------------------------------+
-|                       API Layer (api/)                             |
+|                  API Layer (FastAPI + Async I/O)                   |
 |                                                                    |
-|  +----------------------+  +-----------------------------------+   |
-|  |  FastAPI + Uvicorn   |  |  Celery Workers + Beat            |   |
-|  |  * 13 REST routers   |  |  * Async task execution           |   |
-|  |  * Pydantic schemas  |  |  * Scheduled jobs                 |   |
-|  |  * WebSocket manager |  |  * Redis broker + pub/sub         |   |
-|  +----------------------+  +-----------------------------------+   |
-|  +----------------------+  +-----------------------------------+   |
-|  |  SQLAlchemy ORM      |  |  Service Layer                    |   |
-|  |  * Async PostgreSQL  |  |  * Wraps src/ processing modules  |   |
-|  |  * Alembic migrations|  |  * Task orchestration             |   |
-|  +----------------------+  +-----------------------------------+   |
+|  +---------------------+  +-------------------------------------+ |
+|  |  Routers (api/)     |  |  Celery Workers + Beat Scheduler  | |
+|  |  * accuracy.py      |  |  * Async task execution           | |
+|  |  * dashboard.py     |  |  * Scheduled batch jobs           | |
+|  |  * scheduler.py     |  |  * Redis broker + pub/sub          | |
+|  |  * jobs.py          |  |  * Result persistence              | |
+|  |  * firds.py         |  +-------------------------------------+ |
+|  |  * gleif.py         |                                        |
+|  |  * pipeline.py      |  +-------------------------------------+ |
+|  |  * health.py        |  |  Services + Models (ORM)          | |
+|  +---------------------+  |  * SQLAlchemy async PostgreSQL    | |
+|                            |  * Pydantic request/response       | |
+|                            |  * Business logic orchestration    | |
+|                            +-------------------------------------+ |
 +-------------------------------------------------------------------+
-                                 |
-                                 v
+                              ↓
 +-------------------------------------------------------------------+
-|                   Desktop / CLI Interface Layer                    |
+|         Data & Processing Layer (Python Validation Engine)         |
 |                                                                    |
-|  +---------------------------+  +--------------------------------+ |
-|  |   CLI Scripts (27)        |  |   PySide6 Desktop GUI          | |
-|  |   * validate-buyer        |  |   * 6-tab interface            | |
-|  |   * validate-seller       |  |   * Scheduler engine           | |
-|  |   * firds-refresh         |  |   * System tray app            | |
-|  |   * gleif-check           |  |   * Background QThread         | |
-|  |   * txr-automate          |  |   * Real-time log viewer       | |
-|  |   * ... (22 more)         |  |                                | |
-|  +---------------------------+  +--------------------------------+ |
-+-------------------------------------------------------------------+
-                                 |
-                                 v
-+-------------------------------------------------------------------+
-|                      Processing Layer                              |
+|  +------------------+  +----------+  +-------+  +-----------+    |
+|  | accuracy_testing |  |  replay  |  | firds |  |   gleif   |    |
+|  |  * processor.py  |  |  * Ph 2  |  | * API |  |   * API   |    |
+|  |  * validators/   |  |  * Ph 3  |  | * XML |  |   * CSV   |    |
+|  |  * models/       |  |  * Final |  | * DB  |  |   * DB    |    |
+|  |  * scripts/ (22) |  |  * Merge |  |       |  |   * FTS5  |    |
+|  +------------------+  +----------+  +-------+  +-----------+    |
 |                                                                    |
-|  +----------------------+  +----------+  +-------+  +-----------+ |
-|  |  accuracy_testing    |  |  replay  |  | firds |  |   gleif   | |
-|  |  * ID validation     |  |  * Ph 2  |  | * API |  |   * API   | |
-|  |  * DM validation     |  |  * Ph 3  |  | * XML |  |   * CSV   | |
-|  |  * Pricing           |  |  * Final |  | * DB  |  |   * DB    | |
-|  |  * Net amt/qty       |  |  * Merge |  | * Chk |  |   * Lkp   | |
-|  |  * Data push         |  +----------+  +-------+  +-----------+ |
-|  |  * SQL extracts      |                                          |
-|  +----------------------+                                          |
+|  ┌──────────────────────────────────────────────────────────┐    |
+|  │           Core Library (src/core)                         │    |
+|  │  * config (YAML + env vars)                              │    |
+|  │  * data (country codes, ID formats, constants)           │    |
+|  │  * logging (JSON structured logs)                        │    |
+|  │  * utils (date parsing, CSV, file utilities)             │    |
+|  │  * validation (core validation functions)                │    |
+|  └──────────────────────────────────────────────────────────┘    |
 +-------------------------------------------------------------------+
-                                 |
-                                 v
+                              ↓
 +-------------------------------------------------------------------+
-|                      Core Library (src/core/)                      |
+|          Infrastructure & Persistence (Docker Compose)            |
 |                                                                    |
-|  +----------+  +--------------+  +-------------+                   |
-|  |  config  |  |     data     |  |  validation |                   |
-|  |  * YAML  |  | * Countries  |  |  * Format   |                   |
-|  |  * Env   |  | * ID formats |  |  * Length   |                   |
-|  |  * Cache |  | * Incidents  |  |  * Pattern  |                   |
-|  +----------+  | * Constants  |  |  * Date     |                   |
-|                | * Structures |  +-------------+                   |
-|  +----------+  +--------------+                                    |
-|  | logging  |  +--------------+                                    |
-|  | * JSON   |  |    utils     |                                    |
-|  | * Stats  |  | * DateParser |                                    |
-|  | * File   |  | * CSV utils  |                                    |
-|  +----------+  | * File disc. |                                    |
-|                | * Char repl. |                                    |
-|                +--------------+                                    |
-+-------------------------------------------------------------------+
-                                 |
-                                 v
-+-------------------------------------------------------------------+
-|                    Data / Infrastructure Layer                     |
+|  +----------+  +-----------+  +--------+  +--------+             |
+|  |PostgreSQL|  |  Redis 7  |  |SQLite  |  |  CSV   |             |
+|  | 16 async |  |  * Broker |  |FIRDS   |  | * Input|             |
+|  | * Jobs   |  |  * Pub/Sub|  |* GLEIF |  | * Ref  |             |
+|  | * Config |  |  * Caching|  |        |  | * Logs |             |
+|  +----------+  +-----------+  +--------+  +--------+             |
 |                                                                    |
-|  +-----------+  +----------+  +----------+  +------------------+  |
-|  | CSV Files |  | SQLite   |  |   YAML   |  |   JSON Logs      |  |
-|  | * Input   |  | * FIRDS  |  | * Config |  |   * Structured   |  |
-|  | * Output  |  | * GLEIF  |  | * Env    |  |   * Timestamped  |  |
-|  | * Ref data|  | * FTS5   |  | * Local  |  |                  |  |
-|  +-----------+  +----------+  +----------+  +------------------+  |
-|  +-------------+  +------------+  +----------------------------+  |
-|  | PostgreSQL  |  |   Redis    |  |   Docker / Nginx           |  |
-|  | * Jobs DB   |  | * Broker   |  |   * 6 containers           |  |
-|  | * Run logs  |  | * Pub/Sub  |  |   * Reverse proxy          |  |
-|  +-------------+  +------------+  +----------------------------+  |
+|  Docker Compose • nginx reverse proxy • Uvicorn app server       |
 +-------------------------------------------------------------------+
 </pre>
 </div></div>
@@ -152,34 +129,24 @@
 </thead>
 <tbody>
 <tr>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Web Application</strong></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">React 19 SPA: page routing, forms, state management, WebSocket streaming</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Consumes API layer exclusively &mdash; no direct module access</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Frontend (React)</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Page routing, form handling, state management, WebSocket connections, real-time updates</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Consumes API layer exclusively via HTTP/WebSocket &mdash; no direct module access</td>
 </tr>
 <tr>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>API</strong></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">FastAPI REST endpoints, Celery task queue, WebSocket manager, PostgreSQL persistence</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Wraps processing modules as async tasks with progress tracking</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>API (FastAPI)</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">REST endpoints, Celery task orchestration, async PostgreSQL ORM, WebSocket connections</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Wraps processing modules as async tasks with progress tracking and result persistence</td>
 </tr>
 <tr>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Desktop / CLI</strong></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">CLI argument parsing, PySide6 GUI event handling, scheduler engine, system tray</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Thin layer &mdash; delegates all logic downward</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Processing (Python)</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Business logic, validation rules, data transformation, regulatory compliance checks</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Domain-specific logic; uses core library for common operations; framework-agnostic</td>
 </tr>
 <tr>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Processing</strong></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Business logic, validation rules, data transformation</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Domain-specific logic, uses core library for common operations</td>
-</tr>
-<tr>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Core Library</strong></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Shared configuration, logging, reference data, validation utilities</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Single source of truth for common functionality</td>
-</tr>
-<tr>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Data / Infrastructure</strong></td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Persistent storage, file I/O, caching, message broker, containerisation</td>
-<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">CSV-first for I/O, SQLite for caching, PostgreSQL for web app, Redis for messaging, Docker for deployment</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd"><strong>Infrastructure</strong></td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">Persistent storage (PostgreSQL, SQLite), file I/O (CSV), message broker (Redis), caching</td>
+<td align="left" style="border: 1.0px solid rgb(223,225,230);padding: 8.0px 12.0px;text-align: left;" class="confluenceTd">CSV-first for I/O; PostgreSQL for web app; SQLite for regulatory data caches; Docker deployment</td>
 </tr>
 </tbody>
 </table></div>

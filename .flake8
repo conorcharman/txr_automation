@@ -1,0 +1,21 @@
+[flake8]
+max-line-length = 100
+extend-ignore =
+    E203,
+    E402,
+    E501,
+    E712,
+    E741,
+    F401,
+    F402,
+    F541,
+    F811,
+    F841,
+    W291,
+    W293
+exclude =
+    .git,
+    __pycache__,
+    .pytest_cache,
+    htmlcov,
+    node_modules

@@ -26,6 +26,7 @@ def index() -> ReplayRecordIndex:
 # _split_correction_parts  (static method — no instance required)
 # ===========================================================================
 
+
 class TestSplitCorrectionParts:
     """Unit tests for the _split_correction_parts static helper."""
 
@@ -67,6 +68,7 @@ class TestSplitCorrectionParts:
 # ===========================================================================
 # _parse_corrections  (instance method)
 # ===========================================================================
+
 
 class TestParseCorrectionsColonDelimiter:
     """Baseline tests confirming the existing colon behaviour is unchanged."""

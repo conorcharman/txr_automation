@@ -13,19 +13,19 @@ Data source: ISO 3166-1 country codes (249 countries)
 Last updated: January 2026
 """
 
-from typing import Optional, Dict, List
 from dataclasses import dataclass
+from typing import Dict, List, Optional
 
 
 @dataclass(frozen=True)
 class Country:
     """Immutable country data structure."""
-    
+
     name: str
     alpha2: str
     alpha3: str
     is_eea: bool
-    
+
     def __str__(self) -> str:
         return f"{self.name} ({self.alpha2})"
 
@@ -265,7 +265,9 @@ COUNTRIES = [
     Country("Uganda", "UG", "UGA", False),
     Country("Ukraine", "UA", "UKR", False),
     Country("United Arab Emirates (the)", "AE", "ARE", False),
-    Country("United Kingdom of Great Britain and Northern Ireland (the)", "GB", "GBR", True),
+    Country(
+        "United Kingdom of Great Britain and Northern Ireland (the)", "GB", "GBR", True
+    ),
     Country("United States Minor Outlying Islands (the)", "UM", "UMI", False),
     Country("United States of America (the)", "US", "USA", False),
     Country("Uruguay", "UY", "URY", False),
@@ -288,85 +290,84 @@ class CountryDataManager:
     """
     Singleton manager for country code reference data.
     Provides efficient O(1) lookups by Alpha-2 or Alpha-3 codes.
-    
+
     Usage:
         manager = CountryDataManager()
         country = manager.get_by_alpha2("GB")
         is_eea = manager.is_eea("DE")
         all_eea = manager.get_eea_countries()
     """
-    
-    _instance: Optional['CountryDataManager'] = None
+
+    _instance: Optional["CountryDataManager"] = None
     _initialized: bool = False
-    
-    def __new__(cls) -> 'CountryDataManager':
+
+    def __new__(cls) -> "CountryDataManager":
         """Ensure singleton pattern."""
         if cls._instance is None:
             cls._instance = super().__new__(cls)
         return cls._instance
-    
+
     def __init__(self):
         """Initialize lookup dictionaries (only once)."""
         if CountryDataManager._initialized:
             return
-        
+
         # Build lookup dictionaries for O(1) access
         self._by_alpha2: Dict[str, Country] = {}
         self._by_alpha3: Dict[str, Country] = {}
         self._by_name: Dict[str, Country] = {}
-        
+
         for country in COUNTRIES:
             self._by_alpha2[country.alpha2.upper()] = country
             self._by_alpha3[country.alpha3.upper()] = country
             self._by_name[country.name.upper()] = country
-        
+
         CountryDataManager._initialized = True
-    
+
     def get_by_alpha2(self, code: str) -> Optional[Country]:
         """Get country by ISO Alpha-2 code."""
         return self._by_alpha2.get(code.upper())
-    
+
     def get_by_alpha3(self, code: str) -> Optional[Country]:
         """Get country by ISO Alpha-3 code."""
         return self._by_alpha3.get(code.upper())
-    
+
     def get_by_name(self, name: str) -> Optional[Country]:
         """Get country by name (case-insensitive)."""
         return self._by_name.get(name.upper())
-    
+
     def is_eea(self, code: str) -> bool:
         """Check if a country is in the European Economic Area."""
         country = self.get_by_alpha2(code) or self.get_by_alpha3(code)
         return country.is_eea if country else False
-    
+
     def get_eea_countries(self) -> List[Country]:
         """Get list of all EEA countries."""
         return [c for c in COUNTRIES if c.is_eea]
-    
+
     def get_all_countries(self) -> List[Country]:
         """Get list of all countries."""
         return COUNTRIES.copy()
-    
+
     def validate_code(self, code: str) -> bool:
         """Validate if a code exists (Alpha-2 or Alpha-3)."""
-        return (code.upper() in self._by_alpha2 or 
-                code.upper() in self._by_alpha3)
-    
+        return code.upper() in self._by_alpha2 or code.upper() in self._by_alpha3
+
     def get_alpha3_from_alpha2(self, alpha2: str) -> Optional[str]:
         """Convert Alpha-2 code to Alpha-3."""
         country = self.get_by_alpha2(alpha2)
         return country.alpha3 if country else None
-    
+
     def get_alpha2_from_alpha3(self, alpha3: str) -> Optional[str]:
         """Convert Alpha-3 code to Alpha-2."""
         country = self.get_by_alpha3(alpha3)
         return country.alpha2 if country else None
-    
+
     @property
     def total_countries(self) -> int:
         """Get total number of countries in dataset."""
         return len(COUNTRIES)
-    
+
     @property
     def eea_count(self) -> int:
         """Get total number of EEA countries."""

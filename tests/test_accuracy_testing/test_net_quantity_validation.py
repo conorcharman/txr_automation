@@ -6,10 +6,11 @@ Unit tests for the NetQuantityRecord model and NetQuantityValidator
 for Incident Code 7_6.
 """
 
-import pytest
+import sys
 from decimal import Decimal
 from pathlib import Path
-import sys
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -18,10 +19,10 @@ sys.path.insert(0, str(project_root))
 from src.accuracy_testing.models.net_quantity_record import NetQuantityRecord
 from src.accuracy_testing.validators.net_quantity_validator import NetQuantityValidator
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_record(
     child_ref: str,
@@ -45,6 +46,7 @@ def _make_record(
 # ---------------------------------------------------------------------------
 # NetQuantityRecord model tests
 # ---------------------------------------------------------------------------
+
 
 class TestNetQuantityRecord:
     """Unit tests for the NetQuantityRecord dataclass."""
@@ -133,9 +135,17 @@ class TestNetQuantityRecord:
 
         d = record.to_dict()
         expected_keys = [
-            "child_ref", "child_qty", "parent_ref", "parent_qty",
-            "bulk_ref", "bulk_qty",
-            "report_status", "trade_date_time", "net_qty", "difference", "error",
+            "child_ref",
+            "child_qty",
+            "parent_ref",
+            "parent_qty",
+            "bulk_ref",
+            "bulk_qty",
+            "report_status",
+            "trade_date_time",
+            "net_qty",
+            "difference",
+            "error",
         ]
         assert list(d.keys()) == expected_keys
         assert d["error"] == "N"
@@ -145,6 +155,7 @@ class TestNetQuantityRecord:
 # ---------------------------------------------------------------------------
 # NetQuantityValidator deduplication tests
 # ---------------------------------------------------------------------------
+
 
 class TestNetQuantityValidatorDeduplication:
     """Tests for deduplicate_group()."""
@@ -207,6 +218,7 @@ class TestNetQuantityValidatorDeduplication:
 # ---------------------------------------------------------------------------
 # NetQuantityValidator validation tests
 # ---------------------------------------------------------------------------
+
 
 class TestNetQuantityValidatorValidation:
     """Tests for validate_group() and validate_all()."""
@@ -310,7 +322,7 @@ class TestNetQuantityValidatorValidation:
             _make_record("CHILD001", "100", parent_ref="P1", parent_qty="200"),  # dupe
             _make_record("CHILD002", "100", parent_ref="P1", parent_qty="200"),
             _make_record("CHILD003", "50", parent_ref="P2", parent_qty="100"),
-            _make_record("CHILD003", "50", parent_ref="P2", parent_qty="100"),   # dupe
+            _make_record("CHILD003", "50", parent_ref="P2", parent_qty="100"),  # dupe
             _make_record("CHILD004", "50", parent_ref="P2", parent_qty="100"),
         ]
         stats = self.validator.validate_all(records)
@@ -356,6 +368,7 @@ class TestNetQuantityValidatorValidation:
 # Bulk ref grouping tests
 # ---------------------------------------------------------------------------
 
+
 class TestBulkRefGrouping:
     """Tests that validate_all groups by bulk_ref (first 10 chars of parent_ref)."""
 
@@ -379,9 +392,15 @@ class TestBulkRefGrouping:
         # bulk_qty = sum of unique parent quantities = 100+150+100 = 350
         # net_qty  = sum of child quantities        = 100+150+100 = 350 -> N
         records = [
-            _make_record("CHILD001", "100", parent_ref="44625CPNJMN1G01", parent_qty="100"),
-            _make_record("CHILD002", "150", parent_ref="44625CPNJMN1G02", parent_qty="150"),
-            _make_record("CHILD003", "100", parent_ref="44625CPNJMN1G03", parent_qty="100"),
+            _make_record(
+                "CHILD001", "100", parent_ref="44625CPNJMN1G01", parent_qty="100"
+            ),
+            _make_record(
+                "CHILD002", "150", parent_ref="44625CPNJMN1G02", parent_qty="150"
+            ),
+            _make_record(
+                "CHILD003", "100", parent_ref="44625CPNJMN1G03", parent_qty="100"
+            ),
         ]
         stats = self.validator.validate_all(records)
 
@@ -399,8 +418,12 @@ class TestBulkRefGrouping:
         # Two sub-parents, each with parent_qty=200 -> bulk_qty=400.
         # Children sum to 250 -> difference=-150 -> error Y.
         records = [
-            _make_record("CHILD001", "100", parent_ref="44625CPNJMN1G01", parent_qty="200"),
-            _make_record("CHILD002", "150", parent_ref="44625CPNJMN1G02", parent_qty="200"),
+            _make_record(
+                "CHILD001", "100", parent_ref="44625CPNJMN1G01", parent_qty="200"
+            ),
+            _make_record(
+                "CHILD002", "150", parent_ref="44625CPNJMN1G02", parent_qty="200"
+            ),
         ]
         self.validator.validate_all(records)
 
@@ -413,14 +436,18 @@ class TestBulkRefGrouping:
     def test_distinct_bulk_refs_processed_independently(self):
         """Two different bulk refs produce independent results."""
         records = [
-            _make_record("CHILD001", "200", parent_ref="AAAAAAAAAA1G01", parent_qty="200"),
-            _make_record("CHILD002", "100", parent_ref="BBBBBBBBBB1G01", parent_qty="300"),
+            _make_record(
+                "CHILD001", "200", parent_ref="AAAAAAAAAA1G01", parent_qty="200"
+            ),
+            _make_record(
+                "CHILD002", "100", parent_ref="BBBBBBBBBB1G01", parent_qty="300"
+            ),
         ]
         stats = self.validator.validate_all(records)
 
         assert stats["parents_processed"] == 2
-        assert records[0].error == "N"   # 200 == 200
-        assert records[1].error == "Y"   # 100 != 300
+        assert records[0].error == "N"  # 200 == 200
+        assert records[1].error == "Y"  # 100 != 300
 
     def test_bulk_ref_in_to_dict(self):
         """to_dict() includes bulk_ref and bulk_qty positioned after parent_qty."""
@@ -453,11 +480,21 @@ class TestBulkRefGrouping:
         #   1G03 -> parent_qty=200,  children sum = 200
         # bulk_qty = 500+300+200 = 1000; net_qty = 1000 -> match
         records = [
-            _make_record("A0000000001", "300", parent_ref="44625CPNJMN1G01", parent_qty="500"),
-            _make_record("A0000000002", "200", parent_ref="44625CPNJMN1G01", parent_qty="500"),
-            _make_record("B0000000001", "300", parent_ref="44625CPNJMN1G02", parent_qty="300"),
-            _make_record("C0000000001", "100", parent_ref="44625CPNJMN1G03", parent_qty="200"),
-            _make_record("C0000000002", "100", parent_ref="44625CPNJMN1G03", parent_qty="200"),
+            _make_record(
+                "A0000000001", "300", parent_ref="44625CPNJMN1G01", parent_qty="500"
+            ),
+            _make_record(
+                "A0000000002", "200", parent_ref="44625CPNJMN1G01", parent_qty="500"
+            ),
+            _make_record(
+                "B0000000001", "300", parent_ref="44625CPNJMN1G02", parent_qty="300"
+            ),
+            _make_record(
+                "C0000000001", "100", parent_ref="44625CPNJMN1G03", parent_qty="200"
+            ),
+            _make_record(
+                "C0000000002", "100", parent_ref="44625CPNJMN1G03", parent_qty="200"
+            ),
         ]
         stats = self.validator.validate_all(records)
 

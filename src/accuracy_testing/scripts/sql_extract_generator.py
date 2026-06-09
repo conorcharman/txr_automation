@@ -36,29 +36,26 @@ Features:
 - Progress reporting
 """
 
-import sys
-import csv
-import yaml
 import argparse
-from pathlib import Path
-from typing import List, Dict
+import csv
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Dict, List
+
+import yaml
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
+from core import get_client_types, is_buyer_incident, is_seller_incident
 from src.accuracy_testing.sql_extract_generator import SQLExtractGenerator
-from core import (
-    is_buyer_incident,
-    is_seller_incident,
-    get_client_types,
-)
 
 
 class SQLExtractGeneratorCLI:
     """CLI wrapper for SQL Extract Generator."""
-    
+
     def __init__(
         self,
         template_path: str,
@@ -69,14 +66,14 @@ class SQLExtractGeneratorCLI:
         transaction_column: str = None,
         dry_run: bool = False,
         verbose: bool = False,
-        output_format: str = 'both',
+        output_format: str = "both",
         incident_code: str = None,
         dtf_template_path: str = None,
-        values_mode: bool = False
+        values_mode: bool = False,
     ):
         """
         Initialize CLI.
-        
+
         Args:
             template_path: Path to SQL template file
             input_csv: Path to CSV file with transaction references
@@ -103,35 +100,35 @@ class SQLExtractGeneratorCLI:
         self.incident_code = incident_code
         self.dtf_template_path = dtf_template_path
         self.values_mode = values_mode
-    
+
     def read_transaction_refs(self) -> List[str]:
         """
         Read transaction references from CSV file.
-        
+
         Returns:
             List of transaction reference strings
-            
+
         Raises:
             FileNotFoundError: If CSV file doesn't exist
             ValueError: If specified column not found
         """
         input_path = Path(self.input_csv)
-        
+
         if not input_path.exists():
             raise FileNotFoundError(f"Input CSV not found: {self.input_csv}")
-        
+
         refs = []
-        
-        with open(input_path, 'r', encoding='cp1252') as f:
+
+        with open(input_path, "r", encoding="cp1252") as f:
             reader = csv.reader(f)
             header = next(reader)  # Skip header
-            
+
             # Determine column index
             if self.transaction_column is None:
                 # Default: try "Transaction reference number" (template format)
                 # Fall back to first column if not found
-                if 'Transaction reference number' in header:
-                    col_idx = header.index('Transaction reference number')
+                if "Transaction reference number" in header:
+                    col_idx = header.index("Transaction reference number")
                 else:
                     col_idx = 0
             elif self.transaction_column.isdigit():
@@ -146,20 +143,20 @@ class SQLExtractGeneratorCLI:
                         f"Column '{self.transaction_column}' not found in CSV. "
                         f"Available columns: {', '.join(header)}"
                     )
-            
+
             # Read transaction refs from specified column
             for row in reader:
                 if len(row) > col_idx:
                     ref = row[col_idx].strip()
                     if ref:  # Skip empty refs
                         refs.append(ref)
-        
+
         return refs
-    
+
     def run(self) -> int:
         """
         Execute SQL extract generation.
-        
+
         Returns:
             Exit code (0 for success, 1 for error)
         """
@@ -175,69 +172,71 @@ class SQLExtractGeneratorCLI:
             if self.dry_run:
                 print("Mode:          DRY RUN (preview only)")
             print("=" * 70)
-            
+
             # Initialize generator
             if self.verbose:
                 print("\n[1/4] Loading SQL template...")
-            
+
             generator = SQLExtractGenerator(
                 template_path=self.template_path,
                 batch_size=self.batch_size,
                 placeholder=self.placeholder,
                 output_format=self.output_format,
                 dtf_template_path=self.dtf_template_path,
-                values_mode=self.values_mode
+                values_mode=self.values_mode,
             )
-            
+
             if self.verbose and self.values_mode:
                 print("  ✓ VALUES mode: enabled (CA references will be excluded)")
-            
+
             if self.verbose:
                 print(f"  ✓ Template loaded: {generator.template_path.name}")
                 print(f"  ✓ Placeholder detected: {generator.placeholder}")
-                if self.output_format in ['dtf', 'both']:
-                    print(f"  ✓ DTF template loaded: {generator.dtf_template_path.name}")
-            
+                if self.output_format in ["dtf", "both"]:
+                    print(
+                        f"  ✓ DTF template loaded: {generator.dtf_template_path.name}"
+                    )
+
             # Read transaction references
             if self.verbose:
                 print("\n[2/4] Reading transaction references...")
-            
+
             transaction_refs = self.read_transaction_refs()
-            
+
             print(f"  ✓ Read {len(transaction_refs)} transaction references")
-            
+
             # Get generation summary
             if self.verbose:
                 print("\n[3/4] Planning batches...")
-            
+
             summary = generator.get_summary(transaction_refs)
-            
+
             print(f"  ✓ Total transactions: {summary['total_transactions']}")
             print(f"  ✓ Batch size: {summary['batch_size']}")
             print(f"  ✓ Number of batches: {summary['num_batches']}")
-            
+
             # Generate SQL files
             if self.dry_run:
                 print("\n[4/4] DRY RUN - Skipping file generation")
                 print(f"\nWould generate {summary['num_batches']} file(s) in:")
                 print(f"  {Path(self.output_dir).absolute()}")
-                
+
                 # Show what filenames would be
                 base_filename = self.incident_code or Path(self.template_path).stem
-                
-                if self.output_format in ['sql', 'both']:
+
+                if self.output_format in ["sql", "both"]:
                     print(f"\n  SQL files (in /csv or /sql subdir):")
-                    for i in range(1, summary['num_batches'] + 1):
-                        if summary['num_batches'] == 1:
+                    for i in range(1, summary["num_batches"] + 1):
+                        if summary["num_batches"] == 1:
                             filename = f"{base_filename}.sql"
                         else:
                             filename = f"{base_filename}_Extract{i}.sql"
                         print(f"    - {filename}")
-                
-                if self.output_format in ['dtf', 'both']:
+
+                if self.output_format in ["dtf", "both"]:
                     print(f"\n  DTF files (in /dtf subdir):")
-                    for i in range(1, summary['num_batches'] + 1):
-                        if summary['num_batches'] == 1:
+                    for i in range(1, summary["num_batches"] + 1):
+                        if summary["num_batches"] == 1:
                             filename = f"{base_filename}.dtf"
                         else:
                             filename = f"{base_filename}_Extract{i}.dtf"
@@ -245,38 +244,43 @@ class SQLExtractGeneratorCLI:
             else:
                 if self.verbose:
                     print("\n[4/4] Generating files...")
-                
+
                 base_filename = self.incident_code or Path(self.template_path).stem
                 incident_code = self.incident_code or base_filename
-                
+
                 generated_files = generator.generate_extracts(
                     transaction_refs=transaction_refs,
                     output_dir=self.output_dir,
                     base_filename=base_filename,
-                    incident_code=incident_code
+                    incident_code=incident_code,
                 )
-                
+
                 # Report generated files
-                if generated_files['sql_files']:
-                    print(f"\n✓ Successfully generated {len(generated_files['sql_files'])} SQL file(s):")
-                    for file_path in generated_files['sql_files']:
+                if generated_files["sql_files"]:
+                    print(
+                        f"\n✓ Successfully generated {len(generated_files['sql_files'])} SQL file(s):"
+                    )
+                    for file_path in generated_files["sql_files"]:
                         print(f"    - {file_path}")
-                
-                if generated_files['dtf_files']:
-                    print(f"\n✓ Successfully generated {len(generated_files['dtf_files'])} DTF file(s):")
-                    for file_path in generated_files['dtf_files']:
+
+                if generated_files["dtf_files"]:
+                    print(
+                        f"\n✓ Successfully generated {len(generated_files['dtf_files'])} DTF file(s):"
+                    )
+                    for file_path in generated_files["dtf_files"]:
                         print(f"    - {file_path}")
-            
+
             print("\n" + "=" * 70)
             print("GENERATION COMPLETE")
             print("=" * 70)
-            
+
             return 0
-        
+
         except Exception as e:
             print(f"\n✗ ERROR: {e}", file=sys.stderr)
             if self.verbose:
                 import traceback
+
                 traceback.print_exc()
             return 1
 
@@ -284,7 +288,7 @@ class SQLExtractGeneratorCLI:
 def parse_arguments():
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(
-        description='SQL Extract Generator v1.0 - Generate SQL extracts from transaction references',
+        description="SQL Extract Generator v1.0 - Generate SQL extracts from transaction references",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
@@ -318,115 +322,101 @@ Examples:
       --input data/inconsistent_refs.csv \\
       --output extracts/ \\
       --dry-run
-        """
-    )
-    
-    parser.add_argument(
-        '--config',
-        type=str,
-        help='Path to YAML configuration file (default: config/templates/sql_extract_generator_template.yaml)'
-    )
-    
-    parser.add_argument(
-        '--template',
-        type=str,
-        help='Path to SQL template file'
-    )
-    
-    parser.add_argument(
-        '--input',
-        type=str,
-        help='Path to input CSV file with transaction references'
-    )
-    
-    parser.add_argument(
-        '--output',
-        type=str,
-        help='Directory for output SQL files'
-    )
-    
-    parser.add_argument(
-        '--batch-size',
-        type=int,
-        default=900,
-        help='Number of transaction references per SQL file (default: 900)'
-    )
-    
-    parser.add_argument(
-        '--placeholder',
-        type=str,
-        default=None,
-        help='Custom placeholder pattern in template (auto-detects if not specified)'
-    )
-    
-    parser.add_argument(
-        '--column',
-        type=str,
-        default=None,
-        help='CSV column name or index for transaction references (default: first column)'
-    )
-    
-    parser.add_argument(
-        '--output-format',
-        type=str,
-        choices=['sql', 'dtf', 'both'],
-        default='both',
-        help='Output format: sql (SQL files only), dtf (DTF files only), or both (default: both)'
-    )
-    
-    parser.add_argument(
-        '--incident-code',
-        type=str,
-        default=None,
-        help='Incident code for CSV naming in DTF files (defaults to template basename)'
-    )
-    
-    parser.add_argument(
-        '--dtf-template',
-        type=str,
-        default=None,
-        help='Path to DTF template file (uses default if not specified)'
-    )
-    
-    parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Preview mode - show what would be generated without writing files'
-    )
-    
-    parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help='Enable detailed output'
+        """,
     )
 
     parser.add_argument(
-        '--log-level',
-        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
-        default='INFO',
-        help='Logging level (default: INFO)'
+        "--config",
+        type=str,
+        help="Path to YAML configuration file (default: config/templates/sql_extract_generator_template.yaml)",
     )
-    
+
+    parser.add_argument("--template", type=str, help="Path to SQL template file")
+
     parser.add_argument(
-        '--gui-mode',
-        action='store_true',
+        "--input", type=str, help="Path to input CSV file with transaction references"
+    )
+
+    parser.add_argument("--output", type=str, help="Directory for output SQL files")
+
+    parser.add_argument(
+        "--batch-size",
+        type=int,
+        default=900,
+        help="Number of transaction references per SQL file (default: 900)",
+    )
+
+    parser.add_argument(
+        "--placeholder",
+        type=str,
+        default=None,
+        help="Custom placeholder pattern in template (auto-detects if not specified)",
+    )
+
+    parser.add_argument(
+        "--column",
+        type=str,
+        default=None,
+        help="CSV column name or index for transaction references (default: first column)",
+    )
+
+    parser.add_argument(
+        "--output-format",
+        type=str,
+        choices=["sql", "dtf", "both"],
+        default="both",
+        help="Output format: sql (SQL files only), dtf (DTF files only), or both (default: both)",
+    )
+
+    parser.add_argument(
+        "--incident-code",
+        type=str,
+        default=None,
+        help="Incident code for CSV naming in DTF files (defaults to template basename)",
+    )
+
+    parser.add_argument(
+        "--dtf-template",
+        type=str,
+        default=None,
+        help="Path to DTF template file (uses default if not specified)",
+    )
+
+    parser.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Preview mode - show what would be generated without writing files",
+    )
+
+    parser.add_argument("--verbose", action="store_true", help="Enable detailed output")
+
+    parser.add_argument(
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        default="INFO",
+        help="Logging level (default: INFO)",
+    )
+
+    parser.add_argument(
+        "--gui-mode",
+        action="store_true",
         help=argparse.SUPPRESS,
     )
-    
+
     return parser.parse_args()
 
 
 def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) -> Path:
     """
     Determine the appropriate SQL template for an incident code.
-    
+
     Args:
         incident_code: Incident code (e.g., '7_37', '16_21', '35_3')
         sql_template_dir: Directory containing SQL templates
-        
+
     Returns:
         Path to the appropriate SQL template file
-        
+
     Raises:
         FileNotFoundError: If template not found
     """
@@ -443,34 +433,34 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
     # Note: do NOT use the legacy SCR_pricing_data_v1.0.sql; IncorrectNetAmount.sql
     # includes the LEFT JOIN to SECFIG that returns the INSTRUMENT column needed for
     # net-amount validation.
-    if incident_code in {'35_3', '35_10'}:
+    if incident_code in {"35_3", "35_10"}:
         template_path = sql_template_dir / "IncorrectNetAmount.sql"
     # Non-zero net quantity — uses VALUES block CTE, not an IN-clause
-    elif incident_code == '7_6':
+    elif incident_code == "7_6":
         template_path = sql_template_dir / "NonZeroNetQuantity.sql"
     # Non-zero net amount — uses VALUES block CTE, not an IN-clause
-    elif incident_code == '7_42':
+    elif incident_code == "7_42":
         template_path = sql_template_dir / "NonZeroNetAmount.sql"
     # Incorrect time — uses VALUES block CTE, not an IN-clause
-    elif incident_code == '7_30':
+    elif incident_code == "7_30":
         template_path = sql_template_dir / "IncorrectTime.sql"
     # Inconsistent qty type — uses VALUES block CTE
-    elif incident_code == '7_38':
+    elif incident_code == "7_38":
         template_path = sql_template_dir / "InconsistentQtyType.sql"
     # Inconsistent price type — IN-clause template (CA-prefix REPORTREF input)
-    elif incident_code == '7_50':
+    elif incident_code == "7_50":
         template_path = sql_template_dir / "InconsistentPriceType.sql"
     # Inconsistent buyer
-    elif incident_code == '7_66':
+    elif incident_code == "7_66":
         template_path = sql_template_dir / "InconsistentBuyerID.sql"
     # Inconsistent seller
-    elif incident_code == '16_20':
+    elif incident_code == "16_20":
         template_path = sql_template_dir / "InconsistentSellerID.sql"
     # Decision maker buyer
-    elif incident_code.startswith('12_'):
+    elif incident_code.startswith("12_"):
         template_path = sql_template_dir / "FTBDM.sql"
     # Decision maker seller
-    elif incident_code.startswith('21_'):
+    elif incident_code.startswith("21_"):
         template_path = sql_template_dir / "FTSDM.sql"
     # Regular buyer incidents
     elif is_buyer_incident(incident_code):
@@ -479,17 +469,19 @@ def get_sql_template_for_incident(incident_code: str, sql_template_dir: Path) ->
     elif is_seller_incident(incident_code):
         template_path = sql_template_dir / "SellerID.sql"
     else:
-        raise ValueError(f"Unknown incident code: {incident_code}. Cannot determine SQL template.")
-    
+        raise ValueError(
+            f"Unknown incident code: {incident_code}. Cannot determine SQL template."
+        )
+
     if not template_path.exists():
         raise FileNotFoundError(f"SQL template not found: {template_path}")
-    
+
     return template_path
 
 
 # Incidents that require a DB2 VALUES block instead of a SQL IN-clause.
 # The corresponding SQL templates use {VALUES} as their placeholder.
-VALUES_MODE_INCIDENTS: set = {'7_6', '7_42', '7_30', '7_38', '7_50'}
+VALUES_MODE_INCIDENTS: set = {"7_6", "7_42", "7_30", "7_38", "7_50"}
 
 
 def requires_values_mode(incident_code: str) -> bool:
@@ -507,74 +499,102 @@ def requires_values_mode(incident_code: str) -> bool:
     return incident_code in VALUES_MODE_INCIDENTS
 
 
-def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool = False) -> int:
+def run_batch_sql_generation(
+    config: Dict, dry_run: bool = False, verbose: bool = False
+) -> int:
     """
     Run SQL generation for multiple incidents in batch mode.
-    
+
     Args:
         config: Configuration dictionary with testing_period, incidents, and paths
         dry_run: If True, preview without writing files
         verbose: If True, show detailed output
-        
+
     Returns:
         Exit code (0 for success, 1 for error)
     """
     # Extract batch configuration
-    testing_period = config.get('testing_period', {})
-    fiscal_year = testing_period.get('fiscal_year', 'FYXX')
-    quarter = testing_period.get('quarter', 'QX')
-    
+    testing_period = config.get("testing_period", {})
+    fiscal_year = testing_period.get("fiscal_year", "FYXX")
+    quarter = testing_period.get("quarter", "QX")
+
     # Get batch mode configuration
-    batch_config = config.get('batch', {})
-    
+    batch_config = config.get("batch", {})
+
     # Check for incidents configuration
-    incidents_config = batch_config.get('incidents', [])
-    if incidents_config == 'all':
+    incidents_config = batch_config.get("incidents", [])
+    if incidents_config == "all":
         # Get all automated incidents list from config
-        incidents = batch_config.get('all_incidents', [])
+        incidents = batch_config.get("all_incidents", [])
         if not incidents:
-            raise ValueError("Configuration error: 'batch.all_incidents' is required when incidents: 'all' is specified")
+            raise ValueError(
+                "Configuration error: 'batch.all_incidents' is required when incidents: 'all' is specified"
+            )
         print(f"Processing all {len(incidents)} automated incidents")
     elif isinstance(incidents_config, list):
         incidents = incidents_config
     else:
         incidents = []
-    
+
     # Get paths from batch configuration
     # Use `or` fallback so empty strings / null YAML values don't resolve to
     # Path(".") (current directory), which is the classic silent-failure trap.
-    paths = batch_config.get('paths', {})
-    template_dir = Path(paths.get('template_dir') or 'data/templates')
-    output_dir = Path(paths.get('output_dir') or 'data/sql_extracts')
-    sql_template_dir = Path(paths.get('sql_template_dir') or 'src/accuracy_testing/sql_templates')
-    dtf_template_path = paths.get('dtf_template_file')
-    
+    project_root = Path(__file__).resolve().parents[3]
+
+    def _resolve_config_path(value: str, default_relative: str) -> Path:
+        raw = Path(value or default_relative)
+        if raw.is_absolute():
+            return raw
+        return project_root / raw
+
+    paths = batch_config.get("paths", {})
+    template_dir = _resolve_config_path(paths.get("template_dir"), "data/templates")
+    output_dir = _resolve_config_path(paths.get("output_dir"), "data/sql_extracts")
+    sql_template_dir = _resolve_config_path(
+        paths.get("sql_template_dir"), "src/accuracy_testing/sql_templates"
+    )
+    dtf_template_path = paths.get("dtf_template_file")
+
     # Get filename patterns from batch configuration
-    filename_patterns = batch_config.get('filename_patterns', {})
-    template_pattern = filename_patterns.get('template', '{fiscal_year} {quarter} {incident}.csv')
-    output_sql_pattern = filename_patterns.get('output_sql', '{incident}_{fiscal_year}_{quarter}.sql')
-    output_sql_batch_pattern = filename_patterns.get('output_sql_batch', '{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.sql')
-    output_dtf_pattern = filename_patterns.get('output_dtf', '{incident}_{fiscal_year}_{quarter}.dtf')
-    output_dtf_batch_pattern = filename_patterns.get('output_dtf_batch', '{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.dtf')
-    output_csv_pattern = filename_patterns.get('output_csv', '{incident}_{fiscal_year}_{quarter}.csv')
-    output_csv_batch_pattern = filename_patterns.get('output_csv_batch', '{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.csv')
-    
+    filename_patterns = batch_config.get("filename_patterns", {})
+    template_pattern = filename_patterns.get(
+        "template", "{fiscal_year} {quarter} {incident}.csv"
+    )
+    output_sql_pattern = filename_patterns.get(
+        "output_sql", "{incident}_{fiscal_year}_{quarter}.sql"
+    )
+    output_sql_batch_pattern = filename_patterns.get(
+        "output_sql_batch", "{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.sql"
+    )
+    output_dtf_pattern = filename_patterns.get(
+        "output_dtf", "{incident}_{fiscal_year}_{quarter}.dtf"
+    )
+    output_dtf_batch_pattern = filename_patterns.get(
+        "output_dtf_batch", "{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.dtf"
+    )
+    output_csv_pattern = filename_patterns.get(
+        "output_csv", "{incident}_{fiscal_year}_{quarter}.csv"
+    )
+    output_csv_batch_pattern = filename_patterns.get(
+        "output_csv_batch", "{incident}_{fiscal_year}_{quarter}_Extract{batch_num}.csv"
+    )
+
     # Get processing options
-    processing = config.get('processing', {})
-    batch_size = processing.get('batch_size', 900)
-    placeholder = processing.get('placeholder_pattern', '-- TRANSACTION REFERENCES --')
+    processing = config.get("processing", {})
+    batch_size = processing.get("batch_size", 900)
+    placeholder = processing.get("placeholder_pattern", "-- TRANSACTION REFERENCES --")
     # 'Transaction Reference' matches the column-0 header written by
     # AccuracyTemplateGenerator for every template type (buyer, seller,
     # incorrect_net_amount, net_quantity, net_amount, default).
     # 'Transaction reference number' was the old default that matched the
     # raw consolidated CSV, not the generated template — keep as fallback.
-    transaction_column = processing.get('transaction_column', 'Transaction Reference')
-    output_format = processing.get('output_format', 'both')
-    
+    transaction_column = processing.get("transaction_column", "Transaction Reference")
+    output_format = processing.get("output_format", "both")
+
     if not incidents:
         print("ERROR: No incidents specified in config")
         return 1
-    
+
     print(f"\n{'='*70}")
     print(f"BATCH SQL EXTRACT GENERATION - {fiscal_year} {quarter}")
     print(f"{'='*70}")
@@ -585,7 +605,7 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
     print(f"Incidents:                {', '.join(incidents)}")
     print(f"Batch size:               {batch_size} records per file")
     print(f"{'='*70}\n")
-    
+
     # Validate template directory exists before starting the batch loop so we
     # fail fast with a clear message instead of silently skipping every incident.
     if not template_dir.exists():
@@ -597,68 +617,77 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
 
     # Create output directory
     output_dir.mkdir(parents=True, exist_ok=True)
-    
+
     total_success = 0
     total_failed = 0
     total_sql_files = 0
     total_dtf_files = 0
-    
+
     for incident in incidents:
         print(f"\n{'─'*70}")
         print(f"Processing incident: {incident}")
         print(f"{'─'*70}")
-        
+
         try:
             # Determine SQL template for this incident
             sql_template = get_sql_template_for_incident(incident, sql_template_dir)
             print(f"SQL template: {sql_template.name}")
-            
+
             # Build template CSV filename using configured pattern
             template_filename = template_pattern.format(
                 incident=incident, fiscal_year=fiscal_year, quarter=quarter
             )
             template_path = template_dir / template_filename
-            
+
             # Check if template CSV exists
             if not template_path.exists():
                 print(f"⚠️  Template not found: {template_path.resolve()}")
-                print(f"   Expected pattern : batch.filename_patterns.template = '{template_pattern}'")
+                print(
+                    f"   Expected pattern : batch.filename_patterns.template = '{template_pattern}'"
+                )
                 print(f"   Template directory: {template_dir.resolve()}")
                 print(f"   Skipping incident {incident}")
                 total_failed += 1
                 continue
-            
+
             # Read transaction refs from template CSV
             refs = []
-            with open(template_path, 'r', encoding='cp1252') as f:
+            with open(template_path, "r", encoding="cp1252") as f:
                 reader = csv.DictReader(f)
                 fieldnames = reader.fieldnames or []
                 # Case-insensitive fallback: find the column even if the exact
                 # casing in the file differs from the configured name.
                 actual_column = next(
-                    (col for col in fieldnames
-                     if col.strip().lower() == transaction_column.lower()),
+                    (
+                        col
+                        for col in fieldnames
+                        if col.strip().lower() == transaction_column.lower()
+                    ),
                     None,
                 )
                 if actual_column is None:
-                    print(f"⚠️  Column '{transaction_column}' not found in {template_filename}")
+                    print(
+                        f"⚠️  Column '{transaction_column}' not found in {template_filename}"
+                    )
                     print(f"   Available columns: {', '.join(fieldnames)}")
-                    print(f"   Set processing.transaction_column in your YAML config to match.")
+                    print(
+                        f"   Set processing.transaction_column in your YAML config to match."
+                    )
                     total_failed += 1
                     continue
-                
+
                 for row in reader:
                     ref = row[actual_column].strip()
                     if ref:
                         refs.append(ref)
-            
+
             if not refs:
                 print(f"⚠️  No transaction references found in {template_filename}")
                 total_failed += 1
                 continue
-            
+
             print(f"Transaction refs: {len(refs)}")
-            
+
             # Generate SQL extracts.
             # Always pass placeholder=None so the generator auto-detects the token
             # in the template (whether {VALUES} or a comment-style marker).
@@ -673,33 +702,37 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
 
             if generator.values_mode and verbose:
                 print("  VALUES mode: enabled (CA references will be excluded)")
-            
+
             summary = generator.get_summary(refs)
-            num_batches = summary['num_batches']
-            
+            num_batches = summary["num_batches"]
+
             if dry_run:
-                if output_format in ['sql', 'both']:
+                if output_format in ["sql", "both"]:
                     print(f"DRY RUN - Would generate {num_batches} SQL file(s)")
                     for i in range(1, num_batches + 1):
                         if num_batches == 1:
                             filename = f"{incident}_{fiscal_year}_{quarter}.sql"
                         else:
-                            filename = f"{incident}_{fiscal_year}_{quarter}_Extract{i}.sql"
+                            filename = (
+                                f"{incident}_{fiscal_year}_{quarter}_Extract{i}.sql"
+                            )
                         print(f"  - {filename}")
-                
-                if output_format in ['dtf', 'both']:
+
+                if output_format in ["dtf", "both"]:
                     print(f"DRY RUN - Would generate {num_batches} DTF file(s)")
                     for i in range(1, num_batches + 1):
                         if num_batches == 1:
                             filename = f"{incident}_{fiscal_year}_{quarter}.dtf"
                         else:
-                            filename = f"{incident}_{fiscal_year}_{quarter}_Extract{i}.dtf"
+                            filename = (
+                                f"{incident}_{fiscal_year}_{quarter}_Extract{i}.dtf"
+                            )
                         print(f"  - {filename}")
-                
+
                 total_success += 1
-                if output_format in ['sql', 'both']:
+                if output_format in ["sql", "both"]:
                     total_sql_files += num_batches
-                if output_format in ['dtf', 'both']:
+                if output_format in ["dtf", "both"]:
                     total_dtf_files += num_batches
             else:
                 # Generate with custom base filename
@@ -708,65 +741,76 @@ def run_batch_sql_generation(config: Dict, dry_run: bool = False, verbose: bool 
                     transaction_refs=refs,
                     output_dir=str(output_dir),
                     base_filename=base_filename,
-                    incident_code=f"{incident}_{fiscal_year}_{quarter}_extract"
+                    incident_code=f"{incident}_{fiscal_year}_{quarter}_extract",
                 )
-                
-                if generated_files['sql_files']:
-                    print(f"✓ Generated {len(generated_files['sql_files'])} SQL file(s)")
+
+                if generated_files["sql_files"]:
+                    print(
+                        f"✓ Generated {len(generated_files['sql_files'])} SQL file(s)"
+                    )
                     if verbose:
-                        for file_path in generated_files['sql_files']:
+                        for file_path in generated_files["sql_files"]:
                             print(f"  - {Path(file_path).name}")
-                    total_sql_files += len(generated_files['sql_files'])
-                
-                if generated_files['dtf_files']:
-                    print(f"✓ Generated {len(generated_files['dtf_files'])} DTF file(s)")
+                    total_sql_files += len(generated_files["sql_files"])
+
+                if generated_files["dtf_files"]:
+                    print(
+                        f"✓ Generated {len(generated_files['dtf_files'])} DTF file(s)"
+                    )
                     if verbose:
-                        for file_path in generated_files['dtf_files']:
+                        for file_path in generated_files["dtf_files"]:
                             print(f"  - {Path(file_path).name}")
-                    total_dtf_files += len(generated_files['dtf_files'])
-                
+                    total_dtf_files += len(generated_files["dtf_files"])
+
                 total_success += 1
-        
+
         except Exception as e:
             print(f"✗ Failed: {incident} - {e}")
             if verbose:
                 import traceback
+
                 traceback.print_exc()
             total_failed += 1
             continue
-    
+
     # Print batch summary
     print(f"\n{'='*70}")
     print(f"BATCH SQL GENERATION COMPLETE")
     print(f"{'='*70}")
     print(f"Incidents processed:  {total_success}/{len(incidents)}")
     print(f"Incidents failed:     {total_failed}/{len(incidents)}")
-    if output_format in ['sql', 'both']:
+    if output_format in ["sql", "both"]:
         print(f"Total SQL files:      {total_sql_files}")
-    if output_format in ['dtf', 'both']:
+    if output_format in ["dtf", "both"]:
         print(f"Total DTF files:      {total_dtf_files}")
     print(f"{'='*70}\n")
-    
+
     return 0 if total_failed == 0 else 1
 
 
 def main():
     """Main entry point."""
     args = parse_arguments()
-    
+
     # Load configuration if provided or use default
     config = {}
     if args.config:
-        with open(args.config, 'r') as f:
+        with open(args.config, "r") as f:
             config = yaml.safe_load(f)
     else:
         # Try default configuration path
-        default_config = Path(__file__).parent.parent.parent.parent / "config" / "local" / "accuracy_testing" / "sql_extract_generator.yaml"
+        default_config = (
+            Path(__file__).parent.parent.parent.parent
+            / "config"
+            / "local"
+            / "accuracy_testing"
+            / "sql_extract_generator.yaml"
+        )
         if default_config.exists():
             print(f"Loading default configuration from {default_config}...")
-            with open(default_config, 'r') as f:
+            with open(default_config, "r") as f:
                 config = yaml.safe_load(f)
-    
+
     # Determine paths (CLI args override config)
     template_path = args.template
     input_csv = args.input
@@ -779,49 +823,45 @@ def main():
     output_format = args.output_format
     incident_code = args.incident_code
     dtf_template_path = args.dtf_template
-    
+
     # Get from config if available and not provided via CLI
     if config:
         # Single mode paths are nested under 'single.paths' in the config YAML,
         # mirroring how batch mode uses 'batch.paths'
-        single_config = config.get('single', {})
-        paths = single_config.get('paths', config.get('paths', {}))
-        processing = config.get('processing', {})
-        options = config.get('options', config.get('output_options', {}))
-        
+        single_config = config.get("single", {})
+        paths = single_config.get("paths", config.get("paths", {}))
+        processing = config.get("processing", {})
+        options = config.get("options", config.get("output_options", {}))
+
         if not template_path:
-            template_path = paths.get('sql_template_file')
+            template_path = paths.get("sql_template_file")
         if not input_csv:
-            input_csv = paths.get('template_file')
+            input_csv = paths.get("template_file")
         if not output_dir:
-            output_dir = paths.get('output_dir', paths.get('output_directory'))
+            output_dir = paths.get("output_dir", paths.get("output_directory"))
         # placeholder_pattern is intentionally not loaded from config: the generator
         # auto-detects the token from the template, so a hard-coded config value
         # would conflict with templates that use {VALUES} instead of the comment style.
         # Users who need a non-standard token can still pass --placeholder on the CLI.
         if not transaction_column:
-            transaction_column = processing.get('transaction_column')
+            transaction_column = processing.get("transaction_column")
         if args.batch_size == 900:  # default value
-            batch_size = processing.get('batch_size', 900)
-        if args.output_format == 'both':  # default value
-            output_format = processing.get('output_format', 'both')
+            batch_size = processing.get("batch_size", 900)
+        if args.output_format == "both":  # default value
+            output_format = processing.get("output_format", "both")
         if not incident_code:
-            incident_code = single_config.get('incident_code')
+            incident_code = single_config.get("incident_code")
         if not dtf_template_path:
-            dtf_template_path = paths.get('dtf_template_file')
-    
+            dtf_template_path = paths.get("dtf_template_file")
+
     # Check if batch mode (using mode field from config)
-    mode = config.get('mode', 'single')  # Default to single if not specified
-    is_batch_mode = mode == 'batch'
-    
+    mode = config.get("mode", "single")  # Default to single if not specified
+    is_batch_mode = mode == "batch"
+
     if is_batch_mode:
         # Run batch SQL generation
-        return run_batch_sql_generation(
-            config=config,
-            dry_run=dry_run,
-            verbose=verbose
-        )
-    
+        return run_batch_sql_generation(config=config, dry_run=dry_run, verbose=verbose)
+
     # Single mode - validate required arguments
     if not template_path:
         print("ERROR: Template file (--template or via --config) is required")
@@ -832,7 +872,7 @@ def main():
     if not output_dir:
         print("ERROR: Output directory (--output or via --config) is required")
         return 1
-    
+
     # Auto-detect placeholder from the template; values_mode is derived in
     # SQLExtractGenerator from the detected placeholder, so no incident-code
     # look-up is required here.
@@ -852,7 +892,7 @@ def main():
         dtf_template_path=dtf_template_path,
         values_mode=False,  # Auto-derived by SQLExtractGenerator from the detected placeholder
     )
-    
+
     return cli.run()
 
 

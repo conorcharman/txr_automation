@@ -14,12 +14,12 @@ import logging
 from datetime import datetime, timedelta
 from typing import Dict, List
 
-from ..models.incorrect_time_record import IncorrectTimeRecord, PARENT_DATETIME_MISSING
+from ..models.incorrect_time_record import PARENT_DATETIME_MISSING, IncorrectTimeRecord
 
 logger = logging.getLogger(__name__)
 
 # AS400 TRDDATTIM format: CCYY-MM-DD-HH.MM.SS.ffffff
-_DATETIME_FORMAT: str = '%Y-%m-%d-%H.%M.%S.%f'
+_DATETIME_FORMAT: str = "%Y-%m-%d-%H.%M.%S.%f"
 
 
 def _parse_datetime(value: str) -> datetime:
@@ -73,7 +73,7 @@ def _format_difference(delta: timedelta) -> str:
     else:
         parts.append(f"{seconds} second{'s' if seconds != 1 else ''}")
 
-    return ' '.join(parts)
+    return " ".join(parts)
 
 
 class IncorrectTimeValidator:
@@ -118,12 +118,10 @@ class IncorrectTimeValidator:
         """
         # Handle missing parent datetime
         if not record.parent_datetime:
-            record.error = 'Y'
+            record.error = "Y"
             record.time_difference = PARENT_DATETIME_MISSING
             if self.verbose:
-                logger.debug(
-                    f"  {record.child_ref}: parent_datetime missing — error=Y"
-                )
+                logger.debug(f"  {record.child_ref}: parent_datetime missing — error=Y")
             return
 
         try:
@@ -133,18 +131,18 @@ class IncorrectTimeValidator:
             logger.warning(
                 f"  {record.child_ref}: could not parse datetime — {e} — skipping comparison"
             )
-            record.error = 'Y'
+            record.error = "Y"
             record.time_difference = f"parse error: {e}"
             return
 
         if child_dt == parent_dt:
-            record.error = 'N'
-            record.time_difference = ''
+            record.error = "N"
+            record.time_difference = ""
             if self.verbose:
                 logger.debug(f"  {record.child_ref}: match — {child_dt}")
         else:
             delta = abs(child_dt - parent_dt)
-            record.error = 'Y'
+            record.error = "Y"
             record.time_difference = _format_difference(delta)
             if self.verbose:
                 logger.debug(
@@ -186,13 +184,13 @@ class IncorrectTimeValidator:
 
             self.validate_record(record)
 
-            if record.error == 'N':
+            if record.error == "N":
                 matches += 1
             else:
                 errors += 1
                 if was_missing:
                     missing += 1
-                elif record.time_difference.startswith('parse error'):
+                elif record.time_difference.startswith("parse error"):
                     parse_errors += 1
 
         if self.verbose:
@@ -202,9 +200,9 @@ class IncorrectTimeValidator:
             )
 
         return {
-            'total': total,
-            'matches': matches,
-            'errors': errors,
-            'missing': missing,
-            'parse_errors': parse_errors,
+            "total": total,
+            "matches": matches,
+            "errors": errors,
+            "missing": missing,
+            "parse_errors": parse_errors,
         }

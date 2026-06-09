@@ -9,8 +9,7 @@ All field names follow CDM camelCase conventions.
 
 from __future__ import annotations
 
-from typing import Any, NotRequired
-from typing import TypedDict
+from typing import Any, NotRequired, TypedDict
 
 
 class CdmValue(TypedDict):
@@ -31,8 +30,8 @@ class CdmParty(TypedDict):
 class CdmSecurity(TypedDict):
     identifier: list[CdmIdentifier]
     primaryAssetClass: str  # "EQUITY"
-    fullName: NotRequired[str]      # from FIRDS enrichment
-    cfiCode: NotRequired[str]       # from FIRDS enrichment
+    fullName: NotRequired[str]  # from FIRDS enrichment
+    cfiCode: NotRequired[str]  # from FIRDS enrichment
 
 
 class CdmProduct(TypedDict):

@@ -8,8 +8,8 @@ import requests
 from gleif.client import (
     GleifApiClient,
     GoldenCopyInfo,
-    _extract_lei_attributes,
     _extract_fuzzy_attributes,
+    _extract_lei_attributes,
 )
 
 # ---------------------------------------------------------------------------
@@ -132,7 +132,9 @@ class TestGleifApiClientConstructor:
             c = GleifApiClient(request_delay=0.0)
             assert c is not None
 
-    def test_custom_session_used(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_custom_session_used(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         assert client._session is session
 
     def test_accept_header_set(self, session: MagicMock) -> None:
@@ -148,25 +150,35 @@ class TestGleifApiClientConstructor:
 
 
 class TestGetLatestGoldenCopyInfo:
-    def test_returns_golden_copy_info(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_returns_golden_copy_info(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response(_PUBLISHES_RESPONSE)
         info = client.get_latest_golden_copy_info()
         assert isinstance(info, GoldenCopyInfo)
         assert info.publish_date == "2026-03-23T08:00:00Z"
 
-    def test_download_url_is_csv_url(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_download_url_is_csv_url(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response(_PUBLISHES_RESPONSE)
         info = client.get_latest_golden_copy_info()
         assert info.download_url == _CSV_URL
         assert info.download_url.startswith("https://")
 
-    def test_empty_data_raises(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_empty_data_raises(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response({"data": []})
         with pytest.raises(ValueError, match="no data"):
             client.get_latest_golden_copy_info()
 
-    def test_missing_csv_url_raises(self, client: GleifApiClient, session: MagicMock) -> None:
-        broken = {"data": [{"publish_date": "2026-03-23 08:00:00", "lei2": {"full_file": {}}}]}
+    def test_missing_csv_url_raises(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
+        broken = {
+            "data": [{"publish_date": "2026-03-23 08:00:00", "lei2": {"full_file": {}}}]
+        }
         session.get.return_value = _make_response(broken)
         with pytest.raises(ValueError, match="CSV download URL"):
             client.get_latest_golden_copy_info()
@@ -179,7 +191,9 @@ class TestGetLatestGoldenCopyInfo:
     def test_overridden_url_skips_publishes_api(self, session: MagicMock) -> None:
         """When golden_copy_url is set explicitly, the publish date comes from the LEI records API."""
         custom_url = "https://example.com/my-golden-copy.zip"
-        c = GleifApiClient(session=session, request_delay=0.0, golden_copy_url=custom_url)
+        c = GleifApiClient(
+            session=session, request_delay=0.0, golden_copy_url=custom_url
+        )
         session.get.return_value = _make_response(_META_RESPONSE)
         info = c.get_latest_golden_copy_info()
         assert info.download_url == custom_url
@@ -192,7 +206,9 @@ class TestGetLatestGoldenCopyInfo:
 
 
 class TestGetByLei:
-    def test_found_lei_returns_dict(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_found_lei_returns_dict(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response(_SINGLE_LEI_RESPONSE)
         result = client.get_by_lei("5493001KJTIIGC8Y1R12")
         assert result is not None
@@ -200,13 +216,17 @@ class TestGetByLei:
         assert result["legal_name"] == "Test Entity Ltd"
         assert result["registration_status"] == "ISSUED"
 
-    def test_other_names_joined(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_other_names_joined(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response(_SINGLE_LEI_RESPONSE)
         result = client.get_by_lei("5493001KJTIIGC8Y1R12")
         assert result is not None
         assert "TE Ltd" in result["other_names"]
 
-    def test_lei_normalised_to_upper(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_lei_normalised_to_upper(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response(_SINGLE_LEI_RESPONSE)
         client.get_by_lei("5493001kjtiigc8y1r12")
         call_url = session.get.call_args[0][0]
@@ -222,7 +242,9 @@ class TestGetByLei:
         with pytest.raises(requests.HTTPError):
             client.get_by_lei("5493001KJTIIGC8Y1R12")
 
-    def test_empty_data_returns_none(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_empty_data_returns_none(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response({"data": None})
         result = client.get_by_lei("5493001KJTIIGC8Y1R12")
         assert result is None
@@ -252,7 +274,9 @@ class TestGetLeisByIsin:
         session.get.return_value = _make_response({"data": []})
         assert client.get_leis_by_isin("GB9999999999") == []
 
-    def test_isin_normalised_to_upper(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_isin_normalised_to_upper(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response({"data": []})
         client.get_leis_by_isin("gb00b3rbwm25")
         params = session.get.call_args[1]["params"]
@@ -271,11 +295,15 @@ class TestGetLeiBic:
         )
         assert client.get_lei_by_bic("ALETITMMXXX") == "5493001KJTIIGC8Y1R12"
 
-    def test_not_found_returns_none(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_not_found_returns_none(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response({"data": []})
         assert client.get_lei_by_bic("UNKNOWNBICX") is None
 
-    def test_bic_normalised_to_upper(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_bic_normalised_to_upper(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response({"data": []})
         client.get_lei_by_bic("aletitmmxxx")
         params = session.get.call_args[1]["params"]
@@ -341,7 +369,9 @@ class TestRateLimiting:
             c.get_leis_by_isin("GB00B3RBWM25")
             mock_sleep.assert_called_once_with(1.5)
 
-    def test_zero_delay_skips_sleep(self, client: GleifApiClient, session: MagicMock) -> None:
+    def test_zero_delay_skips_sleep(
+        self, client: GleifApiClient, session: MagicMock
+    ) -> None:
         session.get.return_value = _make_response({"data": []})
         with patch("gleif.client.time.sleep") as mock_sleep:
             client.get_leis_by_isin("GB00B3RBWM25")

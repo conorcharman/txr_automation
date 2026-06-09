@@ -9,6 +9,8 @@ React frontend convention, whilst still accepting snake_case attribute
 names in Python code.
 """
 
+from pydantic import model_validator
+
 from api.schemas.common import _CamelModel
 
 
@@ -29,13 +31,21 @@ class ReplayPhase2Request(_CamelModel):
         log_output: Directory for log files (default: ``"logs"``)
     """
 
-    kaizen_input: str
-    incident_files: str
+    input_file: str | None = None
+    kaizen_input: str | None = None
+    incident_files: str = "/app/data/templates"
     output_file: str
     fiscal_year: str
     quarter: str
     log_level: str = "INFO"
     log_output: str = "/app/data/logs"
+
+    @model_validator(mode="after")
+    def validate_input_paths(self) -> "ReplayPhase2Request":
+        """Ensure at least one accepted replay input field is provided."""
+        if not self.input_file and not self.kaizen_input:
+            raise ValueError("Either inputFile or kaizenInput must be provided")
+        return self
 
 
 class ReplayPhase2FinalRequest(_CamelModel):

@@ -45,6 +45,7 @@ celery_app = Celery(
     backend=_settings.redis_url,
 )
 
+
 @worker_ready.connect
 def _cleanup_orphaned_jobs(sender, **kwargs) -> None:  # noqa: ANN001
     """Mark any 'running' jobs as 'failed' when the worker (re)starts.
@@ -54,6 +55,7 @@ def _cleanup_orphaned_jobs(sender, **kwargs) -> None:  # noqa: ANN001
     database. This signal handler resets them to 'failed' on startup so the
     UI does not show permanently stalled jobs.
     """
+
     async def _reset() -> None:
         from sqlalchemy import update
         from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
@@ -95,7 +97,12 @@ celery_app.conf.update(
     enable_utc=True,
     task_track_started=True,
     # Explicitly include task modules so the worker registers them on startup.
-    include=["api.tasks.script_tasks", "api.tasks.scheduler_tasks", "api.tasks.pipeline_tasks", "api.tasks.reconciliation_tasks"],
+    include=[
+        "api.tasks.script_tasks",
+        "api.tasks.scheduler_tasks",
+        "api.tasks.pipeline_tasks",
+        "api.tasks.reconciliation_tasks",
+    ],
     # Celery beat periodic tasks.
     beat_schedule={
         "check-and-run-schedules-every-minute": {

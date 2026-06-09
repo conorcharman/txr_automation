@@ -8,10 +8,10 @@ import pytest
 from gleif.cache import GleifCacheManager
 from gleif.parser import LeiRecord
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_record(
     lei: str = "5493001KJTIIGC8Y1R12",
@@ -153,18 +153,22 @@ class TestTruncate:
 
 class TestIsinMap:
     def test_upsert_and_retrieve_isin_mapping(self, db: GleifCacheManager) -> None:
-        db.bulk_upsert_isin_map([
-            ("5493001KJTIIGC8Y1R12", "GB00B3RBWM25"),
-            ("5493001KJTIIGC8Y1R12", "GB00ABC12345"),
-        ])
+        db.bulk_upsert_isin_map(
+            [
+                ("5493001KJTIIGC8Y1R12", "GB00B3RBWM25"),
+                ("5493001KJTIIGC8Y1R12", "GB00ABC12345"),
+            ]
+        )
         leis = db.get_leis_for_isin("GB00B3RBWM25")
         assert "5493001KJTIIGC8Y1R12" in leis
 
     def test_get_isins_for_lei(self, db: GleifCacheManager) -> None:
-        db.bulk_upsert_isin_map([
-            ("5493001KJTIIGC8Y1R12", "GB00B3RBWM25"),
-            ("5493001KJTIIGC8Y1R12", "GB00ABC12345"),
-        ])
+        db.bulk_upsert_isin_map(
+            [
+                ("5493001KJTIIGC8Y1R12", "GB00B3RBWM25"),
+                ("5493001KJTIIGC8Y1R12", "GB00ABC12345"),
+            ]
+        )
         isins = db.get_isins_for_lei("5493001KJTIIGC8Y1R12")
         assert set(isins) == {"GB00B3RBWM25", "GB00ABC12345"}
 
@@ -201,10 +205,14 @@ class TestNameSearch:
         assert len(results) >= 1
 
     def test_search_by_other_names(self, db: GleifCacheManager) -> None:
-        db.bulk_upsert([_make_record(
-            legal_name="Barclays PLC",
-            other_names="Barclays Bank; Barclays Capital",
-        )])
+        db.bulk_upsert(
+            [
+                _make_record(
+                    legal_name="Barclays PLC",
+                    other_names="Barclays Bank; Barclays Capital",
+                )
+            ]
+        )
         results = db.search_by_name("Barclays Capital")
         assert len(results) >= 1
         assert results[0]["legal_name"] == "Barclays PLC"
@@ -233,7 +241,9 @@ class TestSyncLog:
         db.log_sync("FULL", "gleif-goldencopy.zip", 100_000, "SUCCESS")
         assert db.is_file_processed("gleif-goldencopy.zip")
 
-    def test_error_file_is_not_considered_processed(self, db: GleifCacheManager) -> None:
+    def test_error_file_is_not_considered_processed(
+        self, db: GleifCacheManager
+    ) -> None:
         db.log_sync("FULL", "gleif-goldencopy.zip", 0, "ERROR")
         assert not db.is_file_processed("gleif-goldencopy.zip")
 

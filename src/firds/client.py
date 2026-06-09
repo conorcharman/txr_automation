@@ -21,8 +21,8 @@ Usage:
         print(f.download_link)
 """
 
-import time
 import logging
+import time
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Iterator, List, Optional
@@ -157,9 +157,7 @@ class FirdsApiClient:
         date_str = publication_date.isoformat()
         return self.get_files("FULCAN", date_str, date_str)
 
-    def get_delta_files(
-        self, date_from: date, date_to: date
-    ) -> List[FirdsFileRecord]:
+    def get_delta_files(self, date_from: date, date_to: date) -> List[FirdsFileRecord]:
         """Convenience wrapper: fetch DLTINS delta files in an inclusive date range.
 
         Args:

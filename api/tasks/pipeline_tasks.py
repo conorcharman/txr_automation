@@ -44,20 +44,20 @@ _argv_lock = threading.Lock()
 # ---------------------------------------------------------------------------
 
 _PIPELINE_SCRIPT_MODULES: dict[str, str] = {
-    "accuracy_template_generator":       "src.accuracy_testing.scripts.accuracy_template_generator",
-    "sql_extract_generator":             "src.accuracy_testing.scripts.sql_extract_generator",
-    "collate_csv_extracts":              "src.accuracy_testing.scripts.collate_csv_extracts",
-    "buyer_id_validation":               "src.accuracy_testing.scripts.buyer_id_validation",
-    "seller_id_validation":              "src.accuracy_testing.scripts.seller_id_validation",
-    "inconsistent_buyer_id_validation":  "src.accuracy_testing.scripts.inconsistent_buyer_id_validation",
+    "accuracy_template_generator": "src.accuracy_testing.scripts.accuracy_template_generator",
+    "sql_extract_generator": "src.accuracy_testing.scripts.sql_extract_generator",
+    "collate_csv_extracts": "src.accuracy_testing.scripts.collate_csv_extracts",
+    "buyer_id_validation": "src.accuracy_testing.scripts.buyer_id_validation",
+    "seller_id_validation": "src.accuracy_testing.scripts.seller_id_validation",
+    "inconsistent_buyer_id_validation": "src.accuracy_testing.scripts.inconsistent_buyer_id_validation",
     "inconsistent_seller_id_validation": "src.accuracy_testing.scripts.inconsistent_seller_id_validation",
-    "validate_ftbdm":                    "src.accuracy_testing.scripts.validate_ftbdm",
-    "validate_ftsdm":                    "src.accuracy_testing.scripts.validate_ftsdm",
-    "incorrect_net_amount_validation":   "src.accuracy_testing.scripts.incorrect_net_amount_validation",
-    "non_zero_net_quantity":             "src.accuracy_testing.scripts.non_zero_net_quantity",
-    "non_zero_net_amount":               "src.accuracy_testing.scripts.non_zero_net_amount",
-    "incorrect_time":                    "src.accuracy_testing.scripts.incorrect_time",
-    "data_push":                         "src.accuracy_testing.scripts.data_push",
+    "validate_ftbdm": "src.accuracy_testing.scripts.validate_ftbdm",
+    "validate_ftsdm": "src.accuracy_testing.scripts.validate_ftsdm",
+    "incorrect_net_amount_validation": "src.accuracy_testing.scripts.incorrect_net_amount_validation",
+    "non_zero_net_quantity": "src.accuracy_testing.scripts.non_zero_net_quantity",
+    "non_zero_net_amount": "src.accuracy_testing.scripts.non_zero_net_amount",
+    "incorrect_time": "src.accuracy_testing.scripts.incorrect_time",
+    "data_push": "src.accuracy_testing.scripts.data_push",
 }
 
 # Validation scripts use batch mode config.
@@ -336,15 +336,15 @@ def run_pipeline(
             # Determine expected extract CSVs from all incident-related scripts
             # that appear later in the pipeline (i.e. validation scripts + collate).
             _INCIDENT_CODES: dict[str, list[str]] = {
-                "buyer_id_validation":               ["7_35", "7_37", "7_39"],
-                "seller_id_validation":              ["16_19", "16_21", "16_23"],
-                "inconsistent_buyer_id_validation":  ["7_66"],
+                "buyer_id_validation": ["7_35", "7_37", "7_39"],
+                "seller_id_validation": ["16_19", "16_21", "16_23"],
+                "inconsistent_buyer_id_validation": ["7_66"],
                 "inconsistent_seller_id_validation": ["16_20"],
-                "validate_ftbdm":                    ["12_17"],
-                "validate_ftsdm":                    ["21_17"],
-                "incorrect_net_amount_validation":    ["35_3"],
-                "non_zero_net_quantity":              ["7_6"],
-                "non_zero_net_amount":               ["7_42"],
+                "validate_ftbdm": ["12_17"],
+                "validate_ftsdm": ["21_17"],
+                "incorrect_net_amount_validation": ["35_3"],
+                "non_zero_net_quantity": ["7_6"],
+                "non_zero_net_amount": ["7_42"],
             }
             expected_codes: list[str] = []
             for future_script in selected_scripts[idx - 1 :]:
@@ -354,8 +354,7 @@ def run_pipeline(
 
             if expected_codes:
                 expected_files = [
-                    Path(extracts_dir)
-                    / f"{code}_{fiscal_year}_{quarter}_extract.csv"
+                    Path(extracts_dir) / f"{code}_{fiscal_year}_{quarter}_extract.csv"
                     for code in expected_codes
                 ]
 
@@ -371,7 +370,9 @@ def run_pipeline(
                 while True:
                     missing = [f for f in expected_files if not f.exists()]
                     if not missing:
-                        found_msg = "All expected extract CSVs detected — resuming pipeline."
+                        found_msg = (
+                            "All expected extract CSVs detected — resuming pipeline."
+                        )
                         _publish({"type": "log", "data": found_msg})
                         full_output.write(found_msg + "\n")
                         _sync_update_status(job_id, "running")
@@ -402,13 +403,24 @@ def run_pipeline(
         # Build config.
         if script_name in _VALIDATION_SCRIPTS:
             config = _build_validation_config(
-                script_name, fiscal_year, quarter,
-                extracts_dir, templates_dir, output_dir, logs_dir,
+                script_name,
+                fiscal_year,
+                quarter,
+                extracts_dir,
+                templates_dir,
+                output_dir,
+                logs_dir,
             )
         else:
             config = _build_utility_config(
-                script_name, fiscal_year, quarter,
-                kaizen_dir, extracts_dir, templates_dir, output_dir, logs_dir,
+                script_name,
+                fiscal_year,
+                quarter,
+                kaizen_dir,
+                extracts_dir,
+                templates_dir,
+                output_dir,
+                logs_dir,
             )
 
         tmp_path = _write_temp_yaml(config)
@@ -422,8 +434,9 @@ def run_pipeline(
                 old_argv = sys.argv
                 sys.argv = [module_path] + argv
                 try:
-                    with contextlib.redirect_stdout(script_buffer), \
-                         contextlib.redirect_stderr(script_buffer):
+                    with contextlib.redirect_stdout(
+                        script_buffer
+                    ), contextlib.redirect_stderr(script_buffer):
                         module.main(argv)
                 finally:
                     sys.argv = old_argv
@@ -455,7 +468,9 @@ def run_pipeline(
                 error_msg = f"  ✗ {script_name} exited with code {exc.code}."
                 _publish({"type": "log", "data": error_msg})
                 full_output.write(error_msg + "\n")
-                results.append({"script": script_name, "status": "failed", "exit_code": exc.code})
+                results.append(
+                    {"script": script_name, "status": "failed", "exit_code": exc.code}
+                )
                 _publish_progress(max(10, int((idx / total_scripts) * 90)))
                 failed = True
                 if stop_on_error:
@@ -465,7 +480,9 @@ def run_pipeline(
             error_msg = f"  ✗ {script_name} failed: {exc}"
             _publish({"type": "log", "data": error_msg})
             full_output.write(error_msg + "\n")
-            results.append({"script": script_name, "status": "failed", "error": str(exc)})
+            results.append(
+                {"script": script_name, "status": "failed", "error": str(exc)}
+            )
             _publish_progress(max(10, int((idx / total_scripts) * 90)))
             failed = True
             if stop_on_error:

@@ -22,8 +22,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from api.database import get_db
 from api.schemas.pipeline import PipelineCreate, PipelineResponse, PipelineUpdate
 from api.schemas.schedule import _VALID_FREQUENCIES
-from api.services.pipeline_service import pipeline_service
 from api.services.job_service import job_service
+from api.services.pipeline_service import pipeline_service
 
 logger = logging.getLogger(__name__)
 
@@ -288,12 +288,11 @@ async def trigger_pipeline(
     fiscal_year = pipeline.fiscal_year
     quarter = pipeline.quarter
     if pipeline.frequency == "quarterly":
-        from api.utils.fiscal_date import get_completed_quarter
         from datetime import datetime, timezone
 
-        fiscal_year, quarter = get_completed_quarter(
-            datetime.now(tz=timezone.utc)
-        )
+        from api.utils.fiscal_date import get_completed_quarter
+
+        fiscal_year, quarter = get_completed_quarter(datetime.now(tz=timezone.utc))
 
     config_snapshot = {
         "pipeline_id": str(pipeline.id),
@@ -305,9 +304,7 @@ async def trigger_pipeline(
         "stop_on_error": pipeline.stop_on_error,
     }
 
-    job = await job_service.create_job(
-        db, f"pipeline:{pipeline.name}", config_snapshot
-    )
+    job = await job_service.create_job(db, f"pipeline:{pipeline.name}", config_snapshot)
     run_pipeline.delay(str(job.id), config_snapshot)
 
     await pipeline_service.mark_triggered(db, pipeline, status="pending")

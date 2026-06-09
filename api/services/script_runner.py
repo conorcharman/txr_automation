@@ -37,10 +37,22 @@ import yaml
 from fastapi import HTTPException
 
 from api.config import get_settings
-from api.schemas.accuracy import RunAllRequest, RunIncidentsRequest, RunValidationRequest
-from api.schemas.firds import FirdsBackfillRequest, FirdsCheckRequest, FirdsRefreshRequest
+from api.schemas.accuracy import (
+    RunAllRequest,
+    RunIncidentsRequest,
+    RunValidationRequest,
+)
 from api.schemas.fca import FcaCheckRequest
-from api.schemas.gleif import GleifBackfillRequest, GleifCheckRequest, GleifRefreshRequest
+from api.schemas.firds import (
+    FirdsBackfillRequest,
+    FirdsCheckRequest,
+    FirdsRefreshRequest,
+)
+from api.schemas.gleif import (
+    GleifBackfillRequest,
+    GleifCheckRequest,
+    GleifRefreshRequest,
+)
 from api.schemas.replay import (
     ReplayMergeRequest,
     ReplayPhase2FinalRequest,
@@ -48,7 +60,11 @@ from api.schemas.replay import (
     ReplayPhase3FinalRequest,
     ReplayPhase3Request,
 )
-from api.schemas.utilities import SetupDirectoriesRequest, XlsxConverterRequest, XmlConverterRequest
+from api.schemas.utilities import (
+    SetupDirectoriesRequest,
+    XlsxConverterRequest,
+    XmlConverterRequest,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -60,42 +76,42 @@ logger = logging.getLogger(__name__)
 #: Must be kept in sync with ``SCRIPT_MODULES`` in ``api/routers/jobs.py``.
 _SCRIPT_MODULES: dict[str, str] = {
     # Accuracy Testing — validation scripts
-    "buyer_id_validation":               "src.accuracy_testing.scripts.buyer_id_validation",
-    "seller_id_validation":              "src.accuracy_testing.scripts.seller_id_validation",
-    "inconsistent_buyer_id_validation":  "src.accuracy_testing.scripts.inconsistent_buyer_id_validation",
+    "buyer_id_validation": "src.accuracy_testing.scripts.buyer_id_validation",
+    "seller_id_validation": "src.accuracy_testing.scripts.seller_id_validation",
+    "inconsistent_buyer_id_validation": "src.accuracy_testing.scripts.inconsistent_buyer_id_validation",
     "inconsistent_seller_id_validation": "src.accuracy_testing.scripts.inconsistent_seller_id_validation",
-    "validate_ftbdm":                    "src.accuracy_testing.scripts.validate_ftbdm",
-    "validate_ftsdm":                    "src.accuracy_testing.scripts.validate_ftsdm",
-    "incorrect_net_amount_validation":   "src.accuracy_testing.scripts.incorrect_net_amount_validation",
-    "non_zero_net_quantity":             "src.accuracy_testing.scripts.non_zero_net_quantity",
-    "non_zero_net_amount":               "src.accuracy_testing.scripts.non_zero_net_amount",
-    "incorrect_time":                    "src.accuracy_testing.scripts.incorrect_time",
+    "validate_ftbdm": "src.accuracy_testing.scripts.validate_ftbdm",
+    "validate_ftsdm": "src.accuracy_testing.scripts.validate_ftsdm",
+    "incorrect_net_amount_validation": "src.accuracy_testing.scripts.incorrect_net_amount_validation",
+    "non_zero_net_quantity": "src.accuracy_testing.scripts.non_zero_net_quantity",
+    "non_zero_net_amount": "src.accuracy_testing.scripts.non_zero_net_amount",
+    "incorrect_time": "src.accuracy_testing.scripts.incorrect_time",
     # Accuracy Testing — utility scripts
-    "run_all_validations":               "src.accuracy_testing.scripts.run_all_validations",
-    "sql_extract_generator":             "src.accuracy_testing.scripts.sql_extract_generator",
-    "accuracy_template_generator":       "src.accuracy_testing.scripts.accuracy_template_generator",
-    "collate_csv_extracts":              "src.accuracy_testing.scripts.collate_csv_extracts",
-    "data_push":                         "src.accuracy_testing.scripts.data_push",
+    "run_all_validations": "src.accuracy_testing.scripts.run_all_validations",
+    "sql_extract_generator": "src.accuracy_testing.scripts.sql_extract_generator",
+    "accuracy_template_generator": "src.accuracy_testing.scripts.accuracy_template_generator",
+    "collate_csv_extracts": "src.accuracy_testing.scripts.collate_csv_extracts",
+    "data_push": "src.accuracy_testing.scripts.data_push",
     # Replay
-    "replay_phase2":                     "src.replay.phase_2_processor",
-    "replay_phase2_final":               "src.replay.phase_2_final_lookup",
-    "replay_phase3":                     "src.replay.phase_3_processor",
-    "replay_phase3_final":               "src.replay.phase_3_final_lookup",
-    "replay_merge_inconsistent":         "src.replay.merge_inconsistent_ids",
+    "replay_phase2": "src.replay.phase_2_processor",
+    "replay_phase2_final": "src.replay.phase_2_final_lookup",
+    "replay_phase3": "src.replay.phase_3_processor",
+    "replay_phase3_final": "src.replay.phase_3_final_lookup",
+    "replay_merge_inconsistent": "src.replay.merge_inconsistent_ids",
     # FIRDS
-    "firds_refresh":                     "src.firds.scripts.refresh_cache",
-    "firds_check":                       "src.firds.scripts.check_reportability",
-    "firds_backfill":                    "src.firds.scripts.backfill",
+    "firds_refresh": "src.firds.scripts.refresh_cache",
+    "firds_check": "src.firds.scripts.check_reportability",
+    "firds_backfill": "src.firds.scripts.backfill",
     # GLEIF
-    "gleif_refresh":                     "src.gleif.scripts.refresh_cache",
-    "gleif_check":                       "src.gleif.scripts.check_lei",
-    "gleif_backfill":                    "src.gleif.scripts.backfill",
+    "gleif_refresh": "src.gleif.scripts.refresh_cache",
+    "gleif_check": "src.gleif.scripts.check_lei",
+    "gleif_backfill": "src.gleif.scripts.backfill",
     # FCA Register
-    "fca_check":                         "src.fca.scripts.check_firm",
+    "fca_check": "src.fca.scripts.check_firm",
     # Utilities
-    "xlsx_csv_converter":                "src.utils.xlsx_csv_converter",
-    "xml_csv_converter":                 "src.utils.xml_csv_converter",
-    "setup_directories":                 "src.utils.setup_directories",
+    "xlsx_csv_converter": "src.utils.xlsx_csv_converter",
+    "xml_csv_converter": "src.utils.xml_csv_converter",
+    "setup_directories": "src.utils.setup_directories",
 }
 
 #: Script names accepted by the ``/api/accuracy/run`` endpoint.
@@ -341,9 +357,7 @@ class ScriptRunnerService:
                     }
             tmp_path = _write_temp_yaml(tpl_config)
             argv = ["--config", tmp_path, "--log-level", req.log_level]
-            logger.debug(
-                "Wrote template generator config to %s.", tmp_path
-            )
+            logger.debug("Wrote template generator config to %s.", tmp_path)
             return module_path, argv, tpl_config
 
         # collate_csv_extracts expects a utility-specific YAML shape with
@@ -388,7 +402,9 @@ class ScriptRunnerService:
                 )
 
             incident_codes = batch.incident_codes or DEFAULT_INCIDENT_CODES
-            normalised_output_dir = _normalise_extracts_output_dir(batch.output_directory)
+            normalised_output_dir = _normalise_extracts_output_dir(
+                batch.output_directory
+            )
             extract_config: dict = {
                 "mode": "batch",
                 "testing_period": {
@@ -398,7 +414,8 @@ class ScriptRunnerService:
                 "batch": {
                     "incidents": incident_codes,
                     "paths": {
-                        "template_dir": batch.template_directory or batch.input_directory,
+                        "template_dir": batch.template_directory
+                        or batch.input_directory,
                         "output_dir": normalised_output_dir,
                         "log_output": batch.log_output,
                     },
@@ -433,7 +450,8 @@ class ScriptRunnerService:
             # within the target (template) directory.
             if req.script_name == "data_push" and req.batch_config.output_directory:
                 batch_paths["backup_dir"] = os.path.join(
-                    req.batch_config.output_directory, "backup",
+                    req.batch_config.output_directory,
+                    "backup",
                 )
             config["batch"] = {"paths": batch_paths}
         elif req.mode == "single" and req.single_config is not None:
@@ -485,7 +503,8 @@ class ScriptRunnerService:
             script_module = _SCRIPT_MODULES.get(script_name)
             if script_module is None:
                 logger.warning(
-                    "Unknown validation type '%s' in RunAllRequest; skipping.", script_name
+                    "Unknown validation type '%s' in RunAllRequest; skipping.",
+                    script_name,
                 )
                 continue
 
@@ -578,9 +597,10 @@ class ScriptRunnerService:
             }
 
         elif isinstance(req, ReplayPhase2Request):
+            replay_input = req.kaizen_input or req.input_file
             config = {
                 "paths": {
-                    "replay_input": req.kaizen_input,
+                    "replay_input": replay_input,
                     "incident_files": req.incident_files,
                     "replay_output": req.output_file,
                     "log_output": req.log_output,
@@ -723,10 +743,14 @@ class ScriptRunnerService:
             # config/local/firds_config.yaml (which may contain host-specific paths).
             tmp_path = _write_temp_yaml(config)
             argv = [
-                "--type", refresh_type,
-                "--db", db_path,
-                "--config", tmp_path,
-                "--log-level", req.log_level,
+                "--type",
+                refresh_type,
+                "--db",
+                db_path,
+                "--config",
+                tmp_path,
+                "--log-level",
+                req.log_level,
             ]
             if req.publication_date:
                 argv.extend(["--date", req.publication_date])
@@ -767,11 +791,16 @@ class ScriptRunnerService:
             }
             tmp_path = _write_temp_yaml(config)
             argv = [
-                "--input", req.input_file,
-                "--output", req.output_file,
-                "--db", db_path,
-                "--config", tmp_path,
-                "--log-level", req.log_level,
+                "--input",
+                req.input_file,
+                "--output",
+                req.output_file,
+                "--db",
+                db_path,
+                "--config",
+                tmp_path,
+                "--log-level",
+                req.log_level,
             ]
             if req.format != "auto":
                 argv.extend(["--format", req.format])
@@ -806,7 +835,9 @@ class ScriptRunnerService:
 
         if isinstance(req, GleifRefreshRequest):
             # The CLI only accepts "full"; treat "auto" as "full".
-            refresh_type = req.refresh_type if req.refresh_type in ("full", "delta") else "full"
+            refresh_type = (
+                req.refresh_type if req.refresh_type in ("full", "delta") else "full"
+            )
             if req.db_path:
                 db_path = req.db_path
             config = {
@@ -819,10 +850,14 @@ class ScriptRunnerService:
             # Pass --config with a YAML to suppress auto-discovery of local config.
             tmp_path = _write_temp_yaml(config)
             argv = [
-                "--type", refresh_type,
-                "--db", db_path,
-                "--config", tmp_path,
-                "--log-level", req.log_level,
+                "--type",
+                refresh_type,
+                "--db",
+                db_path,
+                "--config",
+                tmp_path,
+                "--log-level",
+                req.log_level,
             ]
             if req.delta_type and req.delta_type != "24h":
                 argv.extend(["--delta-type", req.delta_type])
@@ -866,11 +901,16 @@ class ScriptRunnerService:
             }
             tmp_path = _write_temp_yaml(config)
             argv = [
-                "--input", req.input_file,
-                "--output", req.output_file,
-                "--db", db_path,
-                "--config", tmp_path,
-                "--log-level", req.log_level,
+                "--input",
+                req.input_file,
+                "--output",
+                req.output_file,
+                "--db",
+                db_path,
+                "--config",
+                tmp_path,
+                "--log-level",
+                req.log_level,
             ]
             if req.format != "auto":
                 argv.extend(["--format", req.format])
@@ -1018,9 +1058,7 @@ class ScriptRunnerService:
             if req.output_file:
                 argv.extend(["--output-dir", req.output_file])
 
-        logger.debug(
-            "Built utilities argv %s for script %s.", argv, script_name
-        )
+        logger.debug("Built utilities argv %s for script %s.", argv, script_name)
         return module_path, argv, config
 
     def build_run_incidents_argv(
@@ -1078,9 +1116,13 @@ class ScriptRunnerService:
             # Only write template column overrides when explicitly supplied — the
             # scripts fall back to their own defaults when the keys are absent.
             if incident.template_id_column is not None:
-                config["single"]["paths"]["template_id_column"] = incident.template_id_column
+                config["single"]["paths"][
+                    "template_id_column"
+                ] = incident.template_id_column
             if incident.template_type_column is not None:
-                config["single"]["paths"]["template_type_column"] = incident.template_type_column
+                config["single"]["paths"][
+                    "template_type_column"
+                ] = incident.template_type_column
 
             tmp_path = _write_temp_yaml(config)
             argv = ["--config", tmp_path, "--log-level", req.log_level]

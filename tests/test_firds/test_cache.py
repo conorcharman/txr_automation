@@ -12,7 +12,7 @@ Tests cover:
 - truncate_instruments
 """
 
-from datetime import date, timezone, datetime
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 import pytest
@@ -127,12 +127,16 @@ class TestUpsertInstrument:
 
 class TestBulkUpsert:
     def test_bulk_upsert_count(self, db):
-        records = [_make_record(isin=f"GB{str(i).zfill(10)}", mic="XLON") for i in range(10)]
+        records = [
+            _make_record(isin=f"GB{str(i).zfill(10)}", mic="XLON") for i in range(10)
+        ]
         count = db.bulk_upsert(records)
         assert count == 10
 
     def test_bulk_upsert_rows_present(self, db):
-        records = [_make_record(isin=f"GB{str(i).zfill(10)}", mic="XLON") for i in range(3)]
+        records = [
+            _make_record(isin=f"GB{str(i).zfill(10)}", mic="XLON") for i in range(3)
+        ]
         db.bulk_upsert(records)
         for i in range(3):
             assert db.get_by_isin_mic(f"GB{str(i).zfill(10)}", "XLON") is not None
@@ -269,16 +273,16 @@ class TestTruncate:
 
 class TestClearFullRefreshSyncLog:
     def test_clears_full_and_cancel_entries(self, db):
-        db.log_sync("FULL",   "2026-03-07", "FULINS_C_20260307_01of01.zip", 100)
-        db.log_sync("CANCEL", "2026-03-07", "FULCAN_C_20260307_01of01.zip",  10)
-        db.log_sync("DELTA",  "2026-03-10", "DLTINS_20260310_01of01.zip",    50)
+        db.log_sync("FULL", "2026-03-07", "FULINS_C_20260307_01of01.zip", 100)
+        db.log_sync("CANCEL", "2026-03-07", "FULCAN_C_20260307_01of01.zip", 10)
+        db.log_sync("DELTA", "2026-03-10", "DLTINS_20260310_01of01.zip", 50)
         db.clear_full_refresh_sync_log()
         assert db.is_file_processed("FULINS_C_20260307_01of01.zip") is False
         assert db.is_file_processed("FULCAN_C_20260307_01of01.zip") is False
 
     def test_delta_entries_are_preserved(self, db):
-        db.log_sync("FULL",  "2026-03-07", "FULINS_C_20260307_01of01.zip", 100)
-        db.log_sync("DELTA", "2026-03-10", "DLTINS_20260310_01of01.zip",    50)
+        db.log_sync("FULL", "2026-03-07", "FULINS_C_20260307_01of01.zip", 100)
+        db.log_sync("DELTA", "2026-03-10", "DLTINS_20260310_01of01.zip", 50)
         db.clear_full_refresh_sync_log()
         assert db.is_file_processed("DLTINS_20260310_01of01.zip") is True
 

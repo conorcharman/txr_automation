@@ -88,9 +88,7 @@ class XMLToCSVConverter:
     """
 
     # Characters illegal in XML 1.0 (excluding \t, \n, \r which are valid).
-    _INVALID_XML_CHARS_RE: re.Pattern = re.compile(
-        r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]"
-    )
+    _INVALID_XML_CHARS_RE: re.Pattern = re.compile(r"[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]")
     # Bare & not already part of a character/entity reference.
     _BARE_AMP_RE: re.Pattern = re.compile(
         r"&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]+|#x[0-9a-fA-F]+);)"
@@ -101,9 +99,7 @@ class XMLToCSVConverter:
         "http://www.w3.org/2001/XMLSchema",
         "http://www.w3.org/XML/Schema",
     )
-    _XSI_SCHEMA_LOCATION = (
-        "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"
-    )
+    _XSI_SCHEMA_LOCATION = "{http://www.w3.org/2001/XMLSchema-instance}schemaLocation"
     _XSI_NO_NS_SCHEMA_LOCATION = (
         "{http://www.w3.org/2001/XMLSchema-instance}noNamespaceSchemaLocation"
     )
@@ -115,9 +111,7 @@ class XMLToCSVConverter:
     # Resilient XML parsing
     # ------------------------------------------------------------------
 
-    def _parse_xml_resilient(
-        self, xml_path: Path
-    ) -> Tuple[ET.Element, str]:
+    def _parse_xml_resilient(self, xml_path: Path) -> Tuple[ET.Element, str]:
         """Parse an XML file using a cascade of recovery strategies.
 
         Tries four strategies in order, stopping at the first success:
@@ -170,9 +164,7 @@ class XMLToCSVConverter:
                 text = raw_bytes.decode(enc)
                 # Remove the XML declaration if it conflicts with the
                 # encoding we just decoded to (avoids double-header issues).
-                text = re.sub(
-                    r"<\?xml[^?]*\?>", "", text, count=1
-                ).lstrip()
+                text = re.sub(r"<\?xml[^?]*\?>", "", text, count=1).lstrip()
                 return ET.fromstring(text), f"BOM-decoded ({enc})"
             except ET.ParseError as err2:
                 self.logger.warning(f"BOM-decode strategy failed ({err2}).")
@@ -292,9 +284,7 @@ class XMLToCSVConverter:
                         names.append(name)
 
             if names:
-                self.logger.info(
-                    f"Fetched {len(names)} column names from schema."
-                )
+                self.logger.info(f"Fetched {len(names)} column names from schema.")
                 return names
 
             self.logger.warning("Schema fetched but contained no element declarations.")
@@ -446,14 +436,13 @@ class XMLToCSVConverter:
                     else:
                         child_flat = self.flatten_element(child_elem, col_name)
                         # Use first value column as representative
-                        all_values.append(
-                            next(iter(child_flat.values()), "")
-                        )
+                        all_values.append(next(iter(child_flat.values()), ""))
                 result[col_name] = "|".join(all_values)
 
         # Resolve attribute vs child element name collisions
         collision_keys = [
-            k for k in list(result.keys())
+            k
+            for k in list(result.keys())
             if k in result and not k.startswith(prefix + "_") and k in child_groups
         ]
         for key in collision_keys:
@@ -622,9 +611,7 @@ class XMLToCSVConverter:
                 stats.successful += 1
             else:
                 stats.failed += 1
-                self.logger.error(
-                    f"Failed to convert {xml_path.name}: {result.error}"
-                )
+                self.logger.error(f"Failed to convert {xml_path.name}: {result.error}")
 
         return stats
 
@@ -632,6 +619,7 @@ class XMLToCSVConverter:
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def parse_arguments(argv: Optional[List[str]] = None) -> argparse.Namespace:
     """Build and parse the command-line argument parser.
@@ -739,7 +727,9 @@ def main(argv: Optional[List[str]] = None) -> None:
         stats.print_summary()
         sys.exit(0 if stats.failed == 0 else 1)
 
-    print(f"ERROR: Input is neither a file nor a directory: {input_path}", file=sys.stderr)
+    print(
+        f"ERROR: Input is neither a file nor a directory: {input_path}", file=sys.stderr
+    )
     sys.exit(1)
 
 

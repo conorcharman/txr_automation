@@ -124,9 +124,7 @@ class ReconciliationUpdate(_CamelModel):
         if v is not None:
             invalid = set(v) - RECONCILIATION_SCRIPTS
             if invalid:
-                raise ValueError(
-                    f"Invalid reconciliation scripts: {sorted(invalid)}."
-                )
+                raise ValueError(f"Invalid reconciliation scripts: {sorted(invalid)}.")
         return v
 
     @field_validator("rec_period_days", "lookback_days")

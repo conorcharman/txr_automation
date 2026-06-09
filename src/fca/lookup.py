@@ -324,7 +324,9 @@ class FcaFirmLookup:
         try:
             results = self._client.search_firms(name)
         except FcaApiError:
-            logger.warning("FCA name search failed for %r — returning empty list.", name)
+            logger.warning(
+                "FCA name search failed for %r — returning empty list.", name
+            )
             return []
 
         return [_parse_firm_record_from_search(r) for r in results]

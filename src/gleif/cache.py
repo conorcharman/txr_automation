@@ -205,7 +205,9 @@ SELECT MAX(synced_at) FROM gleif_sync_log WHERE status = 'SUCCESS';
 
 _TRUNCATE_LEI_RECORDS = "DELETE FROM lei_records;"
 _TRUNCATE_ISIN_MAP = "DELETE FROM lei_isin_map;"
-_CLEAR_FULL_SYNC_LOG = "DELETE FROM gleif_sync_log WHERE sync_type IN ('FULL', 'ISIN_MAP');"
+_CLEAR_FULL_SYNC_LOG = (
+    "DELETE FROM gleif_sync_log WHERE sync_type IN ('FULL', 'ISIN_MAP');"
+)
 
 
 class GleifCacheManager:
@@ -482,9 +484,7 @@ class GleifCacheManager:
             ``True`` if ``file_name`` is in the sync log with ``SUCCESS`` status.
         """
         with self._connect() as conn:
-            row = conn.execute(
-                _SELECT_SYNC_LOG, {"file_name": file_name}
-            ).fetchone()
+            row = conn.execute(_SELECT_SYNC_LOG, {"file_name": file_name}).fetchone()
         return bool(row and row[0] > 0)
 
     def log_sync(

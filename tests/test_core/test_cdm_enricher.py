@@ -46,7 +46,9 @@ def _make_firds_cache(
     """Return a mock FirdsCacheManager returning canned ISIN data."""
     mock = MagicMock()
     mock.get_by_isin_mic.return_value = row
-    mock.get_by_isin.return_value = rows if rows is not None else ([] if row is None else [row])
+    mock.get_by_isin.return_value = (
+        rows if rows is not None else ([] if row is None else [row])
+    )
     return mock
 
 
@@ -54,9 +56,12 @@ class TestEnrichTransactionGleif:
     def test_lei_buyer_enriched(self) -> None:
         gleif = _make_gleif_lookup(VALID_LEI)
         result = enrich_transaction(
-            buyer_id=VALID_LEI, buyer_id_type="LEI",
-            seller_id=None, seller_id_type=None,
-            isin=None, gleif_lookup=gleif,
+            buyer_id=VALID_LEI,
+            buyer_id_type="LEI",
+            seller_id=None,
+            seller_id_type=None,
+            isin=None,
+            gleif_lookup=gleif,
         )
         assert result.buyer is not None
         assert result.buyer.found is True
@@ -67,19 +72,27 @@ class TestEnrichTransactionGleif:
     def test_lei_seller_enriched(self) -> None:
         gleif = _make_gleif_lookup(VALID_LEI)
         result = enrich_transaction(
-            buyer_id=None, buyer_id_type=None,
-            seller_id=VALID_LEI, seller_id_type="LEI",
-            isin=None, gleif_lookup=gleif,
+            buyer_id=None,
+            buyer_id_type=None,
+            seller_id=VALID_LEI,
+            seller_id_type="LEI",
+            isin=None,
+            gleif_lookup=gleif,
         )
         assert result.seller is not None
         assert result.seller.found is True
 
     def test_not_in_gleif_sets_found_false(self) -> None:
-        gleif = _make_gleif_lookup(VALID_LEI, is_valid=False, reason="NOT_IN_GLEIF", legal_name="")
+        gleif = _make_gleif_lookup(
+            VALID_LEI, is_valid=False, reason="NOT_IN_GLEIF", legal_name=""
+        )
         result = enrich_transaction(
-            buyer_id=VALID_LEI, buyer_id_type="LEI",
-            seller_id=None, seller_id_type=None,
-            isin=None, gleif_lookup=gleif,
+            buyer_id=VALID_LEI,
+            buyer_id_type="LEI",
+            seller_id=None,
+            seller_id_type=None,
+            isin=None,
+            gleif_lookup=gleif,
         )
         assert result.buyer is not None
         assert result.buyer.found is False
@@ -89,9 +102,12 @@ class TestEnrichTransactionGleif:
     def test_concat_id_type_skips_gleif(self) -> None:
         gleif = _make_gleif_lookup(VALID_LEI)
         result = enrich_transaction(
-            buyer_id="GBNJSMITH#1980-01-01#M", buyer_id_type="CONCAT",
-            seller_id=None, seller_id_type=None,
-            isin=None, gleif_lookup=gleif,
+            buyer_id="GBNJSMITH#1980-01-01#M",
+            buyer_id_type="CONCAT",
+            seller_id=None,
+            seller_id_type=None,
+            isin=None,
+            gleif_lookup=gleif,
         )
         assert result.buyer is None
         gleif.lookup_lei.assert_not_called()
@@ -99,17 +115,23 @@ class TestEnrichTransactionGleif:
     def test_nidn_id_type_skips_gleif(self) -> None:
         gleif = _make_gleif_lookup(VALID_LEI)
         result = enrich_transaction(
-            buyer_id="GB1234567", buyer_id_type="NIDN",
-            seller_id=None, seller_id_type=None,
-            isin=None, gleif_lookup=gleif,
+            buyer_id="GB1234567",
+            buyer_id_type="NIDN",
+            seller_id=None,
+            seller_id_type=None,
+            isin=None,
+            gleif_lookup=gleif,
         )
         assert result.buyer is None
 
     def test_none_gleif_lookup_returns_none_enrichment(self) -> None:
         result = enrich_transaction(
-            buyer_id=VALID_LEI, buyer_id_type="LEI",
-            seller_id=VALID_LEI, seller_id_type="LEI",
-            isin=None, gleif_lookup=None,
+            buyer_id=VALID_LEI,
+            buyer_id_type="LEI",
+            seller_id=VALID_LEI,
+            seller_id_type="LEI",
+            isin=None,
+            gleif_lookup=None,
         )
         assert result.buyer is None
         assert result.seller is None
@@ -118,9 +140,12 @@ class TestEnrichTransactionGleif:
         gleif = MagicMock()
         gleif.lookup_lei.side_effect = RuntimeError("cache error")
         result = enrich_transaction(
-            buyer_id=VALID_LEI, buyer_id_type="LEI",
-            seller_id=None, seller_id_type=None,
-            isin=None, gleif_lookup=gleif,
+            buyer_id=VALID_LEI,
+            buyer_id_type="LEI",
+            seller_id=None,
+            seller_id_type=None,
+            isin=None,
+            gleif_lookup=gleif,
         )
         assert result.buyer is not None
         assert result.buyer.found is False
@@ -129,23 +154,33 @@ class TestEnrichTransactionGleif:
     def test_lei_id_type_case_insensitive(self) -> None:
         gleif = _make_gleif_lookup(VALID_LEI)
         result = enrich_transaction(
-            buyer_id=VALID_LEI, buyer_id_type="lei",
-            seller_id=None, seller_id_type=None,
-            isin=None, gleif_lookup=gleif,
+            buyer_id=VALID_LEI,
+            buyer_id_type="lei",
+            seller_id=None,
+            seller_id_type=None,
+            isin=None,
+            gleif_lookup=gleif,
         )
         assert result.buyer is not None
 
 
 class TestEnrichTransactionFirds:
     def test_isin_enriched_from_cache(self) -> None:
-        firds = _make_firds_cache(row={
-            "isin": VALID_ISIN, "full_name": "VODAFONE GROUP PLC ORD",
-            "cfi_code": "ESVUFR", "mic": "XLON",
-        })
+        firds = _make_firds_cache(
+            row={
+                "isin": VALID_ISIN,
+                "full_name": "VODAFONE GROUP PLC ORD",
+                "cfi_code": "ESVUFR",
+                "mic": "XLON",
+            }
+        )
         result = enrich_transaction(
-            buyer_id=None, buyer_id_type=None,
-            seller_id=None, seller_id_type=None,
-            isin=VALID_ISIN, firds_cache=firds,
+            buyer_id=None,
+            buyer_id_type=None,
+            seller_id=None,
+            seller_id_type=None,
+            isin=VALID_ISIN,
+            firds_cache=firds,
         )
         assert result.instrument is not None
         assert result.instrument.found is True
@@ -156,22 +191,33 @@ class TestEnrichTransactionFirds:
     def test_isin_not_in_firds(self) -> None:
         firds = _make_firds_cache(rows=[])
         result = enrich_transaction(
-            buyer_id=None, buyer_id_type=None,
-            seller_id=None, seller_id_type=None,
-            isin=VALID_ISIN, firds_cache=firds,
+            buyer_id=None,
+            buyer_id_type=None,
+            seller_id=None,
+            seller_id_type=None,
+            isin=VALID_ISIN,
+            firds_cache=firds,
         )
         assert result.instrument is not None
         assert result.instrument.found is False
 
     def test_venue_mic_prefers_isin_mic_lookup(self) -> None:
-        firds = _make_firds_cache(row={
-            "isin": VALID_ISIN, "full_name": "NAME A",
-            "cfi_code": "ESVUFR", "mic": "XLON",
-        })
+        firds = _make_firds_cache(
+            row={
+                "isin": VALID_ISIN,
+                "full_name": "NAME A",
+                "cfi_code": "ESVUFR",
+                "mic": "XLON",
+            }
+        )
         result = enrich_transaction(
-            buyer_id=None, buyer_id_type=None,
-            seller_id=None, seller_id_type=None,
-            isin=VALID_ISIN, venue="XLON", firds_cache=firds,
+            buyer_id=None,
+            buyer_id_type=None,
+            seller_id=None,
+            seller_id_type=None,
+            isin=VALID_ISIN,
+            venue="XLON",
+            firds_cache=firds,
         )
         firds.get_by_isin_mic.assert_called_once_with(VALID_ISIN, "XLON")
         assert result.instrument is not None
@@ -179,18 +225,24 @@ class TestEnrichTransactionFirds:
 
     def test_none_firds_cache_returns_none_instrument(self) -> None:
         result = enrich_transaction(
-            buyer_id=None, buyer_id_type=None,
-            seller_id=None, seller_id_type=None,
-            isin=VALID_ISIN, firds_cache=None,
+            buyer_id=None,
+            buyer_id_type=None,
+            seller_id=None,
+            seller_id_type=None,
+            isin=VALID_ISIN,
+            firds_cache=None,
         )
         assert result.instrument is None
 
     def test_no_isin_returns_none_instrument(self) -> None:
         firds = _make_firds_cache(rows=[])
         result = enrich_transaction(
-            buyer_id=None, buyer_id_type=None,
-            seller_id=None, seller_id_type=None,
-            isin=None, firds_cache=firds,
+            buyer_id=None,
+            buyer_id_type=None,
+            seller_id=None,
+            seller_id_type=None,
+            isin=None,
+            firds_cache=firds,
         )
         assert result.instrument is None
 
@@ -199,9 +251,12 @@ class TestEnrichTransactionFirds:
         firds.get_by_isin_mic.side_effect = RuntimeError("db error")
         firds.get_by_isin.side_effect = RuntimeError("db error")
         result = enrich_transaction(
-            buyer_id=None, buyer_id_type=None,
-            seller_id=None, seller_id_type=None,
-            isin=VALID_ISIN, firds_cache=firds,
+            buyer_id=None,
+            buyer_id_type=None,
+            seller_id=None,
+            seller_id_type=None,
+            isin=VALID_ISIN,
+            firds_cache=firds,
         )
         assert result.instrument is not None
         assert result.instrument.found is False
@@ -216,14 +271,22 @@ class TestEnrichmentResult:
 
     def test_both_gleif_and_firds_combined(self) -> None:
         gleif = _make_gleif_lookup(VALID_LEI)
-        firds = _make_firds_cache(row={
-            "isin": VALID_ISIN, "full_name": "INSTRUMENT A",
-            "cfi_code": "ESVUFR", "mic": "XLON",
-        })
+        firds = _make_firds_cache(
+            row={
+                "isin": VALID_ISIN,
+                "full_name": "INSTRUMENT A",
+                "cfi_code": "ESVUFR",
+                "mic": "XLON",
+            }
+        )
         result = enrich_transaction(
-            buyer_id=VALID_LEI, buyer_id_type="LEI",
-            seller_id=VALID_LEI, seller_id_type="LEI",
-            isin=VALID_ISIN, gleif_lookup=gleif, firds_cache=firds,
+            buyer_id=VALID_LEI,
+            buyer_id_type="LEI",
+            seller_id=VALID_LEI,
+            seller_id_type="LEI",
+            isin=VALID_ISIN,
+            gleif_lookup=gleif,
+            firds_cache=firds,
         )
         assert result.buyer is not None
         assert result.seller is not None

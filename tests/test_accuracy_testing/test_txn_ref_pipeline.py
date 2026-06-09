@@ -5,6 +5,7 @@ accuracy testing pipeline orchestrator.
 All external dependencies (SQLExtractGenerator, DTFRunner, subprocess)
 are mocked so no files are written or processes launched.
 """
+
 from __future__ import annotations
 
 import csv
@@ -22,10 +23,10 @@ from src.accuracy_testing.core.txn_ref_pipeline import (
     get_sql_template_path,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture()
 def refs_csv(tmp_path: Path) -> Path:
@@ -76,6 +77,7 @@ def _mock_generate_extracts(**kwargs):
 # Tests: template mapping
 # ---------------------------------------------------------------------------
 
+
 class TestGetSqlTemplatePath:
     def test_buyer_returns_path(self) -> None:
         p = get_sql_template_path("buyer")
@@ -99,6 +101,7 @@ class TestGetSqlTemplatePath:
 # ---------------------------------------------------------------------------
 # Tests: GENERATE step
 # ---------------------------------------------------------------------------
+
 
 class TestGenerateStep:
     def test_generate_reads_refs_and_produces_files(
@@ -146,6 +149,7 @@ class TestGenerateStep:
 # Tests: EXECUTE_DTF step
 # ---------------------------------------------------------------------------
 
+
 class TestExecuteDtfStep:
     def test_manual_mode_returns_waiting(
         self, config: TransactionRefPipelineConfig
@@ -161,19 +165,17 @@ class TestExecuteDtfStep:
         assert dtf_step.step == PipelineStepName.EXECUTE_DTF
         assert dtf_step.status == StepStatus.WAITING
 
-    def test_auto_mode_success(
-        self, config: TransactionRefPipelineConfig
-    ) -> None:
+    def test_auto_mode_success(self, config: TransactionRefPipelineConfig) -> None:
         config.auto_execute_dtf = True
-        with patch(_GENERATOR_CLS, _mock_generate_extracts()), \
-             patch(_DTF_EXECUTE, return_value=True), \
-             patch(_DTF_WAIT, return_value=True), \
-             patch(
-                 "src.accuracy_testing.core.txn_ref_pipeline."
-                 "TransactionRefPipelineExecutor._infer_csv_from_dtf",
-                 return_value=Path("out/dtf/csv/buyer.csv"),
-             ), \
-             patch(_SUBPROCESS_RUN, return_value=MagicMock(returncode=0, stdout="", stderr="")):
+        with patch(_GENERATOR_CLS, _mock_generate_extracts()), patch(
+            _DTF_EXECUTE, return_value=True
+        ), patch(_DTF_WAIT, return_value=True), patch(
+            "src.accuracy_testing.core.txn_ref_pipeline."
+            "TransactionRefPipelineExecutor._infer_csv_from_dtf",
+            return_value=Path("out/dtf/csv/buyer.csv"),
+        ), patch(
+            _SUBPROCESS_RUN, return_value=MagicMock(returncode=0, stdout="", stderr="")
+        ):
             executor = TransactionRefPipelineExecutor()
             result = executor.execute(config)
 
@@ -184,8 +186,9 @@ class TestExecuteDtfStep:
         self, config: TransactionRefPipelineConfig
     ) -> None:
         config.auto_execute_dtf = True
-        with patch(_GENERATOR_CLS, _mock_generate_extracts()), \
-             patch(_DTF_EXECUTE, return_value=False):
+        with patch(_GENERATOR_CLS, _mock_generate_extracts()), patch(
+            _DTF_EXECUTE, return_value=False
+        ):
             executor = TransactionRefPipelineExecutor()
             result = executor.execute(config)
 
@@ -198,20 +201,21 @@ class TestExecuteDtfStep:
 # Tests: COLLATE step
 # ---------------------------------------------------------------------------
 
+
 class TestCollateStep:
     def test_single_batch_skips_collation(
         self, config: TransactionRefPipelineConfig
     ) -> None:
         config.auto_execute_dtf = True
-        with patch(_GENERATOR_CLS, _mock_generate_extracts()), \
-             patch(_DTF_EXECUTE, return_value=True), \
-             patch(_DTF_WAIT, return_value=True), \
-             patch(
-                 "src.accuracy_testing.core.txn_ref_pipeline."
-                 "TransactionRefPipelineExecutor._infer_csv_from_dtf",
-                 return_value=Path("out/dtf/csv/buyer.csv"),
-             ), \
-             patch(_SUBPROCESS_RUN, return_value=MagicMock(returncode=0, stdout="", stderr="")):
+        with patch(_GENERATOR_CLS, _mock_generate_extracts()), patch(
+            _DTF_EXECUTE, return_value=True
+        ), patch(_DTF_WAIT, return_value=True), patch(
+            "src.accuracy_testing.core.txn_ref_pipeline."
+            "TransactionRefPipelineExecutor._infer_csv_from_dtf",
+            return_value=Path("out/dtf/csv/buyer.csv"),
+        ), patch(
+            _SUBPROCESS_RUN, return_value=MagicMock(returncode=0, stdout="", stderr="")
+        ):
             executor = TransactionRefPipelineExecutor()
             result = executor.execute(config)
 
@@ -225,21 +229,22 @@ class TestCollateStep:
 # Tests: VALIDATE step
 # ---------------------------------------------------------------------------
 
+
 class TestValidateStep:
     def test_validate_runs_subprocess(
         self, config: TransactionRefPipelineConfig
     ) -> None:
         config.auto_execute_dtf = True
         mock_proc = MagicMock(returncode=0, stdout="OK\n", stderr="")
-        with patch(_GENERATOR_CLS, _mock_generate_extracts()), \
-             patch(_DTF_EXECUTE, return_value=True), \
-             patch(_DTF_WAIT, return_value=True), \
-             patch(
-                 "src.accuracy_testing.core.txn_ref_pipeline."
-                 "TransactionRefPipelineExecutor._infer_csv_from_dtf",
-                 return_value=Path("out/dtf/csv/buyer.csv"),
-             ), \
-             patch(_SUBPROCESS_RUN, return_value=mock_proc) as mock_run:
+        with patch(_GENERATOR_CLS, _mock_generate_extracts()), patch(
+            _DTF_EXECUTE, return_value=True
+        ), patch(_DTF_WAIT, return_value=True), patch(
+            "src.accuracy_testing.core.txn_ref_pipeline."
+            "TransactionRefPipelineExecutor._infer_csv_from_dtf",
+            return_value=Path("out/dtf/csv/buyer.csv"),
+        ), patch(
+            _SUBPROCESS_RUN, return_value=mock_proc
+        ) as mock_run:
             executor = TransactionRefPipelineExecutor()
             result = executor.execute(config)
 
@@ -255,15 +260,15 @@ class TestValidateStep:
     ) -> None:
         config.auto_execute_dtf = True
         config.script_module_path = ""
-        with patch(_GENERATOR_CLS, _mock_generate_extracts()), \
-             patch(_DTF_EXECUTE, return_value=True), \
-             patch(_DTF_WAIT, return_value=True), \
-             patch(
-                 "src.accuracy_testing.core.txn_ref_pipeline."
-                 "TransactionRefPipelineExecutor._infer_csv_from_dtf",
-                 return_value=Path("out/dtf/csv/buyer.csv"),
-             ), \
-             patch(_SUBPROCESS_RUN, return_value=MagicMock(returncode=0, stdout="", stderr="")):
+        with patch(_GENERATOR_CLS, _mock_generate_extracts()), patch(
+            _DTF_EXECUTE, return_value=True
+        ), patch(_DTF_WAIT, return_value=True), patch(
+            "src.accuracy_testing.core.txn_ref_pipeline."
+            "TransactionRefPipelineExecutor._infer_csv_from_dtf",
+            return_value=Path("out/dtf/csv/buyer.csv"),
+        ), patch(
+            _SUBPROCESS_RUN, return_value=MagicMock(returncode=0, stdout="", stderr="")
+        ):
             executor = TransactionRefPipelineExecutor()
             result = executor.execute(config)
 
@@ -277,21 +282,22 @@ class TestValidateStep:
 # Tests: PUSH step
 # ---------------------------------------------------------------------------
 
+
 class TestPushStep:
     def test_push_skipped_when_no_target(
         self, config: TransactionRefPipelineConfig
     ) -> None:
         config.auto_execute_dtf = True
         config.push_target_file = ""
-        with patch(_GENERATOR_CLS, _mock_generate_extracts()), \
-             patch(_DTF_EXECUTE, return_value=True), \
-             patch(_DTF_WAIT, return_value=True), \
-             patch(
-                 "src.accuracy_testing.core.txn_ref_pipeline."
-                 "TransactionRefPipelineExecutor._infer_csv_from_dtf",
-                 return_value=Path("out/dtf/csv/buyer.csv"),
-             ), \
-             patch(_SUBPROCESS_RUN, return_value=MagicMock(returncode=0, stdout="", stderr="")):
+        with patch(_GENERATOR_CLS, _mock_generate_extracts()), patch(
+            _DTF_EXECUTE, return_value=True
+        ), patch(_DTF_WAIT, return_value=True), patch(
+            "src.accuracy_testing.core.txn_ref_pipeline."
+            "TransactionRefPipelineExecutor._infer_csv_from_dtf",
+            return_value=Path("out/dtf/csv/buyer.csv"),
+        ), patch(
+            _SUBPROCESS_RUN, return_value=MagicMock(returncode=0, stdout="", stderr="")
+        ):
             executor = TransactionRefPipelineExecutor()
             result = executor.execute(config)
 
@@ -304,6 +310,7 @@ class TestPushStep:
 # ---------------------------------------------------------------------------
 # Tests: resume
 # ---------------------------------------------------------------------------
+
 
 class TestResume:
     def test_resume_continues_from_waiting(
@@ -332,10 +339,9 @@ class TestResume:
 # Tests: callbacks
 # ---------------------------------------------------------------------------
 
+
 class TestCallbacks:
-    def test_on_progress_called(
-        self, config: TransactionRefPipelineConfig
-    ) -> None:
+    def test_on_progress_called(self, config: TransactionRefPipelineConfig) -> None:
         calls: list[tuple] = []
 
         def recorder(step, status, msg):
@@ -349,9 +355,7 @@ class TestCallbacks:
         step_names = [c[0] for c in calls]
         assert PipelineStepName.GENERATE in step_names
 
-    def test_on_output_called(
-        self, config: TransactionRefPipelineConfig
-    ) -> None:
+    def test_on_output_called(self, config: TransactionRefPipelineConfig) -> None:
         lines: list[str] = []
 
         with patch(_GENERATOR_CLS, _mock_generate_extracts()):

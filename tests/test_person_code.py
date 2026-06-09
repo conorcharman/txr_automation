@@ -18,7 +18,7 @@ record = ClientRecord(
     gender="M",
     primary_nationality="GB",
     secondary_nationality="US",
-    trade_date_time_raw="2024-01-01-12-00-00-00"
+    trade_date_time_raw="2024-01-01-12-00-00-00",
 )
 
 print("Record created successfully:")
@@ -41,7 +41,7 @@ output_row = [
     record.gender,
     record.primary_nationality,
     record.secondary_nationality,
-    record.trade_date_time_raw
+    record.trade_date_time_raw,
 ]
 
 print("\nOutput row:")

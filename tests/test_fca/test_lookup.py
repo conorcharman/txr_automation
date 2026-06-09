@@ -124,9 +124,12 @@ def _make_mock_client(
     if firm_raises is not None:
         client.get_firm.side_effect = firm_raises
     else:
-        client.get_firm.return_value = firm_data or _load("firm_response.json")["Data"][0]
+        client.get_firm.return_value = (
+            firm_data or _load("firm_response.json")["Data"][0]
+        )
     client.get_firm_permissions.return_value = (
-        permissions_data if permissions_data is not None
+        permissions_data
+        if permissions_data is not None
         else _load("permissions_response.json")["Data"]
     )
     client.search_firms.return_value = _load("search_response.json")["Data"]
@@ -142,7 +145,10 @@ class TestLookupByFrn:
         assert result.firm.organisation_name == "Barclays Bank PLC"
 
     def test_non_authorised_firm_returns_is_authorised_false(self) -> None:
-        firm = {**_load("firm_response.json")["Data"][0], "Status": "No longer authorised"}
+        firm = {
+            **_load("firm_response.json")["Data"][0],
+            "Status": "No longer authorised",
+        }
         lookup = FcaFirmLookup(client=_make_mock_client(firm_data=firm))
         result = lookup.lookup_by_frn("122702")
         assert result.is_authorised is False
@@ -164,7 +170,9 @@ class TestLookupByFrn:
 
     def test_permissions_api_error_returns_empty_list(self) -> None:
         client = _make_mock_client()
-        client.get_firm_permissions.side_effect = FcaApiError("Permission error", status_code=500)
+        client.get_firm_permissions.side_effect = FcaApiError(
+            "Permission error", status_code=500
+        )
         lookup = FcaFirmLookup(client=client)
         result = lookup.lookup_by_frn("122702")
         assert result.permissions == []

@@ -17,7 +17,9 @@ def _write_csv(path: Path, header: list[str], rows: list[list[str]]) -> None:
         writer.writerows(rows)
 
 
-def test_collate_ignores_header_case_and_whitespace_differences(tmp_path: Path, caplog) -> None:
+def test_collate_ignores_header_case_and_whitespace_differences(
+    tmp_path: Path, caplog
+) -> None:
     _write_csv(
         tmp_path / "7_37_Extract1.csv",
         ["Transaction Ref", "Value"],
@@ -87,6 +89,7 @@ def test_existing_output_skip_keeps_extracts_without_reconcile(tmp_path: Path) -
 # ---------------------------------------------------------------------------
 # Headerless CSV tests (has_header=False)
 # ---------------------------------------------------------------------------
+
 
 def _write_headerless_csv(path: Path, rows: list[list[str]]) -> None:
     """Write a CSV file with no header row — first row is the first data record."""
@@ -187,4 +190,3 @@ def test_has_header_true_still_deduplicates_header(tmp_path: Path, caplog) -> No
     assert stats.total_rows == 2
     assert stats.header_rows_skipped == 1
     assert "Header mismatch" not in caplog.text
-

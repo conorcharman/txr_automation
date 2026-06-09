@@ -13,88 +13,83 @@ Modules:
 This is the canonical location for reference data.
 """
 
-# Data structures
-from core.data.data_structures import (
-    ReplayRecord,
-    LookupResult,
-    UnaVistaTransaction,
-    ProcessingStats,
-)
-
-# Country codes reference data
-from core.data.country_codes import (
-    Country,
-    CountryDataManager,
-    country_manager,
-    COUNTRIES,
-)
-
-# ID format validation patterns
-from core.data.id_formats import (
-    IDPattern,
-    IDFormatManager,
-    id_format_manager,
-    ID_PATTERNS,
-)
-
-# Incident code matrix
-from core.data.incident_codes import (
-    IncidentMetadata,
-    INCIDENT_CODE_MATRIX,
-    get_client_types,
-    is_buyer_incident,
-    is_seller_incident,
-    get_all_incident_codes,
-    get_buyer_incident_codes,
-    get_seller_incident_codes,
-    get_standard_buyer_incident_codes,
-    get_standard_seller_incident_codes,
-    get_decision_maker_buyer_codes,
-    get_decision_maker_seller_codes,
-    is_decision_maker_incident,
-    get_inconsistent_buyer_incident_codes,
-    get_inconsistent_seller_incident_codes,
-    is_inconsistent_id_incident,
-    get_validation_type,
-    get_incidents_by_validation_type,
-    get_incident_description,
-    get_available_validation_types,
-)
-
 # Constants - magic number replacements
-from core.data.constants import (
-    # ID lengths by country
-    ID_LENGTHS,
-    IDLength,
-    IDSlice,
-    # ID slice positions by country
-    DOBSlices,
+from core.data.constants import (  # ID lengths by country; ID slice positions by country; Column indices; Validation thresholds; Country-specific mappings
     BE_SLICES,
     BG_SLICES,
     CZ_SLICES,
     EE_SLICES,
+    FI_CENTURY_MARKERS,
     FI_SLICES,
+    ID_LENGTHS,
+    IT_MONTH_LETTERS,
+    IT_MONTH_NUMBERS,
     IT_SLICES,
+    LT_CENTURY_GENDER_CODES,
     LT_SLICES,
+    LV_CENTURY_CODES,
     LV_SLICES,
     PL_SLICES,
     RO_SLICES,
     SE_SLICES,
-    SK_SLICES,
     SI_SLICES,
-    # Column indices
-    Phase3Columns,
-    Phase2SingleColumns,
-    Phase2CombinedColumns,
+    SK_SLICES,
     ClientErrorColumns,
-    # Validation thresholds
+    DOBSlices,
+    IDLength,
+    IDSlice,
+    Phase2CombinedColumns,
+    Phase2SingleColumns,
+    Phase3Columns,
     ValidationThresholds,
-    # Country-specific mappings
-    IT_MONTH_LETTERS,
-    IT_MONTH_NUMBERS,
-    FI_CENTURY_MARKERS,
-    LT_CENTURY_GENDER_CODES,
-    LV_CENTURY_CODES,
+)
+
+# Country codes reference data
+from core.data.country_codes import (
+    COUNTRIES,
+    Country,
+    CountryDataManager,
+    country_manager,
+)
+
+# Data structures
+from core.data.data_structures import (
+    LookupResult,
+    ProcessingStats,
+    ReplayRecord,
+    UnaVistaTransaction,
+)
+
+# ID format validation patterns
+from core.data.id_formats import (
+    ID_PATTERNS,
+    IDFormatManager,
+    IDPattern,
+    id_format_manager,
+)
+
+# Incident code matrix
+from core.data.incident_codes import (
+    INCIDENT_CODE_MATRIX,
+    IncidentMetadata,
+    get_all_incident_codes,
+    get_available_validation_types,
+    get_buyer_incident_codes,
+    get_client_types,
+    get_decision_maker_buyer_codes,
+    get_decision_maker_seller_codes,
+    get_incident_description,
+    get_incidents_by_validation_type,
+    get_inconsistent_buyer_incident_codes,
+    get_inconsistent_seller_incident_codes,
+    get_seller_incident_codes,
+    get_standard_buyer_incident_codes,
+    get_standard_seller_incident_codes,
+    get_validation_type,
+    is_buyer_incident,
+    is_decision_maker_incident,
+    is_inconsistent_id_incident,
+    is_seller_incident,
 )
 
 __all__ = [

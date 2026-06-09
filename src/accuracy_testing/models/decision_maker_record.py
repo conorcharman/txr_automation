@@ -19,12 +19,13 @@ Migrated from: ValidateFTBDM3_0.vb, ValidateFTSDM3_0.vb
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
 from enum import Enum
+from typing import Any, Dict, Optional
 
 
 class Product(Enum):
     """Product type derived from Account ID prefix."""
+
     AJB = "AJB"
     AJBIC = "AJBIC"
     DODL = "DODL"
@@ -33,6 +34,7 @@ class Product(Enum):
 
 class ServiceLevel(Enum):
     """Service level classification for accounts."""
+
     DISCRETIONARY = "D"
     ADVISORY = "A"
     EXECUTION_ONLY = "E"
@@ -95,7 +97,9 @@ class DecisionMakerRecord:
     row_index: int = 0
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any], party_type: str = "Buyer") -> "DecisionMakerRecord":
+    def from_dict(
+        cls, data: Dict[str, Any], party_type: str = "Buyer"
+    ) -> "DecisionMakerRecord":
         """
         Create DecisionMakerRecord from dictionary.
 
@@ -132,10 +136,7 @@ class DecisionMakerRecord:
 
     @classmethod
     def from_row(
-        cls,
-        row: list,
-        party_type: str = "Buyer",
-        row_index: int = 0
+        cls, row: list, party_type: str = "Buyer", row_index: int = 0
     ) -> "DecisionMakerRecord":
         """
         Create DecisionMakerRecord from CSV row list (raw extract format).
@@ -221,19 +222,19 @@ class DecisionMakerRecord:
             List of column values in order.
         """
         return [
-            self.transaction_ref,       # Column 1
-            self.account_id,            # Column 2
-            self.party_code,            # Column 3
-            self.party_code_type,       # Column 4
-            self.dm_code,               # Column 5
-            self.dm_code_type,          # Column 6
-            self.product,               # Column 7
-            self.account_type,          # Column 8
-            self.service_level,         # Column 9
-            self.branch_code,           # Column 10
-            self.error,                 # Column 11
-            self.correction,            # Column 12
-            self.correction_field,      # Column 13
+            self.transaction_ref,  # Column 1
+            self.account_id,  # Column 2
+            self.party_code,  # Column 3
+            self.party_code_type,  # Column 4
+            self.dm_code,  # Column 5
+            self.dm_code_type,  # Column 6
+            self.product,  # Column 7
+            self.account_type,  # Column 8
+            self.service_level,  # Column 9
+            self.branch_code,  # Column 10
+            self.error,  # Column 11
+            self.correction,  # Column 12
+            self.correction_field,  # Column 13
         ]
 
     def get_output_headers(self) -> list:
@@ -299,7 +300,10 @@ class DecisionMakerRecord:
     @property
     def dm_equals_party_code(self) -> bool:
         """Check if Decision Maker code equals Party (Buyer/Seller) code."""
-        return self.dm_code.strip() == self.party_code.strip() and self.dm_code.strip() != ""
+        return (
+            self.dm_code.strip() == self.party_code.strip()
+            and self.dm_code.strip() != ""
+        )
 
     @property
     def correction_field_template(self) -> str:

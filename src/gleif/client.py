@@ -51,12 +51,16 @@ _API_BASE_URL = "https://api.gleif.org/api/v1"
 # GLEIF publishes endpoint — returns the latest Golden Copy file metadata,
 # including the direct CSV download URL, without requiring authentication.
 # Discovered from the GLEIF golden-copy download page JS bundle.
-_GLEIF_PUBLISHES_URL = "https://leidata-preview.gleif.org/api/v2/golden-copies/publishes"
+_GLEIF_PUBLISHES_URL = (
+    "https://leidata-preview.gleif.org/api/v2/golden-copies/publishes"
+)
 
 # Fallback: if the publishes API is unavailable, this URL is used instead.
 # NOTE: as of 2026-03 leidata.gleif.org/api/v2 returns HTTP 403; the publishes
 # endpoint on leidata-preview.gleif.org is the correct auto-discovery path.
-_DEFAULT_GOLDEN_COPY_URL = "https://leidata-preview.gleif.org/api/v2/golden-copies/publishes"
+_DEFAULT_GOLDEN_COPY_URL = (
+    "https://leidata-preview.gleif.org/api/v2/golden-copies/publishes"
+)
 
 # GLEIF enforces 60 requests/minute per user.  1.0 second delay keeps usage
 # within the limit when making sequential lookup calls.
@@ -143,9 +147,7 @@ class GleifApiClient:
                 params={"page[size]": 1, "page[number]": 1},
             )
             publish_date = (
-                data.get("meta", {})
-                .get("goldenCopy", {})
-                .get("publishDate", "")
+                data.get("meta", {}).get("goldenCopy", {}).get("publishDate", "")
             )
             return GoldenCopyInfo(
                 publish_date=publish_date,
@@ -165,10 +167,7 @@ class GleifApiClient:
         latest = publications[0]
         publish_date = latest.get("publish_date", "").replace(" ", "T") + "Z"
         csv_url = (
-            latest.get("lei2", {})
-            .get("full_file", {})
-            .get("csv", {})
-            .get("url", "")
+            latest.get("lei2", {}).get("full_file", {}).get("csv", {}).get("url", "")
         )
         if not csv_url:
             raise ValueError(
@@ -366,15 +365,17 @@ def _extract_lei_attributes(item: Dict[str, Any]) -> Dict[str, Any]:
 
     legal_name_obj = entity.get("legalName") or {}
     other_names = [
-        n.get("name", "")
-        for n in entity.get("otherNames", [])
-        if n.get("name")
+        n.get("name", "") for n in entity.get("otherNames", []) if n.get("name")
     ]
     expiration = entity.get("expiration") or {}
 
     return {
         "lei": attrs.get("lei", item.get("id", "")),
-        "legal_name": legal_name_obj.get("name", "") if isinstance(legal_name_obj, dict) else str(legal_name_obj),
+        "legal_name": (
+            legal_name_obj.get("name", "")
+            if isinstance(legal_name_obj, dict)
+            else str(legal_name_obj)
+        ),
         "other_names": "; ".join(other_names),
         "entity_status": entity.get("status", ""),
         "entity_category": entity.get("category", ""),

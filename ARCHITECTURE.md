@@ -1,23 +1,25 @@
 # TXR Automation - System Architecture
 
-**Version:** 3.0  
-**Last Updated:** 25 March 2026  
-**Status:** Post-VBA Migration — All 12 macros migrated, Phase 6 in progress
+**Version:** 3.1  
+**Last Updated:** 9 June 2026  
+**Status:** Phase 6 (Integration & Testing) — Web app + core engine complete
 
 ---
 
 ## Executive Summary
 
-The Transaction Reporting (TXR) Automation system provides validation and processing capabilities for financial transaction data, specifically focused on buyer/seller identification and decision maker validation for regulatory reporting compliance.
+TXR Automation is a full-stack web application for validating financial transaction data against regulatory standards. It combines a React frontend, FastAPI backend, and Python validation engine to provide interactive validation, job scheduling, and real-time monitoring for transaction reporting compliance.
 
 **Key Facts:**
-- **Migrated from:** 12 VBA macros (Excel-based) — all complete
-- **Current stack:** Python 3.10+, pandas, PySide6, CSV-based processing, SQLite caching
-- **Packages:** 7 (core, accuracy_testing, replay, firds, gleif, gui, utils)
-- **Console scripts:** 22 registered entry points + 1 GUI entry point
-- **Current scale:** 20,000 records quarterly
-- **Target scale:** 1.5M records daily
-- **Test coverage:** 466 passing tests (100% pass rate as of 2026-03-25)
+- **Architecture:** React 19 (frontend) + FastAPI (backend) + PostgreSQL + Redis
+- **Deployment:** Docker Compose with nginx reverse proxy
+- **Backend packages:** 7 (core, accuracy_testing, replay, firds, gleif, gui, utils)
+- **Console scripts:** 22 registered CLI entry points (batch processing)
+- **API endpoints:** 12+ FastAPI routers with OpenAPI documentation
+- **Real-time features:** WebSocket support for job status updates
+- **Async processing:** Celery task queue with Redis broker
+- **Test coverage:** 466+ tests across frontend and backend (100% passing)
+- **Performance:** < 30 seconds for 20K records; targeting 1.5M daily volume
 
 ---
 
@@ -48,58 +50,117 @@ The system validates and corrects transaction reporting data for regulatory comp
 ### 1.2 High-Level Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                   User Interface Layer                       │
-│  • CLI Scripts (22 console commands)                         │
-│  • PySide6 Desktop GUI (txr-gui)                             │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                  Processing Layer                            │
-│  ┌──────────────────┐  ┌──────────────────┐                │
-│  │ accuracy_testing │  │     replay       │                 │
-│  │  • ID validation │  │  • Phase 2/3     │                 │
-│  │  • DM validation │  │  • Processing    │                 │
-│  │  • Pricing       │  └──────────────────┘                 │
-│  │  • Net amt/qty   │                                        │
-│  │  • Data push     │  ┌──────────────────┐                │
-│  │  • SQL extracts  │  │  firds / gleif   │                 │
-│  └──────────────────┘  │  • API clients   │                 │
-│                         │  • SQLite cache  │                 │
-│                         │  • Lookup/check  │                 │
-│                         └──────────────────┘                 │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                   Core Library (txr_core)                    │
-│  ┌─────────────┐  ┌──────────────┐  ┌──────────────┐       │
-│  │   config    │  │     data     │  │  validation  │        │
-│  │  • YAML     │  │ • Countries  │  │  • ID rules  │        │
-│  │  • Env vars │  │ • ID formats │  │  • Formats   │        │
-│  └─────────────┘  │ • Incidents  │  └──────────────┘        │
-│                    │ • Constants  │                           │
-│  ┌─────────────┐  └──────────────┘                          │
-│  │   logging   │  ┌──────────────┐                          │
-│  │  • Struct.  │  │    utils     │                           │
-│  │  • JSON     │  │  • CSV       │                           │
-│  └─────────────┘  │  • Date      │                           │
-│                    │  • Files     │                           │
-│                    └──────────────┘                           │
-└─────────────────────────────────────────────────────────────┘
-                              ↓
-┌─────────────────────────────────────────────────────────────┐
-│                     Data Layer                               │
-│  • CSV files (input/output)                                  │
-│  • SQLite databases (FIRDS instruments, GLEIF LEI records)   │
-│  • Reference data (country codes, ID formats, LEI lookups)   │
-│  • YAML configuration files                                  │
-│  • Logs (JSON structured logging)                            │
-└─────────────────────────────────────────────────────────────┘
+┌───────────────────────────────────────────────────────────────┐
+│                   Frontend Layer (React 19)                   │
+│  • Dashboard (job monitoring, results viewing)                │
+│  • Accuracy Tester (interactive validation interface)         │
+│  • Job Scheduler (schedule batch processing)                  │
+│  • Settings & Configuration                                   │
+│  • Real-time updates via WebSocket                            │
+└─────────────────────────┬─────────────────────────────────────┘
+                          │ REST API + WebSocket
+                          ↓
+┌───────────────────────────────────────────────────────────────┐
+│              API Layer (FastAPI + Uvicorn)                    │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
+│  │   Routers    │  │  Services    │  │  Schemas     │        │
+│  │ • accuracy   │  │ • Celery     │  │ • Validation │        │
+│  │ • dashboard  │  │   tasks      │  │ • Response   │        │
+│  │ • scheduler  │  │ • Config     │  │   models     │        │
+│  │ • firds      │  │ • Database   │  │ • Job models │        │
+│  │ • gleif      │  │   queries    │  └──────────────┘        │
+│  │ • jobs       │  │ • Validation │                           │
+│  │ • pipeline   │  │   logic      │                           │
+│  └──────────────┘  └──────────────┘                           │
+└─────────────────────────┬─────────────────────────────────────┘
+                          ↓
+┌───────────────────────────────────────────────────────────────┐
+│            Data & Processing Layer (Python)                   │
+│  ┌──────────────────┐  ┌──────────────────┐                  │
+│  │ accuracy_testing │  │  Job Queue &     │                  │
+│  │  • Processor     │  │  Result Store    │                  │
+│  │  • Validators    │  │  • Celery tasks  │                  │
+│  │  • Logic checks  │  │  • Redis broker  │                  │
+│  └────────┬─────────┘  └──────┬───────────┘                  │
+│           │                    │                              │
+│  ┌────────┴────────────────────┴──────────────┐              │
+│  │          Core Engine (txr_core)            │              │
+│  │  ┌──────────────────────────────────────┐  │              │
+│  │  │ ID Validation | Regulatory Data      │  │              │
+│  │  │ • Format checking | • FIRDS caching  │  │              │
+│  │  │ • Logic validators| • GLEIF caching  │  │              │
+│  │  │ • DM validation  | • API clients     │  │              │
+│  │  │ • Pricing logic  │                   │  │              │
+│  │  └──────────────────────────────────────┘  │              │
+│  └─────────────────────────────────────────────┘              │
+└────────────────────────┬──────────────────────────────────────┘
+                         ↓
+┌───────────────────────────────────────────────────────────────┐
+│              Infrastructure & Persistence                      │
+│  • PostgreSQL (job history, saved configs, audit trail)       │
+│  • Redis (Celery broker, WebSocket pub/sub)                   │
+│  • SQLite (FIRDS cache, GLEIF cache)                          │
+│  • CSV files (input/output, reference data)                   │
+│  • Logs (JSON structured logging)                             │
+└───────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 2. Module Architecture
+
+### 2.0 API Layer (`api/`)
+
+**Purpose:** FastAPI application serving RESTful endpoints and WebSocket connections for the React frontend.
+
+**Key Components:**
+
+```
+api/
+├── main.py                    # FastAPI app initialization + lifespan
+├── config.py                  # Configuration management + settings
+├── database.py                # SQLAlchemy async setup + PostgreSQL
+├── models/                    # SQLAlchemy ORM models
+│   ├── job.py                 # Job history and status tracking
+│   ├── schedule.py            # Scheduled job definitions
+│   ├── pipeline.py            # Pipeline execution records
+│   └── ...                    # Other domain models
+├── schemas/                   # Pydantic request/response models
+├── routers/                   # API endpoint groups (organized by domain)
+│   ├── accuracy.py            # POST /accuracy/validate-*, GET /accuracy/*
+│   ├── dashboard.py           # GET /dashboard/jobs, /dashboard/stats
+│   ├── scheduler.py           # POST/GET /scheduler/schedules, /run
+│   ├── jobs.py                # GET/DELETE /jobs/{id}, /jobs/history
+│   ├── firds.py               # GET /firds/check, POST /firds/refresh
+│   ├── gleif.py               # GET /gleif/check, POST /gleif/refresh
+│   ├── pipeline.py            # POST /pipeline/execute
+│   ├── health.py              # GET /health, /health/database, /health/redis
+│   └── ...                    # Other routers
+├── services/                  # Business logic and Celery task integration
+│   ├── accuracy_service.py    # Validation orchestration
+│   ├── job_service.py         # Job lifecycle management
+│   ├── scheduler_service.py   # Schedule persistence + trigger
+│   └── ...                    # Other services
+├── tasks/                     # Celery async tasks
+│   ├── validation_tasks.py    # Long-running validation jobs
+│   ├── scheduling_tasks.py    # Scheduled job execution
+│   └── ...                    # Other tasks
+├── utils/                     # API utilities (decorators, middleware)
+└── websocket/                 # WebSocket handlers for real-time updates
+    └── job_monitor.py         # Job status streaming
+```
+
+**Key Classes:**
+- **`APISettings`:** Configuration dataclass with environment variable overrides
+- **`JobModel`:** SQLAlchemy ORM for job history persistence
+- **`ValidationRequest`:** Pydantic schema for accuracy validation requests
+- **`JobResponse`:** Pydantic schema for job status responses
+
+**Architecture Patterns:**
+- **Dependency Injection:** FastAPI `Depends()` for database sessions, config
+- **Async/Await:** All endpoints and services are async
+- **Celery Integration:** Long-running validations offloaded to task queue
+- **WebSocket Pub/Sub:** Redis channels for real-time job status updates
 
 ### 2.1 Core Module (`src/core/`)
 
@@ -232,33 +293,69 @@ gleif/
 - **`GleifRefresher`:** Full rebuild + delta refresh (8h, 24h, 7d, 31d cycles)
 - **`GleifLookup`:** LEI validation with registration status checking and trade-date awareness
 
-### 2.6 GUI Module (`src/gui/`)
+### 2.6 Frontend Module (`web/`)
 
-**Purpose:** PySide6 desktop application providing a graphical interface for all processing modules.
+**Purpose:** React 19 single-page application providing the primary user interface for TXR Automation.
 
-**Architecture:** `QMainWindow` → `QTabWidget` (5 tabs) → Background `QThread` workers
+**Architecture:** React Router → Page components → Service layer → API client
 
 **Key Components:**
 
 ```
-gui/
-├── app.py                 # MainWindow entry point (txr-gui)
-├── constants.py           # App metadata, incident mappings
-├── tabs/                  # Tab implementations
-│   ├── accuracy_tab.py    # Accuracy testing tab (9 incidents)
-│   ├── replay_tab.py      # Replay processing tab
-│   ├── firds_tab.py       # FIRDS management tab
-│   ├── gleif_tab.py       # GLEIF management tab
-│   └── utilities_tab.py   # Utilities tab
-├── widgets/               # Reusable UI components
-│   ├── file_picker.py     # File/directory browser
-│   ├── config_loader.py   # YAML config loader
-│   ├── log_viewer.py      # Real-time log viewer
-│   ├── run_controls.py    # Start/stop/progress controls
-│   └── form_field.py      # Form input widgets
-└── workers/
-    └── script_runner.py   # QThread background script execution
+web/src/
+├── App.tsx                    # Root component + routing
+├── components/                # Reusable UI components
+│   ├── dashboard/             # Dashboard widgets
+│   ├── accuracy-tester/       # Validation interface
+│   ├── job-monitor/           # Job status display
+│   ├── common/                # Shared components (buttons, cards, etc.)
+│   └── ...                    # Other components
+├── pages/                     # Page-level components
+│   ├── dashboard.tsx          # Main dashboard page
+│   ├── accuracy.tsx           # Accuracy tester page
+│   ├── scheduler.tsx          # Job scheduling page
+│   └── settings.tsx           # Configuration page
+├── hooks/                     # Custom React hooks
+│   ├── useQuery.ts            # Data fetching with caching
+│   ├── useWebSocket.ts        # WebSocket connection management
+│   └── ...                    # Other hooks
+├── services/                  # API client and integrations
+│   ├── api.ts                 # HTTP client (axios/fetch wrapper)
+│   ├── websocket.ts           # WebSocket client
+│   └── accuracy.ts            # Accuracy API service
+├── stores/                    # Zustand state management
+│   ├── jobStore.ts            # Job state
+│   ├── uiStore.ts             # UI state (theme, layout)
+│   └── ...                    # Other stores
+├── types/                     # TypeScript interfaces
+│   ├── api.ts                 # API response types
+│   ├── domain.ts              # Domain types (Job, ValidationResult, etc.)
+│   └── ...                    # Other types
+└── utils/                     # Frontend utilities
+    ├── formatters.ts          # Date, number formatting
+    └── validators.ts          # Client-side validation
 ```
+
+**Key Libraries:**
+- **React Router:** Client-side navigation (v7)
+- **React Query:** Server state management (caching, sync)
+- **Zustand:** Lightweight client state (theme, UI state)
+- **React Hook Form:** Form validation with Zod
+- **Tailwind CSS:** Utility-first styling
+- **shadcn/ui:** Accessible component library
+- **Vitest:** Unit testing framework
+
+**Architecture Patterns:**
+- **Custom Hooks:** Encapsulate API calls and WebSocket logic
+- **Service Layer:** API calls isolated in service files
+- **State Management:** Zustand for simple state, React Query for server state
+- **Component Composition:** Small, reusable components
+
+### 2.7 GUI Module (`src/gui/`) — Optional/Legacy
+
+**Purpose:** PySide6 desktop application (alternative to web UI, maintained for backward compatibility).
+
+**Status:** Optional; primary interface is now the React web application.
 
 ---
 
@@ -320,58 +417,117 @@ export TXR_BATCH_SIZE="200"
 
 ## 4. Data Flow
 
-### 4.1 Buyer/Seller ID Validation Workflow
+### 4.1 Web App Validation Workflow (Interactive)
 
 ```
-┌──────────────────┐
-│  Input CSV       │
-│  (Template)      │
-└────────┬─────────┘
+┌──────────────────────────────────────────┐
+│  React Frontend (Accuracy Tester Page)   │
+│  • Upload CSV file or paste data         │
+│  • Select validation type                │
+│  • Trigger validation                    │
+└────────┬─────────────────────────────────┘
+         │ POST /accuracy/validate-batch
+         ↓
+┌──────────────────────────────────────────┐
+│  FastAPI Router (accuracy.py)            │
+│  • Receive CSV/JSON data                 │
+│  • Validate request schema               │
+│  • Dispatch to Celery task               │
+└────────┬─────────────────────────────────┘
+         │ celery.send_task()
+         ↓
+┌──────────────────────────────────────────┐
+│  Celery Task (validation_tasks.py)       │
+│  • Async job execution                   │
+│  • Store job_id in PostgreSQL            │
+│  • Emit WebSocket status updates         │
+└────────┬─────────────────────────────────┘
+         │ async: call validation engine
+         ↓
+┌──────────────────────────────────────────┐
+│  Python Validation Engine                │
+│  (accuracy_testing/processor.py)         │
+│  • Parse & load records                  │
+│  • Phase 1: Inconsistent ID handling     │
+│  • Phase 2: Format validation            │
+│  • Phase 3: Logic validation             │
+│  • Phase 4: Template matching            │
+│  • Return results                        │
+└────────┬─────────────────────────────────┘
+         │ task.result = results
+         ↓
+┌──────────────────────────────────────────┐
+│  WebSocket Pub/Sub (Redis)               │
+│  • Broadcast job completion event        │
+│  • Notify frontend of results            │
+└────────┬─────────────────────────────────┘
+         │ ws.send(job_complete)
+         ↓
+┌──────────────────────────────────────────┐
+│  React Frontend                          │
+│  • Receive WebSocket update              │
+│  • Display validation results            │
+│  • Allow download/export                 │
+└──────────────────────────────────────────┘
+```
+
+### 4.2 Batch Processing Workflow (CLI/Scheduled)
+
+```
+┌──────────────────────────────────────────┐
+│  Console Script or Scheduled Job         │
+│  $ validate-buyer --config config.yaml   │
+│  or                                      │
+│  POST /scheduler/schedules               │
+└────────┬─────────────────────────────────┘
          │
          ↓
-┌──────────────────┐
-│ Load & Parse     │
-│ • Read CSV       │
-│ • Create records │
-└────────┬─────────┘
+┌──────────────────────────────────────────┐
+│  Validation Service                      │
+│  • Load configuration                    │
+│  • Read input CSV from filesystem        │
+│  • Initialize processor                  │
+└────────┬─────────────────────────────────┘
          │
          ↓
-┌──────────────────────────────────────┐
-│ Phase 1: Inconsistent ID Handling    │
-│ • Aggregate by Person Code           │
-│ • Check for fallback IDs              │
-│ • Replace with most recent valid ID  │
-└────────┬─────────────────────────────┘
+┌──────────────────────────────────────────┐
+│ Phase 1: Inconsistent ID Handling        │
+│ • Aggregate by Person Code               │
+│ • Check for fallback IDs                 │
+│ • Replace with most recent valid ID      │
+└────────┬─────────────────────────────────┘
          │
          ↓
-┌──────────────────────────────────────┐
-│ Phase 2: Format Validation           │
-│ • Extract country from nationality   │
-│ • Validate ID format with regex      │
-│ • Generate CONCAT if needed          │
-└────────┬─────────────────────────────┘
+┌──────────────────────────────────────────┐
+│ Phase 2: Format Validation               │
+│ • Extract country from nationality       │
+│ • Validate ID format with regex          │
+│ • Generate CONCAT if needed              │
+└────────┬─────────────────────────────────┘
          │
          ↓
-┌──────────────────────────────────────┐
-│ Phase 3: Logic Validation            │
-│ • Checksums (UK NINO, IT Fiscal)     │
-│ • Date logic (date of birth in ID)   │
-│ • Gender validation                   │
-│ • Italian tracker lookups             │
-└────────┬─────────────────────────────┘
+┌──────────────────────────────────────────┐
+│ Phase 3: Logic Validation                │
+│ • Checksums (UK NINO, IT Fiscal)         │
+│ • Date logic (date of birth in ID)       │
+│ • Gender validation                      │
+│ • Italian tracker lookups                │
+└────────┬─────────────────────────────────┘
          │
          ↓
-┌──────────────────────────────────────┐
-│ Phase 4: Template Validation         │
-│ • Match against Kaizen template      │
-│ • Populate Error/Match columns       │
-└────────┬─────────────────────────────┘
+┌──────────────────────────────────────────┐
+│ Phase 4: Template Validation             │
+│ • Match against Kaizen template          │
+│ • Populate Error/Match columns           │
+└────────┬─────────────────────────────────┘
          │
          ↓
-┌──────────────────┐
-│ Output CSV       │
-│ (Validated)      │
-└──────────────────┘
+┌──────────────────────────────────────────┐
+│ Write Results                            │
+│ • Output CSV to filesystem               │
+│ • Log summary statistics                 │
+│ • (Optional) Store in PostgreSQL         │
+└──────────────────────────────────────────┘
 ```
 
 ### 4.2 Decision Maker Validation Workflow
@@ -417,34 +573,119 @@ export TXR_BATCH_SIZE="200"
 
 ## 5. Deployment Architecture
 
-### 5.1 Current Deployment (Manual)
+### 5.1 Docker Compose (Development & Production)
 
-```
-Developer Machine
-├── Conda Environment (txr_automation)
-├── Python 3.13 runtime
-├── Dependencies from requirements.txt
-└── Run scripts manually via CLI
+```yaml
+# docker-compose.yml (development)
+services:
+  db:               # PostgreSQL 16 (async driver: asyncpg)
+  redis:            # Redis 7 (Celery broker + WebSocket pub/sub)
+  api:              # FastAPI + Uvicorn (hot-reload in dev)
+  web:              # React dev server (Vite) or nginx (prod)
+  celery:           # Celery worker (async job processing)
+  nginx:            # Reverse proxy (development)
+
+# docker-compose.prod.yml (production)
+services:
+  db:               # PostgreSQL 16 (persistent volume)
+  redis:            # Redis 7 (persistent volume)
+  api:              # FastAPI + Uvicorn (gunicorn in prod)
+  web:              # React built assets served by nginx
+  celery:           # Celery worker (production scaling)
+  nginx:            # nginx reverse proxy (SSL, compression)
 ```
 
-### 5.2 Package Installation
+**Networking:**
+```
+Client Browser
+  ↓ (http://localhost:3000)
+  ├→ nginx (port 80/443)
+      ├→ /api/* → api:8000 (FastAPI)
+      ├→ /ws/* → api:8000 (WebSocket)
+      └→ /* → Static React assets
+```
+
+### 5.2 Service Configuration
+
+**PostgreSQL:**
+- Async connection pooling (asyncpg driver)
+- SQLAlchemy 2.0 ORM
+- Alembic migrations for schema management
+
+**Redis:**
+- Celery task broker
+- WebSocket pub/sub for real-time updates
+- Session storage (future)
+
+**Celery:**
+- Async task queue for long-running validations
+- Result backend: PostgreSQL
+- Worker auto-scaling (via Docker Compose replicas)
+
+**FastAPI:**
+- Uvicorn ASGI server (4+ workers)
+- CORS middleware for React frontend
+- OpenAPI documentation at `/docs` and `/redoc`
+
+**React:**
+- Vite bundler (dev server with HMR)
+- Production build to static assets
+- Served by nginx with gzip compression
+
+### 5.3 Local Development Setup
 
 ```bash
-# Development mode (editable install)
-pip install -e .
+# 1. Conda environment
+conda env create -f environment.yml
+conda activate txr_automation
 
-# This registers 22 console scripts + 1 GUI script:
-# Accuracy: validate-buyer, validate-seller, validate-inconsistent-buyer,
-#           validate-inconsistent-seller, validate-ftbdm, validate-ftsdm,
-#           validate-pricing, validate-non-zero-net-qty, validate-non-zero-net-amt,
-#           validate-all, generate-sql-extract, generate-accuracy-template,
-#           collate-csv-extracts, data-push
-# Replay:   replay-phase2, replay-phase3, replay-phase3-final,
-#           merge-inconsistent-summaries
-# FIRDS:    firds-refresh, firds-check, firds-backfill
-# GLEIF:    gleif-refresh, gleif-check, gleif-backfill
-# GUI:      txr-gui
+# 2. Install packages
+pip install -e .                  # Backend + console scripts
+cd web && npm install             # Frontend dependencies
+
+# 3. Start services (PostgreSQL, Redis)
+docker compose up db redis -d
+
+# 4. Run database migrations
+alembic upgrade head
+
+# 5. Start API (terminal 1)
+uvicorn api.main:app --reload
+
+# 6. Start frontend dev server (terminal 2)
+cd web && npm run dev
+
+# Access:
+# Web UI:     http://localhost:5173
+# API:        http://localhost:8000
+# API Docs:   http://localhost:8000/docs
 ```
+
+### 5.4 Console Scripts (Batch Processing)
+
+For headless/CI environments, 22 console scripts remain available:
+
+```bash
+# Installed by: pip install -e .
+# Usage: command-name --config config.yaml [--options]
+
+Accuracy:    validate-buyer, validate-seller, validate-all, etc.
+Replay:      replay-phase2, replay-phase3, etc.
+FIRDS:       firds-refresh, firds-check, etc.
+GLEIF:       gleif-refresh, gleif-check, etc.
+```
+
+**When to use CLI scripts:**
+- CI/CD pipelines (automated batch processing)
+- Scheduled cron jobs
+- Headless servers
+- Backward compatibility with existing workflows
+
+**When to use web app:**
+- Interactive validation with immediate feedback
+- Job monitoring and history
+- Configuration management
+- Real-time progress tracking
 
 ---
 
@@ -549,86 +790,152 @@ Expected output metrics:
 
 ---
 
-## 9. Future Architecture
+## 9. Roadmap & Future Enhancements
 
-### 9.1 Short-Term (Q2 2026)
+### 9.1 Completed (Q1-Q2 2026) ✅
 
-- **Chunked Processing:** Implement streaming CSV processing for 1.5M+ records
-- **Environment Separation:** dev/test/prod configuration environments
-- **GUI Prototype:** Streamlit web interface for non-technical users
-- **Shell Script Automation:** Batch processing workflows
+- **React Frontend:** Modern web UI with real-time updates via WebSocket
+- **FastAPI Backend:** Async REST API with OpenAPI documentation
+- **Docker Compose:** Multi-container orchestration for dev/prod
+- **PostgreSQL:** Persistent storage for job history and configurations
+- **Redis:** Celery broker and WebSocket pub/sub
+- **Async Job Queue:** Celery for long-running validations
+- **WebSocket Support:** Real-time job status updates to frontend
 
-### 9.2 Medium-Term (Q3 2026)
+### 9.2 Short-Term (Q3 2026)
 
-- **PyQt6 Production GUI:** Desktop application with advanced features
-- **CI/CD Pipeline:** Automated testing and deployment
-- **Containerization:** Docker containers for consistent deployment
-- **Monitoring:** Structured logging with log aggregation
+- **Job Scheduling UI:** Schedule recurring batch jobs from web interface
+- **Advanced Filtering:** Filter and search job history
+- **Export Functionality:** Export validation results to CSV/Excel
+- **Audit Trail:** Track all validation changes and corrections
+- **Performance Dashboard:** Real-time metrics and throughput monitoring
 
-### 9.3 Long-Term (Q4 2026+)
+### 9.3 Medium-Term (Q4 2026)
 
-- **Workflow Orchestration:** Airflow/Prefect for daily automated runs
-- **Cloud Deployment:** AWS/Azure for scalability
-- **Distributed Processing:** Process 10M+ records across multiple nodes
-- **Real-Time Validation:** API endpoint for on-demand validation
+- **Distributed Processing:** Scale to 1M+ records/day across multiple workers
+- **Enhanced FIRDS/GLEIF:** Real-time regulatory data caching
+- **User Roles:** Admin, validator, viewer access control
+- **Notification System:** Email/Slack alerts for failed validations
+- **Batch API:** Endpoint for bulk validation requests
 
----
+### 9.4 Long-Term (2027+)
 
-## 10. References
-
-### 10.1 Key Documents
-
-- **[Python_Migration_Plan.md](documentation/planning/Python_Migration_Plan.md):** Master migration roadmap
-- **[Architectural_Review_Level_4.md](documentation/reference/Architectural_Review_Level_4.md):** Detailed architectural analysis
-- **[Phase_8_CLI_Tool_Plan.md](documentation/planning/Phase_8_CLI_Tool_Plan.md):** CLI unification strategy
-
-### 10.2 Code Standards
-
-- **Style Guide:** PEP 8 compliance
-- **Import Order:** stdlib → third-party → local
-- **Line Length:** 100 characters maximum
-- **British English:** All documentation and code comments
+- **Cloud Deployment:** AWS/Azure managed services (RDS, ElastiCache, ECS)
+- **Multi-tenant Support:** Isolated configurations per client
+- **Advanced Analytics:** Machine learning for anomaly detection
+- **Integration Hub:** Webhooks and message queue support (Kafka, RabbitMQ)
+- **Custom Validation Rules:** User-defined business logic engine
 
 ---
 
-## Appendix A: Module Dependency Diagram
+## 10. Technology Stack Summary
+
+### Backend Stack
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **API Framework** | FastAPI 0.100+ | async REST API with OpenAPI |
+| **ORM** | SQLAlchemy 2.0 | async ORM for PostgreSQL |
+| **Validation** | Pydantic v2 | request/response data validation |
+| **Async Broker** | Redis 7 | Celery task broker + pub/sub |
+| **Job Queue** | Celery 5.3+ | async background task processing |
+| **Web Server** | Uvicorn | ASGI application server |
+| **Reverse Proxy** | nginx 1.25+ | production reverse proxy |
+
+### Frontend Stack
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| **Framework** | React 19 | modern UI framework |
+| **Language** | TypeScript 5+ | static type checking |
+| **Build Tool** | Vite 5+ | fast development + optimized builds |
+| **Router** | React Router v7 | client-side navigation |
+| **Data Fetching** | React Query v5 | server state management + caching |
+| **State Management** | Zustand 4+ | lightweight client state |
+| **Form Handling** | React Hook Form | efficient form validation |
+| **Validation** | Zod | schema validation |
+| **Styling** | Tailwind CSS 3 | utility-first CSS framework |
+| **Components** | shadcn/ui | accessible component library |
+| **Icons** | Lucide React | modern icon set |
+| **Testing** | Vitest | unit test framework |
+
+### Infrastructure
+| Service | Technology | Purpose |
+|---------|-----------|---------|
+| **Database** | PostgreSQL 16 | primary data store (async asyncpg driver) |
+| **Cache/Broker** | Redis 7 | Celery broker, WebSocket pub/sub |
+| **Containerization** | Docker + Compose | multi-container orchestration |
+| **Logging** | Python logging + JSON | structured JSON logging |
+
+---
+
+## 11. References
+
+### 11.1 Project Documentation
+
+- **[README.md](README.md):** Project overview, quick start, command reference
+- **[Python_Migration_Plan.md](documentation/planning/Python_Migration_Plan.md):** Historical migration roadmap (now complete)
+- **[API Documentation](http://localhost:8000/docs):** Interactive Swagger UI (at /docs)
+- **[Frontend README](web/README.md):** React-specific development guide
+
+### 11.2 Code Standards
+
+**Backend (Python):**
+- PEP 8 compliance (black, flake8)
+- Type hints on all functions (mypy)
+- Google-style docstrings
+- British English in documentation
+
+**Frontend (TypeScript/React):**
+- ESLint + Prettier for formatting
+- TypeScript strict mode
+- Component-driven development
+- Tailwind CSS conventions
+
+**General:**
+- Commit format: `type(scope): description`
+- Line length: 100 characters (Python), 88 characters (frontend)
+- British English throughout
+
+---
+
+## Appendix A: Component Dependency Diagram
 
 ```
-┌─────────────────────────────────────────────────────────┐
-│                   accuracy_testing                       │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐  │
-│  │  processor   │  │  validators  │  │   scripts    │  │
-│  └──────┬───────┘  └──────┬───────┘  └──────┬───────┘  │
-│         │                 │                  │          │
-│         └─────────────────┴──────────────────┘          │
-│                           ↓                              │
-│  ┌──────────────────────────────────────────────────┐  │
-│  │               accuracy_testing/core              │  │
-│  │         (wrappers for core library)              │  │
-│  └─────────────────────┬────────────────────────────┘  │
-└────────────────────────┼─────────────────────────────────┘
-                         ↓
-┌────────────────────────────────────────────────────────┐
-│                       core                              │
-│  ┌──────────┐  ┌──────────┐  ┌───────────┐            │
-│  │  config  │  │   data   │  │ validation│            │
-│  └────┬─────┘  └────┬─────┘  └─────┬─────┘            │
-│       └─────────────┴──────────────┴─────┐            │
-│                  ↓                        ↓             │
-│  ┌──────────────────────┐  ┌──────────────────────┐   │
-│  │      logging         │  │       utils          │   │
-│  └──────────────────────┘  └──────────────────────┘   │
-└────────────────────────────────────────────────────────┘
-
-┌────────────────────────────────────────────────────────┐
-│                      replay                             │
-│  (uses core, independent of accuracy_testing)           │
-└────────────────────────────────────────────────────────┘
+Frontend (web/)
+  ├── React Components
+  │   ├── Pages (dashboard, accuracy, scheduler, settings)
+  │   └── Components (reusable UI widgets)
+  ├── Hooks (custom React logic)
+  ├── Services (API client, WebSocket)
+  └── Stores (Zustand state)
+       ↓
+  API Client (axios/fetch)
+       ↓
+Backend (api/)
+  ├── Routers (FastAPI endpoints)
+  ├── Services (business logic)
+  ├── Schemas (Pydantic models)
+  ├── Models (SQLAlchemy ORM)
+  ├── Tasks (Celery async tasks)
+  └── WebSocket handlers
+       ↓
+Core Engine (src/*)
+  ├── accuracy_testing (ID validation)
+  ├── replay (transaction matching)
+  ├── firds (regulatory data)
+  ├── gleif (LEI lookup)
+  └── core (shared utilities)
+       ↓
+Infrastructure
+  ├── PostgreSQL (persistence)
+  ├── Redis (broker + pub/sub)
+  ├── Celery Workers (async processing)
+  └── SQLite (FIRDS/GLEIF caches)
 ```
 
 ---
 
 **Document Control:**
 - **Author:** AI Assistant (GitHub Copilot)  
-- **Review Status:** Draft  
-- **Next Review:** Q2 2026
+- **Last Updated:** 9 June 2026
+- **Status:** Current (Phase 6)
+- **Next Review:** Q3 2026

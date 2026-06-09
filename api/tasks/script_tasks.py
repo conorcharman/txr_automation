@@ -435,8 +435,7 @@ def run_script(
     # Identify temp config files created by ScriptRunnerService so we can
     # clean them up after the script finishes.
     _temp_files: list[str] = [
-        arg for arg in argv
-        if arg.endswith(".yaml") and os.sep + "tmp" in arg.lower()
+        arg for arg in argv if arg.endswith(".yaml") and os.sep + "tmp" in arg.lower()
     ]
 
     try:
@@ -468,9 +467,7 @@ def run_script(
                 # "not reportable" — that is a valid result, not an error.
                 exit_code = exc.code if isinstance(exc.code, int) else 1
                 if exit_code != 0 and exit_code not in accepted_exit_codes:
-                    raise RuntimeError(
-                        f"Script exited with code {exit_code}"
-                    ) from exc
+                    raise RuntimeError(f"Script exited with code {exit_code}") from exc
             finally:
                 with _argv_lock:
                     sys.argv = old_argv
@@ -493,9 +490,17 @@ def run_script(
                 if isinstance(paths_cfg, dict)
                 else None
             )
-            if isinstance(selected_codes, list) and selected_codes and isinstance(output_dir, str):
-                allowed = {str(code).strip() for code in selected_codes if str(code).strip()}
-                removed_count, scanned_count = _filter_template_outputs(output_dir, allowed)
+            if (
+                isinstance(selected_codes, list)
+                and selected_codes
+                and isinstance(output_dir, str)
+            ):
+                allowed = {
+                    str(code).strip() for code in selected_codes if str(code).strip()
+                }
+                removed_count, scanned_count = _filter_template_outputs(
+                    output_dir, allowed
+                )
                 _publish_log_line(
                     (
                         f"Template filter applied: kept {len(allowed)} selected incident(s); "
@@ -527,7 +532,9 @@ def run_script(
         _publish_progress(_publish, estimator.on_terminal())
         _publish({"type": "status", "data": "failed"})
         full_log = partial_output + ("\n" if partial_output else "") + error_str
-        _sync_update_status(job_id, "failed", error_message=error_str, log_output=full_log)
+        _sync_update_status(
+            job_id, "failed", error_message=error_str, log_output=full_log
+        )
         raise
 
     finally:
@@ -594,7 +601,12 @@ def run_incidents(
     _sync_update_status(job_id, "running")
     _publish({"type": "status", "data": "running"})
     _publish({"type": "progress", "data": 5})
-    _publish({"type": "log", "data": f"Starting incident run ({len(incident_configs)} incidents)"})
+    _publish(
+        {
+            "type": "log",
+            "data": f"Starting incident run ({len(incident_configs)} incidents)",
+        }
+    )
     heartbeat_stop = threading.Event()
     heartbeat_thread = _start_heartbeat(
         lambda line: _publish({"type": "log", "data": line}),
@@ -615,7 +627,8 @@ def run_incidents(
 
         # Track temp files for cleanup.
         temp_files.extend(
-            arg for arg in argv
+            arg
+            for arg in argv
             if arg.endswith(".yaml") and os.sep + "tmp" in arg.lower()
         )
 
@@ -641,8 +654,9 @@ def run_incidents(
                 root_logger.addHandler(capture_handler)
                 if old_root_level > logging.INFO:
                     root_logger.setLevel(logging.INFO)
-                with contextlib.redirect_stdout(script_buffer), \
-                     contextlib.redirect_stderr(script_buffer):
+                with contextlib.redirect_stdout(
+                    script_buffer
+                ), contextlib.redirect_stderr(script_buffer):
                     print(f"Loading module: {module_path}")
                     # Import inside the redirect so module-level logging
                     # handlers (StructuredLogger's StreamHandler) capture to
@@ -654,9 +668,7 @@ def run_incidents(
             except SystemExit as exc:
                 exit_code = exc.code if isinstance(exc.code, int) else 1
                 if exit_code != 0:
-                    raise RuntimeError(
-                        f"Script exited with code {exit_code}"
-                    ) from exc
+                    raise RuntimeError(f"Script exited with code {exit_code}") from exc
             finally:
                 with _argv_lock:
                     sys.argv = old_argv
@@ -680,11 +692,13 @@ def run_incidents(
             error_msg = f"  ✗ {incident_code} failed: {exc}"
             _publish({"type": "log", "data": error_msg})
             full_output.write(error_msg + "\n")
-            results.append({
-                "incident": incident_code,
-                "status": "failed",
-                "error": str(exc),
-            })
+            results.append(
+                {
+                    "incident": incident_code,
+                    "status": "failed",
+                    "error": str(exc),
+                }
+            )
             _publish({"type": "progress", "data": int((idx / total) * 100)})
             failed = True
             if stop_on_error:

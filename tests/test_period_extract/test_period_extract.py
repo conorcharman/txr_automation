@@ -20,17 +20,17 @@ import pytest
 
 from src.accuracy_testing.core.dtf_runner import DTFRunner
 from src.accuracy_testing.scripts.period_extract_generator import (
-    VALIDATION_TYPE_MAP,
     SQL_TEMPLATE_MAP,
+    VALIDATION_TYPE_MAP,
     ValidationType,
     fiscal_period_to_dates,
     main,
 )
 
-
 # ---------------------------------------------------------------------------
 # fiscal_period_to_dates — date range calculations
 # ---------------------------------------------------------------------------
+
 
 class TestFiscalPeriodToDates:
     """Verify date ranges for all quarters across two fiscal years."""
@@ -76,6 +76,7 @@ class TestFiscalPeriodToDates:
 # ---------------------------------------------------------------------------
 # DTFRunner.generate_dtf — template variable substitution
 # ---------------------------------------------------------------------------
+
 
 class TestDTFRunnerGenerateDtf:
     """Verify that DTFRunner correctly injects SQL and output path into the template."""
@@ -136,6 +137,7 @@ class TestDTFRunnerGenerateDtf:
 # Path conversion for Windows DTF compatibility
 # ---------------------------------------------------------------------------
 
+
 class TestDTFRunnerPathConversion:
     """Verify Linux-to-Windows path conversion for DTF compatibility."""
 
@@ -174,7 +176,7 @@ class TestDTFRunnerPathConversion:
 
         linux_path = "/app/data/FY26/Q2/extract.csv"
         custom_base = r"D:\custom\data\location"
-        
+
         with patch.dict(os.environ, {"DTF_WINDOWS_APP_DATA_PATH": custom_base}):
             result = DTFRunner._convert_path_to_windows(linux_path)
             assert result.startswith(r"D:\custom")
@@ -183,31 +185,35 @@ class TestDTFRunnerPathConversion:
     def test_generate_dtf_converts_linux_paths_to_windows(self, tmp_path: Path) -> None:
         """When given a Linux path, generate_dtf should write Windows path to DTF."""
         runner = DTFRunner()
-        
+
         # Simulate a Docker container Linux path for the CSV output
         linux_csv_path = "/app/data/FY26/Q2/accuracy_testing/extracts/csv/extract.csv"
         dtf_output = tmp_path / "test.dtf"
-        
+
         # Generate DTF with a simple SQL query
         runner.generate_dtf(
             sql_query="SELECT * FROM GLDATA/TXNREPESMA",
             output_csv_path=linux_csv_path,
             dtf_output_path=dtf_output,
         )
-        
+
         # Read the generated DTF and verify it contains a Windows path
         dtf_content = dtf_output.read_text(encoding="utf-8")
-        
+
         # The PCFile should contain a Windows path, not the Linux path
         assert "PCFile=" in dtf_content
-        
+
         # Extract the PCFile line
         pcfile_line = [l for l in dtf_content.split("\n") if l.startswith("PCFile=")][0]
         pcfile_value = pcfile_line.split("=", 1)[1].strip()
-        
+
         # Verify it's a Windows path (has backslashes or drive letter) and not the Linux path
-        assert "\\" in pcfile_value or ":" in pcfile_value, f"Expected Windows path, got: {pcfile_value}"
-        assert not pcfile_value.startswith("/app"), f"Should not contain Linux path, got: {pcfile_value}"
+        assert (
+            "\\" in pcfile_value or ":" in pcfile_value
+        ), f"Expected Windows path, got: {pcfile_value}"
+        assert not pcfile_value.startswith(
+            "/app"
+        ), f"Should not contain Linux path, got: {pcfile_value}"
         assert "FY26" in pcfile_value and "Q2" in pcfile_value
 
 
@@ -215,28 +221,30 @@ class TestDTFRunnerPathConversion:
 # SQL_TEMPLATE_MAP / VALIDATION_TYPE_MAP coverage
 # ---------------------------------------------------------------------------
 
+
 class TestTemplateMaps:
     """Verify that the template and validation-type maps are complete."""
 
     def test_sql_template_map_covers_all_validation_types(self) -> None:
         """SQL_TEMPLATE_MAP must have one entry for every ValidationType member."""
         for vtype in ValidationType:
-            assert vtype in SQL_TEMPLATE_MAP, (
-                f"SQL_TEMPLATE_MAP is missing an entry for {vtype!r}"
-            )
+            assert (
+                vtype in SQL_TEMPLATE_MAP
+            ), f"SQL_TEMPLATE_MAP is missing an entry for {vtype!r}"
 
     def test_validation_type_map_covers_all_cli_keys(self) -> None:
         """VALIDATION_TYPE_MAP must map the same number of entries as there are ValidationType members."""
         assert len(VALIDATION_TYPE_MAP) == len(ValidationType)
         for key, value in VALIDATION_TYPE_MAP.items():
-            assert isinstance(value, ValidationType), (
-                f"VALIDATION_TYPE_MAP[{key!r}] is not a ValidationType: {value!r}"
-            )
+            assert isinstance(
+                value, ValidationType
+            ), f"VALIDATION_TYPE_MAP[{key!r}] is not a ValidationType: {value!r}"
 
 
 # ---------------------------------------------------------------------------
 # main() dry-run
 # ---------------------------------------------------------------------------
+
 
 class TestPeriodExtractGeneratorMainDryRun:
     """Verify that --dry-run exits without writing any files."""
@@ -245,10 +253,14 @@ class TestPeriodExtractGeneratorMainDryRun:
         """main() with --dry-run should return without writing any files to output_dir."""
         test_argv = [
             "period_extract_generator",
-            "--validation-type", "buyer_id",
-            "--fiscal-year", "FY26",
-            "--quarter", "Q2",
-            "--output-dir", str(tmp_path),
+            "--validation-type",
+            "buyer_id",
+            "--fiscal-year",
+            "FY26",
+            "--quarter",
+            "Q2",
+            "--output-dir",
+            str(tmp_path),
             "--dry-run",
         ]
         with patch.object(sys, "argv", test_argv):

@@ -48,41 +48,41 @@ router = APIRouter(tags=["jobs"])
 #: dict used by the domain-specific routers.  Both must be kept in sync.
 SCRIPT_MODULES: dict[str, str] = {
     # Accuracy Testing — validation scripts
-    "buyer_id_validation":               "src.accuracy_testing.scripts.buyer_id_validation",
-    "seller_id_validation":              "src.accuracy_testing.scripts.seller_id_validation",
-    "inconsistent_buyer_id_validation":  "src.accuracy_testing.scripts.inconsistent_buyer_id_validation",
+    "buyer_id_validation": "src.accuracy_testing.scripts.buyer_id_validation",
+    "seller_id_validation": "src.accuracy_testing.scripts.seller_id_validation",
+    "inconsistent_buyer_id_validation": "src.accuracy_testing.scripts.inconsistent_buyer_id_validation",
     "inconsistent_seller_id_validation": "src.accuracy_testing.scripts.inconsistent_seller_id_validation",
-    "validate_ftbdm":                    "src.accuracy_testing.scripts.validate_ftbdm",
-    "validate_ftsdm":                    "src.accuracy_testing.scripts.validate_ftsdm",
-    "incorrect_net_amount_validation":   "src.accuracy_testing.scripts.incorrect_net_amount_validation",
-    "non_zero_net_quantity":             "src.accuracy_testing.scripts.non_zero_net_quantity",
-    "non_zero_net_amount":               "src.accuracy_testing.scripts.non_zero_net_amount",
-    "incorrect_time":                    "src.accuracy_testing.scripts.incorrect_time",
+    "validate_ftbdm": "src.accuracy_testing.scripts.validate_ftbdm",
+    "validate_ftsdm": "src.accuracy_testing.scripts.validate_ftsdm",
+    "incorrect_net_amount_validation": "src.accuracy_testing.scripts.incorrect_net_amount_validation",
+    "non_zero_net_quantity": "src.accuracy_testing.scripts.non_zero_net_quantity",
+    "non_zero_net_amount": "src.accuracy_testing.scripts.non_zero_net_amount",
+    "incorrect_time": "src.accuracy_testing.scripts.incorrect_time",
     # Accuracy Testing — utility scripts
-    "run_all_validations":               "src.accuracy_testing.scripts.run_all_validations",
-    "sql_extract_generator":             "src.accuracy_testing.scripts.sql_extract_generator",
-    "accuracy_template_generator":       "src.accuracy_testing.scripts.accuracy_template_generator",
-    "collate_csv_extracts":              "src.accuracy_testing.scripts.collate_csv_extracts",
-    "data_push":                         "src.accuracy_testing.scripts.data_push",
+    "run_all_validations": "src.accuracy_testing.scripts.run_all_validations",
+    "sql_extract_generator": "src.accuracy_testing.scripts.sql_extract_generator",
+    "accuracy_template_generator": "src.accuracy_testing.scripts.accuracy_template_generator",
+    "collate_csv_extracts": "src.accuracy_testing.scripts.collate_csv_extracts",
+    "data_push": "src.accuracy_testing.scripts.data_push",
     # Replay
-    "replay_phase2":                     "src.replay.phase_2_processor",
-    "replay_phase2_final":               "src.replay.phase_2_final_lookup",
-    "replay_phase3":                     "src.replay.phase_3_processor",
-    "replay_phase3_final":               "src.replay.phase_3_final_lookup",
-    "replay_merge_inconsistent":         "src.replay.merge_inconsistent_ids",
+    "replay_phase2": "src.replay.phase_2_processor",
+    "replay_phase2_final": "src.replay.phase_2_final_lookup",
+    "replay_phase3": "src.replay.phase_3_processor",
+    "replay_phase3_final": "src.replay.phase_3_final_lookup",
+    "replay_merge_inconsistent": "src.replay.merge_inconsistent_ids",
     # FIRDS
-    "firds_refresh":                     "src.firds.scripts.refresh_cache",
-    "firds_check":                       "src.firds.scripts.check_reportability",
-    "firds_backfill":                    "src.firds.scripts.backfill",
+    "firds_refresh": "src.firds.scripts.refresh_cache",
+    "firds_check": "src.firds.scripts.check_reportability",
+    "firds_backfill": "src.firds.scripts.backfill",
     # GLEIF
-    "gleif_refresh":                     "src.gleif.scripts.refresh_cache",
-    "gleif_check":                       "src.gleif.scripts.check_lei",
-    "gleif_backfill":                    "src.gleif.scripts.backfill",
+    "gleif_refresh": "src.gleif.scripts.refresh_cache",
+    "gleif_check": "src.gleif.scripts.check_lei",
+    "gleif_backfill": "src.gleif.scripts.backfill",
     # FCA Register
-    "fca_check":                         "src.fca.scripts.check_firm",
+    "fca_check": "src.fca.scripts.check_firm",
     # Utilities
-    "xlsx_csv_converter":                "src.utils.xlsx_csv_converter",
-    "xml_csv_converter":                 "src.utils.xml_csv_converter",
+    "xlsx_csv_converter": "src.utils.xlsx_csv_converter",
+    "xml_csv_converter": "src.utils.xml_csv_converter",
 }
 
 
@@ -249,9 +249,7 @@ async def create_job(
         argv,
         body.config,
     )
-    logger.info(
-        "Dispatched task for job %s (script=%s).", job.id, body.script_name
-    )
+    logger.info("Dispatched task for job %s (script=%s).", job.id, body.script_name)
 
     return JobResponse.from_orm_job(job)
 

@@ -24,7 +24,7 @@
 </head>
 <body>
 <p class="breadcrumb"><a href="00_index.html">TXR Automation Documentation</a> &rsaquo; Project Overview</p>
-<p class="last-updated">Last updated: 15 April 2026</p>
+<p class="last-updated">Last updated: 9 June 2026</p>
 <h1 style="color: rgb(23,43,77);" id="id-1.ProjectOverview-ProjectOverview">Project Overview</h1>
 <h2 style="color: rgb(23,43,77);" id="id-1.ProjectOverview-TableofContents">Table of Contents</h2>
 <ul>
@@ -37,28 +37,23 @@
 </ul>
 <span class="confluence-anchor-link" id="id-1.ProjectOverview-executive-summary"><span class="confluence-anchor-link" id="executive-summary" /></span><h2 style="color: rgb(23,43,77);" id="id-1.ProjectOverview-ExecutiveSummary">Executive Summary</h2>
 <div style="background: rgb(222,235,255);border-left: 4.0px solid rgb(0,82,204);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
-<strong>TXR Automation</strong> is a comprehensive Python suite that automates transaction reporting validation for regulatory compliance.
-    It has successfully replaced all 12 legacy VBA macros with a unified, tested, and maintainable Python codebase.
-    The project now also includes a PySide6 desktop GUI, a fullstack web application (React + FastAPI), an automated scheduling engine, and Docker-based deployment.
+<strong>TXR Automation (Phase 6)</strong> is a modern full-stack web application for financial transaction reporting validation. 
+    The system provides an interactive React 19 frontend with real-time validation feedback, a FastAPI backend with async job processing, and a powerful Python validation engine.
+    It handles buyer/seller identification validation, decision maker validation, pricing checks, and data reconciliation across 68 country-specific ID format patterns.
 </div>
-<p>The project migrates transaction reporting automation from VBA macros (Excel-based) to Python, eliminating Excel dependencies in favour of a CSV-first, platform-independent workflow. The system validates financial transaction data for compliance with UK MiFIR and ESMA RTS 22 requirements.</p>
-<h3 style="color: rgb(23,43,77);" id="id-1.ProjectOverview-KeyAchievements">Key Achievements</h3>
+<p><strong>Status:</strong> Phase 6 (Integration & Testing) in progress. The VBA-to-Python migration is complete (12 of 12 macros), and the web application is in active development. 
+    All core validation logic has been migrated, enhanced, and tested to ensure regulatory compliance with UK MiFIR and ESMA RTS 22 requirements.</p>
+<h3 style="color: rgb(23,43,77);" id="id-1.ProjectOverview-KeyAchievements">Key Achievements (Phase 6)</h3>
 <div style="background: rgb(227,252,239);border-left: 4.0px solid rgb(0,135,90);padding: 12.0px 16.0px;margin: 16.0px 0;border-radius: 3.0px;">
 <ul>
-<li>
-<strong>12 of 12 VBA macros fully migrated</strong> to Python (100% complete)</li>
-<li>
-<strong>466 automated tests</strong> with 100% pass rate</li>
-<li>
-<strong>50,000 records/second</strong> ID validation throughput (vs. minutes in VBA)</li>
-<li>
-<strong>40&ndash;50% code complexity reduction</strong> through shared core library and CSV-first approach</li>
-<li>
-<strong>Zero Excel dependencies</strong> &mdash; fully platform-independent</li>
-<li>
-<strong>PySide6 desktop GUI</strong> with 6-tab interface and automated scheduler</li>
-<li>
-<strong>Fullstack web application</strong> &mdash; React 19 SPA + FastAPI backend with Docker Compose deployment</li>
+<li><strong>Modern web application</strong> &mdash; React 19 frontend + FastAPI backend + PostgreSQL + Redis</li>
+<li><strong>Real-time job monitoring</strong> &mdash; WebSocket-powered dashboard with live progress updates</li>
+<li><strong>Async job queue</strong> &mdash; Celery workers for long-running validations, scheduled batch processing</li>
+<li><strong>Interactive validation interface</strong> &mdash; Upload CSV, validate immediately, view results in real-time</li>
+<li><strong>466+ automated tests</strong> across frontend and backend with 100% pass rate</li>
+<li><strong>Docker Compose deployment</strong> &mdash; Dev and production configurations ready to go</li>
+<li><strong>Complete API documentation</strong> &mdash; OpenAPI/Swagger at /docs with 12+ endpoint routers</li>
+<li><strong>VBA migration complete</strong> &mdash; All 12 legacy macros successfully migrated to Python (2024–2025)</li>
 </ul>
 </div>
 <h3 style="color: rgb(23,43,77);" id="id-1.ProjectOverview-BusinessCase">Business Case</h3>

@@ -47,9 +47,9 @@ Output CSV columns (all input columns + 3 appended):
     - error          (N = match, Y = mismatch)
 """
 
-import sys
-import csv
 import argparse
+import csv
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
@@ -59,31 +59,33 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.accuracy_testing.models.net_amount_record import NetAmountRecord
-from src.accuracy_testing.validators.net_amount_validator import NetAmountValidator
 from src.accuracy_testing.processor import (
     AccuracyConfigManager,
     AccuracyPathConfig,
     AccuracyProcessorConfig,
 )
+from src.accuracy_testing.validators.net_amount_validator import NetAmountValidator
 
 try:
     from core import create_logger, safe_open_csv  # type: ignore[assignment]
 except ImportError:
     import logging
 
-    def create_logger(name, log_dir=None, log_level='INFO'):  # type: ignore[assignment]
+    def create_logger(name, log_dir=None, log_level="INFO"):  # type: ignore[assignment]
         _logger = logging.getLogger(name)
         _logger.setLevel(getattr(logging, log_level))
         if not _logger.handlers:
             handler = logging.StreamHandler()
             handler.setFormatter(
-                logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                logging.Formatter(
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                )
             )
             _logger.addHandler(handler)
         return _logger
 
-    def safe_open_csv(file_path, mode, newline=''):  # type: ignore[assignment]
-        return open(file_path, mode, encoding='utf-8', newline=newline), 'utf-8'
+    def safe_open_csv(file_path, mode, newline=""):  # type: ignore[assignment]
+        return open(file_path, mode, encoding="utf-8", newline=newline), "utf-8"
 
 
 class NetAmountStats:
@@ -119,7 +121,7 @@ class NetAmountStats:
             "=" * 70,
         ]
         try:
-            if logger and hasattr(logger, 'info'):
+            if logger and hasattr(logger, "info"):
                 for line in lines:
                     logger.info(line)
             else:
@@ -185,8 +187,12 @@ class NonZeroNetAmountScript:
         else:
             raise ValueError("Must provide either config_path or config_dict")
 
-        self.path_config: AccuracyPathConfig = AccuracyConfigManager.get_path_config(self.config)
-        self.proc_config: AccuracyProcessorConfig = AccuracyConfigManager.get_processor_config(self.config)
+        self.path_config: AccuracyPathConfig = AccuracyConfigManager.get_path_config(
+            self.config
+        )
+        self.proc_config: AccuracyProcessorConfig = (
+            AccuracyConfigManager.get_processor_config(self.config)
+        )
 
         self.logger = create_logger(
             name="non_zero_net_amount",
@@ -206,7 +212,7 @@ class NonZeroNetAmountScript:
         Args:
             title: Section title text
         """
-        if hasattr(self.logger, 'log_header'):
+        if hasattr(self.logger, "log_header"):
             self.logger.log_header(title)  # type: ignore[union-attr]
         else:
             self.logger.info("=" * 70)
@@ -236,7 +242,7 @@ class NonZeroNetAmountScript:
             raise FileNotFoundError(f"Input file not found: {self.input_file}")
 
         records: List[NetAmountRecord] = []
-        f, encoding = safe_open_csv(self.input_file, 'r', newline='')
+        f, encoding = safe_open_csv(self.input_file, "r", newline="")
         self.logger.info(f"Detected encoding: {encoding}")
 
         try:
@@ -256,7 +262,9 @@ class NonZeroNetAmountScript:
                         self.logger.error(f"Row {row_idx}: {e} — skipping")
                         self.stats.processing_errors += 1
                     except Exception as e:
-                        self.logger.error(f"Unexpected error on row {row_idx}: {e} — skipping")
+                        self.logger.error(
+                            f"Unexpected error on row {row_idx}: {e} — skipping"
+                        )
                         self.stats.processing_errors += 1
 
         except Exception as e:
@@ -281,24 +289,26 @@ class NonZeroNetAmountScript:
         self.output_file.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            with open(self.output_file, 'w', encoding='utf-8', newline='') as f:
+            with open(self.output_file, "w", encoding="utf-8", newline="") as f:
                 writer = csv.writer(f)
                 writer.writerow(self.OUTPUT_COLUMNS)
 
                 for record in records:
-                    writer.writerow([
-                        record.child_ref,
-                        str(record.child_netamt),
-                        record.parent_ref,
-                        str(record.parent_netamt),
-                        record.bulk_ref,
-                        str(record.bulk_netamt),
-                        record.report_status,
-                        record.trade_date_time,
-                        str(record.net_amt),
-                        str(record.difference),
-                        record.error,
-                    ])
+                    writer.writerow(
+                        [
+                            record.child_ref,
+                            str(record.child_netamt),
+                            record.parent_ref,
+                            str(record.parent_netamt),
+                            record.bulk_ref,
+                            str(record.bulk_netamt),
+                            record.report_status,
+                            record.trade_date_time,
+                            str(record.net_amt),
+                            str(record.difference),
+                            record.error,
+                        ]
+                    )
 
             self.logger.info(f"Wrote {len(records)} records to output")
 
@@ -333,10 +343,10 @@ class NonZeroNetAmountScript:
         self._log_header("VALIDATING NET AMOUNT GROUPS")
         validation_stats = self.validator.validate_all(all_records)
 
-        self.stats.parents_processed = validation_stats['parents_processed']
-        self.stats.duplicates_removed = validation_stats['duplicates_removed']
-        self.stats.match_groups = validation_stats['match_groups']
-        self.stats.error_groups = validation_stats['error_groups']
+        self.stats.parents_processed = validation_stats["parents_processed"]
+        self.stats.duplicates_removed = validation_stats["duplicates_removed"]
+        self.stats.match_groups = validation_stats["match_groups"]
+        self.stats.error_groups = validation_stats["error_groups"]
 
         # Step 3: Collect the deduplicated output records
         # Re-run deduplication per group to get the retained records only.
@@ -381,6 +391,7 @@ class NonZeroNetAmountScript:
 # CLI
 # ------------------------------------------------------------------
 
+
 def parse_args() -> argparse.Namespace:
     """Create and parse the argument parser."""
     parser = argparse.ArgumentParser(
@@ -403,41 +414,41 @@ Examples:
     )
 
     parser.add_argument(
-        'input_file',
-        nargs='?',
+        "input_file",
+        nargs="?",
         type=str,
-        help='Path to input CSV file (positional, backward compatible)',
+        help="Path to input CSV file (positional, backward compatible)",
     )
     parser.add_argument(
-        'output_file',
-        nargs='?',
+        "output_file",
+        nargs="?",
         type=str,
-        help='Path to output CSV file (positional, backward compatible)',
+        help="Path to output CSV file (positional, backward compatible)",
     )
     parser.add_argument(
-        '--config',
+        "--config",
         type=str,
-        help='Path to YAML configuration file',
+        help="Path to YAML configuration file",
     )
     parser.add_argument(
-        '--log-level',
-        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         default=None,
-        help='Override logging level from config',
+        help="Override logging level from config",
     )
     parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help='Enable verbose output',
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output",
     )
     parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Preview without writing output file',
+        "--dry-run",
+        action="store_true",
+        help="Preview without writing output file",
     )
     parser.add_argument(
-        '--gui-mode',
-        action='store_true',
+        "--gui-mode",
+        action="store_true",
         help=argparse.SUPPRESS,
     )
 
@@ -453,18 +464,18 @@ def main() -> int:
             config = AccuracyConfigManager.load_from_yaml(args.config)
         elif args.input_file and args.output_file:
             config = {
-                'paths': {
-                    'input_file': args.input_file,
-                    'output_file': args.output_file,
-                    'log_output': 'logs',
+                "paths": {
+                    "input_file": args.input_file,
+                    "output_file": args.output_file,
+                    "log_output": "logs",
                 },
-                'processor': {
-                    'log_level': args.log_level or 'INFO',
-                    'verbose': args.verbose,
-                    'batch_size': 1000,
+                "processor": {
+                    "log_level": args.log_level or "INFO",
+                    "verbose": args.verbose,
+                    "batch_size": 1000,
                 },
             }
-        elif not getattr(args, 'gui_mode', False):
+        elif not getattr(args, "gui_mode", False):
             default_config = (
                 Path(__file__).parent.parent.parent.parent
                 / "config"
@@ -483,9 +494,9 @@ def main() -> int:
 
         # CLI overrides
         if args.log_level:
-            config.setdefault('processor', {})['log_level'] = args.log_level
+            config.setdefault("processor", {})["log_level"] = args.log_level
         if args.verbose:
-            config.setdefault('processor', {})['verbose'] = True
+            config.setdefault("processor", {})["verbose"] = True
 
         script = NonZeroNetAmountScript(
             config_dict=config,
@@ -500,6 +511,7 @@ def main() -> int:
     except Exception as e:
         print(f"\nFATAL ERROR: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 

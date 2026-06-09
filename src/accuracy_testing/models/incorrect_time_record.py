@@ -12,7 +12,7 @@ The AS400 TRDDATTIM format is: CCYY-MM-DD-HH.MM.SS.ffffff
 """
 
 from dataclasses import dataclass, field
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Number of characters used to derive the bulk reference from parent_ref.
 BULK_REF_LENGTH: int = 11
@@ -56,18 +56,18 @@ class IncorrectTimeRecord:
     parent_datetime: str
 
     # Derived field — set automatically in __post_init__
-    bulk_ref: str = field(default='', init=False)
+    bulk_ref: str = field(default="", init=False)
 
     # Output fields (set by validator)
-    time_difference: str = field(default='')
-    error: str = field(default='N')
+    time_difference: str = field(default="")
+    error: str = field(default="N")
 
     def __post_init__(self) -> None:
         """Derive bulk_ref from the first BULK_REF_LENGTH characters of parent_ref."""
         self.bulk_ref = self.parent_ref[:BULK_REF_LENGTH]
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'IncorrectTimeRecord':
+    def from_dict(cls, data: Dict[str, Any]) -> "IncorrectTimeRecord":
         """
         Create an IncorrectTimeRecord from a dictionary (e.g. a CSV row dict).
 
@@ -93,14 +93,20 @@ class IncorrectTimeRecord:
             >>> record = IncorrectTimeRecord.from_dict(row)
         """
         return cls(
-            child_ref=str(data.get('child_ref') or data.get('CHILD_REF', '')).strip(),
-            child_datetime=str(data.get('child_datetime') or data.get('CHILD_DATETIME', '')).strip(),
-            parent_ref=str(data.get('parent_ref') or data.get('PARENT_REF', '')).strip(),
-            parent_datetime=str(data.get('parent_datetime') or data.get('PARENT_DATETIME', '')).strip(),
+            child_ref=str(data.get("child_ref") or data.get("CHILD_REF", "")).strip(),
+            child_datetime=str(
+                data.get("child_datetime") or data.get("CHILD_DATETIME", "")
+            ).strip(),
+            parent_ref=str(
+                data.get("parent_ref") or data.get("PARENT_REF", "")
+            ).strip(),
+            parent_datetime=str(
+                data.get("parent_datetime") or data.get("PARENT_DATETIME", "")
+            ).strip(),
         )
 
     @classmethod
-    def from_row(cls, row: list, row_index: int = 0) -> 'IncorrectTimeRecord':
+    def from_row(cls, row: list, row_index: int = 0) -> "IncorrectTimeRecord":
         """
         Create an IncorrectTimeRecord from a positional CSV row.
 
@@ -140,11 +146,11 @@ class IncorrectTimeRecord:
             Ordered dictionary containing all input, derived, and output fields.
         """
         return {
-            'child_ref': self.child_ref,
-            'child_datetime': self.child_datetime,
-            'parent_ref': self.parent_ref,
-            'parent_datetime': self.parent_datetime,
-            'bulk_ref': self.bulk_ref,
-            'time_difference': self.time_difference,
-            'error': self.error,
+            "child_ref": self.child_ref,
+            "child_datetime": self.child_datetime,
+            "parent_ref": self.parent_ref,
+            "parent_datetime": self.parent_datetime,
+            "bulk_ref": self.bulk_ref,
+            "time_difference": self.time_difference,
+            "error": self.error,
         }

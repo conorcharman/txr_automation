@@ -2,10 +2,11 @@
 Pytest fixtures for integration tests.
 """
 
-import pytest
-import tempfile
 import os
+import tempfile
 from pathlib import Path
+
+import pytest
 
 
 @pytest.fixture
@@ -21,13 +22,13 @@ def temp_data_dir(tmp_path):
     """Create a temporary directory for test data files."""
     data_dir = tmp_path / "data"
     data_dir.mkdir()
-    
+
     # Create subdirectories
     (data_dir / "input").mkdir()
     (data_dir / "output").mkdir()
     (data_dir / "logs").mkdir()
     (data_dir / "incident").mkdir()
-    
+
     return data_dir
 
 
@@ -135,14 +136,14 @@ def clean_env():
     """Clean environment variables before and after tests."""
     # Save original environment
     original_env = os.environ.copy()
-    
+
     # Remove TXR_* variables
     for key in list(os.environ.keys()):
-        if key.startswith('TXR_'):
+        if key.startswith("TXR_"):
             del os.environ[key]
-    
+
     yield
-    
+
     # Restore original environment
     os.environ.clear()
     os.environ.update(original_env)

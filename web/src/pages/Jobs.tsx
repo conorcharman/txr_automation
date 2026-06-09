@@ -33,7 +33,7 @@ const Jobs: React.FC = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showSettings, setShowSettings] = useState(false);
-  const [logOutput, setLogOutput] = useState<string>(readGlobalLog);
+  const [logOutputOverride, setLogOutputOverride] = useState<string>(readGlobalLog);
 
   // Populate log path default from server config when localStorage is empty.
   const { data: fsConfig } = useQuery({
@@ -41,11 +41,7 @@ const Jobs: React.FC = () => {
     queryFn: getFilesystemConfig,
     staleTime: Infinity,
   });
-  useEffect(() => {
-    if (!logOutput && fsConfig?.dataRoot) {
-      setLogOutput(fsConfig.dataRoot + "/logs");
-    }
-  }, [fsConfig, logOutput]);
+  const logOutput = logOutputOverride || (fsConfig?.dataRoot ? `${fsConfig.dataRoot}/logs` : "");
 
   const clearMutation = useMutation({
     mutationFn: clearJobHistory,
@@ -119,7 +115,7 @@ const Jobs: React.FC = () => {
           <label className="text-xs font-medium text-muted-foreground">Log Output Directory</label>
           <PathPickerInput
             value={logOutput}
-            onChange={setLogOutput}
+            onChange={setLogOutputOverride}
             mode="directory"
             placeholder="logs"
           />

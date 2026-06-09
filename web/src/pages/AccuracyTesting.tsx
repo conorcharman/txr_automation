@@ -33,6 +33,8 @@ import type {
   ResolvedPaths,
 } from "@/types";
 
+/* eslint-disable react-hooks/incompatible-library -- Intentional watch subscriptions persist form state safely for this page. */
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------

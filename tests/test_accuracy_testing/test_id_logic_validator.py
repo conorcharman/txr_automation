@@ -7,6 +7,7 @@ identifiers.  Each test class covers one country or one cross-cutting concern.
 """
 
 import pytest
+
 from src.accuracy_testing.id_logic_validator import IDLogicValidator
 
 
@@ -19,6 +20,7 @@ def validator() -> IDLogicValidator:
 # ===========================================================================
 # Spanish NIF / NIE logic (check-letter, mod-23)
 # ===========================================================================
+
 
 class TestSpanishNIFLogic:
     """Tests for _validate_spanish_nidn check-letter algorithm."""
@@ -76,21 +78,28 @@ class TestSpanishNIFLogic:
         assert validator._validate_spanish_nidn("", "", "") is True
         assert validator._validate_spanish_nidn("ABCDEFGHI", "", "") is True
 
-    def test_validate_id_logic_dispatches_to_es(self, validator: IDLogicValidator) -> None:
+    def test_validate_id_logic_dispatches_to_es(
+        self, validator: IDLogicValidator
+    ) -> None:
         """validate_id_logic routes ES NIDN to the Spanish validator."""
         # Valid NIF with country prefix stripped by validate_id_logic
         assert validator.validate_id_logic("ES12345678Z", "NIDN", "ES", "", "") is True
         assert validator.validate_id_logic("ES12345678A", "NIDN", "ES", "", "") is False
 
-    def test_validate_id_logic_non_nidn_skipped(self, validator: IDLogicValidator) -> None:
+    def test_validate_id_logic_non_nidn_skipped(
+        self, validator: IDLogicValidator
+    ) -> None:
         """Non-NIDN types are not validated."""
         assert validator.validate_id_logic("ES12345678A", "CCPT", "ES", "", "") is True
-        assert validator.validate_id_logic("ES12345678A", "CONCAT", "ES", "", "") is True
+        assert (
+            validator.validate_id_logic("ES12345678A", "CONCAT", "ES", "", "") is True
+        )
 
 
 # ===========================================================================
 # Belgian NIDN — year-2000 DOB handling
 # ===========================================================================
+
 
 class TestBelgianNIDNYear2000:
     """Verify century-prefix logic in the Belgian check-digit calculation."""
@@ -120,6 +129,7 @@ class TestBelgianNIDNYear2000:
 # GB NINO format — prefix rejection via id_format_manager
 # ===========================================================================
 
+
 class TestGBNINOFormatInvalidPrefixes:
     """
     Verify that the updated GB NINO regex in id_formats.py correctly rejects
@@ -129,41 +139,43 @@ class TestGBNINOFormatInvalidPrefixes:
     @pytest.fixture
     def format_manager(self):
         from src.accuracy_testing.core.id_formats import IDFormatManager
+
         return IDFormatManager()
 
     # --- Prefixes that MUST be rejected ---------------------------------
 
     @pytest.mark.parametrize("prefix", ["BG", "GB", "KN", "NK", "NT", "OO", "TN", "ZZ"])
-    def test_invalid_hmrc_prefix_rejected(
-        self, format_manager, prefix: str
-    ) -> None:
+    def test_invalid_hmrc_prefix_rejected(self, format_manager, prefix: str) -> None:
         """HMRC-invalid prefixes are rejected by the format validator."""
         nino = f"{prefix}123456C"
-        assert format_manager.validate("GB", "NIDN", nino) is False, (
-            f"Expected {nino} to be invalid (prefix '{prefix}' is HMRC-disallowed)"
-        )
+        assert (
+            format_manager.validate("GB", "NIDN", nino) is False
+        ), f"Expected {nino} to be invalid (prefix '{prefix}' is HMRC-disallowed)"
 
     # --- Prefixes that MUST be accepted ---------------------------------
 
-    @pytest.mark.parametrize("nino", [
-        "AB123456C",  # Standard valid NINO
-        "CR045092B",  # CR prefix — valid per HMRC, was incorrectly rejected before fix
-        "JL123456A",  # Another valid prefix
-        "ST123456D",  # Another valid prefix
-    ])
+    @pytest.mark.parametrize(
+        "nino",
+        [
+            "AB123456C",  # Standard valid NINO
+            "CR045092B",  # CR prefix — valid per HMRC, was incorrectly rejected before fix
+            "JL123456A",  # Another valid prefix
+            "ST123456D",  # Another valid prefix
+        ],
+    )
     def test_valid_nino_accepted(self, format_manager, nino: str) -> None:
         """Structurally valid NINOs (including CR prefix) are accepted."""
-        assert format_manager.validate("GB", "NIDN", nino) is True, (
-            f"Expected {nino} to be valid but was rejected"
-        )
+        assert (
+            format_manager.validate("GB", "NIDN", nino) is True
+        ), f"Expected {nino} to be valid but was rejected"
 
     def test_invalid_first_char_rejected(self, format_manager) -> None:
         """First character must not be D, F, I, Q, U, or V."""
         for char in "DFIQUV":
             nino = f"{char}B123456C"
-            assert format_manager.validate("GB", "NIDN", nino) is False, (
-                f"Expected {nino} to be invalid (first char '{char}' disallowed)"
-            )
+            assert (
+                format_manager.validate("GB", "NIDN", nino) is False
+            ), f"Expected {nino} to be invalid (first char '{char}' disallowed)"
 
     def test_invalid_second_char_rejected(self, format_manager) -> None:
         """
@@ -176,6 +188,6 @@ class TestGBNINOFormatInvalidPrefixes:
         """
         for char in "DFIOUV":
             nino = f"A{char}123456C"
-            assert format_manager.validate("GB", "NIDN", nino) is False, (
-                f"Expected A{char}123456C to be invalid (second char '{char}' disallowed)"
-            )
+            assert (
+                format_manager.validate("GB", "NIDN", nino) is False
+            ), f"Expected A{char}123456C to be invalid (second char '{char}' disallowed)"

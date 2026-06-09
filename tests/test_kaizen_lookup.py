@@ -3,10 +3,13 @@
 
 import csv
 from pathlib import Path
+
 from src.accuracy_testing.processor import ClientRecord, IDValidationProcessor
 
 # Test with a real transaction from the 7_35 incident
-template_file = Path(r'c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 - 7_35.csv')
+template_file = Path(
+    r"c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 - 7_35.csv"
+)
 
 # Create a test record
 test_record = ClientRecord(
@@ -23,7 +26,7 @@ test_record = ClientRecord(
     gender="M",
     primary_nationality="GB",
     secondary_nationality="",
-    original_row=[]
+    original_row=[],
 )
 
 # Initialize processor with template (using column NAMES)
@@ -32,7 +35,7 @@ processor = IDValidationProcessor(
     verbose=False,
     template_path=str(template_file),
     template_id_column="Buyer ID Code",  # Column NAME
-    template_type_column="Type of Buyer ID Code"  # Column NAME
+    template_type_column="Type of Buyer ID Code",  # Column NAME
 )
 
 print("=" * 80)
@@ -65,11 +68,15 @@ if processed.kaizen_error:
 else:
     print("❌ FAILED: Template lookup is NOT working")
     print("   Kaizen Error field is empty")
-    
+
     # Debug: Check if transaction exists in template
     if processed.transaction_ref in processor.template_data:
         template_entry = processor.template_data[processed.transaction_ref]
         print(f"   DEBUG: Template entry exists: {template_entry}")
     else:
-        print(f"   DEBUG: Transaction {processed.transaction_ref} not found in template")
-        print(f"   DEBUG: First 3 template keys: {list(processor.template_data.keys())[:3]}")
+        print(
+            f"   DEBUG: Transaction {processed.transaction_ref} not found in template"
+        )
+        print(
+            f"   DEBUG: First 3 template keys: {list(processor.template_data.keys())[:3]}"
+        )

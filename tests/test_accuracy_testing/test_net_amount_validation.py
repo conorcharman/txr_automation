@@ -6,10 +6,11 @@ Unit tests for the NetAmountRecord model and NetAmountValidator
 for Incident Code 7_42.
 """
 
-import pytest
+import sys
 from decimal import Decimal
 from pathlib import Path
-import sys
+
+import pytest
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent
@@ -18,10 +19,10 @@ sys.path.insert(0, str(project_root))
 from src.accuracy_testing.models.net_amount_record import NetAmountRecord
 from src.accuracy_testing.validators.net_amount_validator import NetAmountValidator
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
+
 
 def _make_record(
     child_ref: str,
@@ -45,6 +46,7 @@ def _make_record(
 # ---------------------------------------------------------------------------
 # NetAmountRecord model tests
 # ---------------------------------------------------------------------------
+
 
 class TestNetAmountRecord:
     """Unit tests for the NetAmountRecord dataclass."""
@@ -96,7 +98,14 @@ class TestNetAmountRecord:
 
     def test_from_row_positional(self):
         """Test from_row() using positional CSV values."""
-        row = ["DD2024000004", "750.50", "PARENT004", "1500.00", "DRAFT", "2024-09-20 10:00:00"]
+        row = [
+            "DD2024000004",
+            "750.50",
+            "PARENT004",
+            "1500.00",
+            "DRAFT",
+            "2024-09-20 10:00:00",
+        ]
         record = NetAmountRecord.from_row(row, row_index=2)
 
         assert record.child_ref == "DD2024000004"
@@ -133,9 +142,17 @@ class TestNetAmountRecord:
 
         d = record.to_dict()
         expected_keys = [
-            "child_ref", "child_netamt", "parent_ref", "parent_netamt",
-            "bulk_ref", "bulk_netamt",
-            "report_status", "trade_date_time", "net_amt", "difference", "error",
+            "child_ref",
+            "child_netamt",
+            "parent_ref",
+            "parent_netamt",
+            "bulk_ref",
+            "bulk_netamt",
+            "report_status",
+            "trade_date_time",
+            "net_amt",
+            "difference",
+            "error",
         ]
         assert list(d.keys()) == expected_keys
         assert d["error"] == "N"
@@ -155,6 +172,7 @@ class TestNetAmountRecord:
 # ---------------------------------------------------------------------------
 # NetAmountValidator deduplication tests
 # ---------------------------------------------------------------------------
+
 
 class TestNetAmountValidatorDeduplication:
     """Tests for deduplicate_group()."""
@@ -205,8 +223,8 @@ class TestNetAmountValidatorDeduplication:
         records = [
             _make_record("CHILD001", "100.00"),
             _make_record("CHILD002", "200.00"),
-            _make_record("CHILD001", "99.00"),   # dupe of CHILD001
-            _make_record("CHILD002", "88.00"),   # dupe of CHILD002
+            _make_record("CHILD001", "99.00"),  # dupe of CHILD001
+            _make_record("CHILD002", "88.00"),  # dupe of CHILD002
         ]
         deduped, dupes = self.validator.deduplicate_group(records)
 
@@ -217,6 +235,7 @@ class TestNetAmountValidatorDeduplication:
 # ---------------------------------------------------------------------------
 # NetAmountValidator validation tests
 # ---------------------------------------------------------------------------
+
 
 class TestNetAmountValidatorValidation:
     """Tests for validate_group() and validate_all()."""
@@ -289,12 +308,20 @@ class TestNetAmountValidatorValidation:
     def test_validate_all_multiple_parent_groups(self):
         """Two separate parent groups are each validated independently."""
         parent_a = [
-            _make_record("CHILD001", "1000.00", parent_ref="PARENT_A", parent_netamt="2000.00"),
-            _make_record("CHILD002", "1000.00", parent_ref="PARENT_A", parent_netamt="2000.00"),
+            _make_record(
+                "CHILD001", "1000.00", parent_ref="PARENT_A", parent_netamt="2000.00"
+            ),
+            _make_record(
+                "CHILD002", "1000.00", parent_ref="PARENT_A", parent_netamt="2000.00"
+            ),
         ]
         parent_b = [
-            _make_record("CHILD003", "500.00", parent_ref="PARENT_B", parent_netamt="1000.00"),
-            _make_record("CHILD004", "400.00", parent_ref="PARENT_B", parent_netamt="1000.00"),
+            _make_record(
+                "CHILD003", "500.00", parent_ref="PARENT_B", parent_netamt="1000.00"
+            ),
+            _make_record(
+                "CHILD004", "400.00", parent_ref="PARENT_B", parent_netamt="1000.00"
+            ),
         ]
         all_records = parent_a + parent_b
 
@@ -316,12 +343,24 @@ class TestNetAmountValidatorValidation:
     def test_validate_all_stats_duplicates_removed(self):
         """validate_all() correctly totals duplicates_removed across groups."""
         records = [
-            _make_record("CHILD001", "1000.00", parent_ref="P1", parent_netamt="2000.00"),
-            _make_record("CHILD001", "1000.00", parent_ref="P1", parent_netamt="2000.00"),  # dupe
-            _make_record("CHILD002", "1000.00", parent_ref="P1", parent_netamt="2000.00"),
-            _make_record("CHILD003", "500.00", parent_ref="P2", parent_netamt="1000.00"),
-            _make_record("CHILD003", "500.00", parent_ref="P2", parent_netamt="1000.00"),   # dupe
-            _make_record("CHILD004", "500.00", parent_ref="P2", parent_netamt="1000.00"),
+            _make_record(
+                "CHILD001", "1000.00", parent_ref="P1", parent_netamt="2000.00"
+            ),
+            _make_record(
+                "CHILD001", "1000.00", parent_ref="P1", parent_netamt="2000.00"
+            ),  # dupe
+            _make_record(
+                "CHILD002", "1000.00", parent_ref="P1", parent_netamt="2000.00"
+            ),
+            _make_record(
+                "CHILD003", "500.00", parent_ref="P2", parent_netamt="1000.00"
+            ),
+            _make_record(
+                "CHILD003", "500.00", parent_ref="P2", parent_netamt="1000.00"
+            ),  # dupe
+            _make_record(
+                "CHILD004", "500.00", parent_ref="P2", parent_netamt="1000.00"
+            ),
         ]
         stats = self.validator.validate_all(records)
 
@@ -334,7 +373,9 @@ class TestNetAmountValidatorValidation:
         # CHILD001 appears twice — second occurrence must not be added to sum.
         records = [
             _make_record("CHILD001", "1000.00", parent_netamt="3000.00"),
-            _make_record("CHILD001", "9999.00", parent_netamt="3000.00"),  # dupe — excluded
+            _make_record(
+                "CHILD001", "9999.00", parent_netamt="3000.00"
+            ),  # dupe — excluded
             _make_record("CHILD002", "2000.00", parent_netamt="3000.00"),
         ]
         self.validator.validate_group(records)
@@ -348,7 +389,7 @@ class TestNetAmountValidatorValidation:
         records = [
             NetAmountRecord(
                 child_ref="CHILD001",
-                child_netamt=Decimal("0"),   # default from null
+                child_netamt=Decimal("0"),  # default from null
                 parent_ref="PARENT001",
                 parent_netamt=Decimal("0"),  # default from null
                 report_status="",
@@ -390,6 +431,7 @@ class TestNetAmountValidatorValidation:
 # Bulk ref grouping tests
 # ---------------------------------------------------------------------------
 
+
 class TestBulkRefGrouping:
     """Tests that validate_all groups by bulk_ref (first 11 chars of parent_ref)."""
 
@@ -403,9 +445,24 @@ class TestBulkRefGrouping:
         # the same total for every sub-parent). bulk_netamt = 3500.
         # net_amt = 1000+1500+1000 = 3500 -> N
         records = [
-            _make_record("CHILD001", "1000.00", parent_ref="44625CPNJMN1G01", parent_netamt="3500.00"),
-            _make_record("CHILD002", "1500.00", parent_ref="44625CPNJMN1G02", parent_netamt="3500.00"),
-            _make_record("CHILD003", "1000.00", parent_ref="44625CPNJMN1G03", parent_netamt="3500.00"),
+            _make_record(
+                "CHILD001",
+                "1000.00",
+                parent_ref="44625CPNJMN1G01",
+                parent_netamt="3500.00",
+            ),
+            _make_record(
+                "CHILD002",
+                "1500.00",
+                parent_ref="44625CPNJMN1G02",
+                parent_netamt="3500.00",
+            ),
+            _make_record(
+                "CHILD003",
+                "1000.00",
+                parent_ref="44625CPNJMN1G03",
+                parent_netamt="3500.00",
+            ),
         ]
         stats = self.validator.validate_all(records)
 
@@ -423,8 +480,18 @@ class TestBulkRefGrouping:
         # Two sub-parents, both carrying the shared bulk-level parent_netamt=2000.
         # Children sum to 2500 -> difference=500 -> error Y.
         records = [
-            _make_record("CHILD001", "1000.00", parent_ref="44625CPNJMN1G01", parent_netamt="2000.00"),
-            _make_record("CHILD002", "1500.00", parent_ref="44625CPNJMN1G02", parent_netamt="2000.00"),
+            _make_record(
+                "CHILD001",
+                "1000.00",
+                parent_ref="44625CPNJMN1G01",
+                parent_netamt="2000.00",
+            ),
+            _make_record(
+                "CHILD002",
+                "1500.00",
+                parent_ref="44625CPNJMN1G02",
+                parent_netamt="2000.00",
+            ),
         ]
         self.validator.validate_all(records)
 
@@ -437,14 +504,24 @@ class TestBulkRefGrouping:
     def test_distinct_bulk_refs_processed_independently(self):
         """Two different bulk refs produce independent results."""
         records = [
-            _make_record("CHILD001", "2000.00", parent_ref="AAAAAAAAAA1G01", parent_netamt="2000.00"),
-            _make_record("CHILD002", "1000.00", parent_ref="BBBBBBBBBB1G01", parent_netamt="3000.00"),
+            _make_record(
+                "CHILD001",
+                "2000.00",
+                parent_ref="AAAAAAAAAA1G01",
+                parent_netamt="2000.00",
+            ),
+            _make_record(
+                "CHILD002",
+                "1000.00",
+                parent_ref="BBBBBBBBBB1G01",
+                parent_netamt="3000.00",
+            ),
         ]
         stats = self.validator.validate_all(records)
 
         assert stats["parents_processed"] == 2
-        assert records[0].error == "N"   # 2000 == 2000
-        assert records[1].error == "Y"   # 1000 != 3000
+        assert records[0].error == "N"  # 2000 == 2000
+        assert records[1].error == "Y"  # 1000 != 3000
 
     def test_sub_parents_carry_same_netamt_no_double_count(self):
         """
@@ -462,8 +539,18 @@ class TestBulkRefGrouping:
         # bulk_netamt = 1000 (NOT 2000 as the old summing code would produce).
         # Children: A0000000001(600) + B0000000001(400) = 1000 -> match.
         records = [
-            _make_record("A0000000001", "600.00", parent_ref="44625CPNJMN1G01", parent_netamt="1000.00"),
-            _make_record("B0000000001", "400.00", parent_ref="44625CPNJMN1G02", parent_netamt="1000.00"),
+            _make_record(
+                "A0000000001",
+                "600.00",
+                parent_ref="44625CPNJMN1G01",
+                parent_netamt="1000.00",
+            ),
+            _make_record(
+                "B0000000001",
+                "400.00",
+                parent_ref="44625CPNJMN1G02",
+                parent_netamt="1000.00",
+            ),
         ]
         stats = self.validator.validate_all(records)
 
@@ -481,12 +568,15 @@ class TestBulkRefGrouping:
 # Tolerance threshold tests
 # ---------------------------------------------------------------------------
 
+
 class TestNetAmountTolerance:
     """Tests for the ±1.0 difference tolerance applied to 7_42 only."""
 
     def setup_method(self):
         # Disable per-record scaling so these tests exercise the fixed floor only.
-        self.validator = NetAmountValidator(tolerance=Decimal('1.0'), tolerance_per_record=Decimal('0'))
+        self.validator = NetAmountValidator(
+            tolerance=Decimal("1.0"), tolerance_per_record=Decimal("0")
+        )
 
     def test_exact_zero_still_matches(self):
         """Zero difference is within tolerance -> error N."""
@@ -538,7 +628,7 @@ class TestNetAmountTolerance:
 
     def test_custom_tolerance_zero_is_strict(self):
         """tolerance=0 reverts to exact match behaviour."""
-        validator = NetAmountValidator(tolerance=Decimal('0'))
+        validator = NetAmountValidator(tolerance=Decimal("0"))
         records = [_make_record("CHILD001", "1000.50", parent_netamt="1000.00")]
         validator.validate_group(records)
         assert records[0].error == "Y"
@@ -559,12 +649,15 @@ class TestNetAmountTolerance:
 # Per-record scaling tolerance tests
 # ---------------------------------------------------------------------------
 
+
 class TestNetAmountPerRecordTolerance:
     """Tests for the per-record scaling component of effective tolerance."""
 
     def test_small_group_uses_fixed_floor(self):
         """For a 2-record group: max(1.0, 0.005×2)=1.0 — floor wins."""
-        validator = NetAmountValidator()  # defaults: tolerance=1.0, tolerance_per_record=0.005
+        validator = (
+            NetAmountValidator()
+        )  # defaults: tolerance=1.0, tolerance_per_record=0.005
         records = [
             _make_record("CHILD001", "500.50", parent_netamt="1000.00"),
             _make_record("CHILD002", "500.00", parent_netamt="1000.00"),
@@ -578,10 +671,9 @@ class TestNetAmountPerRecordTolerance:
         validator = NetAmountValidator()
         # 637 records contributing 1.00 each, 1 record contributing 2.28
         # net_amt = 637 + 2.28 = 639.28; parent_netamt = 638.00; difference = +1.28
-        records = (
-            [_make_record(f"C{i:06}", "1.00", parent_netamt="638.00") for i in range(637)]
-            + [_make_record("C000638", "2.28", parent_netamt="638.00")]
-        )
+        records = [
+            _make_record(f"C{i:06}", "1.00", parent_netamt="638.00") for i in range(637)
+        ] + [_make_record("C000638", "2.28", parent_netamt="638.00")]
         validator.validate_group(records)
         assert records[0].difference == Decimal("1.28")
         assert records[0].error == "N"  # 1.28 <= 3.19
@@ -590,21 +682,21 @@ class TestNetAmountPerRecordTolerance:
         """638 records: difference of 4.00 exceeds scaled tolerance of 3.19 -> Y."""
         validator = NetAmountValidator()
         # net_amt = 637 + 5.00 = 642.00; difference = +4.00
-        records = (
-            [_make_record(f"C{i:06}", "1.00", parent_netamt="638.00") for i in range(637)]
-            + [_make_record("C000638", "5.00", parent_netamt="638.00")]
-        )
+        records = [
+            _make_record(f"C{i:06}", "1.00", parent_netamt="638.00") for i in range(637)
+        ] + [_make_record("C000638", "5.00", parent_netamt="638.00")]
         validator.validate_group(records)
         assert records[0].difference == Decimal("4.00")
         assert records[0].error == "Y"  # 4.00 > 3.19
 
     def test_per_record_zero_disables_scaling(self):
         """tolerance_per_record=0 means effective_tolerance is always self.tolerance."""
-        validator = NetAmountValidator(tolerance=Decimal('1.0'), tolerance_per_record=Decimal('0'))
-        records = (
-            [_make_record(f"C{i:06}", "1.00", parent_netamt="638.00") for i in range(637)]
-            + [_make_record("C000638", "2.28", parent_netamt="638.00")]
+        validator = NetAmountValidator(
+            tolerance=Decimal("1.0"), tolerance_per_record=Decimal("0")
         )
+        records = [
+            _make_record(f"C{i:06}", "1.00", parent_netamt="638.00") for i in range(637)
+        ] + [_make_record("C000638", "2.28", parent_netamt="638.00")]
         # difference=1.28, effective_tolerance=max(1.0, 0)=1.0 -> 1.28 > 1.0 -> Y
         validator.validate_group(records)
         assert records[0].error == "Y"
@@ -614,10 +706,9 @@ class TestNetAmountPerRecordTolerance:
         validator = NetAmountValidator()
         # 200 records: effective_tolerance = max(1.0, 0.005×200) = max(1.0, 1.0) = 1.0
         # difference = exactly 1.0 -> N
-        records = (
-            [_make_record(f"C{i:06}", "1.00", parent_netamt="200.00") for i in range(199)]
-            + [_make_record("C000200", "2.00", parent_netamt="200.00")]
-        )
+        records = [
+            _make_record(f"C{i:06}", "1.00", parent_netamt="200.00") for i in range(199)
+        ] + [_make_record("C000200", "2.00", parent_netamt="200.00")]
         validator.validate_group(records)
         assert records[0].difference == Decimal("1.00")
         assert records[0].error == "N"

@@ -274,13 +274,21 @@ def _process_incident(
     extra_cols: List[str] = []
     if buyer_col:
         extra_cols += [
-            "buyer_lei_valid", "buyer_lei_status", "buyer_legal_name",
-            "buyer_lei_reason", "buyer_entity_category", "buyer_legal_address_country",
+            "buyer_lei_valid",
+            "buyer_lei_status",
+            "buyer_legal_name",
+            "buyer_lei_reason",
+            "buyer_entity_category",
+            "buyer_legal_address_country",
         ]
     if seller_col:
         extra_cols += [
-            "seller_lei_valid", "seller_lei_status", "seller_legal_name",
-            "seller_lei_reason", "seller_entity_category", "seller_legal_address_country",
+            "seller_lei_valid",
+            "seller_lei_status",
+            "seller_legal_name",
+            "seller_lei_reason",
+            "seller_entity_category",
+            "seller_legal_address_country",
         ]
 
     out_fieldnames = fieldnames + extra_cols
@@ -346,8 +354,12 @@ def _process_generic(
         sys.exit(1)
 
     extra_cols = [
-        "lei_valid", "lei_status", "legal_name",
-        "lei_reason", "entity_category", "legal_address_country",
+        "lei_valid",
+        "lei_status",
+        "legal_name",
+        "lei_reason",
+        "entity_category",
+        "legal_address_country",
     ]
     out_fieldnames = fieldnames + extra_cols
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -401,9 +413,7 @@ def main() -> None:
             cache_for_refresh.initialise_db()
             refresher = GleifRefresher(cache=cache_for_refresh)
             result = refresher.run_full_refresh()
-            print(
-                f"Refresh complete: {result.total_records:,} records loaded."
-            )
+            print(f"Refresh complete: {result.total_records:,} records loaded.")
         else:
             print(
                 f"Cache exists at '{args.db}'. "

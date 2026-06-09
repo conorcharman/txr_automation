@@ -8,7 +8,9 @@ from api.schemas.fca import FcaCheckRequest
 from api.services.script_runner import script_runner_service
 
 
-def test_build_fca_argv_includes_config_with_credentials(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_fca_argv_includes_config_with_credentials(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """FCA batch argv should include --config and carry credentials in snapshot."""
     monkeypatch.setattr(
         "api.services.script_runner.get_settings",
@@ -35,11 +37,21 @@ def test_build_fca_argv_includes_config_with_credentials(monkeypatch: pytest.Mon
     assert "--output" in argv
     assert snapshot["fca"]["api_email"] == "user@example.com"
     assert snapshot["fca"]["api_key"] == "top-secret"
-    assert snapshot["batch"]["input_file"].replace("\\", "/").endswith("/tmp/fca_input.csv")
-    assert snapshot["batch"]["output_file"].replace("\\", "/").endswith("/tmp/fca_output.csv")
+    assert (
+        snapshot["batch"]["input_file"]
+        .replace("\\", "/")
+        .endswith("/tmp/fca_input.csv")
+    )
+    assert (
+        snapshot["batch"]["output_file"]
+        .replace("\\", "/")
+        .endswith("/tmp/fca_output.csv")
+    )
 
 
-def test_build_fca_argv_succeeds_when_credentials_missing(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_build_fca_argv_succeeds_when_credentials_missing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     """Missing credentials must NOT raise — job must be created so failure appears in Job History.
 
     Previously this raised HTTPException(400) before the job row was inserted, causing the job

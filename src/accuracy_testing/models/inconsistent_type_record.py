@@ -20,21 +20,21 @@ the output columns (qty_type / price_type).
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, Dict, Any
+from typing import Any, Dict, Optional
 
 # F11 values that map to NmnlVal / Pctg
-F11_PERCENTAGE_MARKERS: frozenset = frozenset({'A', 'D', 'E'})
+F11_PERCENTAGE_MARKERS: frozenset = frozenset({"A", "D", "E"})
 
 # Human-readable quantity type tags keyed by F11 classification
 QTY_TYPE_LABELS: Dict[str, str] = {
-    'percentage': 'NmnlVal',
-    'unit': 'Unit',
+    "percentage": "NmnlVal",
+    "unit": "Unit",
 }
 
 # Human-readable price type tags keyed by F11 classification
 PRICE_TYPE_LABELS: Dict[str, str] = {
-    'percentage': 'Pctg',
-    'unit': 'MntryVal',
+    "percentage": "Pctg",
+    "unit": "MntryVal",
 }
 
 # Number of characters used to derive the bulk reference from parent_ref.
@@ -51,7 +51,7 @@ def classify_f11(f11: str) -> str:
     Returns:
         'percentage' if F11 is A, D or E; 'unit' otherwise (F or blank).
     """
-    return 'percentage' if f11.strip().upper() in F11_PERCENTAGE_MARKERS else 'unit'
+    return "percentage" if f11.strip().upper() in F11_PERCENTAGE_MARKERS else "unit"
 
 
 @dataclass
@@ -87,12 +87,12 @@ class InconsistentTypeRecord:
     trade_date_time: str
 
     # Derived fields — set automatically in __post_init__
-    bulk_ref: str = field(default='', init=False)
-    child_type: str = field(default='', init=False)
-    parent_type: str = field(default='', init=False)
+    bulk_ref: str = field(default="", init=False)
+    child_type: str = field(default="", init=False)
+    parent_type: str = field(default="", init=False)
 
     # Output field (set by validator)
-    error: str = field(default='N')
+    error: str = field(default="N")
 
     def __post_init__(self) -> None:
         """Derive bulk_ref and type classifications from input fields."""
@@ -121,7 +121,7 @@ class InconsistentTypeRecord:
         return PRICE_TYPE_LABELS[self.parent_type]
 
     @classmethod
-    def from_dict(cls, data: Dict[str, Any]) -> 'InconsistentTypeRecord':
+    def from_dict(cls, data: Dict[str, Any]) -> "InconsistentTypeRecord":
         """
         Create an InconsistentTypeRecord from a dictionary (e.g. a CSV row dict).
 
@@ -149,15 +149,21 @@ class InconsistentTypeRecord:
             >>> record = InconsistentTypeRecord.from_dict(row)
         """
         return cls(
-            child_ref=str(data.get('child_ref') or data.get('CHILD_REF', '')).strip(),
-            child_f11=str(data.get('child_f11') or data.get('CHILD_F11', '')).strip(),
-            parent_ref=str(data.get('parent_ref') or data.get('PARENT_REF', '')).strip(),
-            parent_f11=str(data.get('parent_f11') or data.get('PARENT_F11', '')).strip(),
-            trade_date_time=str(data.get('trade_date_time') or data.get('TRADE_DATE_TIME', '')).strip(),
+            child_ref=str(data.get("child_ref") or data.get("CHILD_REF", "")).strip(),
+            child_f11=str(data.get("child_f11") or data.get("CHILD_F11", "")).strip(),
+            parent_ref=str(
+                data.get("parent_ref") or data.get("PARENT_REF", "")
+            ).strip(),
+            parent_f11=str(
+                data.get("parent_f11") or data.get("PARENT_F11", "")
+            ).strip(),
+            trade_date_time=str(
+                data.get("trade_date_time") or data.get("TRADE_DATE_TIME", "")
+            ).strip(),
         )
 
     @classmethod
-    def from_row(cls, row: list, row_index: int = 0) -> 'InconsistentTypeRecord':
+    def from_row(cls, row: list, row_index: int = 0) -> "InconsistentTypeRecord":
         """
         Create an InconsistentTypeRecord from a positional CSV row.
 
@@ -199,13 +205,13 @@ class InconsistentTypeRecord:
             Ordered dictionary containing all input, derived, and output fields.
         """
         return {
-            'child_ref': self.child_ref,
-            'child_f11': self.child_f11,
-            'parent_ref': self.parent_ref,
-            'parent_f11': self.parent_f11,
-            'trade_date_time': self.trade_date_time,
-            'bulk_ref': self.bulk_ref,
-            'child_type': self.child_type,
-            'parent_type': self.parent_type,
-            'error': self.error,
+            "child_ref": self.child_ref,
+            "child_f11": self.child_f11,
+            "parent_ref": self.parent_ref,
+            "parent_f11": self.parent_f11,
+            "trade_date_time": self.trade_date_time,
+            "bulk_ref": self.bulk_ref,
+            "child_type": self.child_type,
+            "parent_type": self.parent_type,
+            "error": self.error,
         }

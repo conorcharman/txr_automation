@@ -133,11 +133,19 @@ async def test_list_configs_filter(client: AsyncClient) -> None:
     """GET /api/configs?script_name=x returns only configs for that script."""
     await client.post(
         "/api/configs",
-        json={"name": "Buyer Config", "scriptName": "buyer_id_validation", "configData": {}},
+        json={
+            "name": "Buyer Config",
+            "scriptName": "buyer_id_validation",
+            "configData": {},
+        },
     )
     await client.post(
         "/api/configs",
-        json={"name": "Seller Config", "scriptName": "seller_id_validation", "configData": {}},
+        json={
+            "name": "Seller Config",
+            "scriptName": "seller_id_validation",
+            "configData": {},
+        },
     )
 
     response = await client.get("/api/configs?script_name=buyer_id_validation")

@@ -38,6 +38,7 @@ from typing import Any, Callable, Dict, Optional
 
 try:
     import yaml
+
     _YAML_AVAILABLE = True
 except ImportError:
     yaml = None  # type: ignore[assignment]
@@ -223,7 +224,7 @@ def main() -> None:
     redis_url = os.environ.get("REDIS_URL")
     progress_tracker: Optional[ProgressTracker] = None
     progress_callback: Optional[Callable[[str, int], None]] = None
-    
+
     if job_id:
         progress_tracker = ProgressTracker(
             job_id=job_id,
@@ -245,11 +246,9 @@ def main() -> None:
         print(f"Starting GLEIF full refresh -> {db_path}")
         result = refresher.run_full_refresh(skip_isin_map=args.skip_isin_map)
     else:
-        print(
-            f"Starting GLEIF delta refresh (type: {args.delta_type}) -> {db_path}"
-        )
+        print(f"Starting GLEIF delta refresh (type: {args.delta_type}) -> {db_path}")
         result = refresher.run_delta_refresh(delta_type=args.delta_type)
-    
+
     # Signal completion if progress tracker is active
     if progress_tracker:
         progress_tracker.complete()

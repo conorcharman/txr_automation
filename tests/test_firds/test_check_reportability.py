@@ -13,7 +13,9 @@ from firds.scripts.check_reportability import _process_file
 class _StubChecker:
     """Simple checker stub that always returns reportable for test inputs."""
 
-    def is_reportable(self, isin: str, trade_date: date, mic: str | None = None) -> ReportabilityResult:
+    def is_reportable(
+        self, isin: str, trade_date: date, mic: str | None = None
+    ) -> ReportabilityResult:
         return ReportabilityResult(
             is_reportable=True,
             reason=ReportabilityReason.ACTIVE,
@@ -24,7 +26,12 @@ class _StubChecker:
         )
 
 
-def _write_csv(path: Path, fieldnames: list[str], rows: list[dict[str, str]], encoding: str = "utf-8") -> None:
+def _write_csv(
+    path: Path,
+    fieldnames: list[str],
+    rows: list[dict[str, str]],
+    encoding: str = "utf-8",
+) -> None:
     with path.open("w", newline="", encoding=encoding) as fh:
         writer = csv.DictWriter(fh, fieldnames=fieldnames)
         writer.writeheader()
@@ -39,7 +46,9 @@ def test_process_file_accepts_instrument_id_alias(tmp_path: Path) -> None:
         [{"Instrument ID": "gb00b3rbwm25", "Trade Date": "2026-05-21", "MIC": "xlon"}],
     )
 
-    rows, row_count, error_count = _process_file(_StubChecker(), csv_path, file_date=None)
+    rows, row_count, error_count = _process_file(
+        _StubChecker(), csv_path, file_date=None
+    )
 
     assert rows is not None
     assert row_count == 1
@@ -57,7 +66,9 @@ def test_process_file_accepts_whitespace_and_case_variants(tmp_path: Path) -> No
         [{"  ISIN  ": "GB00B3RBWM25", "  trade_date ": "2026-05-21", "  Mic": "XLON"}],
     )
 
-    rows, row_count, error_count = _process_file(_StubChecker(), csv_path, file_date=None)
+    rows, row_count, error_count = _process_file(
+        _StubChecker(), csv_path, file_date=None
+    )
 
     assert rows is not None
     assert row_count == 1
@@ -74,7 +85,9 @@ def test_process_file_accepts_bom_prefixed_isin_header(tmp_path: Path) -> None:
         encoding="utf-8-sig",
     )
 
-    rows, row_count, error_count = _process_file(_StubChecker(), csv_path, file_date=None)
+    rows, row_count, error_count = _process_file(
+        _StubChecker(), csv_path, file_date=None
+    )
 
     assert rows is not None
     assert row_count == 1
@@ -82,7 +95,9 @@ def test_process_file_accepts_bom_prefixed_isin_header(tmp_path: Path) -> None:
     assert rows[0]["is_reportable"] == "Y"
 
 
-def test_process_file_uses_filename_date_when_date_column_missing(tmp_path: Path) -> None:
+def test_process_file_uses_filename_date_when_date_column_missing(
+    tmp_path: Path,
+) -> None:
     csv_path = tmp_path / "firds_21-05-2026.csv"
     _write_csv(
         csv_path,
@@ -90,7 +105,9 @@ def test_process_file_uses_filename_date_when_date_column_missing(tmp_path: Path
         [{"instrument_identifier": "GB00B3RBWM25", "mic": "XLON"}],
     )
 
-    rows, row_count, error_count = _process_file(_StubChecker(), csv_path, file_date=date(2026, 5, 21))
+    rows, row_count, error_count = _process_file(
+        _StubChecker(), csv_path, file_date=date(2026, 5, 21)
+    )
 
     assert rows is not None
     assert row_count == 1

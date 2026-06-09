@@ -13,6 +13,8 @@ import Field from "@/components/Field";
 import { xlsxConvert, xmlConvert, setupDirectories } from "@/api/utilities";
 import { cn } from "@/lib/utils";
 
+/* eslint-disable react-hooks/incompatible-library -- Intentional watch subscriptions persist form state safely for this page. */
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------

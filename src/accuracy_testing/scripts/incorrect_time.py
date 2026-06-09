@@ -41,9 +41,9 @@ Output CSV columns (all input columns + 3 appended):
     - error             (N = datetimes match to the second, Y = mismatch or missing)
 """
 
-import sys
-import csv
 import argparse
+import csv
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import List, Optional
@@ -53,11 +53,13 @@ project_root = Path(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from src.accuracy_testing.models.incorrect_time_record import IncorrectTimeRecord
-from src.accuracy_testing.validators.incorrect_time_validator import IncorrectTimeValidator
 from src.accuracy_testing.processor import (
     AccuracyConfigManager,
     AccuracyPathConfig,
     AccuracyProcessorConfig,
+)
+from src.accuracy_testing.validators.incorrect_time_validator import (
+    IncorrectTimeValidator,
 )
 
 try:
@@ -65,19 +67,21 @@ try:
 except ImportError:
     import logging
 
-    def create_logger(name, log_dir=None, log_level='INFO'):  # type: ignore[assignment]
+    def create_logger(name, log_dir=None, log_level="INFO"):  # type: ignore[assignment]
         _logger = logging.getLogger(name)
         _logger.setLevel(getattr(logging, log_level))
         if not _logger.handlers:
             handler = logging.StreamHandler()
             handler.setFormatter(
-                logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+                logging.Formatter(
+                    "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+                )
             )
             _logger.addHandler(handler)
         return _logger
 
-    def safe_open_csv(file_path, mode, newline=''):  # type: ignore[assignment]
-        return open(file_path, mode, encoding='utf-8', newline=newline), 'utf-8'
+    def safe_open_csv(file_path, mode, newline=""):  # type: ignore[assignment]
+        return open(file_path, mode, encoding="utf-8", newline=newline), "utf-8"
 
 
 class IncorrectTimeStats:
@@ -113,7 +117,7 @@ class IncorrectTimeStats:
             "=" * 70,
         ]
         try:
-            if logger and hasattr(logger, 'info'):
+            if logger and hasattr(logger, "info"):
                 for line in lines:
                     logger.info(line)
             else:
@@ -172,8 +176,12 @@ class IncorrectTimeScript:
         else:
             raise ValueError("Must provide either config_path or config_dict")
 
-        self.path_config: AccuracyPathConfig = AccuracyConfigManager.get_path_config(self.config)
-        self.proc_config: AccuracyProcessorConfig = AccuracyConfigManager.get_processor_config(self.config)
+        self.path_config: AccuracyPathConfig = AccuracyConfigManager.get_path_config(
+            self.config
+        )
+        self.proc_config: AccuracyProcessorConfig = (
+            AccuracyConfigManager.get_processor_config(self.config)
+        )
 
         self.logger = create_logger(
             name="incorrect_time",
@@ -188,7 +196,7 @@ class IncorrectTimeScript:
 
     def _log_header(self, title: str) -> None:
         """Emit a section header."""
-        if hasattr(self.logger, 'log_header'):
+        if hasattr(self.logger, "log_header"):
             self.logger.log_header(title)  # type: ignore[union-attr]
         else:
             self.logger.info("=" * 70)
@@ -215,7 +223,7 @@ class IncorrectTimeScript:
             raise FileNotFoundError(f"Input file not found: {self.input_file}")
 
         records: List[IncorrectTimeRecord] = []
-        f, encoding = safe_open_csv(self.input_file, 'r', newline='')
+        f, encoding = safe_open_csv(self.input_file, "r", newline="")
         self.logger.info(f"Detected encoding: {encoding}")
 
         try:
@@ -235,7 +243,9 @@ class IncorrectTimeScript:
                         self.logger.error(f"Row {row_idx}: {e} — skipping")
                         self.stats.processing_errors += 1
                     except Exception as e:
-                        self.logger.error(f"Unexpected error on row {row_idx}: {e} — skipping")
+                        self.logger.error(
+                            f"Unexpected error on row {row_idx}: {e} — skipping"
+                        )
                         self.stats.processing_errors += 1
 
         except Exception as e:
@@ -258,20 +268,22 @@ class IncorrectTimeScript:
         self.output_file.parent.mkdir(parents=True, exist_ok=True)
 
         try:
-            with open(self.output_file, 'w', encoding='utf-8', newline='') as f:
+            with open(self.output_file, "w", encoding="utf-8", newline="") as f:
                 writer = csv.writer(f)
                 writer.writerow(self.OUTPUT_COLUMNS)
 
                 for record in records:
-                    writer.writerow([
-                        record.child_ref,
-                        record.child_datetime,
-                        record.parent_ref,
-                        record.parent_datetime,
-                        record.bulk_ref,
-                        record.time_difference,
-                        record.error,
-                    ])
+                    writer.writerow(
+                        [
+                            record.child_ref,
+                            record.child_datetime,
+                            record.parent_ref,
+                            record.parent_datetime,
+                            record.bulk_ref,
+                            record.time_difference,
+                            record.error,
+                        ]
+                    )
 
             self.logger.info(f"Wrote {len(records)} records to output")
 
@@ -306,10 +318,10 @@ class IncorrectTimeScript:
         self._log_header("VALIDATING TRADE DATETIMES")
         validation_stats = self.validator.validate_all(all_records)
 
-        self.stats.match_records = validation_stats['matches']
-        self.stats.error_records = validation_stats['errors']
-        self.stats.missing_parent = validation_stats['missing']
-        self.stats.parse_errors = validation_stats['parse_errors']
+        self.stats.match_records = validation_stats["matches"]
+        self.stats.error_records = validation_stats["errors"]
+        self.stats.missing_parent = validation_stats["missing"]
+        self.stats.parse_errors = validation_stats["parse_errors"]
         self.stats.output_records = len(all_records)
 
         # Step 3: Write (or dry-run preview)
@@ -342,6 +354,7 @@ class IncorrectTimeScript:
 # Batch mode
 # ------------------------------------------------------------------
 
+
 def run_batch_validation(config: dict, dry_run: bool = False) -> int:
     """
     Run validation for multiple incidents in batch mode.
@@ -353,19 +366,23 @@ def run_batch_validation(config: dict, dry_run: bool = False) -> int:
     Returns:
         0 on full success, 1 if any incident failed.
     """
-    testing_period = config.get('testing_period', {})
-    fiscal_year = testing_period.get('fiscal_year', 'FYXX')
-    quarter = testing_period.get('quarter', 'QX')
+    testing_period = config.get("testing_period", {})
+    fiscal_year = testing_period.get("fiscal_year", "FYXX")
+    quarter = testing_period.get("quarter", "QX")
 
-    batch_config = config.get('batch', {})
-    incidents = batch_config.get('incidents', [])
-    paths = batch_config.get('paths', {})
-    extract_dir = Path(paths.get('extract_dir', 'data/extracts'))
-    output_dir = Path(paths.get('output_dir', 'data/validated'))
+    batch_config = config.get("batch", {})
+    incidents = batch_config.get("incidents", [])
+    paths = batch_config.get("paths", {})
+    extract_dir = Path(paths.get("extract_dir", "data/extracts"))
+    output_dir = Path(paths.get("output_dir", "data/validated"))
 
-    filename_patterns = batch_config.get('filename_patterns', {})
-    extract_pattern = filename_patterns.get('extract', '{incident}_{fiscal_year}_{quarter}_extract.csv')
-    output_pattern = filename_patterns.get('output', 'validated_{fiscal_year}_{quarter}_{incident}.csv')
+    filename_patterns = batch_config.get("filename_patterns", {})
+    extract_pattern = filename_patterns.get(
+        "extract", "{incident}_{fiscal_year}_{quarter}_extract.csv"
+    )
+    output_pattern = filename_patterns.get(
+        "output", "validated_{fiscal_year}_{quarter}_{incident}.csv"
+    )
 
     if not incidents:
         print("ERROR: No incidents specified in batch config")
@@ -405,12 +422,12 @@ def run_batch_validation(config: dict, dry_run: bool = False) -> int:
             continue
 
         incident_config = {
-            'paths': {
-                'input_file': str(extract_path),
-                'output_file': str(output_path),
-                'log_output': paths.get('log_output', 'logs'),
+            "paths": {
+                "input_file": str(extract_path),
+                "output_file": str(output_path),
+                "log_output": paths.get("log_output", "logs"),
             },
-            'processor': config.get('processor', {}),
+            "processor": config.get("processor", {}),
         }
 
         try:
@@ -436,6 +453,7 @@ def run_batch_validation(config: dict, dry_run: bool = False) -> int:
 # CLI
 # ------------------------------------------------------------------
 
+
 def parse_args() -> argparse.Namespace:
     """Create and parse the argument parser."""
     parser = argparse.ArgumentParser(
@@ -458,41 +476,41 @@ Examples:
     )
 
     parser.add_argument(
-        'input_file',
-        nargs='?',
+        "input_file",
+        nargs="?",
         type=str,
-        help='Path to input CSV file (positional, backward compatible)',
+        help="Path to input CSV file (positional, backward compatible)",
     )
     parser.add_argument(
-        'output_file',
-        nargs='?',
+        "output_file",
+        nargs="?",
         type=str,
-        help='Path to output CSV file (positional, backward compatible)',
+        help="Path to output CSV file (positional, backward compatible)",
     )
     parser.add_argument(
-        '--config',
+        "--config",
         type=str,
-        help='Path to YAML configuration file',
+        help="Path to YAML configuration file",
     )
     parser.add_argument(
-        '--log-level',
-        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
+        "--log-level",
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
         default=None,
-        help='Override logging level from config',
+        help="Override logging level from config",
     )
     parser.add_argument(
-        '--verbose',
-        action='store_true',
-        help='Enable verbose output',
+        "--verbose",
+        action="store_true",
+        help="Enable verbose output",
     )
     parser.add_argument(
-        '--dry-run',
-        action='store_true',
-        help='Preview without writing output file',
+        "--dry-run",
+        action="store_true",
+        help="Preview without writing output file",
     )
     parser.add_argument(
-        '--gui-mode',
-        action='store_true',
+        "--gui-mode",
+        action="store_true",
         help=argparse.SUPPRESS,
     )
 
@@ -508,18 +526,18 @@ def main() -> int:
             config = AccuracyConfigManager.load_from_yaml(args.config)
         elif args.input_file and args.output_file:
             config = {
-                'paths': {
-                    'input_file': args.input_file,
-                    'output_file': args.output_file,
-                    'log_output': 'logs',
+                "paths": {
+                    "input_file": args.input_file,
+                    "output_file": args.output_file,
+                    "log_output": "logs",
                 },
-                'processor': {
-                    'log_level': args.log_level or 'INFO',
-                    'verbose': args.verbose,
-                    'batch_size': 1000,
+                "processor": {
+                    "log_level": args.log_level or "INFO",
+                    "verbose": args.verbose,
+                    "batch_size": 1000,
                 },
             }
-        elif not getattr(args, 'gui_mode', False):
+        elif not getattr(args, "gui_mode", False):
             default_config = (
                 Path(__file__).parent.parent.parent.parent
                 / "config"
@@ -538,11 +556,11 @@ def main() -> int:
 
         # CLI overrides
         if args.log_level:
-            config.setdefault('processor', {})['log_level'] = args.log_level
+            config.setdefault("processor", {})["log_level"] = args.log_level
         if args.verbose:
-            config.setdefault('processor', {})['verbose'] = True
+            config.setdefault("processor", {})["verbose"] = True
 
-        if config.get('mode') == 'batch':
+        if config.get("mode") == "batch":
             return run_batch_validation(config, dry_run=args.dry_run)
 
         script = IncorrectTimeScript(
@@ -560,5 +578,5 @@ def main() -> int:
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())

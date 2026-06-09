@@ -49,7 +49,6 @@ from typing import List, Optional
 from .cache import GleifCacheManager
 from .client import GleifApiClient
 
-
 # ---------------------------------------------------------------------------
 # Reason constants
 # ---------------------------------------------------------------------------
@@ -346,7 +345,9 @@ def _apply_validation_logic(
     }
 
     if reg_status == LeiLookupReason.ISSUED:
-        return LeiLookupResult(is_valid=True, reason=LeiLookupReason.ISSUED, **base_kwargs)
+        return LeiLookupResult(
+            is_valid=True, reason=LeiLookupReason.ISSUED, **base_kwargs
+        )
 
     if reg_status == "LAPSED":
         if trade_date is not None:
@@ -357,7 +358,9 @@ def _apply_validation_logic(
                     reason=LeiLookupReason.LAPSED_VALID_AT_TRADE_DATE,
                     **base_kwargs,
                 )
-        return LeiLookupResult(is_valid=False, reason=LeiLookupReason.LAPSED, **base_kwargs)
+        return LeiLookupResult(
+            is_valid=False, reason=LeiLookupReason.LAPSED, **base_kwargs
+        )
 
     # All other statuses — use the status string directly as the reason
     return LeiLookupResult(

@@ -94,9 +94,7 @@ class ConfigService:
         Returns:
             The matching ``SavedConfig`` ORM instance, or ``None`` if not found.
         """
-        result = await db.execute(
-            select(SavedConfig).where(SavedConfig.name == name)
-        )
+        result = await db.execute(select(SavedConfig).where(SavedConfig.name == name))
         return result.scalar_one_or_none()
 
     async def create_config(

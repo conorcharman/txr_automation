@@ -251,8 +251,9 @@ def _run_script(
             old_argv = sys.argv
             sys.argv = [module_path] + argv
             try:
-                with contextlib.redirect_stdout(script_buffer), \
-                     contextlib.redirect_stderr(script_buffer):
+                with contextlib.redirect_stdout(
+                    script_buffer
+                ), contextlib.redirect_stderr(script_buffer):
                     module.main(argv)
             finally:
                 sys.argv = old_argv
@@ -344,7 +345,9 @@ def run_reconciliation(
     lookback_start = (now - timedelta(days=lookback_days)).date()
 
     # Resolve paths — reconciliation uses a dedicated rec/ directory.
-    root = Path(get_settings().data_dir) / "reconciliation" / now.strftime("%Y%m%d_%H%M%S")
+    root = (
+        Path(get_settings().data_dir) / "reconciliation" / now.strftime("%Y%m%d_%H%M%S")
+    )
     extracts_dir = overrides.get("extracts", str(root / "extracts"))
     templates_dir = overrides.get("templates", str(root / "templates"))
     output_dir = overrides.get("output", str(root / "output"))
@@ -360,14 +363,14 @@ def run_reconciliation(
     expected_csvs: list[str] = []
 
     # Order selected_scripts according to fixed execution order.
-    ordered_scripts = [
-        s for s in _REC_EXECUTION_ORDER if s in selected_scripts
-    ]
+    ordered_scripts = [s for s in _REC_EXECUTION_ORDER if s in selected_scripts]
     total_scripts = max(len(ordered_scripts), 1)
     total_extract_scripts = max(len(ordered_scripts), 1)
 
     # ── Phase 1 & 2: DTF config generation ──────────────────────────────────
-    _publish({"type": "log", "data": "═══ Phase 1: Generating DTF extraction configs ═══"})
+    _publish(
+        {"type": "log", "data": "═══ Phase 1: Generating DTF extraction configs ═══"}
+    )
     full_output.write("═══ Phase 1: Generating DTF extraction configs ═══\n")
 
     for script_name in ordered_scripts:
@@ -394,10 +397,14 @@ def run_reconciliation(
                 "src.accuracy_testing.scripts.period_extract_generator"
             )
             gen_argv = [
-                "--validation-type", extract_type,
-                "--start-date", start,
-                "--end-date", end,
-                "--output-dir", dtf_dir,
+                "--validation-type",
+                extract_type,
+                "--start-date",
+                start,
+                "--end-date",
+                end,
+                "--output-dir",
+                dtf_dir,
             ]
             gen_buffer = io.StringIO()
 
@@ -405,8 +412,9 @@ def run_reconciliation(
                 old_argv = sys.argv
                 sys.argv = ["period_extract_generator"] + gen_argv
                 try:
-                    with contextlib.redirect_stdout(gen_buffer), \
-                         contextlib.redirect_stderr(gen_buffer):
+                    with contextlib.redirect_stdout(
+                        gen_buffer
+                    ), contextlib.redirect_stderr(gen_buffer):
                         module.main()
                 finally:
                     sys.argv = old_argv
@@ -422,21 +430,45 @@ def run_reconciliation(
                 expected_csvs.append(str(csv_file))
 
             results.append({"script": f"extract:{script_name}", "status": "success"})
-            completed_extracts = len([r for r in results if str(r.get("script", "")).startswith("extract:")])
-            _publish_progress(5 + int((completed_extracts / total_extract_scripts) * 25))
+            completed_extracts = len(
+                [r for r in results if str(r.get("script", "")).startswith("extract:")]
+            )
+            _publish_progress(
+                5 + int((completed_extracts / total_extract_scripts) * 25)
+            )
 
         except SystemExit as exc:
             if exc.code in (None, 0):
-                results.append({"script": f"extract:{script_name}", "status": "success"})
-                completed_extracts = len([r for r in results if str(r.get("script", "")).startswith("extract:")])
-                _publish_progress(5 + int((completed_extracts / total_extract_scripts) * 25))
+                results.append(
+                    {"script": f"extract:{script_name}", "status": "success"}
+                )
+                completed_extracts = len(
+                    [
+                        r
+                        for r in results
+                        if str(r.get("script", "")).startswith("extract:")
+                    ]
+                )
+                _publish_progress(
+                    5 + int((completed_extracts / total_extract_scripts) * 25)
+                )
             else:
-                error_msg = f"  ✗ DTF generation for {script_name} exited with code {exc.code}."
+                error_msg = (
+                    f"  ✗ DTF generation for {script_name} exited with code {exc.code}."
+                )
                 _publish({"type": "log", "data": error_msg})
                 full_output.write(error_msg + "\n")
                 results.append({"script": f"extract:{script_name}", "status": "failed"})
-                completed_extracts = len([r for r in results if str(r.get("script", "")).startswith("extract:")])
-                _publish_progress(5 + int((completed_extracts / total_extract_scripts) * 25))
+                completed_extracts = len(
+                    [
+                        r
+                        for r in results
+                        if str(r.get("script", "")).startswith("extract:")
+                    ]
+                )
+                _publish_progress(
+                    5 + int((completed_extracts / total_extract_scripts) * 25)
+                )
                 failed = True
                 if stop_on_error:
                     break
@@ -446,8 +478,12 @@ def run_reconciliation(
             _publish({"type": "log", "data": error_msg})
             full_output.write(error_msg + "\n")
             results.append({"script": f"extract:{script_name}", "status": "failed"})
-            completed_extracts = len([r for r in results if str(r.get("script", "")).startswith("extract:")])
-            _publish_progress(5 + int((completed_extracts / total_extract_scripts) * 25))
+            completed_extracts = len(
+                [r for r in results if str(r.get("script", "")).startswith("extract:")]
+            )
+            _publish_progress(
+                5 + int((completed_extracts / total_extract_scripts) * 25)
+            )
             failed = True
             if stop_on_error:
                 break
@@ -456,7 +492,8 @@ def run_reconciliation(
         _publish_progress(100)
         _publish({"type": "status", "data": "failed"})
         _sync_update_status(
-            job_id, "failed",
+            job_id,
+            "failed",
             error_message="DTF generation failed.",
             log_output=full_output.getvalue(),
         )
@@ -480,7 +517,9 @@ def run_reconciliation(
                 _publish_progress(45)
                 break
             for m in missing:
-                _publish({"type": "log", "data": f"  Waiting for extract: {Path(m).name}"})
+                _publish(
+                    {"type": "log", "data": f"  Waiting for extract: {Path(m).name}"}
+                )
             time.sleep(EXTRACT_POLL_INTERVAL_SECONDS)
         else:
             missing = [p for p in expected_csvs if not Path(p).exists()]
@@ -494,7 +533,8 @@ def run_reconciliation(
                 _publish({"type": "status", "data": "failed"})
                 _publish_progress(100)
                 _sync_update_status(
-                    job_id, "failed",
+                    job_id,
+                    "failed",
                     error_message=f"Extract timeout: {[Path(p).name for p in missing]}",
                     log_output=full_output.getvalue(),
                 )
@@ -516,15 +556,25 @@ def run_reconciliation(
             continue
 
         config = _build_validation_config(
-            script_name, extracts_dir, templates_dir, output_dir, logs_dir,
+            script_name,
+            extracts_dir,
+            templates_dir,
+            output_dir,
+            logs_dir,
         )
 
         step_label = f"[{idx}/{total_scripts}]"
         success = _run_script(
-            script_name, module_path, config,
-            _publish, full_output, step_label,
+            script_name,
+            module_path,
+            config,
+            _publish,
+            full_output,
+            step_label,
         )
-        results.append({"script": script_name, "status": "success" if success else "failed"})
+        results.append(
+            {"script": script_name, "status": "success" if success else "failed"}
+        )
         _publish_progress(45 + int((idx / total_scripts) * 40))
 
         if not success:
@@ -536,7 +586,8 @@ def run_reconciliation(
         _publish_progress(100)
         _publish({"type": "status", "data": "failed"})
         _sync_update_status(
-            job_id, "failed",
+            job_id,
+            "failed",
             error_message="Validation failed.",
             log_output=full_output.getvalue(),
         )
@@ -549,10 +600,16 @@ def run_reconciliation(
     data_push_module = _REC_SCRIPT_MODULES["data_push"]
     data_push_config = _build_data_push_config(output_dir)
     success = _run_script(
-        "data_push", data_push_module, data_push_config,
-        _publish, full_output, "[data_push]",
+        "data_push",
+        data_push_module,
+        data_push_config,
+        _publish,
+        full_output,
+        "[data_push]",
     )
-    results.append({"script": "data_push", "status": "success" if success else "failed"})
+    results.append(
+        {"script": "data_push", "status": "success" if success else "failed"}
+    )
     _publish_progress(95)
     if not success:
         failed = True

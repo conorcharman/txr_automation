@@ -127,7 +127,10 @@ class FirdsDownloader:
         """
         if self._staging_dir.exists():
             shutil.rmtree(self._staging_dir)
-            logger.info("Cleaned up FIRDS staging directory", extra={"path": str(self._staging_dir)})
+            logger.info(
+                "Cleaned up FIRDS staging directory",
+                extra={"path": str(self._staging_dir)},
+            )
 
     def cleanup_file(self, result: DownloadResult) -> None:
         """Remove the ZIP and extracted XMLs for a single download result.
@@ -170,7 +173,10 @@ class FirdsDownloader:
                 for chunk in response.iter_content(chunk_size=_DOWNLOAD_CHUNK_BYTES):
                     fh.write(chunk)
 
-        logger.debug("ZIP download complete", extra={"dest": str(dest), "size_bytes": dest.stat().st_size})
+        logger.debug(
+            "ZIP download complete",
+            extra={"dest": str(dest), "size_bytes": dest.stat().st_size},
+        )
         return dest
 
     def _extract_xml(self, zip_path: Path, archive_name: str) -> List[Path]:

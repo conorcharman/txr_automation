@@ -15,6 +15,8 @@ import { firdsRefresh, firdsCheck, firdsBackfill, firdsLookup } from "@/api/fird
 import { cn } from "@/lib/utils";
 import type { FirdsLookupResponse } from "@/types";
 
+/* eslint-disable react-hooks/incompatible-library -- Intentional watch subscriptions persist form state safely for this page. */
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------

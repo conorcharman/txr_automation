@@ -1,9 +1,10 @@
 """Tests for GLEIF CSV parser (parser.py)."""
 
 import io
-import pytest
 from pathlib import Path
 from unittest.mock import patch
+
+import pytest
 
 from gleif.parser import GleifCsvParser, GleifIsinMapParser, LeiRecord
 
@@ -31,13 +32,17 @@ _GOLDEN_COPY_ROW_LAPSED = (
     "LAPSED,2018-03-01T00:00:00Z,2024-01-01T00:00:00Z,2024-06-01T00:00:00Z"
 )
 
-_GOLDEN_COPY_CSV = "\n".join([
-    _GOLDEN_COPY_HEADER,
-    _GOLDEN_COPY_ROW_ISSUED,
-    _GOLDEN_COPY_ROW_LAPSED,
-])
+_GOLDEN_COPY_CSV = "\n".join(
+    [
+        _GOLDEN_COPY_HEADER,
+        _GOLDEN_COPY_ROW_ISSUED,
+        _GOLDEN_COPY_ROW_LAPSED,
+    ]
+)
 
-_ISIN_MAP_CSV = "LEI,ISIN\n5493001KJTIIGC8Y1R12,GB00B3RBWM25\n5493001KJTIIGC8Y1R12,GB00ABC12345\n"
+_ISIN_MAP_CSV = (
+    "LEI,ISIN\n5493001KJTIIGC8Y1R12,GB00B3RBWM25\n5493001KJTIIGC8Y1R12,GB00ABC12345\n"
+)
 
 
 @pytest.fixture
@@ -91,7 +96,10 @@ class TestGleifCsvParser:
         assert lapsed.entity_expiration_reason == "DISSOLVED"
 
     def test_parse_skips_rows_without_lei(self, tmp_path: Path) -> None:
-        csv_content = _GOLDEN_COPY_HEADER + "\n,Missing LEI Corp,GB,ACTIVE,GB,,,, ISSUED,2020-01-01,2025-01-01,2026-01-01\n"
+        csv_content = (
+            _GOLDEN_COPY_HEADER
+            + "\n,Missing LEI Corp,GB,ACTIVE,GB,,,, ISSUED,2020-01-01,2025-01-01,2026-01-01\n"
+        )
         p = tmp_path / "bad.csv"
         p.write_text(csv_content, encoding="utf-8")
         records = list(GleifCsvParser().parse(p))
@@ -109,7 +117,10 @@ class TestGleifCsvParser:
             list(GleifCsvParser().parse(p))
 
     def test_parse_collects_other_names(self, tmp_path: Path) -> None:
-        header = _GOLDEN_COPY_HEADER + ",Entity.OtherEntityNames.0.OtherEntityName.name,Entity.OtherEntityNames.1.OtherEntityName.name"
+        header = (
+            _GOLDEN_COPY_HEADER
+            + ",Entity.OtherEntityNames.0.OtherEntityName.name,Entity.OtherEntityNames.1.OtherEntityName.name"
+        )
         row = _GOLDEN_COPY_ROW_ISSUED + ",Alt Name One,Alt Name Two"
         p = tmp_path / "with_other_names.csv"
         p.write_text(header + "\n" + row, encoding="utf-8")

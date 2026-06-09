@@ -72,7 +72,9 @@ class TestProposedEvent:
 class TestTradeParties:
     def _trade(self, **overrides: object) -> dict:
         result = _base_report(**overrides)
-        return result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0]["before"]["trade"]
+        return result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0][
+            "before"
+        ]["trade"]
 
     def test_buyer_party_present(self) -> None:
         trade = self._trade()
@@ -93,19 +95,27 @@ class TestTradeParties:
     def test_enrichment_populates_party_name(self) -> None:
         enrichment = EnrichmentResult(
             buyer=LeiEnrichment(
-                lei=VALID_LEI, found=True, is_valid=True, reason="ISSUED",
+                lei=VALID_LEI,
+                found=True,
+                is_valid=True,
+                reason="ISSUED",
                 legal_name="ACME INVESTMENT FIRM LTD",
             )
         )
         result = build_transaction_report(
             transaction_ref="TXN-001",
-            buyer_id=VALID_LEI, buyer_id_type="LEI",
-            seller_id=None, seller_id_type=None,
+            buyer_id=VALID_LEI,
+            buyer_id_type="LEI",
+            seller_id=None,
+            seller_id_type=None,
             trading_date_time="2024-01-15T09:30:00",
-            quantity=100.0, net_amount=None,
+            quantity=100.0,
+            net_amount=None,
             enrichment=enrichment,
         )
-        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0]["before"]["trade"]
+        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0][
+            "before"
+        ]["trade"]
         buyer = next(p for p in trade["party"] if p["partyRole"] == "BUYER")
         assert buyer["name"] == "ACME INVESTMENT FIRM LTD"
 
@@ -118,7 +128,9 @@ class TestTradeParties:
 class TestProduct:
     def _security(self, **overrides: object) -> dict:
         result = _base_report(**overrides)
-        return result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0]["before"]["trade"]["product"]["security"]
+        return result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0][
+            "before"
+        ]["trade"]["product"]["security"]
 
     def test_primary_asset_class_equity(self) -> None:
         security = self._security()
@@ -126,7 +138,9 @@ class TestProduct:
 
     def test_isin_identifier_present(self) -> None:
         security = self._security()
-        isin_entry = next(i for i in security["identifier"] if i["identifierType"] == "ISIN")
+        isin_entry = next(
+            i for i in security["identifier"] if i["identifierType"] == "ISIN"
+        )
         assert isin_entry["identifier"]["value"] == "GB0001234567"
 
     def test_isin_absent_when_none(self) -> None:
@@ -136,19 +150,28 @@ class TestProduct:
     def test_firds_enrichment_populates_full_name(self) -> None:
         enrichment = EnrichmentResult(
             instrument=InstrumentEnrichment(
-                isin="GB0001234567", found=True,
+                isin="GB0001234567",
+                found=True,
                 full_name="VODAFONE GROUP PLC ORD USD0.2",
-                cfi_code="ESVUFR", mic="XLON",
+                cfi_code="ESVUFR",
+                mic="XLON",
             )
         )
         result = build_transaction_report(
             transaction_ref="TXN-001",
-            buyer_id=None, buyer_id_type=None,
-            seller_id=None, seller_id_type=None,
-            trading_date_time=None, quantity=100.0, net_amount=None,
-            isin="GB0001234567", enrichment=enrichment,
+            buyer_id=None,
+            buyer_id_type=None,
+            seller_id=None,
+            seller_id_type=None,
+            trading_date_time=None,
+            quantity=100.0,
+            net_amount=None,
+            isin="GB0001234567",
+            enrichment=enrichment,
         )
-        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0]["before"]["trade"]
+        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0][
+            "before"
+        ]["trade"]
         security = trade["product"]["security"]
         assert security["fullName"] == "VODAFONE GROUP PLC ORD USD0.2"
         assert security["cfiCode"] == "ESVUFR"
@@ -159,12 +182,19 @@ class TestProduct:
         )
         result = build_transaction_report(
             transaction_ref="TXN-001",
-            buyer_id=None, buyer_id_type=None,
-            seller_id=None, seller_id_type=None,
-            trading_date_time=None, quantity=100.0, net_amount=None,
-            isin="GB0001234567", enrichment=enrichment,
+            buyer_id=None,
+            buyer_id_type=None,
+            seller_id=None,
+            seller_id_type=None,
+            trading_date_time=None,
+            quantity=100.0,
+            net_amount=None,
+            isin="GB0001234567",
+            enrichment=enrichment,
         )
-        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0]["before"]["trade"]
+        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0][
+            "before"
+        ]["trade"]
         security = trade["product"]["security"]
         assert "fullName" not in security
 
@@ -172,7 +202,9 @@ class TestProduct:
 class TestTradeLot:
     def _price_quantity(self, **overrides: object) -> dict:
         result = _base_report(**overrides)
-        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0]["before"]["trade"]
+        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0][
+            "before"
+        ]["trade"]
         return trade["tradeLot"][0]["priceQuantity"][0]
 
     def test_quantity_value(self) -> None:
@@ -195,7 +227,9 @@ class TestTradeLot:
 class TestExecutionDetails:
     def _execution(self, **overrides: object) -> dict:
         result = _base_report(**overrides)
-        return result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0]["before"]["trade"]["executionDetails"]
+        return result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0][
+            "before"
+        ]["trade"]["executionDetails"]
 
     def test_venue_mic_present(self) -> None:
         execution = self._execution()
@@ -211,17 +245,23 @@ class TestExecutionDetails:
 
     def test_execution_details_absent_when_venue_and_datetime_none(self) -> None:
         result = _base_report(venue=None, trading_date_time=None)
-        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0]["before"]["trade"]
+        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0][
+            "before"
+        ]["trade"]
         assert "executionDetails" not in trade
 
 
 class TestInvestmentDecision:
     def test_investment_decision_present(self) -> None:
         result = _base_report(investment_decision_maker="ALGO")
-        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0]["before"]["trade"]
+        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0][
+            "before"
+        ]["trade"]
         assert trade["investmentDecision"]["decisionMaker"] == "ALGO"
 
     def test_investment_decision_absent_when_none(self) -> None:
         result = _base_report(investment_decision_maker=None)
-        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0]["before"]["trade"]
+        trade = result["originatingWorkflowStep"]["proposedEvent"]["instruction"][0][
+            "before"
+        ]["trade"]
         assert "investmentDecision" not in trade

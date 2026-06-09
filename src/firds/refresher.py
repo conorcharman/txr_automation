@@ -155,7 +155,9 @@ class FirdsRefresher:
         if target_date is None:
             target_date = _most_recent_saturday()
 
-        logger.info("Starting FIRDS full refresh", extra={"target_date": str(target_date)})
+        logger.info(
+            "Starting FIRDS full refresh", extra={"target_date": str(target_date)}
+        )
 
         result = RefreshResult()
         self._report_progress("fulins", 0)
@@ -174,7 +176,10 @@ class FirdsRefresher:
                 )
             total_fulins = len(full_files)
             if not full_files:
-                logger.warning("No in-scope FULINS files found for date", extra={"date": str(target_date)})
+                logger.warning(
+                    "No in-scope FULINS files found for date",
+                    extra={"date": str(target_date)},
+                )
                 self._report_progress("fulins", 100)
             else:
                 logger.info("Found %d in-scope FULINS file(s) to process", total_fulins)
@@ -186,7 +191,9 @@ class FirdsRefresher:
                 for idx, file_record in enumerate(full_files, start=1):
                     logger.info(
                         "[%d/%d] Downloading FULINS: %s",
-                        idx, total_fulins, file_record.file_name,
+                        idx,
+                        total_fulins,
+                        file_record.file_name,
                     )
                     file_result = self._process_file(
                         file_record,
@@ -200,7 +207,9 @@ class FirdsRefresher:
                     if file_result is not None:
                         logger.info(
                             "[%d/%d] FULINS complete — %s records",
-                            idx, total_fulins, f"{file_result:,}",
+                            idx,
+                            total_fulins,
+                            f"{file_result:,}",
                         )
 
             # --- FULCAN: cancellations ---
@@ -208,11 +217,15 @@ class FirdsRefresher:
             total_cancel = len(cancel_files)
             self._report_progress("fulcan", 0)
             if total_cancel:
-                logger.info("Found %d FULCAN cancellation file(s) to process", total_cancel)
+                logger.info(
+                    "Found %d FULCAN cancellation file(s) to process", total_cancel
+                )
             for idx, file_record in enumerate(cancel_files, start=1):
                 logger.info(
                     "[%d/%d] Downloading FULCAN: %s",
-                    idx, total_cancel, file_record.file_name,
+                    idx,
+                    total_cancel,
+                    file_record.file_name,
                 )
                 self._process_file(
                     file_record,
@@ -223,7 +236,7 @@ class FirdsRefresher:
                 # Report progress as percentage of FULCAN files completed
                 fulcan_percent = (idx / max(total_cancel, 1)) * 100
                 self._report_progress("fulcan", int(fulcan_percent))
-            
+
             if not total_cancel:
                 self._report_progress("fulcan", 100)
 
@@ -281,7 +294,9 @@ class FirdsRefresher:
             Number of records processed, or ``None`` if skipped / failed.
         """
         if self._cache.is_file_processed(file_record.file_name):
-            logger.info("Skipping already-processed file", extra={"file": file_record.file_name})
+            logger.info(
+                "Skipping already-processed file", extra={"file": file_record.file_name}
+            )
             result.files_skipped += 1
             return None
 
@@ -421,8 +436,8 @@ def _most_recent_saturday(reference: Optional[date] = None) -> date:
     return ref - timedelta(days=days_since_saturday)
 
 
-from contextlib import contextmanager
 import os
+from contextlib import contextmanager
 
 
 @contextmanager

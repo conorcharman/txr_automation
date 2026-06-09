@@ -1,0 +1,15 @@
+[MASTER]
+ignore=.git,__pycache__,.pytest_cache,htmlcov,node_modules,web
+
+[MESSAGES CONTROL]
+disable=
+    C,
+    R,
+    W,
+    no-member,
+    not-callable,
+    used-before-assignment,
+    possibly-used-before-assignment
+
+[REPORTS]
+score=no

@@ -61,6 +61,7 @@ from typing import Any, Dict, List, Optional
 
 try:
     import yaml
+
     _YAML_AVAILABLE = True
 except ImportError:
     yaml = None  # type: ignore[assignment]
@@ -78,27 +79,46 @@ from fca.lookup import FcaFirmLookup, FirmLookupResult, FirmRecord
 # ---------------------------------------------------------------------------
 
 _FRN_COLUMNS = {
-    "frn", "frn_number", "frn number",
-    "firm_reference_number", "firm reference number",
-    "firm_reference_no", "firm reference no",
-    "firm_ref", "firm ref",
-    "reference_number", "reference number",
-    "reference_no", "reference no",
-    "ref_no", "ref no",
-    "fca_number", "fca number",
-    "fca_reference_number", "fca reference number",
-    "fca_ref", "fca ref",
+    "frn",
+    "frn_number",
+    "frn number",
+    "firm_reference_number",
+    "firm reference number",
+    "firm_reference_no",
+    "firm reference no",
+    "firm_ref",
+    "firm ref",
+    "reference_number",
+    "reference number",
+    "reference_no",
+    "reference no",
+    "ref_no",
+    "ref no",
+    "fca_number",
+    "fca number",
+    "fca_reference_number",
+    "fca reference number",
+    "fca_ref",
+    "fca ref",
 }
 _NAME_COLUMNS = {
-    "firm_name", "firm name",
-    "organisation_name", "organisation name",
+    "firm_name",
+    "firm name",
+    "organisation_name",
+    "organisation name",
     "name",
-    "company_name", "company name",
-    "counterparty_name", "counterparty name",
-    "entity_name", "entity name",
-    "legal_name", "legal name",
-    "business_name", "business name",
-    "full_name", "full name",
+    "company_name",
+    "company name",
+    "counterparty_name",
+    "counterparty name",
+    "entity_name",
+    "entity name",
+    "legal_name",
+    "legal name",
+    "business_name",
+    "business name",
+    "full_name",
+    "full name",
 }
 
 #: Common FCA regulated activity names used for permission dropdowns.
@@ -136,7 +156,12 @@ _COL_FCA_STATUS = "fca_status"
 _COL_FCA_AUTHORISED = "fca_authorised"
 _COL_FCA_PERMISSIONS = "fca_permissions"
 
-_OUTPUT_COLUMNS = [_COL_FCA_FRN, _COL_FCA_STATUS, _COL_FCA_AUTHORISED, _COL_FCA_PERMISSIONS]
+_OUTPUT_COLUMNS = [
+    _COL_FCA_FRN,
+    _COL_FCA_STATUS,
+    _COL_FCA_AUTHORISED,
+    _COL_FCA_PERMISSIONS,
+]
 
 
 # ---------------------------------------------------------------------------
@@ -302,7 +327,11 @@ def _has_permission(result: FirmLookupResult, permission: str) -> str:
     if not result.firm:
         return "N"
     target = permission.strip().lower()
-    return "Y" if any(p.activity_name.strip().lower() == target for p in result.permissions) else "N"
+    return (
+        "Y"
+        if any(p.activity_name.strip().lower() == target for p in result.permissions)
+        else "N"
+    )
 
 
 def _format_permissions(result: FirmLookupResult) -> str:
@@ -327,7 +356,9 @@ def _result_to_row(result: FirmLookupResult) -> Dict[str, str]:
 # ---------------------------------------------------------------------------
 
 
-def _run_single_frn(lookup: FcaFirmLookup, frn: str, permission: Optional[str] = None) -> None:
+def _run_single_frn(
+    lookup: FcaFirmLookup, frn: str, permission: Optional[str] = None
+) -> None:
     """Look up a single firm by FRN and print results to stdout."""
     result = lookup.lookup_by_frn(frn)
 
@@ -448,7 +479,9 @@ def _run_batch(
             f"({frn_col if mode == 'frn' else name_col!r})..."
         )
 
-        out_fieldnames = fieldnames + _OUTPUT_COLUMNS + ([permission] if permission else [])
+        out_fieldnames = (
+            fieldnames + _OUTPUT_COLUMNS + ([permission] if permission else [])
+        )
         rows = list(reader)
 
     total = len(rows)
@@ -506,7 +539,9 @@ def _run_batch(
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8", newline="") as out_fh:
-        writer = csv.DictWriter(out_fh, fieldnames=out_fieldnames, extrasaction="ignore")
+        writer = csv.DictWriter(
+            out_fh, fieldnames=out_fieldnames, extrasaction="ignore"
+        )
         writer.writeheader()
         writer.writerows(enriched)
 
@@ -598,7 +633,9 @@ def main(argv: Optional[List[str]] = None) -> None:
     else:
         assert effective_input is not None
         output_path = effective_output or _derive_output_path(effective_input)
-        _run_batch(lookup, effective_input, output_path, permission=effective_permission)
+        _run_batch(
+            lookup, effective_input, output_path, permission=effective_permission
+        )
 
 
 if __name__ == "__main__":

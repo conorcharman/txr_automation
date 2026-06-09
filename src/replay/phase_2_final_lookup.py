@@ -24,11 +24,11 @@ Version 1.0 - Initial implementation (April 2026)
 Version 1.1 - Added XLSX support for Phase 2 output and UnaVista files (May 2026)
 """
 
+import argparse
 import csv
 import glob
 import os
 import re
-import argparse
 from collections import defaultdict
 from dataclasses import dataclass, field
 from datetime import datetime
@@ -37,28 +37,28 @@ from typing import Dict, List, Optional, Set, Tuple
 
 try:
     import openpyxl
+
     _OPENPYXL_AVAILABLE = True
 except ImportError:
     _OPENPYXL_AVAILABLE = False
 
 # Core library imports
 from core import (
+    INCIDENT_CODE_MATRIX,
     ConfigManager,
     DateParser,
     ProcessingStats,
     UnaVistaTransaction,
     create_logger,
     safe_open_csv,
-    INCIDENT_CODE_MATRIX,
 )
-from core.data import Phase2SingleColumns, Phase2CombinedColumns
+from core.data import Phase2CombinedColumns, Phase2SingleColumns
 
 # Sibling module imports — reuse indexer and column mapper from the Feedback stage
 from .phase_2_processor import IncidentColumnMapper, IncidentFileIndex
 
 # Reuse UnaVista field mapping and test result structure from Phase 3 Final Lookup
 from .phase_3_final_lookup import FieldMapper, TestResult
-
 
 # ============================================================================
 # File Reading Helper
@@ -78,7 +78,7 @@ def _read_rows(file_path: str) -> List[List[str]]:
     Raises:
         ImportError: If the file is ``.xlsx`` but ``openpyxl`` is not installed.
     """
-    if str(file_path).lower().endswith('.xlsx'):
+    if str(file_path).lower().endswith(".xlsx"):
         if not _OPENPYXL_AVAILABLE:
             raise ImportError(
                 "openpyxl is required to read .xlsx files: pip install openpyxl"
@@ -92,7 +92,7 @@ def _read_rows(file_path: str) -> List[List[str]]:
         wb.close()
         return rows
     else:
-        f, _ = safe_open_csv(Path(file_path), 'r', newline='')
+        f, _ = safe_open_csv(Path(file_path), "r", newline="")
         with f:
             return list(csv.reader(f))
 
@@ -118,10 +118,10 @@ def _make_output_filename(input_path: str) -> str:
           -> UnaVista_MiFIR_Manual_Corrections_423_20180406(AJB).csv
     """
     stem = Path(input_path).stem
-    new_stem = re.sub(r'\([^)]*\)', '(AJB)', stem)
+    new_stem = re.sub(r"\([^)]*\)", "(AJB)", stem)
     if new_stem == stem:  # no parentheses found
-        new_stem = stem + '(AJB)'
-    return new_stem + '.csv'
+        new_stem = stem + "(AJB)"
+    return new_stem + ".csv"
 
 
 def _split_correction_parts(raw: str) -> List[str]:
@@ -137,12 +137,14 @@ def _split_correction_parts(raw: str) -> List[str]:
     Returns:
         List of stripped string parts.
     """
-    if '\u00ac' in raw:  # ¬
-        return [p.strip() for p in raw.split('\u00ac')]
-    return [p.strip() for p in raw.split(':')]
+    if "\u00ac" in raw:  # ¬
+        return [p.strip() for p in raw.split("\u00ac")]
+    return [p.strip() for p in raw.split(":")]
 
 
-def _parse_phase2_corrections(correction_value: str, correction_field: str) -> Dict[str, str]:
+def _parse_phase2_corrections(
+    correction_value: str, correction_field: str
+) -> Dict[str, str]:
     """Parse Phase 2 output correction strings into a field -> value dict.
 
     The Phase 2 processor writes final corrections into the output CSV. This
@@ -160,11 +162,11 @@ def _parse_phase2_corrections(correction_value: str, correction_field: str) -> D
     value = correction_value.strip()
     field_str = correction_field.strip()
 
-    if not value or value.lower() in ('no change', 'client not found'):
+    if not value or value.lower() in ("no change", "client not found"):
         return {}
-    if re.search(r'\bre\s+accounts?\b', value, re.IGNORECASE):
+    if re.search(r"\bre\s+accounts?\b", value, re.IGNORECASE):
         return {}
-    if not field_str or field_str.lower() in ('no change', 'client not found'):
+    if not field_str or field_str.lower() in ("no change", "client not found"):
         return {}
 
     value_parts = _split_correction_parts(value)
@@ -172,8 +174,8 @@ def _parse_phase2_corrections(correction_value: str, correction_field: str) -> D
 
     corrections: Dict[str, str] = {}
     for field_item, val in zip(field_parts, value_parts):
-        if ' & ' in field_item:
-            for sub_field in field_item.split(' & '):
+        if " & " in field_item:
+            for sub_field in field_item.split(" & "):
                 corrections[sub_field.strip()] = val
         else:
             corrections[field_item] = val
@@ -202,17 +204,18 @@ def _extract_incident_correction(
         Tuple of (correction_value, correction_field). Both are "No Change" when
         no correction applies.
     """
+
     def _cell(col: Optional[int]) -> str:
         return row[col].strip() if col is not None and len(row) > col else ""
 
-    correction_value = _cell(column_mapper.get('correction'))
-    correction_field = _cell(column_mapper.get('correction_field'))
-    suggested_value = _cell(column_mapper.get('suggested_correction'))
-    suggested_field = _cell(column_mapper.get('suggested_correction_field'))
-    agree = _cell(column_mapper.get('agree_with_correction')).upper()
+    correction_value = _cell(column_mapper.get("correction"))
+    correction_field = _cell(column_mapper.get("correction_field"))
+    suggested_value = _cell(column_mapper.get("suggested_correction"))
+    suggested_field = _cell(column_mapper.get("suggested_correction_field"))
+    agree = _cell(column_mapper.get("agree_with_correction")).upper()
 
     if correction_value:
-        if agree in ('N', 'F'):
+        if agree in ("N", "F"):
             if suggested_value:
                 correction_value, correction_field = suggested_value, suggested_field
             else:
@@ -224,7 +227,7 @@ def _extract_incident_correction(
         else:
             return "No Change", "No Change"
 
-    if re.search(r'\bre\s+accounts?\b', correction_value, re.IGNORECASE):
+    if re.search(r"\bre\s+accounts?\b", correction_value, re.IGNORECASE):
         return "No Change", "No Change"
 
     return correction_value, correction_field
@@ -233,6 +236,7 @@ def _extract_incident_correction(
 # ============================================================================
 # Data Classes
 # ============================================================================
+
 
 @dataclass
 class Phase2ReplayRecord:
@@ -273,6 +277,7 @@ class Phase2CrossRef:
 # Phase 2 Replay Index
 # ============================================================================
 
+
 class Phase2ReplayIndex:
     """Builds a transaction_ref -> Phase2ReplayRecord index from Phase 2 output CSVs.
 
@@ -288,22 +293,22 @@ class Phase2ReplayIndex:
     @staticmethod
     def _detect_file_type(filename: str) -> str:
         """Return 'combined' if '+' appears in the filename, else 'single'."""
-        return 'combined' if '+' in filename else 'single'
+        return "combined" if "+" in filename else "single"
 
     @staticmethod
     def _get_column_mapping(file_type: str) -> Dict[str, int]:
         """Return column index mapping for the given file type."""
         cols: type
-        if file_type == 'single':
+        if file_type == "single":
             cols = Phase2SingleColumns
         else:
             cols = Phase2CombinedColumns
         return {
-            'incident_code': cols.INCIDENT_CODE,
-            'agrees': cols.AGREES,
-            'correction_field': cols.CORRECTION_FIELD,
-            'correction_value': cols.CORRECTION_VALUE,
-            'transaction_ref': cols.TRANSACTION_REF,
+            "incident_code": cols.INCIDENT_CODE,
+            "agrees": cols.AGREES,
+            "correction_field": cols.CORRECTION_FIELD,
+            "correction_value": cols.CORRECTION_VALUE,
+            "transaction_ref": cols.TRANSACTION_REF,
         }
 
     def load_file(self, file_path: str) -> None:
@@ -332,18 +337,18 @@ class Phase2ReplayIndex:
                 while len(row) < min_cols:
                     row.append("")
 
-                txn_ref = row[col_map['transaction_ref']].strip()
+                txn_ref = row[col_map["transaction_ref"]].strip()
                 if not txn_ref:
                     continue
 
-                codes_str = row[col_map['incident_code']].strip()
-                codes = [c.strip() for c in codes_str.split('|') if c.strip()]
+                codes_str = row[col_map["incident_code"]].strip()
+                codes = [c.strip() for c in codes_str.split("|") if c.strip()]
 
                 self.records[txn_ref] = Phase2ReplayRecord(
                     transaction_ref=txn_ref,
                     incident_codes=codes,
-                    correction_value=row[col_map['correction_value']].strip(),
-                    correction_field=row[col_map['correction_field']].strip(),
+                    correction_value=row[col_map["correction_value"]].strip(),
+                    correction_field=row[col_map["correction_field"]].strip(),
                     source_file=filename,
                     file_type=file_type,
                 )
@@ -358,6 +363,7 @@ class Phase2ReplayIndex:
 # ============================================================================
 # UnaVista Transaction Index
 # ============================================================================
+
 
 class UnaVistaTransactionIndex:
     """Loads UnaVista CSV files and builds a transaction_ref -> row_index dict.
@@ -440,6 +446,7 @@ class UnaVistaTransactionIndex:
 # Main Processor
 # ============================================================================
 
+
 class Phase2FinalLookup:
     """Main processor for Phase 2 Final Lookup.
 
@@ -474,26 +481,26 @@ class Phase2FinalLookup:
             raise ValueError("Must provide either config_path or config_dict")
 
         # Paths
-        paths = self.config.get('paths', {})
-        self.replay_output_path: str = paths.get('replay_output', '')
-        self.incident_files_path: str = paths.get('incident_files', '')
-        self.unavista_files_path: str = paths.get('unavista_files', '')
-        self.output_path: str = paths.get('output', self.replay_output_path)
-        self.log_output_path: str = paths.get('log_output', self.output_path)
+        paths = self.config.get("paths", {})
+        self.replay_output_path: str = paths.get("replay_output", "")
+        self.incident_files_path: str = paths.get("incident_files", "")
+        self.unavista_files_path: str = paths.get("unavista_files", "")
+        self.output_path: str = paths.get("output", self.replay_output_path)
+        self.log_output_path: str = paths.get("log_output", self.output_path)
 
         # File patterns
-        files = self.config.get('files', {})
-        self.replay_patterns: List[str] = files.get('replay_patterns', ['*.csv'])
-        self.incident_pattern: str = files.get('incident_pattern', '*.csv')
+        files = self.config.get("files", {})
+        self.replay_patterns: List[str] = files.get("replay_patterns", ["*.csv"])
+        self.incident_pattern: str = files.get("incident_pattern", "*.csv")
         self.unavista_pattern: str = files.get(
-            'unavista_pattern', 'UnaVista_MiFIR_Manual_Corrections_*.csv'
+            "unavista_pattern", "UnaVista_MiFIR_Manual_Corrections_*.csv"
         )
 
         # Column config for incident file cross-reference
-        self.incident_columns: Dict[str, str] = self.config.get('incident_columns', {})
+        self.incident_columns: Dict[str, str] = self.config.get("incident_columns", {})
 
         # Logging
-        log_level = self.config.get('processor', {}).get('log_level', 'INFO')
+        log_level = self.config.get("processor", {}).get("log_level", "INFO")
         self.logger = create_logger(
             name="phase2_final_lookup",
             log_dir=self.log_output_path,
@@ -502,9 +509,16 @@ class Phase2FinalLookup:
 
         # Stats
         self.stats = ProcessingStats()
-        for key in ('processed_records', 'not_found', 'no_change',
-                    'full_pass', 'full_fail', 'partial_pass',
-                    'inconsistent', 'cross_ref_discrepancies'):
+        for key in (
+            "processed_records",
+            "not_found",
+            "no_change",
+            "full_pass",
+            "full_fail",
+            "partial_pass",
+            "inconsistent",
+            "cross_ref_discrepancies",
+        ):
             self.stats.increment(key, 0)
 
         # Indexes
@@ -623,10 +637,12 @@ class Phase2FinalLookup:
         Returns:
             Absolute path to the incident file, or None if not found.
         """
-        pattern_prefix = self.incident_pattern.replace('*.csv', '').strip()
+        pattern_prefix = self.incident_pattern.replace("*.csv", "").strip()
 
         # Tier 1: "FY25 Q4 7_39.csv"
-        path = os.path.join(self.incident_files_path, f"{pattern_prefix} {incident_code}.csv")
+        path = os.path.join(
+            self.incident_files_path, f"{pattern_prefix} {incident_code}.csv"
+        )
         if os.path.exists(path):
             return path
 
@@ -638,15 +654,19 @@ class Phase2FinalLookup:
             return path_dash
 
         # Tier 3: "* 7_39.csv" (exact, space-anchored)
-        matches = glob.glob(os.path.join(self.incident_files_path, f"* {incident_code}.csv"))
+        matches = glob.glob(
+            os.path.join(self.incident_files_path, f"* {incident_code}.csv")
+        )
         if matches:
             return matches[0]
 
         # Tier 4: "* 7_39*.csv" with regex collision guard
         # Regex: code must be preceded by whitespace and followed by whitespace,
         # underscore, or dot — prevents "9_1" matching "9_10" or "9_12".
-        code_re = re.compile(rf'\s{re.escape(incident_code)}(?=[\s_.])')
-        wider = glob.glob(os.path.join(self.incident_files_path, f"* {incident_code}*.csv"))
+        code_re = re.compile(rf"\s{re.escape(incident_code)}(?=[\s_.])")
+        wider = glob.glob(
+            os.path.join(self.incident_files_path, f"* {incident_code}*.csv")
+        )
         for match in sorted(wider, key=os.path.getmtime):
             if code_re.search(os.path.basename(match)):
                 return match
@@ -674,9 +694,9 @@ class Phase2FinalLookup:
         """
         if incident_code not in self.incident_indexes:
             return Phase2CrossRef(
-                match_state='not_found',
-                incident_correction_value='',
-                incident_correction_field='',
+                match_state="not_found",
+                incident_correction_value="",
+                incident_correction_field="",
             )
 
         index = self.incident_indexes[incident_code]
@@ -684,9 +704,9 @@ class Phase2FinalLookup:
 
         if row_idx is None:
             return Phase2CrossRef(
-                match_state='not_found',
-                incident_correction_value='',
-                incident_correction_field='',
+                match_state="not_found",
+                incident_correction_value="",
+                incident_correction_field="",
             )
 
         inc_value, inc_field = _extract_incident_correction(
@@ -694,21 +714,27 @@ class Phase2FinalLookup:
         )
 
         output_value = record.correction_value.strip()
-        output_is_no_change = output_value.lower() in ('no change', 'client not found', '')
-        incident_is_no_change = inc_value.lower() == 'no change'
+        output_is_no_change = output_value.lower() in (
+            "no change",
+            "client not found",
+            "",
+        )
+        incident_is_no_change = inc_value.lower() == "no change"
 
         if output_is_no_change and incident_is_no_change:
-            state = 'both_agree'
+            state = "both_agree"
         elif not output_is_no_change and not incident_is_no_change:
-            if (output_value.lower() == inc_value.lower() and
-                    record.correction_field.strip().lower() == inc_field.lower()):
-                state = 'both_agree'
+            if (
+                output_value.lower() == inc_value.lower()
+                and record.correction_field.strip().lower() == inc_field.lower()
+            ):
+                state = "both_agree"
             else:
-                state = 'both_disagree'
+                state = "both_disagree"
         elif output_is_no_change:
-            state = 'incident_only'
+            state = "incident_only"
         else:
-            state = 'output_only'
+            state = "output_only"
 
         return Phase2CrossRef(
             match_state=state,
@@ -726,23 +752,23 @@ class Phase2FinalLookup:
         Returns:
             Annotation string, or empty string when there is no discrepancy.
         """
-        if cross_ref.match_state == 'both_agree':
-            return ''
-        if cross_ref.match_state == 'not_found':
-            return f'[⚠ {incident_code}: txn not in incident file]'
-        if cross_ref.match_state == 'output_only':
-            return f'[⚠ {incident_code}: incident has no correction]'
-        if cross_ref.match_state == 'incident_only':
+        if cross_ref.match_state == "both_agree":
+            return ""
+        if cross_ref.match_state == "not_found":
+            return f"[⚠ {incident_code}: txn not in incident file]"
+        if cross_ref.match_state == "output_only":
+            return f"[⚠ {incident_code}: incident has no correction]"
+        if cross_ref.match_state == "incident_only":
             return (
-                f'[⚠ {incident_code}: incident has '
-                f'{cross_ref.incident_correction_field}='
-                f'\'{cross_ref.incident_correction_value}\' but output has none]'
+                f"[⚠ {incident_code}: incident has "
+                f"{cross_ref.incident_correction_field}="
+                f"'{cross_ref.incident_correction_value}' but output has none]"
             )
         # both_disagree
         return (
-            f'[⚠ {incident_code}: incident '
-            f'{cross_ref.incident_correction_field}='
-            f'\'{cross_ref.incident_correction_value}\']'
+            f"[⚠ {incident_code}: incident "
+            f"{cross_ref.incident_correction_field}="
+            f"'{cross_ref.incident_correction_value}']"
         )
 
     # ------------------------------------------------------------------ #
@@ -763,8 +789,8 @@ class Phase2FinalLookup:
         for code in incident_codes:
             entry = INCIDENT_CODE_MATRIX.get(code)
             if entry:
-                types.update(entry.get('sides', set()))
-        return types or {'buyer'}
+                types.update(entry.get("sides", set()))
+        return types or {"buyer"}
 
     # ------------------------------------------------------------------ #
     # Field testing
@@ -795,36 +821,42 @@ class Phase2FinalLookup:
                 self.logger.warning(
                     f"Unknown field mapping: '{field_name}' for {client_type}"
                 )
-                results.append(TestResult(
-                    field_name=field_name,
-                    expected=expected_value,
-                    actual='UNKNOWN_FIELD',
-                    passed=False,
-                    source='',
-                ))
+                results.append(
+                    TestResult(
+                        field_name=field_name,
+                        expected=expected_value,
+                        actual="UNKNOWN_FIELD",
+                        passed=False,
+                        source="",
+                    )
+                )
                 continue
 
-            actual_value = row_data[col_idx].strip() if col_idx < len(row_data) else ''
+            actual_value = row_data[col_idx].strip() if col_idx < len(row_data) else ""
 
-            if expected_value.strip().upper() == 'NULL':
-                passed = (actual_value == '')
+            if expected_value.strip().upper() == "NULL":
+                passed = actual_value == ""
             else:
                 expected_norm = expected_value.strip().lower()
                 actual_norm = actual_value.strip().lower()
 
-                if 'date' in field_name.lower() or field_name.upper() == 'DOB':
-                    expected_norm = DateParser.parse_date(expected_value) or expected_norm
+                if "date" in field_name.lower() or field_name.upper() == "DOB":
+                    expected_norm = (
+                        DateParser.parse_date(expected_value) or expected_norm
+                    )
                     actual_norm = DateParser.parse_date(actual_value) or actual_norm
 
-                passed = (expected_norm == actual_norm)
+                passed = expected_norm == actual_norm
 
-            results.append(TestResult(
-                field_name=field_name,
-                expected=expected_value,
-                actual=actual_value,
-                passed=passed,
-                source='',
-            ))
+            results.append(
+                TestResult(
+                    field_name=field_name,
+                    expected=expected_value,
+                    actual=actual_value,
+                    passed=passed,
+                    source="",
+                )
+            )
 
         return results
 
@@ -851,18 +883,18 @@ class Phase2FinalLookup:
             Formatted test_result string.
         """
         value = record.correction_value.strip()
-        is_no_change = value.lower() in ('no change', '')
-        is_client_not_found = value.lower() == 'client not found'
+        is_no_change = value.lower() in ("no change", "")
+        is_client_not_found = value.lower() == "client not found"
 
         if is_client_not_found:
-            return 'Transaction not found in incident file'
+            return "Transaction not found in incident file"
 
         # Detect multi-code inconsistencies written by the Feedback stage.
         # The Phase 2 processor joins inconsistent corrections with '|' (and no ¬).
         # A legitimate multi-field correction uses ¬ as the delimiter.
-        if '|' in value and '\u00ac' not in value:
-            self.stats.increment('inconsistent')
-            return f'Inconsistent corrections from Phase 2: {value}'
+        if "|" in value and "\u00ac" not in value:
+            self.stats.increment("inconsistent")
+            return f"Inconsistent corrections from Phase 2: {value}"
 
         # Parse corrections from Phase 2 output (source of truth)
         corrections = _parse_phase2_corrections(value, record.correction_field)
@@ -882,14 +914,14 @@ class Phase2FinalLookup:
                 annotation = self._format_discrepancy(cross_ref, code)
                 if annotation:
                     discrepancy_parts.append(annotation)
-                    self.stats.increment('cross_ref_discrepancies')
+                    self.stats.increment("cross_ref_discrepancies")
 
-        discrepancy_note = ' '.join(discrepancy_parts)
+        discrepancy_note = " ".join(discrepancy_parts)
 
         if is_no_change or not corrections:
-            self.stats.increment('no_change')
-            result = 'No change'
-            return f'{result} {discrepancy_note}'.strip()
+            self.stats.increment("no_change")
+            result = "No change"
+            return f"{result} {discrepancy_note}".strip()
 
         # Test each correction field per client type
         output_parts: List[str] = []
@@ -910,28 +942,28 @@ class Phase2FinalLookup:
 
             parts: List[str] = []
             if passed:
-                pass_str = ', '.join(f'{r.field_name}={r.expected}' for r in passed)
-                parts.append(f'PASS ({client_type}): {pass_str}')
+                pass_str = ", ".join(f"{r.field_name}={r.expected}" for r in passed)
+                parts.append(f"PASS ({client_type}): {pass_str}")
             if failed:
-                fail_str = ' | '.join(
+                fail_str = " | ".join(
                     f"{r.field_name} expected '{r.expected}' got '{r.actual}'"
                     for r in failed
                 )
-                parts.append(f'FAIL ({client_type}): {fail_str}')
+                parts.append(f"FAIL ({client_type}): {fail_str}")
 
             if parts:
-                output_parts.append(' | '.join(parts))
+                output_parts.append(" | ".join(parts))
 
         if not any_tested:
-            result = 'No testable corrections'
+            result = "No testable corrections"
         else:
-            result = ' || '.join(output_parts) if output_parts else 'No change'
+            result = " || ".join(output_parts) if output_parts else "No change"
             if all_passed:
-                self.stats.increment('full_pass')
+                self.stats.increment("full_pass")
             else:
-                self.stats.increment('full_fail')
+                self.stats.increment("full_fail")
 
-        return f'{result} {discrepancy_note}'.strip()
+        return f"{result} {discrepancy_note}".strip()
 
     # ------------------------------------------------------------------ #
     # Output generation
@@ -951,7 +983,7 @@ class Phase2FinalLookup:
         os.makedirs(self.output_path, exist_ok=True)
 
         header = list(self.unavista_index.header)
-        output_header = header[:2] + ['test_result'] + header[2:]
+        output_header = header[:2] + ["test_result"] + header[2:]
 
         output_filenames: List[str] = []
         not_found_total = 0
@@ -962,16 +994,16 @@ class Phase2FinalLookup:
 
             for row_idx in range(start_idx, start_idx + row_count):
                 row_data = self.unavista_index.transactions[row_idx]
-                txn_ref = row_data[1].strip() if len(row_data) > 1 else ''
+                txn_ref = row_data[1].strip() if len(row_data) > 1 else ""
                 record = self.replay_index.records.get(txn_ref)
 
                 if record is None:
-                    test_result = 'Transaction not found'
+                    test_result = "Transaction not found"
                     not_found_count += 1
-                    self.stats.increment('not_found')
+                    self.stats.increment("not_found")
                 else:
                     test_result = self.process_transaction(record, row_data)
-                    self.stats.increment('processed_records')
+                    self.stats.increment("processed_records")
 
                 row = list(row_data)
                 row.insert(2, test_result)
@@ -986,7 +1018,7 @@ class Phase2FinalLookup:
 
             output_filename = _make_output_filename(file_path)
             output_filepath = os.path.join(self.output_path, output_filename)
-            with open(output_filepath, 'w', encoding='utf-8', newline='') as f_out:
+            with open(output_filepath, "w", encoding="utf-8", newline="") as f_out:
                 csv.writer(f_out).writerows(output_rows)
 
             self.logger.info(f"Output written to: {output_filename}")
@@ -1010,7 +1042,9 @@ class Phase2FinalLookup:
             self.logger.log_header("PHASE 2 FINAL LOOKUP v1.0")
             self.logger.info(f"Phase 2 output path: {self.replay_output_path}")
             self.logger.info(f"UnaVista files path: {self.unavista_files_path}")
-            self.logger.info(f"Incident files path: {self.incident_files_path or '(not configured)'}")
+            self.logger.info(
+                f"Incident files path: {self.incident_files_path or '(not configured)'}"
+            )
             self.logger.info(f"Output path:         {self.output_path}")
 
             self.find_files()
@@ -1024,8 +1058,8 @@ class Phase2FinalLookup:
 
             if self.incident_indexes:
                 cross_ref_pct = (
-                    self.stats.custom_stats.get('cross_ref_discrepancies', 0)
-                    / max(self.stats.custom_stats.get('processed_records', 1), 1)
+                    self.stats.custom_stats.get("cross_ref_discrepancies", 0)
+                    / max(self.stats.custom_stats.get("processed_records", 1), 1)
                     * 100
                 )
                 self.logger.info(
@@ -1046,6 +1080,7 @@ class Phase2FinalLookup:
 # CLI Entry Point
 # ============================================================================
 
+
 def parse_args() -> argparse.Namespace:
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(
@@ -1062,19 +1097,19 @@ Examples:
     )
 
     parser.add_argument(
-        '--config',
+        "--config",
         type=str,
-        help='Path to YAML configuration file',
+        help="Path to YAML configuration file",
     )
     parser.add_argument(
-        '--log-level',
+        "--log-level",
         type=str,
-        choices=['DEBUG', 'INFO', 'WARNING', 'ERROR'],
-        help='Override log level from configuration',
+        choices=["DEBUG", "INFO", "WARNING", "ERROR"],
+        help="Override log level from configuration",
     )
     parser.add_argument(
-        '--gui-mode',
-        action='store_true',
+        "--gui-mode",
+        action="store_true",
         help=argparse.SUPPRESS,
     )
 
@@ -1088,10 +1123,13 @@ def main() -> int:
     try:
         if args.config:
             config = ConfigManager.load_from_yaml(args.config)
-        elif not getattr(args, 'gui_mode', False):
+        elif not getattr(args, "gui_mode", False):
             default_config = (
                 Path(__file__).parent.parent.parent
-                / 'config' / 'local' / 'replay' / 'phase2_final.yaml'
+                / "config"
+                / "local"
+                / "replay"
+                / "phase2_final.yaml"
             )
             if default_config.exists():
                 print(f"Loading default configuration from {default_config}...")
@@ -1105,9 +1143,9 @@ def main() -> int:
             return 1
 
         if args.log_level:
-            if 'processor' not in config:
-                config['processor'] = {}
-            config['processor']['log_level'] = args.log_level
+            if "processor" not in config:
+                config["processor"] = {}
+            config["processor"]["log_level"] = args.log_level
 
         processor = Phase2FinalLookup(config_dict=config)
         return processor.run()
@@ -1115,9 +1153,10 @@ def main() -> int:
     except Exception as e:
         print(f"Fatal error: {e}")
         import traceback
+
         traceback.print_exc()
         return 1
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exit(main())

@@ -51,6 +51,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 try:
     import yaml
+
     _YAML_AVAILABLE = True
 except ImportError:
     yaml = None  # type: ignore[assignment]
@@ -74,20 +75,20 @@ _FTS5_SPECIAL_CHARS = re.compile(r"[^\w\s]", re.UNICODE)
 # Patterns are word-boundary anchored and treat a trailing period as optional so
 # that both "Ltd" and "Ltd." are expanded.  Applied in _normalise_company_suffixes.
 _SUFFIX_EXPANSIONS: List[Tuple[re.Pattern[str], str]] = [
-    (re.compile(r"\bLtd\.?(?!\w)",   re.IGNORECASE), "Limited"),
-    (re.compile(r"\bCorp\.?(?!\w)",  re.IGNORECASE), "Corporation"),
-    (re.compile(r"\bInc\.?(?!\w)",   re.IGNORECASE), "Incorporated"),
-    (re.compile(r"\bBros\.?(?!\w)",  re.IGNORECASE), "Brothers"),
-    (re.compile(r"\bIntl\.?(?!\w)",  re.IGNORECASE), "International"),
-    (re.compile(r"\bMgmt\.?(?!\w)",  re.IGNORECASE), "Management"),
-    (re.compile(r"\bSvcs\.?(?!\w)",  re.IGNORECASE), "Services"),
-    (re.compile(r"\bSvc\.?(?!\w)",   re.IGNORECASE), "Services"),
-    (re.compile(r"\bGrp\.?(?!\w)",   re.IGNORECASE), "Group"),
+    (re.compile(r"\bLtd\.?(?!\w)", re.IGNORECASE), "Limited"),
+    (re.compile(r"\bCorp\.?(?!\w)", re.IGNORECASE), "Corporation"),
+    (re.compile(r"\bInc\.?(?!\w)", re.IGNORECASE), "Incorporated"),
+    (re.compile(r"\bBros\.?(?!\w)", re.IGNORECASE), "Brothers"),
+    (re.compile(r"\bIntl\.?(?!\w)", re.IGNORECASE), "International"),
+    (re.compile(r"\bMgmt\.?(?!\w)", re.IGNORECASE), "Management"),
+    (re.compile(r"\bSvcs\.?(?!\w)", re.IGNORECASE), "Services"),
+    (re.compile(r"\bSvc\.?(?!\w)", re.IGNORECASE), "Services"),
+    (re.compile(r"\bGrp\.?(?!\w)", re.IGNORECASE), "Group"),
     (re.compile(r"\bHldgs\.?(?!\w)", re.IGNORECASE), "Holdings"),
-    (re.compile(r"\bHldg\.?(?!\w)",  re.IGNORECASE), "Holding"),
-    (re.compile(r"\bMfg\.?(?!\w)",   re.IGNORECASE), "Manufacturing"),
+    (re.compile(r"\bHldg\.?(?!\w)", re.IGNORECASE), "Holding"),
+    (re.compile(r"\bMfg\.?(?!\w)", re.IGNORECASE), "Manufacturing"),
     (re.compile(r"\bAssoc\.?(?!\w)", re.IGNORECASE), "Association"),
-    (re.compile(r"\bAssn\.?(?!\w)",  re.IGNORECASE), "Association"),
+    (re.compile(r"\bAssn\.?(?!\w)", re.IGNORECASE), "Association"),
 ]
 
 # Result column names appended to each output row — LEI validation mode
@@ -417,7 +418,9 @@ def _search_name_with_fallback(
     prefix_score = "1_PREFIX_NORM" if is_normalised else "1_PREFIX"
 
     # Step 1: phrase search on normalised form (GB results promoted first)
-    results = lookup.search_by_name(normalised, limit=limit, priority_country=_PRIORITY_COUNTRY)
+    results = lookup.search_by_name(
+        normalised, limit=limit, priority_country=_PRIORITY_COUNTRY
+    )
     if results:
         return results, phrase_score
 
@@ -427,7 +430,9 @@ def _search_name_with_fallback(
     if not words:
         return [], "NO_MATCH"
     prefix_query = " ".join(w + "*" for w in words)
-    results = lookup.search_by_name(prefix_query, limit=limit, raw_query=True, priority_country=_PRIORITY_COUNTRY)
+    results = lookup.search_by_name(
+        prefix_query, limit=limit, raw_query=True, priority_country=_PRIORITY_COUNTRY
+    )
     if results:
         return results, prefix_score
 
@@ -435,7 +440,9 @@ def _search_name_with_fallback(
     # was changed by suffix expansion — catches entities whose official registered
     # name itself uses abbreviations (e.g. "Smith Consulting Ltd." in GLEIF).
     if is_normalised:
-        results = lookup.search_by_name(name_value, limit=limit, priority_country=_PRIORITY_COUNTRY)
+        results = lookup.search_by_name(
+            name_value, limit=limit, priority_country=_PRIORITY_COUNTRY
+        )
         if results:
             return results, "1_PHRASE"
 
@@ -443,7 +450,12 @@ def _search_name_with_fallback(
         words_raw = safe_raw.split()
         if words_raw:
             prefix_raw = " ".join(w + "*" for w in words_raw)
-            results = lookup.search_by_name(prefix_raw, limit=limit, raw_query=True, priority_country=_PRIORITY_COUNTRY)
+            results = lookup.search_by_name(
+                prefix_raw,
+                limit=limit,
+                raw_query=True,
+                priority_country=_PRIORITY_COUNTRY,
+            )
             if results:
                 return results, "1_PREFIX"
 
@@ -483,7 +495,7 @@ def _process_batch_file(
     with input_path.open(encoding="utf-8-sig", newline="") as in_fh:
         reader = csv.DictReader(in_fh)
         if not reader.fieldnames:
-            logger.warning("Input CSV has no headers: %s", input_path)
+            print(f"WARNING: Input CSV has no headers: {input_path}", file=sys.stderr)
             return 0, 0
 
         fieldnames = list(reader.fieldnames)
@@ -553,14 +565,16 @@ def _process_batch_file(
                     if not lei_value:
                         rows_skipped += 1
                         out_row = dict(row)
-                        out_row.update({
-                            _COL_LEI_VALID: "",
-                            _COL_LEI_STATUS: "",
-                            _COL_LEGAL_NAME: "",
-                            _COL_LEI_REASON: "",
-                            _COL_ENTITY_CATEGORY: "",
-                            _COL_LEGAL_ADDR_COUNTRY: "",
-                        })
+                        out_row.update(
+                            {
+                                _COL_LEI_VALID: "",
+                                _COL_LEI_STATUS: "",
+                                _COL_LEGAL_NAME: "",
+                                _COL_LEI_REASON: "",
+                                _COL_ENTITY_CATEGORY: "",
+                                _COL_LEGAL_ADDR_COUNTRY: "",
+                            }
+                        )
                         writer.writerow(out_row)
                         continue
 
@@ -578,14 +592,16 @@ def _process_batch_file(
                     result: LeiLookupResult = lookup.lookup_lei(lei_value, trade_date)
 
                     out_row = dict(row)
-                    out_row.update({
-                        _COL_LEI_VALID: "Y" if result.is_valid else "N",
-                        _COL_LEI_STATUS: result.registration_status,
-                        _COL_LEGAL_NAME: result.legal_name,
-                        _COL_LEI_REASON: result.reason,
-                        _COL_ENTITY_CATEGORY: result.entity_category,
-                        _COL_LEGAL_ADDR_COUNTRY: result.legal_address_country,
-                    })
+                    out_row.update(
+                        {
+                            _COL_LEI_VALID: "Y" if result.is_valid else "N",
+                            _COL_LEI_STATUS: result.registration_status,
+                            _COL_LEGAL_NAME: result.legal_name,
+                            _COL_LEI_REASON: result.reason,
+                            _COL_ENTITY_CATEGORY: result.entity_category,
+                            _COL_LEGAL_ADDR_COUNTRY: result.legal_address_country,
+                        }
+                    )
                     writer.writerow(out_row)
                     rows_processed += 1
 
@@ -612,13 +628,15 @@ def _process_batch_file(
                 if not name_value:
                     rows_skipped += 1
                     out_row = dict(row)
-                    out_row.update({
-                        _COL_NAME_MATCH_LEI: "",
-                        _COL_NAME_MATCH_LEGAL_NAME: "",
-                        _COL_NAME_MATCH_STATUS: "",
-                        _COL_NAME_MATCH_COUNTRY: "",
-                        _COL_NAME_MATCH_SCORE: "",
-                    })
+                    out_row.update(
+                        {
+                            _COL_NAME_MATCH_LEI: "",
+                            _COL_NAME_MATCH_LEGAL_NAME: "",
+                            _COL_NAME_MATCH_STATUS: "",
+                            _COL_NAME_MATCH_COUNTRY: "",
+                            _COL_NAME_MATCH_SCORE: "",
+                        }
+                    )
                     writer.writerow(out_row)
                     continue
 
@@ -627,21 +645,29 @@ def _process_batch_file(
                 out_row = dict(row)
                 if matches:
                     match = matches[0]
-                    out_row.update({
-                        _COL_NAME_MATCH_LEI: match.get("lei", ""),
-                        _COL_NAME_MATCH_LEGAL_NAME: match.get("legal_name", ""),
-                        _COL_NAME_MATCH_STATUS: match.get("registration_status", ""),
-                        _COL_NAME_MATCH_COUNTRY: match.get("legal_address_country", ""),
-                        _COL_NAME_MATCH_SCORE: score,
-                    })
+                    out_row.update(
+                        {
+                            _COL_NAME_MATCH_LEI: match.get("lei", ""),
+                            _COL_NAME_MATCH_LEGAL_NAME: match.get("legal_name", ""),
+                            _COL_NAME_MATCH_STATUS: match.get(
+                                "registration_status", ""
+                            ),
+                            _COL_NAME_MATCH_COUNTRY: match.get(
+                                "legal_address_country", ""
+                            ),
+                            _COL_NAME_MATCH_SCORE: score,
+                        }
+                    )
                 else:
-                    out_row.update({
-                        _COL_NAME_MATCH_LEI: "",
-                        _COL_NAME_MATCH_LEGAL_NAME: "",
-                        _COL_NAME_MATCH_STATUS: "",
-                        _COL_NAME_MATCH_COUNTRY: "",
-                        _COL_NAME_MATCH_SCORE: score,
-                    })
+                    out_row.update(
+                        {
+                            _COL_NAME_MATCH_LEI: "",
+                            _COL_NAME_MATCH_LEGAL_NAME: "",
+                            _COL_NAME_MATCH_STATUS: "",
+                            _COL_NAME_MATCH_COUNTRY: "",
+                            _COL_NAME_MATCH_SCORE: score,
+                        }
+                    )
                 writer.writerow(out_row)
                 rows_processed += 1
 
@@ -784,9 +810,7 @@ def main() -> None:
         )
         total_processed += rows_p
         total_skipped += rows_s
-        print(
-            f"  {input_path.name}: {rows_p} rows processed -> {per_file_out.name}"
-        )
+        print(f"  {input_path.name}: {rows_p} rows processed -> {per_file_out.name}")
 
         # Collect for merged output — only if the file was actually written
         if output and per_file_out.exists():

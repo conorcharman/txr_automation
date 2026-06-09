@@ -2,7 +2,12 @@
 
 import pytest
 
-from src.drr.rule_catalogue import CATALOGUE, VALIDATOR_TO_RULES, RuleReference, get_rules_for_validator
+from src.drr.rule_catalogue import (
+    CATALOGUE,
+    VALIDATOR_TO_RULES,
+    RuleReference,
+    get_rules_for_validator,
+)
 
 
 class TestCatalogue:
@@ -83,4 +88,6 @@ class TestValidatorToRules:
     def test_all_mapped_rules_exist_in_catalogue(self) -> None:
         for validator, rule_names in VALIDATOR_TO_RULES.items():
             for name in rule_names:
-                assert name in CATALOGUE, f"{validator} references unknown rule '{name}'"
+                assert (
+                    name in CATALOGUE
+                ), f"{validator} references unknown rule '{name}'"

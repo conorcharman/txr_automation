@@ -73,7 +73,9 @@ async def test_compliance_check_response_shape(client: AsyncClient) -> None:
 
 
 @pytest.mark.anyio
-async def test_compliance_check_results_carry_regulatory_references(client: AsyncClient) -> None:
+async def test_compliance_check_results_carry_regulatory_references(
+    client: AsyncClient,
+) -> None:
     response = await client.post("/api/drr/compliance-check", json=VALID_PAYLOAD)
     result = response.json()["results"][0]
     assert result["fieldNumber"]
@@ -92,18 +94,24 @@ async def test_compliance_check_all_pass_on_valid_payload(client: AsyncClient) -
 
 
 @pytest.mark.anyio
-async def test_compliance_check_invalid_buyer_lei_fails_rule(client: AsyncClient) -> None:
+async def test_compliance_check_invalid_buyer_lei_fails_rule(
+    client: AsyncClient,
+) -> None:
     payload = {**VALID_PAYLOAD, "buyerId": INVALID_LEI}
     response = await client.post("/api/drr/compliance-check", json=payload)
     assert response.status_code == 200
     data = response.json()
-    buyer_result = next(r for r in data["results"] if r["ruleName"] == "BuyerSeller_Buyer")
+    buyer_result = next(
+        r for r in data["results"] if r["ruleName"] == "BuyerSeller_Buyer"
+    )
     assert buyer_result["status"] == "fail"
     assert data["overallStatus"] == "fail"
 
 
 @pytest.mark.anyio
-async def test_compliance_check_missing_transaction_ref_returns_422(client: AsyncClient) -> None:
+async def test_compliance_check_missing_transaction_ref_returns_422(
+    client: AsyncClient,
+) -> None:
     payload = {k: v for k, v in VALID_PAYLOAD.items() if k != "transactionRef"}
     response = await client.post("/api/drr/compliance-check", json=payload)
     assert response.status_code == 422
@@ -145,8 +153,14 @@ async def test_list_submissions_returns_summaries(client: AsyncClient) -> None:
 
 @pytest.mark.anyio
 async def test_list_submissions_ordered_newest_first(client: AsyncClient) -> None:
-    await client.post("/api/drr/compliance-check", json={**VALID_PAYLOAD, "transactionRef": "TXN-FIRST"})
-    await client.post("/api/drr/compliance-check", json={**VALID_PAYLOAD, "transactionRef": "TXN-SECOND"})
+    await client.post(
+        "/api/drr/compliance-check",
+        json={**VALID_PAYLOAD, "transactionRef": "TXN-FIRST"},
+    )
+    await client.post(
+        "/api/drr/compliance-check",
+        json={**VALID_PAYLOAD, "transactionRef": "TXN-SECOND"},
+    )
     response = await client.get("/api/drr/submissions")
     data = response.json()
     assert data[0]["transactionRef"] == "TXN-SECOND"
@@ -216,7 +230,9 @@ async def test_cdm_report_json_has_expected_keys(client: AsyncClient) -> None:
 @pytest.mark.anyio
 async def test_cdm_report_trade_contains_parties(client: AsyncClient) -> None:
     response = await client.post("/api/drr/cdm-report", json=VALID_PAYLOAD)
-    instruction = response.json()["cdmJson"]["originatingWorkflowStep"]["proposedEvent"]["instruction"]
+    instruction = response.json()["cdmJson"]["originatingWorkflowStep"][
+        "proposedEvent"
+    ]["instruction"]
     trade = instruction[0]["before"]["trade"]
     roles = [p["partyRole"] for p in trade["party"]]
     assert "BUYER" in roles
@@ -240,13 +256,17 @@ async def test_cdm_report_not_persisted_to_submissions(client: AsyncClient) -> N
 
 
 @pytest.mark.anyio
-async def test_cdm_report_missing_transaction_ref_returns_422(client: AsyncClient) -> None:
+async def test_cdm_report_missing_transaction_ref_returns_422(
+    client: AsyncClient,
+) -> None:
     payload = {k: v for k, v in VALID_PAYLOAD.items() if k != "transactionRef"}
     response = await client.post("/api/drr/cdm-report", json=payload)
     assert response.status_code == 422
 
 
 @pytest.mark.anyio
-async def test_cdm_report_compliance_status_pass_on_valid_payload(client: AsyncClient) -> None:
+async def test_cdm_report_compliance_status_pass_on_valid_payload(
+    client: AsyncClient,
+) -> None:
     response = await client.post("/api/drr/cdm-report", json=VALID_PAYLOAD)
     assert response.json()["complianceStatus"] == "pass"

@@ -18,7 +18,7 @@ import logging
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -289,7 +289,9 @@ def _row_to_report(row: dict[str, str], row_num: int) -> DRRComplianceCheckRespo
     )
 
 
-@router.post("/drr/compliance-check/bulk", response_model=DRRBulkComplianceCheckResponse)
+@router.post(
+    "/drr/compliance-check/bulk", response_model=DRRBulkComplianceCheckResponse
+)
 async def bulk_compliance_check(
     file: UploadFile = File(...),
 ) -> DRRBulkComplianceCheckResponse:
@@ -322,7 +324,9 @@ async def bulk_compliance_check(
         content = await file.read()
         text = content.decode("utf-8-sig")  # strip BOM if present
     except UnicodeDecodeError as exc:
-        raise HTTPException(status_code=400, detail=f"File is not valid UTF-8: {exc}") from exc
+        raise HTTPException(
+            status_code=400, detail=f"File is not valid UTF-8: {exc}"
+        ) from exc
 
     reader = csv.DictReader(io.StringIO(text))
     results: list[DRRComplianceCheckResponse] = []
@@ -331,7 +335,9 @@ async def bulk_compliance_check(
         for row_num, row in enumerate(reader, start=2):  # row 1 is header
             results.append(_row_to_report(row, row_num))
     except Exception as exc:
-        raise HTTPException(status_code=400, detail=f"Error parsing row {row_num}: {exc}") from exc
+        raise HTTPException(
+            status_code=400, detail=f"Error parsing row {row_num}: {exc}"
+        ) from exc
 
     if not results:
         raise HTTPException(status_code=400, detail="CSV file contains no data rows")
@@ -377,7 +383,9 @@ async def list_submissions(
     ]
 
 
-@router.get("/drr/submissions/{submission_id}", response_model=DRRComplianceCheckResponse)
+@router.get(
+    "/drr/submissions/{submission_id}", response_model=DRRComplianceCheckResponse
+)
 async def get_submission(
     submission_id: uuid.UUID,
     db: AsyncSession = Depends(get_db),
@@ -421,8 +429,12 @@ def _enrichment_result_to_schema(enrichment: EnrichmentResult) -> DRREnrichmentS
     if enrichment.buyer is not None:
         b = enrichment.buyer
         buyer_schema = LeiEnrichment(
-            lei=b.lei, found=b.found, is_valid=b.is_valid, reason=b.reason,
-            legal_name=b.legal_name, entity_status=b.entity_status,
+            lei=b.lei,
+            found=b.found,
+            is_valid=b.is_valid,
+            reason=b.reason,
+            legal_name=b.legal_name,
+            entity_status=b.entity_status,
             registration_status=b.registration_status,
             legal_address_country=b.legal_address_country,
         )
@@ -431,8 +443,12 @@ def _enrichment_result_to_schema(enrichment: EnrichmentResult) -> DRREnrichmentS
     if enrichment.seller is not None:
         s = enrichment.seller
         seller_schema = LeiEnrichment(
-            lei=s.lei, found=s.found, is_valid=s.is_valid, reason=s.reason,
-            legal_name=s.legal_name, entity_status=s.entity_status,
+            lei=s.lei,
+            found=s.found,
+            is_valid=s.is_valid,
+            reason=s.reason,
+            legal_name=s.legal_name,
+            entity_status=s.entity_status,
             registration_status=s.registration_status,
             legal_address_country=s.legal_address_country,
         )
@@ -441,8 +457,11 @@ def _enrichment_result_to_schema(enrichment: EnrichmentResult) -> DRREnrichmentS
     if enrichment.instrument is not None:
         i = enrichment.instrument
         instrument_schema = InstrumentEnrichment(
-            isin=i.isin, found=i.found,
-            full_name=i.full_name, cfi_code=i.cfi_code, mic=i.mic,
+            isin=i.isin,
+            found=i.found,
+            full_name=i.full_name,
+            cfi_code=i.cfi_code,
+            mic=i.mic,
         )
 
     return DRREnrichmentSummary(
@@ -507,13 +526,17 @@ async def cdm_report(body: DRRCdmReportRequest) -> DRRCdmReportResponse:
     firds_cache = None
     try:
         from src.gleif import GleifCacheManager, GleifLookup
+
         settings = get_settings()
-        gleif_lookup = GleifLookup(cache=GleifCacheManager(Path(settings.gleif_db_path)))
+        gleif_lookup = GleifLookup(
+            cache=GleifCacheManager(Path(settings.gleif_db_path))
+        )
     except Exception:
         logger.debug("GLEIF cache unavailable for CDM enrichment", exc_info=True)
 
     try:
         from src.firds import FirdsCacheManager
+
         settings = get_settings()
         firds_cache = FirdsCacheManager(db_path=Path(settings.firds_db_path))
     except Exception:

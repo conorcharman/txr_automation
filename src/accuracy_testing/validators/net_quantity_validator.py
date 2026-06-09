@@ -125,7 +125,7 @@ class NetQuantityValidator:
         # "44625CPNJMN1G01", "44625CPNJMN1G02", "44625CPNJMN1G03" each carrying
         # their own portion of the total contract quantity.
         seen_parent_refs: set = set()
-        bulk_qty = Decimal('0')
+        bulk_qty = Decimal("0")
         for record in records:
             if record.parent_ref not in seen_parent_refs:
                 seen_parent_refs.add(record.parent_ref)
@@ -142,12 +142,12 @@ class NetQuantityValidator:
         # Step 4 — sum child quantities across unique records
         net_qty = sum(
             (r.child_qty for r in deduplicated),
-            start=Decimal('0'),
+            start=Decimal("0"),
         )
 
         # Step 5 — compare net child quantity against total bulk quantity
         difference = net_qty - bulk_qty
-        error = "N" if difference == Decimal('0') else "Y"
+        error = "N" if difference == Decimal("0") else "Y"
 
         if self.verbose:
             logger.debug(
@@ -200,23 +200,23 @@ class NetQuantityValidator:
             groups[record.bulk_ref].append(record)
 
         stats: Dict[str, int] = {
-            'total_records': len(records),
-            'parents_processed': 0,
-            'duplicates_removed': 0,
-            'error_groups': 0,
-            'match_groups': 0,
+            "total_records": len(records),
+            "parents_processed": 0,
+            "duplicates_removed": 0,
+            "error_groups": 0,
+            "match_groups": 0,
         }
 
         for bulk_ref, group_records in groups.items():
             dupes_removed = self.validate_group(group_records)
-            stats['parents_processed'] += 1
-            stats['duplicates_removed'] += dupes_removed
+            stats["parents_processed"] += 1
+            stats["duplicates_removed"] += dupes_removed
 
             # All records in the group have the same error flag after validation
             if group_records[0].error == "Y":
-                stats['error_groups'] += 1
+                stats["error_groups"] += 1
             else:
-                stats['match_groups'] += 1
+                stats["match_groups"] += 1
 
         if self.verbose or logger.isEnabledFor(logging.INFO):
             logger.info(

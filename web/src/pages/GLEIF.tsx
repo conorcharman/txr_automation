@@ -15,6 +15,8 @@ import { gleifRefresh, gleifCheck, gleifBackfill, gleifLookup, gleifSearch } fro
 import { cn } from "@/lib/utils";
 import type { GleifLookupResponse, GleifSearchResult } from "@/types";
 
+/* eslint-disable react-hooks/incompatible-library -- Intentional watch subscriptions persist form state safely for this page. */
+
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------

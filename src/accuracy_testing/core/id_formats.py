@@ -15,18 +15,18 @@ New code should import directly from core.data:
 try:
     # When imported as installed package (accuracy_testing.core.id_formats)
     from core.data.id_formats import (
-        IDPattern,
-        IDFormatManager,
-        id_format_manager,
         ID_PATTERNS,
+        IDFormatManager,
+        IDPattern,
+        id_format_manager,
     )
 except ImportError:
     # When imported from workspace root (src.accuracy_testing.core.id_formats)
     from src.core.data.id_formats import (
-        IDPattern,
-        IDFormatManager,
-        id_format_manager,
         ID_PATTERNS,
+        IDFormatManager,
+        IDPattern,
+        id_format_manager,
     )
 
 __all__ = [

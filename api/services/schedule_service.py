@@ -56,13 +56,17 @@ def calculate_next_run(frequency: str, cron_expression: str | None = None) -> da
     if frequency == "daily":
         # Next midnight UTC
         tomorrow = (now + timedelta(days=1)).date()
-        return datetime(tomorrow.year, tomorrow.month, tomorrow.day, tzinfo=timezone.utc)
+        return datetime(
+            tomorrow.year, tomorrow.month, tomorrow.day, tzinfo=timezone.utc
+        )
 
     if frequency == "weekly":
         # Next Monday midnight UTC
         days_until_monday = (7 - now.weekday()) % 7 or 7
         next_monday = (now + timedelta(days=days_until_monday)).date()
-        return datetime(next_monday.year, next_monday.month, next_monday.day, tzinfo=timezone.utc)
+        return datetime(
+            next_monday.year, next_monday.month, next_monday.day, tzinfo=timezone.utc
+        )
 
     if frequency == "monthly":
         # First of next month midnight UTC

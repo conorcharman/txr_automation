@@ -17,7 +17,6 @@ from firds.client import FirdsFileRecord
 from firds.downloader import DownloadResult
 from firds.refresher import FirdsRefresher, RefreshResult, _most_recent_saturday
 
-
 # ---------------------------------------------------------------------------
 # _most_recent_saturday helper
 # ---------------------------------------------------------------------------
@@ -54,7 +53,9 @@ def _make_fulins_xml(records: list[dict]) -> str:
     """Build a minimal FULINS XML string for a list of (isin, mic) dicts."""
     ref_data_blocks = ""
     for r in records:
-        term = f"<TermntnDt>{r['termination']}</TermntnDt>" if r.get("termination") else ""
+        term = (
+            f"<TermntnDt>{r['termination']}</TermntnDt>" if r.get("termination") else ""
+        )
         ref_data_blocks += (
             f"<RefData>"
             f"<FinInstrmGnlAttrbts>"
@@ -84,8 +85,10 @@ def _make_delta_xml(entries: list[dict]) -> str:
     """
     blocks = ""
     for e in entries:
-        term = f"<TermntnDt>{e['termination']}</TermntnDt>" if e.get("termination") else ""
-        tag = e['tag']
+        term = (
+            f"<TermntnDt>{e['termination']}</TermntnDt>" if e.get("termination") else ""
+        )
+        tag = e["tag"]
         blocks += (
             f"<{tag}>"
             f"<FinInstrmGnlAttrbts>"
@@ -113,7 +116,9 @@ def _write_xml(tmp_path: Path, xml_content: str, name: str = "data.xml") -> Path
     return xml_path
 
 
-def _make_download_result(file_record: FirdsFileRecord, xml_paths: list[Path]) -> DownloadResult:
+def _make_download_result(
+    file_record: FirdsFileRecord, xml_paths: list[Path]
+) -> DownloadResult:
     """Return a successful DownloadResult pointing at real XML files."""
     return DownloadResult(
         file_record=file_record,
@@ -264,6 +269,8 @@ class TestDeltaRefresh:
         refresher = FirdsRefresher(
             cache=db, api_client=mock_api, staging_dir=tmp_path / "staging"
         )
-        result = refresher.run_delta_refresh(since_date=date(2025, 1, 1), to_date=date(2025, 12, 31))
+        result = refresher.run_delta_refresh(
+            since_date=date(2025, 1, 1), to_date=date(2025, 12, 31)
+        )
         assert result.files_failed == 0
         mock_api.get_delta_files.assert_not_called()

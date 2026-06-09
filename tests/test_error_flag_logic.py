@@ -3,9 +3,12 @@
 
 import csv
 from pathlib import Path
+
 from src.accuracy_testing.processor import ClientRecord, IDValidationProcessor
 
-template_file = Path(r'c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 - 7_37.csv')
+template_file = Path(
+    r"c:\Users\ccharm\Desktop\Data\txr_automated_accuracy_testing\accuracy_testing\2025\Q4\incident_code_analysis\FY25 Q4 - 7_37.csv"
+)
 
 # Create a test record with INVALID ID that will generate a correction
 test_record = ClientRecord(
@@ -22,7 +25,7 @@ test_record = ClientRecord(
     gender="M",
     primary_nationality="IT",
     secondary_nationality="",
-    original_row=[]
+    original_row=[],
 )
 
 # Initialize processor with template
@@ -31,7 +34,7 @@ processor = IDValidationProcessor(
     verbose=False,
     template_path=str(template_file),
     template_id_column=3,
-    template_type_column=4
+    template_type_column=4,
 )
 
 print("=" * 80)
@@ -62,10 +65,10 @@ if processed.correction_output and processed.kaizen_error:
     else:
         expected_match = "FALSE"
         expected_error = "Y"
-    
+
     print(f"Expected Match: {expected_match}, Actual: {processed.match}")
     print(f"Expected Error: {expected_error}, Actual: {processed.error}")
-    
+
     if processed.match == expected_match and processed.error == expected_error:
         print("✅ SUCCESS: Error flag logic is correct!")
     else:

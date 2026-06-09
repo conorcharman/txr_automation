@@ -8,9 +8,9 @@ Validates the mathematical relationship:
     Net Amount = Consideration + Interest
 """
 
-from typing import List, Dict, Optional
-from decimal import Decimal
 import logging
+from decimal import Decimal
+from typing import Dict, List, Optional
 
 from ..models.incorrect_net_amount_record import IncorrectNetAmountRecord
 
@@ -41,31 +41,33 @@ INSTRUMENT_TYPE_MAP: dict[str, str] = {
 class IncorrectNetAmountValidator:
     """
     Validates pricing data for transactions.
-    
+
     Validates that Net Amount equals the sum of Consideration and Interest,
     within a specified tolerance for floating-point comparison.
-    
+
     Usage:
         validator = IncorrectNetAmountValidator(tolerance=Decimal('0.01'))
         validator.validate_record(record)
         # record.error will be "N" or "TBC"
         # record.total, expected_interest, net_difference will be calculated
     """
-    
-    def __init__(self, tolerance: Decimal = Decimal('0.01'), verbose: bool = False):
+
+    def __init__(self, tolerance: Decimal = Decimal("0.01"), verbose: bool = False):
         """
         Initialize validator.
-        
+
         Args:
             tolerance: Tolerance for floating-point comparison (default 0.01)
             verbose: Enable verbose logging (default False)
         """
         self.tolerance = tolerance
         self.verbose = verbose
-        
+
         if self.verbose:
-            logger.info(f"IncorrectNetAmountValidator initialized with tolerance={self.tolerance}")
-    
+            logger.info(
+                f"IncorrectNetAmountValidator initialized with tolerance={self.tolerance}"
+            )
+
     def validate_record(self, record: IncorrectNetAmountRecord) -> None:
         """
         Validate a single pricing record.
@@ -125,7 +127,7 @@ class IncorrectNetAmountValidator:
             record.error = "ERROR"
             record.comments = f"Validation Error: {str(e)}"
             raise
-    
+
     def validate_batch(self, records: List[IncorrectNetAmountRecord]) -> Dict[str, int]:
         """
         Validate a batch of incorrect net amount records.
@@ -145,28 +147,23 @@ class IncorrectNetAmountValidator:
             >>> stats = validator.validate_batch(records)
             >>> print(f"Processed {stats['total']}, {stats['invalid']} invalid")
         """
-        stats = {
-            'total': len(records),
-            'valid': 0,
-            'invalid': 0,
-            'errors': 0
-        }
+        stats = {"total": len(records), "valid": 0, "invalid": 0, "errors": 0}
 
         for record in records:
             try:
                 self.validate_record(record)
 
                 if record.error == "N":
-                    stats['valid'] += 1
+                    stats["valid"] += 1
                 elif record.error in ("TBC", "Y"):
-                    stats['invalid'] += 1
+                    stats["invalid"] += 1
                 else:
-                    stats['errors'] += 1
+                    stats["errors"] += 1
 
             except Exception as e:
                 logger.error(f"Failed to validate {record.transaction_ref}: {e}")
                 record.error = "ERROR"
-                stats['errors'] += 1
+                stats["errors"] += 1
 
         if self.verbose:
             logger.info(
@@ -175,7 +172,7 @@ class IncorrectNetAmountValidator:
             )
 
         return stats
-    
+
     @staticmethod
     def classify_instrument(classification_code: Optional[str]) -> Optional[str]:
         """
@@ -226,7 +223,9 @@ class IncorrectNetAmountValidator:
         Args:
             record: IncorrectNetAmountRecord to pre-validate (mutated in place).
         """
-        record.instrument_type = self.classify_instrument(record.instrument_classification)
+        record.instrument_type = self.classify_instrument(
+            record.instrument_classification
+        )
         if record.instrument_type == "Equity":
             record.error = "Y"
         else:

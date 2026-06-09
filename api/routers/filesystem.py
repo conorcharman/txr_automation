@@ -31,6 +31,7 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/filesystem", tags=["filesystem"])
 
+
 def _allowed_roots() -> list[Path]:
     """Return the list of allowed root directories, resolved to absolute paths."""
     data_dir = get_settings().data_dir.resolve()
@@ -46,8 +47,7 @@ def _allowed_roots() -> list[Path]:
 def _is_allowed(resolved: Path) -> bool:
     """Check whether *resolved* is inside one of the allowed roots."""
     return any(
-        resolved == root or root in resolved.parents
-        for root in _allowed_roots()
+        resolved == root or root in resolved.parents for root in _allowed_roots()
     )
 
 
@@ -85,7 +85,9 @@ async def browse_directory(
         HTTPException 404: If the path does not exist or is not a directory.
     """
     # Default to the configured data directory when no path is supplied.
-    effective_path = path if path is not None else str(get_settings().data_dir.resolve())
+    effective_path = (
+        path if path is not None else str(get_settings().data_dir.resolve())
+    )
     target = Path(effective_path)
 
     if not target.is_absolute():
@@ -112,7 +114,9 @@ async def browse_directory(
 
     entries: list[FilesystemEntry] = []
     try:
-        for child in sorted(resolved.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower())):
+        for child in sorted(
+            resolved.iterdir(), key=lambda p: (not p.is_dir(), p.name.lower())
+        ):
             # Skip hidden files/directories and ensure symlinks stay in bounds.
             if child.name.startswith("."):
                 continue
@@ -228,10 +232,10 @@ _STAGE_DIRS = ("kaizen", "extracts", "templates", "output", "logs")
 #: would create a spurious top-level directory instead of resolving under it.
 _MODULE_DIRS: dict[str, str] = {
     "replay_phase2_feedback": "replay",
-    "replay_phase2_final":    "replay",
+    "replay_phase2_final": "replay",
     "replay_phase3_feedback": "replay",
-    "replay_phase3_final":    "replay",
-    "replay_phase3_merge":    "replay",
+    "replay_phase3_final": "replay",
+    "replay_phase3_merge": "replay",
 }
 
 #: Per-workflow stage → sub-path map for all replay modules.
@@ -240,29 +244,29 @@ _REPLAY_MODULE_STAGE_MAPS: dict[str, dict[str, str]] = {
     "replay_phase2_feedback": {
         "kaizen": "phase_2/feedback/kaizen",
         "output": "phase_2/feedback/output",
-        "logs":   "phase_2/logs",
+        "logs": "phase_2/logs",
     },
     "replay_phase2_final": {
-        "kaizen":   "phase_2/feedback/output",
+        "kaizen": "phase_2/feedback/output",
         "extracts": "phase_2/final_lookup/unavista",
-        "output":   "phase_2/final_lookup/output",
-        "logs":     "phase_2/logs",
+        "output": "phase_2/final_lookup/output",
+        "logs": "phase_2/logs",
     },
     "replay_phase3_feedback": {
         "kaizen": "phase_3/feedback/kaizen",
         "output": "phase_3/feedback/output",
-        "logs":   "phase_3/logs",
+        "logs": "phase_3/logs",
     },
     "replay_phase3_final": {
-        "kaizen":   "phase_3/feedback/output",
+        "kaizen": "phase_3/feedback/output",
         "extracts": "phase_3/final_lookup/unavista",
-        "output":   "phase_3/final_lookup/output",
-        "logs":     "phase_3/logs",
+        "output": "phase_3/final_lookup/output",
+        "logs": "phase_3/logs",
     },
     "replay_phase3_merge": {
         "kaizen": "phase_3/feedback/output",
         "output": "phase_3/feedback/merged",
-        "logs":   "phase_3/logs",
+        "logs": "phase_3/logs",
     },
 }
 
@@ -341,7 +345,9 @@ async def resolve_paths(body: ResolvePathsRequest) -> ResolvedPaths:
     module = body.module.strip() if body.module else None
 
     if not fy or not quarter:
-        raise HTTPException(status_code=400, detail="fiscal_year and quarter are required.")
+        raise HTTPException(
+            status_code=400, detail="fiscal_year and quarter are required."
+        )
 
     # Reject path traversal in the FY/Q/module segments themselves.
     for segment in filter(None, (fy, quarter, module)):

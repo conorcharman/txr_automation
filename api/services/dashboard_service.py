@@ -15,9 +15,9 @@ Usage:
         stats = await dashboard_service.get_stats(db)
 """
 
-from datetime import date, datetime, timezone, timedelta
+from datetime import date, datetime, timedelta, timezone
 
-from sqlalchemy import select, func
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.models.job import Job
@@ -51,7 +51,9 @@ class DashboardService:
         Returns:
             A ``DashboardStats`` instance populated with the computed values.
         """
-        today_utc = datetime.combine(date.today(), datetime.min.time(), tzinfo=timezone.utc)
+        today_utc = datetime.combine(
+            date.today(), datetime.min.time(), tzinfo=timezone.utc
+        )
         seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
 
         # Jobs created today (UTC).
@@ -84,7 +86,9 @@ class DashboardService:
         failed_count: int = failed_result.scalar_one() or 0
 
         total_completed = success_count + failed_count
-        success_rate: float = (success_count / total_completed) if total_completed > 0 else 1.0
+        success_rate: float = (
+            (success_count / total_completed) if total_completed > 0 else 1.0
+        )
 
         # Total saved configurations.
         configs_result = await db.execute(select(func.count(SavedConfig.id)))

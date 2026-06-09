@@ -87,9 +87,7 @@ def _read_file(
 
     if suffix == ".csv":
         try:
-            df = pd.read_csv(
-                path, dtype=str, encoding=encoding, keep_default_na=False
-            )
+            df = pd.read_csv(path, dtype=str, encoding=encoding, keep_default_na=False)
             return [(df, path.name)]
         except Exception as exc:
             logger.warning("Could not read CSV '%s': %s", path.name, exc)
@@ -101,9 +99,7 @@ def _read_file(
             xl = pd.ExcelFile(path)
             for sheet_name in xl.sheet_names:
                 try:
-                    df = xl.parse(
-                        sheet_name, dtype=str, keep_default_na=False
-                    )
+                    df = xl.parse(sheet_name, dtype=str, keep_default_na=False)
                     results.append((df, f"{path.name}::{sheet_name}"))
                 except Exception as exc:
                     logger.warning(
@@ -114,9 +110,7 @@ def _read_file(
                     )
             return results
         except Exception as exc:
-            logger.warning(
-                "Could not open Excel file '%s': %s", path.name, exc
-            )
+            logger.warning("Could not open Excel file '%s': %s", path.name, exc)
             return []
 
     if suffix == ".xml":
@@ -127,21 +121,14 @@ def _read_file(
             converter = XMLToCSVConverter()
             root, _ = converter._parse_xml_resilient(path)
             record_tag = converter.detect_record_element(root)
-            rows = [
-                converter.flatten_element(elem)
-                for elem in root.iter(record_tag)
-            ]
+            rows = [converter.flatten_element(elem) for elem in root.iter(record_tag)]
             if not rows:
-                logger.warning(
-                    "No records found in XML file '%s'.", path.name
-                )
+                logger.warning("No records found in XML file '%s'.", path.name)
                 return []
             df = pd.DataFrame(rows).fillna("").astype(str)
             return [(df, path.name)]
         except Exception as exc:
-            logger.warning(
-                "Could not read XML file '%s': %s", path.name, exc
-            )
+            logger.warning("Could not read XML file '%s': %s", path.name, exc)
             return []
 
     return []
@@ -275,9 +262,7 @@ def find_records(
 
             matches[source_column] = source_label
             # Ensure source_column is always the rightmost column.
-            cols = [c for c in matches.columns if c != source_column] + [
-                source_column
-            ]
+            cols = [c for c in matches.columns if c != source_column] + [source_column]
             accumulated.append(matches[cols])
             file_had_matches = True
 
@@ -324,9 +309,7 @@ def find_records(
         f"  Output:                    {output_path}"
     )
     if result.skipped_files:
-        print(
-            f"  Skipped (no column/error): {len(result.skipped_files)}"
-        )
+        print(f"  Skipped (no column/error): {len(result.skipped_files)}")
         for sf in result.skipped_files[:10]:
             print(f"    - {sf}")
         if len(result.skipped_files) > 10:

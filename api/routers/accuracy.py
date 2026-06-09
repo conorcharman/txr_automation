@@ -35,7 +35,10 @@ from api.services.discovery import (
     discover_incidents,
 )
 from api.services.job_service import job_service
-from api.services.script_runner import ACCURACY_VALIDATION_SCRIPTS, script_runner_service
+from api.services.script_runner import (
+    ACCURACY_VALIDATION_SCRIPTS,
+    script_runner_service,
+)
 from api.tasks.script_tasks import run_incidents, run_script
 
 logger = logging.getLogger(__name__)
@@ -231,7 +234,9 @@ async def detect_consolidated_incident_stats(
         )
         for code, values in sorted(
             raw_stats.items(),
-            key=lambda item: tuple(int(part) for part in item[0].split("_", maxsplit=1)),
+            key=lambda item: tuple(
+                int(part) for part in item[0].split("_", maxsplit=1)
+            ),
         )
     ]
     return ConsolidatedIncidentDetectResponse(

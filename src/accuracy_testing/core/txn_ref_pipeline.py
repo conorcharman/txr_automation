@@ -33,6 +33,7 @@ Usage:
     >>> result = executor.execute(config)
     >>> print(result.status)
 """
+
 from __future__ import annotations
 
 import csv
@@ -270,8 +271,11 @@ class TransactionRefPipelineExecutor:
 
         # Mark the DTF step as complete now that user confirmed.
         dtf_step = next(
-            (s for s in partial_result.step_results
-             if s.step == PipelineStepName.EXECUTE_DTF),
+            (
+                s
+                for s in partial_result.step_results
+                if s.step == PipelineStepName.EXECUTE_DTF
+            ),
             None,
         )
         if dtf_step is not None:
@@ -332,7 +336,9 @@ class TransactionRefPipelineExecutor:
             self._emit(sr)
             return sr
 
-        self._on_output(f"Read {len(refs)} transaction references from {config.input_csv.name}")
+        self._on_output(
+            f"Read {len(refs)} transaction references from {config.input_csv.name}"
+        )
 
         if config.dry_run:
             sr.status = StepStatus.SUCCESS
@@ -401,8 +407,7 @@ class TransactionRefPipelineExecutor:
             None,
         )
         dtf_files = [
-            f for f in (gen_step.output_files if gen_step else [])
-            if f.endswith(".dtf")
+            f for f in (gen_step.output_files if gen_step else []) if f.endswith(".dtf")
         ]
 
         if not dtf_files:
@@ -421,7 +426,9 @@ class TransactionRefPipelineExecutor:
 
         if not config.auto_execute_dtf:
             # Return WAITING so the GUI can show a Resume button.
-            self._on_output("DTF files generated. Execute them manually, then click Resume.")
+            self._on_output(
+                "DTF files generated. Execute them manually, then click Resume."
+            )
             for f in dtf_files:
                 self._on_output(f"  → {f}")
             sr.status = StepStatus.WAITING
@@ -483,10 +490,13 @@ class TransactionRefPipelineExecutor:
             (s for s in result.step_results if s.step == PipelineStepName.GENERATE),
             None,
         )
-        dtf_count = len([
-            f for f in (gen_step.output_files if gen_step else [])
-            if f.endswith(".dtf")
-        ])
+        dtf_count = len(
+            [
+                f
+                for f in (gen_step.output_files if gen_step else [])
+                if f.endswith(".dtf")
+            ]
+        )
 
         if dtf_count <= 1:
             sr.status = StepStatus.SKIPPED
@@ -630,9 +640,11 @@ class TransactionRefPipelineExecutor:
         self._on_output("Running data push...")
 
         cmd = [
-            sys.executable, "-m",
+            sys.executable,
+            "-m",
             "accuracy_testing.scripts.data_push",
-            "--target", config.push_target_file,
+            "--target",
+            config.push_target_file,
             "--gui-mode",
         ]
         incident = config.incident_code or config.validation_type

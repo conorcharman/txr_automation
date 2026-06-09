@@ -161,7 +161,11 @@ class GleifCsvParser:
             )
 
             # Cache the entity category column name (may not exist in all versions)
-            cat_col = "Entity.EntityCategory" if "Entity.EntityCategory" in fieldnames else None
+            cat_col = (
+                "Entity.EntityCategory"
+                if "Entity.EntityCategory" in fieldnames
+                else None
+            )
 
             rows_yielded = 0
             rows_skipped = 0
@@ -177,23 +181,27 @@ class GleifCsvParser:
 
                 # Collect all non-empty other entity names and join with "; "
                 other_names = "; ".join(
-                    row[c].strip()
-                    for c in other_name_cols
-                    if row.get(c, "").strip()
+                    row[c].strip() for c in other_name_cols if row.get(c, "").strip()
                 )
 
-                expiration_date = row.get(_COL_ENTITY_EXPIRATION_DATE, "").strip() or None
+                expiration_date = (
+                    row.get(_COL_ENTITY_EXPIRATION_DATE, "").strip() or None
+                )
 
                 yield LeiRecord(
                     lei=lei,
                     legal_name=legal_name,
                     registration_status=registration_status,
                     entity_status=row.get(_COL_ENTITY_STATUS, "").strip(),
-                    entity_category=row.get(cat_col or "", "").strip() if cat_col else "",
+                    entity_category=(
+                        row.get(cat_col or "", "").strip() if cat_col else ""
+                    ),
                     legal_address_country=row.get(_COL_LEGAL_ADDR_COUNTRY, "").strip(),
                     legal_jurisdiction=row.get(_COL_JURISDICTION, "").strip(),
                     other_names=other_names,
-                    initial_registration_date=row.get(_COL_INITIAL_REG_DATE, "").strip(),
+                    initial_registration_date=row.get(
+                        _COL_INITIAL_REG_DATE, ""
+                    ).strip(),
                     last_update_date=row.get(_COL_LAST_UPDATE_DATE, "").strip(),
                     next_renewal_date=row.get(_COL_NEXT_RENEWAL_DATE, "").strip(),
                     entity_expiration_date=expiration_date,

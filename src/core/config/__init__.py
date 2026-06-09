@@ -14,11 +14,7 @@ For backward compatibility, these are also re-exported from:
 - txr_replay_core.config
 """
 
-from core.config.config_manager import (
-    ConfigManager,
-    PathConfig,
-    ProcessorConfig,
-)
+from core.config.config_manager import ConfigManager, PathConfig, ProcessorConfig
 
 __all__ = [
     "ConfigManager",

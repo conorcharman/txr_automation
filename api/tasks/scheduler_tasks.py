@@ -71,11 +71,11 @@ async def _run_due_schedules() -> int:
 
                 config = schedule.config_data or {}
                 try:
-                    job = await job_service.create_job(
-                        db, schedule.script_name, config
-                    )
+                    job = await job_service.create_job(db, schedule.script_name, config)
                     run_script.delay(str(job.id), module_path, [], config)
-                    await schedule_service.mark_triggered(db, schedule, status="pending")
+                    await schedule_service.mark_triggered(
+                        db, schedule, status="pending"
+                    )
                     triggered += 1
                     logger.info(
                         "Triggered schedule '%s' — job %s dispatched.",
@@ -83,9 +83,7 @@ async def _run_due_schedules() -> int:
                         job.id,
                     )
                 except Exception:  # noqa: BLE001
-                    logger.exception(
-                        "Failed to trigger schedule '%s'.", schedule.name
-                    )
+                    logger.exception("Failed to trigger schedule '%s'.", schedule.name)
     finally:
         await engine.dispose()
 
@@ -165,7 +163,9 @@ async def _run_due_pipelines() -> int:
                         db, f"pipeline:{pipeline.name}", config_snapshot
                     )
                     run_pipeline.delay(str(job.id), config_snapshot)
-                    await pipeline_service.mark_triggered(db, pipeline, status="pending")
+                    await pipeline_service.mark_triggered(
+                        db, pipeline, status="pending"
+                    )
                     triggered += 1
                     logger.info(
                         "Triggered pipeline '%s' — job %s dispatched.",
@@ -173,9 +173,7 @@ async def _run_due_pipelines() -> int:
                         job.id,
                     )
                 except Exception:  # noqa: BLE001
-                    logger.exception(
-                        "Failed to trigger pipeline '%s'.", pipeline.name
-                    )
+                    logger.exception("Failed to trigger pipeline '%s'.", pipeline.name)
     finally:
         await engine.dispose()
 
@@ -248,9 +246,7 @@ async def _run_due_reconciliations() -> int:
                         job.id,
                     )
                 except Exception:  # noqa: BLE001
-                    logger.exception(
-                        "Failed to trigger reconciliation '%s'.", rec.name
-                    )
+                    logger.exception("Failed to trigger reconciliation '%s'.", rec.name)
     finally:
         await engine.dispose()
 

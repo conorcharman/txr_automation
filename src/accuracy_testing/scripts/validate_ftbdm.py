@@ -61,12 +61,12 @@ Version: 1.0
 Migrated from: ValidateFTBDM3_0.vb
 """
 
-import sys
 import argparse
 import logging
-from pathlib import Path
-from typing import Optional, Dict, Any
+import sys
 from datetime import datetime
+from pathlib import Path
+from typing import Any, Dict, Optional
 
 # Add project root to path
 project_root = Path(__file__).parent.parent.parent.parent
@@ -85,7 +85,8 @@ from src.accuracy_testing.validators.decision_maker_validator import (
 
 # Import core utilities
 try:
-    from core import create_logger, StructuredLogger
+    from core import StructuredLogger, create_logger
+
     CORE_LOGGING = True
 except ImportError:
     CORE_LOGGING = False
@@ -152,11 +153,13 @@ class BuyerDecisionMakerValidator:
 
         processor_config = self.config.get("processor", {})
         processor_config["log_level"] = log_level
-        
+
         # Get incident code from config
         self.incident_code = self.config.get("single", {}).get("incident_code")
         if not self.incident_code:
-            raise ValueError("Configuration error: 'single.incident_code' is required in config file")
+            raise ValueError(
+                "Configuration error: 'single.incident_code' is required in config file"
+            )
         processor_config["verbose"] = verbose
         self.config["processor"] = processor_config
 
@@ -178,7 +181,9 @@ class BuyerDecisionMakerValidator:
         """Setup logging configuration."""
         log_level = self.config.get("processor", {}).get("log_level", "INFO")
         # Get log_output from single.paths or fallback to paths
-        paths = self.config.get("single", {}).get("paths", {}) or self.config.get("paths", {})
+        paths = self.config.get("single", {}).get("paths", {}) or self.config.get(
+            "paths", {}
+        )
         log_dir = paths.get("log_output", "logs")
 
         if CORE_LOGGING and create_logger:
@@ -228,7 +233,9 @@ class BuyerDecisionMakerValidator:
             FileNotFoundError: If required files are missing
             ValueError: If configuration is invalid
         """
-        self.logger.info(f"Starting Buyer Decision Maker Validation (Incident {self.incident_code})")
+        self.logger.info(
+            f"Starting Buyer Decision Maker Validation (Incident {self.incident_code})"
+        )
         self.logger.info(f"Input file: {self.input_file}")
         self.logger.info(f"LEI data file: {self.lei_data_file}")
         self.logger.info(f"Output file: {self.output_file}")
@@ -263,7 +270,9 @@ class BuyerDecisionMakerValidator:
     def _print_summary(self, stats: ValidationStats) -> None:
         """Print validation summary."""
         print("\n" + "=" * 60)
-        print(f"Buyer Decision Maker Validation Complete (Incident {self.incident_code})")
+        print(
+            f"Buyer Decision Maker Validation Complete (Incident {self.incident_code})"
+        )
         print("=" * 60)
         print(f"Total records:              {stats.total:>8}")
         print(f"No error:                   {stats.no_error:>8}")
@@ -368,15 +377,24 @@ def main() -> int:
 
     # Determine config source
     config_path = args.config
-    if not config_path and not args.input_file and not getattr(args, 'gui_mode', False):
+    if not config_path and not args.input_file and not getattr(args, "gui_mode", False):
         # Default configuration path (same pattern as other validation scripts)
         from pathlib import Path
-        default_config = Path(__file__).parent.parent.parent.parent / "config" / "local" / "accuracy_testing" / "ftbdm_validation.yaml"
+
+        default_config = (
+            Path(__file__).parent.parent.parent.parent
+            / "config"
+            / "local"
+            / "accuracy_testing"
+            / "ftbdm_validation.yaml"
+        )
         if default_config.exists():
             print(f"Loading default configuration from {default_config}...")
             config_path = str(default_config)
         else:
-            parser.error("No configuration specified and default config not found. Use --config or provide --input and --lei-data")
+            parser.error(
+                "No configuration specified and default config not found. Use --config or provide --input and --lei-data"
+            )
 
     try:
         validator = BuyerDecisionMakerValidator(
@@ -405,6 +423,7 @@ def main() -> int:
         print(f"Unexpected error: {e}", file=sys.stderr)
         if args.verbose:
             import traceback
+
             traceback.print_exc()
         return 3
 

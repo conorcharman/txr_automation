@@ -16,28 +16,29 @@ Incident Codes:
     - 21_17: Seller Decision Maker
 """
 
-import pytest
 from pathlib import Path
 from typing import Dict
 
+import pytest
+
 from src.accuracy_testing.models.decision_maker_record import (
     DecisionMakerRecord,
-    determine_product,
     Product,
     ServiceLevel,
+    determine_product,
 )
 from src.accuracy_testing.validators.decision_maker_validator import (
-    DecisionMakerValidator,
-    LEILookupManager,
-    IDFormatValidator,
-    ValidationStats,
     DecisionMakerProcessor,
+    DecisionMakerValidator,
+    IDFormatValidator,
+    LEILookupManager,
+    ValidationStats,
 )
-
 
 # =============================================================================
 # Test Fixtures
 # =============================================================================
+
 
 @pytest.fixture
 def sample_lei_lookup() -> Dict[str, str]:
@@ -86,6 +87,7 @@ def seller_validator(lei_manager, id_validator) -> DecisionMakerValidator:
 # Test: DecisionMakerRecord Model
 # =============================================================================
 
+
 class TestDecisionMakerRecord:
     """Tests for DecisionMakerRecord dataclass."""
 
@@ -100,7 +102,7 @@ class TestDecisionMakerRecord:
             service_level="D",
             branch_code="ABC001",
         )
-        
+
         assert record.transaction_ref == "TXN001"
         assert record.account_id == "A12345678"
         assert record.party_type == "Buyer"  # Default
@@ -117,9 +119,9 @@ class TestDecisionMakerRecord:
             "Service Level": "D",
             "Branch Code": "XYZ002",
         }
-        
+
         record = DecisionMakerRecord.from_dict(data, party_type="Buyer")
-        
+
         assert record.transaction_ref == "TXN002"
         assert record.party_code == "549300BUYER0000000001"
         assert record.dm_code == "549300MANAGER0000001"
@@ -136,26 +138,26 @@ class TestDecisionMakerRecord:
             "Service Level": "A",
             "Branch Code": "DEF003",
         }
-        
+
         record = DecisionMakerRecord.from_dict(data, party_type="Seller")
-        
+
         assert record.party_code == "549300SELLER000000001"
         assert record.party_type == "Seller"
 
     def test_from_row(self):
         """Test creating record from CSV row list."""
         row = [
-            "TXN004",           # 0: Transaction Reference
-            "X22222222",        # 1: Account ID
-            "549300PARTY000001", # 2: Party Code
-            "549300DM000000001", # 3: DM Code
-            "Managed",          # 4: Account Type
-            "E",                # 5: Service Level
-            "ABC001",           # 6: Branch Code
+            "TXN004",  # 0: Transaction Reference
+            "X22222222",  # 1: Account ID
+            "549300PARTY000001",  # 2: Party Code
+            "549300DM000000001",  # 3: DM Code
+            "Managed",  # 4: Account Type
+            "E",  # 5: Service Level
+            "ABC001",  # 6: Branch Code
         ]
-        
+
         record = DecisionMakerRecord.from_row(row, party_type="Buyer", row_index=5)
-        
+
         assert record.transaction_ref == "TXN004"
         assert record.account_id == "X22222222"
         assert record.service_level == "E"
@@ -172,7 +174,7 @@ class TestDecisionMakerRecord:
             service_level="D",
             branch_code="",
         )
-        
+
         non_sipp_record = DecisionMakerRecord(
             transaction_ref="TXN",
             account_id="A1",
@@ -182,7 +184,7 @@ class TestDecisionMakerRecord:
             service_level="D",
             branch_code="",
         )
-        
+
         assert sipp_record.is_sipp is True
         assert non_sipp_record.is_sipp is False
 
@@ -197,7 +199,7 @@ class TestDecisionMakerRecord:
             service_level="D",
             branch_code="",
         )
-        
+
         advisory = DecisionMakerRecord(
             transaction_ref="TXN",
             account_id="A1",
@@ -207,7 +209,7 @@ class TestDecisionMakerRecord:
             service_level="A",
             branch_code="",
         )
-        
+
         execution = DecisionMakerRecord(
             transaction_ref="TXN",
             account_id="A1",
@@ -217,7 +219,7 @@ class TestDecisionMakerRecord:
             service_level="E",
             branch_code="",
         )
-        
+
         assert discretionary.is_discretionary is True
         assert advisory.is_discretionary is False
         assert execution.is_discretionary is False
@@ -233,7 +235,7 @@ class TestDecisionMakerRecord:
             service_level="D",
             branch_code="",
         )
-        
+
         different_code = DecisionMakerRecord(
             transaction_ref="TXN",
             account_id="A1",
@@ -243,7 +245,7 @@ class TestDecisionMakerRecord:
             service_level="D",
             branch_code="",
         )
-        
+
         assert same_code.dm_equals_party_code is True
         assert different_code.dm_equals_party_code is False
 
@@ -259,7 +261,7 @@ class TestDecisionMakerRecord:
             branch_code="",
             party_type="Buyer",
         )
-        
+
         seller_record = DecisionMakerRecord(
             transaction_ref="TXN",
             account_id="A1",
@@ -270,7 +272,7 @@ class TestDecisionMakerRecord:
             branch_code="",
             party_type="Seller",
         )
-        
+
         assert "Buyer decision maker" in buyer_record.correction_field_template
         assert "Seller decision maker" in seller_record.correction_field_template
 
@@ -291,9 +293,9 @@ class TestDecisionMakerRecord:
             correction="",
             correction_field="",
         )
-        
+
         row = record.to_output_row()
-        
+
         assert len(row) == 13
         assert row[0] == "TXN001"
         assert row[3] == "LEI"  # party_code_type
@@ -304,6 +306,7 @@ class TestDecisionMakerRecord:
 # =============================================================================
 # Test: Product Determination
 # =============================================================================
+
 
 class TestDetermineProduct:
     """Tests for product determination from account ID."""
@@ -339,34 +342,35 @@ class TestDetermineProduct:
 # Test: LEI Lookup Manager
 # =============================================================================
 
+
 class TestLEILookupManager:
     """Tests for LEI lookup functionality."""
 
     def test_lookup_existing_branch(self, lei_manager):
         """Test lookup for existing branch."""
         exists, lei = lei_manager.lookup("ABC001")
-        
+
         assert exists is True
         assert lei == "549300FUNDMANAGER0001"
 
     def test_lookup_nonexistent_branch(self, lei_manager):
         """Test lookup for non-existent branch."""
         exists, lei = lei_manager.lookup("UNKNOWN")
-        
+
         assert exists is False
         assert lei == ""
 
     def test_lookup_empty_lei(self, lei_manager):
         """Test lookup for branch with empty LEI."""
         exists, lei = lei_manager.lookup("EMPTY")
-        
+
         assert exists is True
         assert lei == ""
 
     def test_lookup_strips_whitespace(self, lei_manager):
         """Test that whitespace is stripped from branch code."""
         exists, lei = lei_manager.lookup("  ABC001  ")
-        
+
         assert exists is True
         assert lei == "549300FUNDMANAGER0001"
 
@@ -379,13 +383,16 @@ class TestLEILookupManager:
 # Test: ID Format Validator
 # =============================================================================
 
+
 class TestIDFormatValidator:
     """Tests for ID format validation."""
 
     def test_lei_format(self, id_validator):
         """Test LEI format detection."""
         assert id_validator.validate("549300ABCDEFGHIJ1234") == "LEI"
-        assert id_validator.validate("213800VALID00000000XX") == ""  # Invalid checksum format
+        assert (
+            id_validator.validate("213800VALID00000000XX") == ""
+        )  # Invalid checksum format
 
     def test_empty_id(self, id_validator):
         """Test empty ID returns empty string."""
@@ -402,6 +409,7 @@ class TestIDFormatValidator:
 # Test: Decision Maker Validation Logic
 # =============================================================================
 
+
 class TestDecisionMakerValidator:
     """Tests for Decision Maker validation logic."""
 
@@ -416,9 +424,9 @@ class TestDecisionMakerValidator:
             service_level="D",  # Discretionary
             branch_code="ABC001",
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         assert record.error == "N"
         assert record.correction == ""
 
@@ -433,9 +441,9 @@ class TestDecisionMakerValidator:
             service_level="E",  # Execution only
             branch_code="ABC001",
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         assert record.error == "N"
 
     def test_discretionary_empty_dm_with_valid_lei(self, buyer_validator):
@@ -449,9 +457,9 @@ class TestDecisionMakerValidator:
             service_level="D",
             branch_code="ABC001",
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         assert record.error == "Y"
         assert record.correction == "549300FUNDMANAGER0001:L"
         assert "decision maker code" in record.correction_field
@@ -467,9 +475,9 @@ class TestDecisionMakerValidator:
             service_level="D",
             branch_code="ABC001",
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         assert record.error == "Y"
         assert record.correction == "549300FUNDMANAGER0001:L"
 
@@ -484,9 +492,9 @@ class TestDecisionMakerValidator:
             service_level="D",
             branch_code="ABC001",
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         assert record.error == "N"
         assert record.correction == ""
 
@@ -501,9 +509,9 @@ class TestDecisionMakerValidator:
             service_level="D",
             branch_code="UNKNOWN",  # Not in lookup
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         assert "TBC" in record.error
         assert "branch" in record.error.lower()
 
@@ -518,9 +526,9 @@ class TestDecisionMakerValidator:
             service_level="D",
             branch_code="EMPTY",  # Has empty LEI
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         assert record.error == "Y"
         assert record.correction == ""  # No correction possible
 
@@ -535,9 +543,9 @@ class TestDecisionMakerValidator:
             service_level="D",
             branch_code="ABC001",
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         # LEI lookup returns same value as current DM - investigate
         assert "TBC" in record.error
 
@@ -552,9 +560,9 @@ class TestDecisionMakerValidator:
             service_level="D",
             branch_code="XYZ002",
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         assert record.error == "Y"
         assert record.correction == "549300FUNDMANAGER0002:L"
 
@@ -569,9 +577,9 @@ class TestDecisionMakerValidator:
             service_level="D",
             branch_code="ABC001",
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         assert record.product == "AJB"
 
     def test_id_type_classification(self, buyer_validator):
@@ -585,9 +593,9 @@ class TestDecisionMakerValidator:
             service_level="D",
             branch_code="ABC001",
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         # Should attempt to classify ID types
         # (actual results depend on patterns)
         assert record.party_code_type is not None
@@ -597,6 +605,7 @@ class TestDecisionMakerValidator:
 # =============================================================================
 # Test: Seller Variant
 # =============================================================================
+
 
 class TestSellerDecisionMakerValidator:
     """Tests specific to Seller Decision Maker validation."""
@@ -613,9 +622,9 @@ class TestSellerDecisionMakerValidator:
             branch_code="ABC001",
             party_type="Seller",
         )
-        
+
         seller_validator.validate_record(record)
-        
+
         assert record.error == "Y"
         assert "Seller decision maker" in record.correction_field
 
@@ -623,6 +632,7 @@ class TestSellerDecisionMakerValidator:
 # =============================================================================
 # Test: Batch Processing
 # =============================================================================
+
 
 class TestBatchProcessing:
     """Tests for batch validation processing."""
@@ -681,9 +691,9 @@ class TestBatchProcessing:
                 branch_code="ABC001",
             ),
         ]
-        
+
         stats = buyer_validator.validate_batch(records)
-        
+
         assert stats.total == 5
         assert stats.no_error == 3  # SIPP, different values, non-discretionary
         assert stats.error == 1  # Empty DM
@@ -695,6 +705,7 @@ class TestBatchProcessing:
 # =============================================================================
 # Test: Edge Cases
 # =============================================================================
+
 
 class TestEdgeCases:
     """Tests for edge cases and error handling."""
@@ -710,9 +721,9 @@ class TestEdgeCases:
             service_level="  D  ",
             branch_code="  ABC001  ",
         )
-        
+
         buyer_validator.validate_record(record)
-        
+
         # Should still work with whitespace
         assert record.error == "N"
 
@@ -728,9 +739,9 @@ class TestEdgeCases:
                 service_level="D",
                 branch_code="ABC001",
             )
-            
+
             buyer_validator.validate_record(record)
-            
+
             assert record.error == "N", f"Failed for account_type='{account_type}'"
 
     def test_case_insensitive_service_level(self, buyer_validator):
@@ -745,9 +756,9 @@ class TestEdgeCases:
                 service_level=service_level,
                 branch_code="ABC001",
             )
-            
+
             buyer_validator.validate_record(record)
-            
+
             assert record.error == "Y", f"Failed for service_level='{service_level}'"
 
     def test_empty_all_fields(self, buyer_validator):
@@ -761,16 +772,16 @@ class TestEdgeCases:
             service_level="",
             branch_code="",
         )
-        
+
         # Should not raise exception
         buyer_validator.validate_record(record)
-        
+
         # Empty service level is not "D", so no error
         assert record.error == "N"
 
     def test_from_row_insufficient_columns(self):
         """Test from_row raises error for insufficient columns."""
         row = ["TXN", "ACCT", "CODE"]  # Only 3 columns
-        
+
         with pytest.raises(ValueError, match="at least 7 columns"):
             DecisionMakerRecord.from_row(row)

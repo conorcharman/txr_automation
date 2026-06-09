@@ -24,7 +24,6 @@ from firds.parser import (
     _normalise_date_optional,
 )
 
-
 # ---------------------------------------------------------------------------
 # XML fixture helpers
 # ---------------------------------------------------------------------------
@@ -33,12 +32,18 @@ _NS = "urn:iso:std:iso:20022:tech:xsd:auth.017.001.01"
 _DELTA_NS = "urn:iso:std:iso:20022:tech:xsd:auth.036.001.03"
 
 
-def _make_fulins_xml(isin: str, mic: str, cfi: str = "ESXXXX",
-                     admission: str = "2020-01-15",
-                     termination: str = "",
-                     rca: str = "GB") -> str:
+def _make_fulins_xml(
+    isin: str,
+    mic: str,
+    cfi: str = "ESXXXX",
+    admission: str = "2020-01-15",
+    termination: str = "",
+    rca: str = "GB",
+) -> str:
     """Return a minimal FULINS XML string for one RefData record."""
-    term_elem = f"<{_NS_PFX}TermntnDt>{termination}</{_NS_PFX}TermntnDt>" if termination else ""
+    term_elem = (
+        f"<{_NS_PFX}TermntnDt>{termination}</{_NS_PFX}TermntnDt>" if termination else ""
+    )
     return textwrap.dedent(f"""\
         <?xml version="1.0" encoding="UTF-8"?>
         <Document xmlns="{_NS}">
@@ -69,9 +74,13 @@ def _make_fulins_xml(isin: str, mic: str, cfi: str = "ESXXXX",
 _NS_PFX = ""  # used in helpers above – overridden below when namespace is present
 
 
-def _make_delta_xml(record_tag: str, isin: str, mic: str,
-                    admission: str = "2020-01-15",
-                    termination: str = "") -> str:
+def _make_delta_xml(
+    record_tag: str,
+    isin: str,
+    mic: str,
+    admission: str = "2020-01-15",
+    termination: str = "",
+) -> str:
     """Return a minimal DLTINS XML string for one delta record."""
     term_elem = f"<TermntnDt>{termination}</TermntnDt>" if termination else ""
     return textwrap.dedent(f"""\
@@ -265,7 +274,9 @@ class TestDeltaFileParsing:
         assert records[0].record_type == "MOD"
 
     def test_terminated_record_type(self, tmp_xml):
-        xml = _make_delta_xml("TermntdRcrd", "GB00B3RBWM25", "XLON", termination="2025-06-30")
+        xml = _make_delta_xml(
+            "TermntdRcrd", "GB00B3RBWM25", "XLON", termination="2025-06-30"
+        )
         records = list(FirdsXmlParser().parse(tmp_xml(xml)))
         assert records[0].record_type == "TERM"
         assert records[0].termination_date == "2025-06-30"
@@ -308,7 +319,7 @@ def _make_fulins_v2_xml(
         '<?xml version="1.0" encoding="UTF-8"?>'
         f'<BizData xmlns="{_BAH_NS}">'
         f'<Hdr><AppHdr xmlns="urn:iso:std:iso:20022:tech:xsd:head.001.001.01">'
-        '<MsgDefIdr>auth.017.001.02</MsgDefIdr></AppHdr></Hdr>'
+        "<MsgDefIdr>auth.017.001.02</MsgDefIdr></AppHdr></Hdr>"
         f'<Pyld><Document xmlns="{_V2_NS}">'
         "<FinInstrmRptgRefDataRpt><RefData>"
         f"<FinInstrmGnlAttrbts><Id>{isin}</Id>"

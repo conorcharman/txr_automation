@@ -15,10 +15,10 @@ This module consolidates:
 - txr_replay_core.logger
 """
 
-from .structured_logger import StructuredLogger, StatsProtocol, create_logger
+from .structured_logger import StatsProtocol, StructuredLogger, create_logger
 
 __all__ = [
-    'StructuredLogger',
-    'StatsProtocol',
-    'create_logger',
+    "StructuredLogger",
+    "StatsProtocol",
+    "create_logger",
 ]

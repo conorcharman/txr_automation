@@ -51,8 +51,8 @@ class NetAmountValidator:
     def __init__(
         self,
         verbose: bool = False,
-        tolerance: Decimal = Decimal('1.0'),
-        tolerance_per_record: Decimal = Decimal('0.005'),
+        tolerance: Decimal = Decimal("1.0"),
+        tolerance_per_record: Decimal = Decimal("0.005"),
     ):
         """
         Initialise the validator.
@@ -179,7 +179,7 @@ class NetAmountValidator:
         # Step 4 — sum child net amounts across unique records
         net_amt = sum(
             (r.child_netamt for r in deduplicated),
-            start=Decimal('0'),
+            start=Decimal("0"),
         )
 
         # Step 5 — compute effective tolerance and compare.
@@ -245,23 +245,23 @@ class NetAmountValidator:
             groups[record.bulk_ref].append(record)
 
         stats: Dict[str, int] = {
-            'total_records': len(records),
-            'parents_processed': 0,
-            'duplicates_removed': 0,
-            'error_groups': 0,
-            'match_groups': 0,
+            "total_records": len(records),
+            "parents_processed": 0,
+            "duplicates_removed": 0,
+            "error_groups": 0,
+            "match_groups": 0,
         }
 
         for bulk_ref, group_records in groups.items():
             dupes_removed = self.validate_group(group_records)
-            stats['parents_processed'] += 1
-            stats['duplicates_removed'] += dupes_removed
+            stats["parents_processed"] += 1
+            stats["duplicates_removed"] += dupes_removed
 
             # All records in the group have the same error flag after validation
             if group_records[0].error == "Y":
-                stats['error_groups'] += 1
+                stats["error_groups"] += 1
             else:
-                stats['match_groups'] += 1
+                stats["match_groups"] += 1
 
         if self.verbose or logger.isEnabledFor(logging.INFO):
             logger.info(

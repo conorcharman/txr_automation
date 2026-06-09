@@ -71,6 +71,3 @@ def get_settings() -> Settings:
         A ``Settings`` instance populated from the environment or ``.env``.
     """
     return Settings()
-
-
-

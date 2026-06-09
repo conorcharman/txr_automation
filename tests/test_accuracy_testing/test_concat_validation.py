@@ -16,12 +16,13 @@ Usage:
 """
 
 import pytest
-from src.accuracy_testing.processor import IDValidationProcessor, ClientRecord
 
+from src.accuracy_testing.processor import ClientRecord, IDValidationProcessor
 
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
+
 
 @pytest.fixture
 def processor() -> IDValidationProcessor:
@@ -57,6 +58,7 @@ def _make_record(**kwargs) -> ClientRecord:
 # Unit tests: _validate_concat_name_segments()
 # ---------------------------------------------------------------------------
 
+
 class TestValidateConcatNameSegments:
     """Direct unit tests for _validate_concat_name_segments()."""
 
@@ -84,7 +86,9 @@ class TestValidateConcatNameSegments:
         )
         assert valid is False
         assert "VANSM" in msg, f"Expected 'VANSM' in error message, got: {msg}"
-        assert "SMITH" in msg, f"Expected expected segment 'SMITH' in error message, got: {msg}"
+        assert (
+            "SMITH" in msg
+        ), f"Expected expected segment 'SMITH' in error message, got: {msg}"
 
     def test_correct_prefix_stripped_surname_passes(
         self, processor: IDValidationProcessor
@@ -106,9 +110,7 @@ class TestValidateConcatNameSegments:
         """A CONCAT with the wrong first-name segment must fail."""
         # [10:15] = WRONG does not match expected 'JANE#'
         id_value = "GB19800101WRONGSMITH"
-        valid, msg = processor._validate_concat_name_segments(
-            id_value, "JANE", "SMITH"
-        )
+        valid, msg = processor._validate_concat_name_segments(id_value, "JANE", "SMITH")
         assert valid is False
         assert "first-name segment" in msg.lower() or "first-name" in msg
 
@@ -170,6 +172,7 @@ class TestValidateConcatNameSegments:
 # Integration tests: _validate_existing_id() with name parameters
 # ---------------------------------------------------------------------------
 
+
 class TestValidateExistingIdConcatNameCheck:
     """Integration tests through _validate_existing_id()."""
 
@@ -212,16 +215,16 @@ class TestValidateExistingIdConcatNameCheck:
             "CONCAT",
             "GB",
         )
-        assert is_valid is True, (
-            f"Backward-compat call without names should pass structurally. Got: {error}"
-        )
+        assert (
+            is_valid is True
+        ), f"Backward-compat call without names should pass structurally. Got: {error}"
 
     def test_structurally_invalid_concat_still_fails(
         self, processor: IDValidationProcessor
     ) -> None:
         """A CONCAT that fails the regex must still fail even without names."""
         is_valid, error = processor._validate_existing_id(
-            "TOOLONG12345678901234",   # >20 chars — fails regex
+            "TOOLONG12345678901234",  # >20 chars — fails regex
             "CONCAT",
             "GB",
         )
@@ -231,6 +234,7 @@ class TestValidateExistingIdConcatNameCheck:
 # ---------------------------------------------------------------------------
 # End-to-end integration test: process_record() triggers correction
 # ---------------------------------------------------------------------------
+
 
 class TestConcatPrefixEndToEnd:
     """End-to-end test: a record with prefix-in-segment CONCAT is corrected."""
@@ -260,12 +264,14 @@ class TestConcatPrefixEndToEnd:
         result = processor.process_record(record)
 
         # The existing ID must have been rejected
-        assert result.is_valid is False, "Record should be invalid due to segment mismatch"
+        assert (
+            result.is_valid is False
+        ), "Record should be invalid due to segment mismatch"
 
         # The correction engine must have produced a CONCAT
-        assert result.correction_type == "CONCAT", (
-            f"Expected correction_type='CONCAT', got '{result.correction_type}'"
-        )
+        assert (
+            result.correction_type == "CONCAT"
+        ), f"Expected correction_type='CONCAT', got '{result.correction_type}'"
 
         # The corrected CONCAT must not contain the prefix-inclusive segment
         assert result.correction != "", "Expected a non-empty correction value"
@@ -276,9 +282,9 @@ class TestConcatPrefixEndToEnd:
             f"in corrected CONCAT '{corrected}'"
         )
         # Country code prefix must be 'GB'
-        assert corrected[:2] == "GB", (
-            f"Expected country prefix 'GB', got '{corrected[:2]}'"
-        )
+        assert (
+            corrected[:2] == "GB"
+        ), f"Expected country prefix 'GB', got '{corrected[:2]}'"
 
     def test_correct_concat_record_passes_without_correction(
         self, processor: IDValidationProcessor
@@ -299,9 +305,9 @@ class TestConcatPrefixEndToEnd:
             f"Expected valid record. format={result.format_status}, "
             f"logic={result.logic_status}, error='{result.failure_reason}'"
         )
-        assert result.correction == "", (
-            f"Expected no correction for valid CONCAT, got '{result.correction}'"
-        )
+        assert (
+            result.correction == ""
+        ), f"Expected no correction for valid CONCAT, got '{result.correction}'"
 
     def test_missing_surname_concat_passes_on_regex(
         self, processor: IDValidationProcessor
@@ -311,8 +317,8 @@ class TestConcatPrefixEndToEnd:
         record = _make_record(
             id_value="GB19800101JANE#VANSM",
             id_type="CONCAT",
-            first_name="",   # no first name
-            surname="",      # no surname — skip check
+            first_name="",  # no first name
+            surname="",  # no surname — skip check
             date_of_birth="1980-01-01",
             primary_nationality="GB",
         )

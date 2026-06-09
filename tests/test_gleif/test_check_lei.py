@@ -13,7 +13,6 @@ from gleif.scripts.check_lei import (
     _search_name_with_fallback,
 )
 
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -48,21 +47,31 @@ def lookup(tmp_path: Path) -> GleifLookup:
     """Return a GleifLookup backed by a cache seeded with test entities."""
     cache = GleifCacheManager(db_path=tmp_path / "gleif_test.db")
     cache.initialise_db()
-    cache.bulk_upsert([
-        _make_record("5493001KJTIIGC8Y1R12", "Citibank Europe PLC"),
-        _make_record("213800WAVVOPS85N2205", "Deutsche Bank AG"),
-        _make_record("AAAAAAAAAAAAAAAAAAAA", "Barclays Capital Holdings (UK) Ltd"),
-        _make_record("BBBBBBBBBBBBBBBBBBBB", "Smith & Jones (Nominees) Limited"),
-        # Suffix-normalisation test records — stored under full legal names
-        _make_record("CCCCCCCCCCCCCCCCCCCC", "RETAIL BOOK LIMITED"),
-        _make_record("DDDDDDDDDDDDDDDDDDDD", "Global Trading Corporation"),
-        _make_record("EEEEEEEEEEEEEEEEEEEE", "Alpha Services Group"),
-        _make_record("FFFFFFFFFFFFFFFFFFFF", "Beta Holdings Management"),
-        _make_record("GGGGGGGGGGGGGGGGGGGG", "Pacific Brothers Manufacturing"),
-        # GB-priority test records — two entities with similar names, one GB one non-GB
-        _make_record("HHHHHHHHHHHHHHHHHHHH", "ZEUS CAPITAL LIMITED", legal_address_country="GB"),
-        _make_record("IIIIIIIIIIIIIIIIIIII", "Zeus US Capital Managers Limited", legal_address_country="VG"),
-    ])
+    cache.bulk_upsert(
+        [
+            _make_record("5493001KJTIIGC8Y1R12", "Citibank Europe PLC"),
+            _make_record("213800WAVVOPS85N2205", "Deutsche Bank AG"),
+            _make_record("AAAAAAAAAAAAAAAAAAAA", "Barclays Capital Holdings (UK) Ltd"),
+            _make_record("BBBBBBBBBBBBBBBBBBBB", "Smith & Jones (Nominees) Limited"),
+            # Suffix-normalisation test records — stored under full legal names
+            _make_record("CCCCCCCCCCCCCCCCCCCC", "RETAIL BOOK LIMITED"),
+            _make_record("DDDDDDDDDDDDDDDDDDDD", "Global Trading Corporation"),
+            _make_record("EEEEEEEEEEEEEEEEEEEE", "Alpha Services Group"),
+            _make_record("FFFFFFFFFFFFFFFFFFFF", "Beta Holdings Management"),
+            _make_record("GGGGGGGGGGGGGGGGGGGG", "Pacific Brothers Manufacturing"),
+            # GB-priority test records — two entities with similar names, one GB one non-GB
+            _make_record(
+                "HHHHHHHHHHHHHHHHHHHH",
+                "ZEUS CAPITAL LIMITED",
+                legal_address_country="GB",
+            ),
+            _make_record(
+                "IIIIIIIIIIIIIIIIIIII",
+                "Zeus US Capital Managers Limited",
+                legal_address_country="VG",
+            ),
+        ]
+    )
     return GleifLookup(cache=cache)
 
 
@@ -110,9 +119,7 @@ class TestSearchNameWithFallback:
         assert results == []
         assert score == "NO_MATCH"
 
-    def test_name_with_parentheses_does_not_raise(
-        self, lookup: GleifLookup
-    ) -> None:
+    def test_name_with_parentheses_does_not_raise(self, lookup: GleifLookup) -> None:
         """Name containing parentheses must not raise an FTS5 OperationalError."""
         results, score = _search_name_with_fallback(
             lookup, "Barclays Capital Holdings (UK) Ltd"
@@ -120,9 +127,7 @@ class TestSearchNameWithFallback:
         assert results
         assert score in ("1_PHRASE", "1_PREFIX", "1_PHRASE_NORM", "1_PREFIX_NORM")
 
-    def test_name_with_ampersand_does_not_raise(
-        self, lookup: GleifLookup
-    ) -> None:
+    def test_name_with_ampersand_does_not_raise(self, lookup: GleifLookup) -> None:
         """Name containing '&' must not raise an FTS5 OperationalError."""
         results, score = _search_name_with_fallback(
             lookup, "Smith & Jones (Nominees) Limited"
@@ -138,9 +143,7 @@ class TestSearchNameWithFallback:
         assert results == []
         assert score == "NO_MATCH"
 
-    def test_match_result_contains_expected_fields(
-        self, lookup: GleifLookup
-    ) -> None:
+    def test_match_result_contains_expected_fields(self, lookup: GleifLookup) -> None:
         """First result dict must contain lei, legal_name, registration_status."""
         results, _ = _search_name_with_fallback(lookup, "Citibank Europe PLC")
         assert results
@@ -153,9 +156,7 @@ class TestSearchNameWithFallback:
         results, _ = _search_name_with_fallback(lookup, "Zeus", limit=5)
         assert len(results) <= 5
 
-    def test_limit_one_returns_single_element_list(
-        self, lookup: GleifLookup
-    ) -> None:
+    def test_limit_one_returns_single_element_list(self, lookup: GleifLookup) -> None:
         """Default limit=1 returns a list with exactly one element."""
         results, score = _search_name_with_fallback(lookup, "Citibank Europe PLC")
         assert len(results) == 1
@@ -175,34 +176,53 @@ class TestNormaliseCompanySuffixes:
         assert _normalise_company_suffixes("Retail Book Ltd.") == "Retail Book Limited"
 
     def test_corp_expanded(self) -> None:
-        assert _normalise_company_suffixes("Global Trading Corp") == "Global Trading Corporation"
+        assert (
+            _normalise_company_suffixes("Global Trading Corp")
+            == "Global Trading Corporation"
+        )
 
     def test_inc_expanded(self) -> None:
         assert _normalise_company_suffixes("Acme Inc") == "Acme Incorporated"
 
     def test_grp_expanded(self) -> None:
-        assert _normalise_company_suffixes("Alpha Services Grp") == "Alpha Services Group"
+        assert (
+            _normalise_company_suffixes("Alpha Services Grp") == "Alpha Services Group"
+        )
 
     def test_hldgs_expanded(self) -> None:
-        assert _normalise_company_suffixes("Beta Hldgs Management") == "Beta Holdings Management"
+        assert (
+            _normalise_company_suffixes("Beta Hldgs Management")
+            == "Beta Holdings Management"
+        )
 
     def test_mgmt_expanded(self) -> None:
-        assert _normalise_company_suffixes("Beta Holdings Mgmt") == "Beta Holdings Management"
+        assert (
+            _normalise_company_suffixes("Beta Holdings Mgmt")
+            == "Beta Holdings Management"
+        )
 
     def test_mfg_expanded(self) -> None:
-        assert _normalise_company_suffixes("Pacific Bros Mfg") == "Pacific Brothers Manufacturing"
+        assert (
+            _normalise_company_suffixes("Pacific Bros Mfg")
+            == "Pacific Brothers Manufacturing"
+        )
 
     def test_svcs_expanded(self) -> None:
         assert _normalise_company_suffixes("Alpha Svcs Group") == "Alpha Services Group"
 
     def test_intl_expanded(self) -> None:
-        assert _normalise_company_suffixes("Acme Intl Corp") == "Acme International Corporation"
+        assert (
+            _normalise_company_suffixes("Acme Intl Corp")
+            == "Acme International Corporation"
+        )
 
     def test_case_insensitive(self) -> None:
         assert _normalise_company_suffixes("Retail Book LTD") == "Retail Book Limited"
 
     def test_no_abbreviations_unchanged(self) -> None:
-        assert _normalise_company_suffixes("RETAIL BOOK LIMITED") == "RETAIL BOOK LIMITED"
+        assert (
+            _normalise_company_suffixes("RETAIL BOOK LIMITED") == "RETAIL BOOK LIMITED"
+        )
 
     def test_multiple_abbreviations_in_one_name(self) -> None:
         result = _normalise_company_suffixes("Acme Intl Bros Corp")
@@ -302,23 +322,16 @@ class TestSearchNameGbPriority:
         assert results[0]["lei"] == "HHHHHHHHHHHHHHHHHHHH"
         assert score in ("1_PHRASE_NORM", "1_PREFIX_NORM")
 
-    def test_gb_result_returned_for_full_name_search(
-        self, lookup: GleifLookup
-    ) -> None:
+    def test_gb_result_returned_for_full_name_search(self, lookup: GleifLookup) -> None:
         """Searching 'Zeus Capital Limited' (full name) returns GB result first."""
         results, score = _search_name_with_fallback(lookup, "Zeus Capital Limited")
         assert results
         assert results[0]["legal_address_country"] == "GB"
         assert score in ("1_PHRASE", "1_PHRASE_NORM")
 
-    def test_limit_multi_includes_gb_first(
-        self, lookup: GleifLookup
-    ) -> None:
+    def test_limit_multi_includes_gb_first(self, lookup: GleifLookup) -> None:
         """With limit=2, both Zeus entities are returned with GB entity first."""
-        results, _ = _search_name_with_fallback(
-            lookup, "Zeus Capital Limited", limit=2
-        )
+        results, _ = _search_name_with_fallback(lookup, "Zeus Capital Limited", limit=2)
         countries = [r["legal_address_country"] for r in results]
         assert "GB" in countries
         assert countries[0] == "GB"
-

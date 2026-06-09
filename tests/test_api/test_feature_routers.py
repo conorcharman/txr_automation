@@ -17,7 +17,6 @@ Tests for the domain-specific feature endpoints:
 import pytest
 from httpx import AsyncClient
 
-
 # ---------------------------------------------------------------------------
 # Script list endpoints
 # ---------------------------------------------------------------------------

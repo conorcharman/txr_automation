@@ -8,7 +8,6 @@ import requests
 
 from fca.client import FcaApiError, FcaRegisterClient, _TokenBucket
 
-
 # ---------------------------------------------------------------------------
 # _TokenBucket
 # ---------------------------------------------------------------------------
@@ -151,7 +150,15 @@ class TestFcaRegisterClientGet:
         assert result == {"Data": []}
 
     def test_search_firms_returns_data_list(self) -> None:
-        body = {"Data": [{"Reference Number": "122702", "Name": "Barclays", "Status": "Authorised"}]}
+        body = {
+            "Data": [
+                {
+                    "Reference Number": "122702",
+                    "Name": "Barclays",
+                    "Status": "Authorised",
+                }
+            ]
+        }
         session = _mock_session(200, body)
         client = _make_client(session)
         results = client.search_firms("Barclays")
@@ -164,7 +171,15 @@ class TestFcaRegisterClientGet:
         assert client.search_firms("unknown") == []
 
     def test_get_firm_returns_first_data_element(self) -> None:
-        body = {"Data": [{"FRN": "122702", "Organisation Name": "Barclays Bank PLC", "Status": "Authorised"}]}
+        body = {
+            "Data": [
+                {
+                    "FRN": "122702",
+                    "Organisation Name": "Barclays Bank PLC",
+                    "Status": "Authorised",
+                }
+            ]
+        }
         session = _mock_session(200, body)
         client = _make_client(session)
         result = client.get_firm("122702")

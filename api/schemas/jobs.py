@@ -82,6 +82,7 @@ class JobResponse(_CamelModel):
         Returns:
             A fully populated ``JobResponse``.
         """
+
         def _iso(dt: datetime | None) -> str | None:
             if dt is None:
                 return None

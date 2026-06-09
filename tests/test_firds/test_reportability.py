@@ -25,7 +25,6 @@ from firds.reportability import (
     ReportabilityResult,
 )
 
-
 # ---------------------------------------------------------------------------
 # Fixtures
 # ---------------------------------------------------------------------------
@@ -43,11 +42,15 @@ def checker(db) -> FirdsReportabilityChecker:
     return FirdsReportabilityChecker(cache=db)
 
 
-def _insert(db: FirdsCacheManager, isin: str, mic: str,
-            admission: str = "2020-01-01",
-            termination: str | None = None,
-            cancelled: bool = False,
-            cancelled_date: str | None = None) -> None:
+def _insert(
+    db: FirdsCacheManager,
+    isin: str,
+    mic: str,
+    admission: str = "2020-01-01",
+    termination: str | None = None,
+    cancelled: bool = False,
+    cancelled_date: str | None = None,
+) -> None:
     record = InstrumentRecord(
         isin=isin,
         mic=mic,
@@ -177,26 +180,34 @@ class TestAdmissionAfterTrade:
 
 class TestTerminatedBeforeTrade:
     def test_not_reportable_after_termination(self, db, checker):
-        _insert(db, "GB00B3RBWM25", "XLON", admission="2020-01-01", termination="2024-12-31")
+        _insert(
+            db, "GB00B3RBWM25", "XLON", admission="2020-01-01", termination="2024-12-31"
+        )
         result = checker.is_reportable("GB00B3RBWM25", date(2025, 6, 15), mic="XLON")
         assert result.is_reportable is False
         assert result.reason == ReportabilityReason.TERMINATED_BEFORE_TRADE
 
     def test_not_reportable_on_termination_date(self, db, checker):
         """Instrument terminated ON the trade date should not be reportable."""
-        _insert(db, "GB00B3RBWM25", "XLON", admission="2020-01-01", termination="2025-06-15")
+        _insert(
+            db, "GB00B3RBWM25", "XLON", admission="2020-01-01", termination="2025-06-15"
+        )
         result = checker.is_reportable("GB00B3RBWM25", date(2025, 6, 15), mic="XLON")
         assert result.is_reportable is False
         assert result.reason == ReportabilityReason.TERMINATED_BEFORE_TRADE
 
     def test_reportable_day_before_termination(self, db, checker):
-        _insert(db, "GB00B3RBWM25", "XLON", admission="2020-01-01", termination="2025-06-16")
+        _insert(
+            db, "GB00B3RBWM25", "XLON", admission="2020-01-01", termination="2025-06-16"
+        )
         result = checker.is_reportable("GB00B3RBWM25", date(2025, 6, 15), mic="XLON")
         assert result.is_reportable is True
 
     def test_only_terminated_venue_not_reportable_any(self, db, checker):
         """With only terminated venues, any-venue check should also fail."""
-        _insert(db, "GB00B3RBWM25", "XLON", admission="2020-01-01", termination="2023-01-01")
+        _insert(
+            db, "GB00B3RBWM25", "XLON", admission="2020-01-01", termination="2023-01-01"
+        )
         result = checker.is_reportable("GB00B3RBWM25", date(2025, 6, 15))
         assert result.is_reportable is False
 
@@ -215,10 +226,14 @@ class TestCancelled:
 
     def test_cancellation_takes_precedence_over_termination(self, db, checker):
         """A cancelled+terminated instrument should report CANCELLED, not TERMINATED."""
-        _insert(db, "GB00B3RBWM25", "XLON",
-                admission="2020-01-01",
-                termination="2024-01-01",
-                cancelled=True)
+        _insert(
+            db,
+            "GB00B3RBWM25",
+            "XLON",
+            admission="2020-01-01",
+            termination="2024-01-01",
+            cancelled=True,
+        )
         result = checker.is_reportable("GB00B3RBWM25", date(2025, 6, 15), mic="XLON")
         assert result.reason == ReportabilityReason.CANCELLED
 

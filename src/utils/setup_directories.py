@@ -49,7 +49,6 @@ from typing import List
 
 from core import ConfigManager, create_logger
 
-
 # ---------------------------------------------------------------------------
 # Directory tree
 # ---------------------------------------------------------------------------
@@ -83,6 +82,7 @@ DIRECTORY_TREE: List[str] = [
 # ---------------------------------------------------------------------------
 # CLI
 # ---------------------------------------------------------------------------
+
 
 def _parse_arguments() -> argparse.Namespace:
     """Parse command-line arguments.
@@ -131,6 +131,7 @@ def _parse_arguments() -> argparse.Namespace:
 # Main
 # ---------------------------------------------------------------------------
 
+
 def main() -> int:
     """Entry point.
 
@@ -146,10 +147,12 @@ def main() -> int:
 
     setup = config.get("setup", {})
     fiscal_year: str = args.fiscal_year or setup.get("fiscal_year", "")
-    quarter: str     = args.quarter     or setup.get("quarter", "")
-    data_dir: str    = args.data_dir    or setup.get("data_dir", "/app/data")
-    log_level: str   = args.log_level   or config.get("processor", {}).get("log_level", "INFO")
-    log_dir: str     = config.get("paths", {}).get("log_output", "/app/data/logs")
+    quarter: str = args.quarter or setup.get("quarter", "")
+    data_dir: str = args.data_dir or setup.get("data_dir", "/app/data")
+    log_level: str = args.log_level or config.get("processor", {}).get(
+        "log_level", "INFO"
+    )
+    log_dir: str = config.get("paths", {}).get("log_output", "/app/data/logs")
 
     logger = create_logger("setup_directories", log_dir, log_level)
 
@@ -167,9 +170,9 @@ def main() -> int:
     logger.info(f"Quarter     : {quarter}")
     logger.info(f"Directories : {len(DIRECTORY_TREE)}")
 
-    created  = 0
+    created = 0
     existing = 0
-    errors   = 0
+    errors = 0
 
     for rel_path in DIRECTORY_TREE:
         full_path = base / rel_path

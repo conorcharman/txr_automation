@@ -49,6 +49,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 try:
     import yaml
+
     _YAML_AVAILABLE = True
 except ImportError:
     _YAML_AVAILABLE = False
@@ -58,7 +59,11 @@ if str(_REPO_ROOT / "src") not in sys.path:
     sys.path.insert(0, str(_REPO_ROOT / "src"))
 
 from firds.cache import FirdsCacheManager
-from firds.reportability import FirdsReportabilityChecker, ReportabilityResult, ReportabilityReason
+from firds.reportability import (
+    FirdsReportabilityChecker,
+    ReportabilityReason,
+    ReportabilityResult,
+)
 
 # Regex to find DD-MM-YYYY anywhere in a filename stem
 _DATE_PATTERN = re.compile(r"\b(\d{2}-\d{2}-\d{4})\b")
@@ -104,6 +109,7 @@ def _resolve_column(fieldnames: List[str], aliases: List[str]) -> Optional[str]:
             return match
     return None
 
+
 logger = logging.getLogger(__name__)
 
 
@@ -122,7 +128,7 @@ def _parse_args() -> argparse.Namespace:
         type=str,
         default=None,
         help="ISO 10383 Market Identifier Code (MIC) of the trading venue. "
-             "If omitted, checks across all venues.",
+        "If omitted, checks across all venues.",
     )
     single.add_argument(
         "--date",
@@ -299,7 +305,9 @@ def main() -> None:
 
     # --- Resolve config -------------------------------------------------
     _DEFAULT_CONFIG = _REPO_ROOT / "config" / "local" / "firds_config.yaml"
-    config_path: Optional[Path] = args.config or (_DEFAULT_CONFIG if _DEFAULT_CONFIG.exists() else None)
+    config_path: Optional[Path] = args.config or (
+        _DEFAULT_CONFIG if _DEFAULT_CONFIG.exists() else None
+    )
     cfg: Dict[str, Any] = _load_yaml_config(config_path) if config_path else {}
     batch_cfg: Dict[str, Any] = cfg.get("batch", {})
 
@@ -376,7 +384,10 @@ def main() -> None:
 
         for input_path in input_paths:
             if not input_path.exists():
-                print(f"Warning: Input file not found, skipping: {input_path}", file=sys.stderr)
+                print(
+                    f"Warning: Input file not found, skipping: {input_path}",
+                    file=sys.stderr,
+                )
                 skipped_files += 1
                 continue
 
@@ -414,7 +425,9 @@ def main() -> None:
             else:
                 merged_output.parent.mkdir(parents=True, exist_ok=True)
                 _write_csv(all_rows, merged_output)
-                print(f"\nMerged output ({len(all_rows)} rows) written to: {merged_output}")
+                print(
+                    f"\nMerged output ({len(all_rows)} rows) written to: {merged_output}"
+                )
 
         if skipped_files:
             print(
@@ -468,7 +481,10 @@ def _process_file(
     with fh:
         reader = csv.DictReader(fh)
         if reader.fieldnames is None:
-            print(f"Error: '{input_path.name}' has no headers — skipping.", file=sys.stderr)
+            print(
+                f"Error: '{input_path.name}' has no headers — skipping.",
+                file=sys.stderr,
+            )
             return None, 0, 0
 
         fieldnames = list(reader.fieldnames)

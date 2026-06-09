@@ -33,7 +33,9 @@ class DRRSubmission(Base):
     __tablename__ = "drr_submissions"
 
     id: Mapped[uuid.UUID] = mapped_column(primary_key=True, default=uuid.uuid4)
-    transaction_ref: Mapped[str] = mapped_column(String(200), nullable=False, index=True)
+    transaction_ref: Mapped[str] = mapped_column(
+        String(200), nullable=False, index=True
+    )
     checked_at: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

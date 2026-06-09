@@ -58,8 +58,12 @@ class FcaLookupService:
             "status": result.firm.status if result.firm else "NOT FOUND",
             "is_authorised": result.is_authorised,
             "business_type": result.firm.business_type if result.firm else "",
-            "companies_house_number": result.firm.companies_house_number if result.firm else "",
-            "status_effective_date": result.firm.status_effective_date if result.firm else "",
+            "companies_house_number": (
+                result.firm.companies_house_number if result.firm else ""
+            ),
+            "status_effective_date": (
+                result.firm.status_effective_date if result.firm else ""
+            ),
             "permissions": permissions,
         }
 

@@ -65,9 +65,7 @@ class ReconciliationService:
         except ValueError:
             return None
         result = await db.execute(
-            select(ReconciliationSchedule).where(
-                ReconciliationSchedule.id == parsed_id
-            )
+            select(ReconciliationSchedule).where(ReconciliationSchedule.id == parsed_id)
         )
         return result.scalar_one_or_none()
 

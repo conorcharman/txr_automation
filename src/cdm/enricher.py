@@ -94,7 +94,9 @@ def _enrich_lei(
         )
     except Exception:
         logger.debug("GLEIF lookup failed for LEI %s", lei, exc_info=True)
-        return LeiEnrichment(lei=lei, found=False, is_valid=False, reason="LOOKUP_ERROR")
+        return LeiEnrichment(
+            lei=lei, found=False, is_valid=False, reason="LOOKUP_ERROR"
+        )
 
 
 def _enrich_instrument(

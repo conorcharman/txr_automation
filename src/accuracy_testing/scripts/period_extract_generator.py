@@ -29,6 +29,7 @@ Version 1.1 Changes:
 Version 1.0 Changes:
 - Initial implementation for Phase 4 period-based extraction
 """
+
 from __future__ import annotations
 
 import argparse
@@ -45,10 +46,10 @@ sys.path.insert(0, str(project_root))
 
 from src.accuracy_testing.core.dtf_runner import DTFRunner
 
-
 # ---------------------------------------------------------------------------
 # Enums and data types (formerly in src.gui.scheduler.models / file_naming)
 # ---------------------------------------------------------------------------
+
 
 class ValidationType(Enum):  # noqa: D101
     BUYER_ID = "buyer_id"
@@ -92,6 +93,7 @@ def _generate_extract_path(
     filename = f"{vtype.value}_{period.fiscal_year}_{period.quarter}_{ts}_extract.csv"
     return output_dir / filename
 
+
 # ---------------------------------------------------------------------------
 # Mapping tables
 # ---------------------------------------------------------------------------
@@ -129,6 +131,7 @@ _SQL_TEMPLATES_DIR = Path(__file__).parent.parent / "sql_templates"
 # Date range calculation
 # ---------------------------------------------------------------------------
 
+
 def fiscal_period_to_dates(fiscal_year: str, quarter: str) -> tuple[date, date]:
     """Convert a fiscal year + quarter label to a start/end date range.
 
@@ -163,13 +166,16 @@ def fiscal_period_to_dates(fiscal_year: str, quarter: str) -> tuple[date, date]:
     }
     q_upper = quarter.upper()
     if q_upper not in quarter_map:
-        raise ValueError(f"Invalid quarter {quarter!r}. Expected one of: Q1, Q2, Q3, Q4.")
+        raise ValueError(
+            f"Invalid quarter {quarter!r}. Expected one of: Q1, Q2, Q3, Q4."
+        )
     return quarter_map[q_upper]
 
 
 # ---------------------------------------------------------------------------
 # CLI entry point
 # ---------------------------------------------------------------------------
+
 
 def main() -> None:
     """Entry point for the period extract generator CLI."""

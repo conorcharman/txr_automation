@@ -246,6 +246,7 @@ class FirdsXmlParser:
 # Utility functions
 # ---------------------------------------------------------------------------
 
+
 def _extract_namespace(tag: str) -> str:
     """Return the ``{namespace}`` prefix from a Clark-notation tag, or ``''``.
 

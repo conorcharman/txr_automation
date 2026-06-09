@@ -20,6 +20,7 @@ Version 1.1 Changes:
 Version 1.0 Changes:
 - Initial implementation for Phase 4 period-based extraction
 """
+
 from __future__ import annotations
 
 import logging
@@ -52,7 +53,9 @@ class DTFRunner:
     """
 
     TEMPLATE_PATH = (
-        Path(__file__).parent.parent / "sql_templates" / "AS400_DataTransfer_template.dtf"
+        Path(__file__).parent.parent
+        / "sql_templates"
+        / "AS400_DataTransfer_template.dtf"
     )
 
     def generate_dtf(
@@ -77,11 +80,11 @@ class DTFRunner:
         """
         template = Path(template_path or self.TEMPLATE_PATH)
         content = template.read_text(encoding="utf-8")
-        
+
         # Convert Linux paths to Windows paths for DTF compatibility.
         # IBM Data Transfer runs on Windows and needs Windows-format paths.
         dtf_output_path_for_dtf = self._convert_path_to_windows(str(output_csv_path))
-        
+
         content = content.replace("{OUTPUT_PATH}", dtf_output_path_for_dtf)
         content = content.replace("{SQL_QUERY}", self._flatten_sql(sql_query))
         output = Path(dtf_output_path)
@@ -144,26 +147,26 @@ class DTFRunner:
             win_base = os.environ.get("DTF_WINDOWS_APP_DATA_PATH")
             if win_base:
                 # Replace /app/data with the configured Windows path.
-                relative = path_str[len("/app/data"):].lstrip("/")
+                relative = path_str[len("/app/data") :].lstrip("/")
                 return (Path(win_base) / relative).as_posix().replace("/", "\\")
 
             # Auto-detect: common installation pattern.
             # Assume /app/data → C:\Users\<user>\Documents\GitHub\txr_automation\data
             # (or wherever the repo is checked out).
             default_base = r"C:\Users\ccharm\Documents\GitHub\txr_automation\data"
-            relative = path_str[len("/app/data"):].lstrip("/")
+            relative = path_str[len("/app/data") :].lstrip("/")
             return (Path(default_base) / relative).as_posix().replace("/", "\\")
 
         elif path_str.startswith("/app"):
             # Map /app to the app root.
             win_base = os.environ.get("DTF_WINDOWS_APP_PATH")
             if win_base:
-                relative = path_str[len("/app"):].lstrip("/")
+                relative = path_str[len("/app") :].lstrip("/")
                 return (Path(win_base) / relative).as_posix().replace("/", "\\")
 
             # Auto-detect: use repo root + txr_automation.
             default_base = r"C:\Users\ccharm\Documents\GitHub\txr_automation"
-            relative = path_str[len("/app"):].lstrip("/")
+            relative = path_str[len("/app") :].lstrip("/")
             return (Path(default_base) / relative).as_posix().replace("/", "\\")
 
         # For other Linux paths or unmapped patterns, return as-is.
@@ -291,12 +294,10 @@ class DTFRunner:
         # points to cwbtf.exe (the GUI editor) — rtopcb.exe is in the same
         # folder and is the correct batch executor.
         try:
-            import winreg  # only available on Windows
             import shlex
+            import winreg  # only available on Windows
 
-            with winreg.OpenKey(
-                winreg.HKEY_CLASSES_ROOT, r".dtf"
-            ) as ext_key:
+            with winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, r".dtf") as ext_key:
                 prog_id, _ = winreg.QueryValueEx(ext_key, "")
 
             with winreg.OpenKey(

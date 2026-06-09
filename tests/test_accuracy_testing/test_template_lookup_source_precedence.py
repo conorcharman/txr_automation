@@ -53,7 +53,9 @@ def test_seller_lookup_falls_back_to_consolidated_columns(tmp_path: Path) -> Non
     rows = [["TXN001", "", "", "16_21", "GBAA123456A", "NIDN"]]
     _write_template(template_path, header, rows)
 
-    processor = IDValidationProcessor(client_type="seller", template_path=str(template_path))
+    processor = IDValidationProcessor(
+        client_type="seller", template_path=str(template_path)
+    )
     record = _build_record("TXN001", "GBAA123456A:NIDN")
 
     processor._perform_template_validation(record)
@@ -77,7 +79,9 @@ def test_buyer_lookup_falls_back_to_consolidated_columns(tmp_path: Path) -> None
     rows = [["TXN002", "", "", "7_66", "FRZZ987654B", "CCPT"]]
     _write_template(template_path, header, rows)
 
-    processor = IDValidationProcessor(client_type="buyer", template_path=str(template_path))
+    processor = IDValidationProcessor(
+        client_type="buyer", template_path=str(template_path)
+    )
     record = _build_record("TXN002", "FRZZ987654B:CCPT")
 
     processor._perform_template_validation(record)
@@ -98,17 +102,21 @@ def test_primary_columns_override_fallback_when_populated(tmp_path: Path) -> Non
         "Seller identification code",
         "Type of seller identification code",
     ]
-    rows = [[
-        "TXN003",
-        "GBPRIMARY999A",
-        "NIDN",
-        "16_21",
-        "GBFALLBACK111A",
-        "CCPT",
-    ]]
+    rows = [
+        [
+            "TXN003",
+            "GBPRIMARY999A",
+            "NIDN",
+            "16_21",
+            "GBFALLBACK111A",
+            "CCPT",
+        ]
+    ]
     _write_template(template_path, header, rows)
 
-    processor = IDValidationProcessor(client_type="seller", template_path=str(template_path))
+    processor = IDValidationProcessor(
+        client_type="seller", template_path=str(template_path)
+    )
     record = _build_record("TXN003", "GBPRIMARY999A:NIDN")
 
     processor._perform_template_validation(record)
@@ -129,7 +137,9 @@ def test_legacy_columns_still_work_without_consolidated_section(tmp_path: Path) 
     rows = [["TXN004", "GBLEGACY222A", "NIDN"]]
     _write_template(template_path, header, rows)
 
-    processor = IDValidationProcessor(client_type="seller", template_path=str(template_path))
+    processor = IDValidationProcessor(
+        client_type="seller", template_path=str(template_path)
+    )
     record = _build_record("TXN004", "GBLEGACY222A:NIDN")
 
     processor._perform_template_validation(record)
@@ -150,7 +160,9 @@ def test_correction_field_id_uses_id_only_for_comparison(tmp_path: Path) -> None
     rows = [["TXN005", "GBIDONLY123A", "NIDN"]]
     _write_template(template_path, header, rows)
 
-    processor = IDValidationProcessor(client_type="seller", template_path=str(template_path))
+    processor = IDValidationProcessor(
+        client_type="seller", template_path=str(template_path)
+    )
     record = _build_record("TXN005", "GBIDONLY123A:CCPT")
     record.correction_fields = "ID"
 
@@ -172,7 +184,9 @@ def test_correction_field_idt_uses_type_only_for_comparison(tmp_path: Path) -> N
     rows = [["TXN006", "GBTYPEONLY321B", "CCPT"]]
     _write_template(template_path, header, rows)
 
-    processor = IDValidationProcessor(client_type="buyer", template_path=str(template_path))
+    processor = IDValidationProcessor(
+        client_type="buyer", template_path=str(template_path)
+    )
     record = _build_record("TXN006", "DIFFERENTID:CCPT")
     record.correction_fields = "IDT"
 

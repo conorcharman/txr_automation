@@ -2,6 +2,7 @@
 """Test script to verify Error column is populated for all records."""
 
 from pathlib import Path
+
 from src.accuracy_testing.processor import ClientRecord, IDValidationProcessor
 
 
@@ -22,20 +23,21 @@ def test_error_column_populated_for_no_valid_country():
         gender="M",
         primary_nationality="",  # Empty
         secondary_nationality="",  # Empty
-        original_row=[]
+        original_row=[],
     )
 
     # Initialize processor (no template loaded, verbose mode)
     processor = IDValidationProcessor(
-        client_type="buyer",
-        verbose=False  # Turn off verbose to reduce output
+        client_type="buyer", verbose=False  # Turn off verbose to reduce output
     )
 
     # Process the record
     processed = processor.process_record(test_record)
 
     # Verify Error field is populated
-    assert processed.error != "", f"Error field should be populated but got: '{processed.error}'"
+    assert (
+        processed.error != ""
+    ), f"Error field should be populated but got: '{processed.error}'"
 
 
 if __name__ == "__main__":
@@ -54,13 +56,10 @@ if __name__ == "__main__":
         gender="M",
         primary_nationality="",  # Empty
         secondary_nationality="",  # Empty
-        original_row=[]
+        original_row=[],
     )
 
-    processor = IDValidationProcessor(
-        client_type="buyer",
-        verbose=False
-    )
+    processor = IDValidationProcessor(client_type="buyer", verbose=False)
 
     processed = processor.process_record(test_record)
 

@@ -23,19 +23,21 @@ Migrated from: ValidateFTBDM3_0.vb, ValidateFTSDM3_0.vb
 import csv
 import logging
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple
-from dataclasses import dataclass, field
 
 from ..models.decision_maker_record import DecisionMakerRecord, determine_product
 
 # Import shared core library for ID format validation
 try:
     from src.core.data.id_formats import id_format_manager
+
     _CORE_FORMAT_MANAGER_AVAILABLE = True
 except ImportError:
     try:
         from core.data.id_formats import id_format_manager
+
         _CORE_FORMAT_MANAGER_AVAILABLE = True
     except ImportError:
         _CORE_FORMAT_MANAGER_AVAILABLE = False
@@ -49,6 +51,7 @@ LEI_PATTERN = re.compile(r"^[A-Z0-9]{18}\d{2}$")
 @dataclass
 class ValidationStats:
     """Statistics from Decision Maker validation run."""
+
     total: int = 0
     no_error: int = 0
     error: int = 0
@@ -297,10 +300,7 @@ class DecisionMakerValidator:
             record.error = "N"
 
     def _handle_empty_dm(
-        self,
-        record: DecisionMakerRecord,
-        branch_exists: bool,
-        lei: str
+        self, record: DecisionMakerRecord, branch_exists: bool, lei: str
     ) -> None:
         """Handle case where DM code is empty."""
         if branch_exists:
@@ -328,7 +328,7 @@ class DecisionMakerValidator:
         record: DecisionMakerRecord,
         branch_exists: bool,
         lei: str,
-        current_dm: str
+        current_dm: str,
     ) -> None:
         """Handle case where DM code equals Party code."""
         if branch_exists:
@@ -350,10 +350,7 @@ class DecisionMakerValidator:
                 f"{record.transaction_ref}: DM equals party code, branch not found"
             )
 
-    def validate_batch(
-        self,
-        records: List[DecisionMakerRecord]
-    ) -> ValidationStats:
+    def validate_batch(self, records: List[DecisionMakerRecord]) -> ValidationStats:
         """
         Validate a batch of records.
 
@@ -446,14 +443,14 @@ class DecisionMakerProcessor:
 
             for row_idx, row in enumerate(reader, start=2):
                 if len(row) < 7:
-                    self.logger.warning(f"Row {row_idx}: insufficient columns (need 7, got {len(row)}), skipping")
+                    self.logger.warning(
+                        f"Row {row_idx}: insufficient columns (need 7, got {len(row)}), skipping"
+                    )
                     continue
 
                 try:
                     record = DecisionMakerRecord.from_row(
-                        row,
-                        party_type=self.party_type,
-                        row_index=row_idx
+                        row, party_type=self.party_type, row_index=row_idx
                     )
                     self.records.append(record)
                 except Exception as e:

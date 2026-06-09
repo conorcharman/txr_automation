@@ -47,13 +47,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         Control to the running application.
     """
     # Import models here to register their metadata with Base before create_all.
+    import api.models.drr_submission  # noqa: F401
     import api.models.job  # noqa: F401
     import api.models.pipeline  # noqa: F401
     import api.models.reconciliation  # noqa: F401
     import api.models.saved_config  # noqa: F401
     import api.models.schedule  # noqa: F401
-    import api.models.drr_submission  # noqa: F401
-
     from api.database import Base, get_engine
 
     try:
@@ -98,18 +97,18 @@ app.add_middleware(
 from api.routers.accuracy import router as accuracy_router  # noqa: E402
 from api.routers.configs import router as configs_router  # noqa: E402
 from api.routers.dashboard import router as dashboard_router  # noqa: E402
+from api.routers.drr import router as drr_router  # noqa: E402
+from api.routers.fca import router as fca_router  # noqa: E402
 from api.routers.filesystem import router as filesystem_router  # noqa: E402
 from api.routers.firds import router as firds_router  # noqa: E402
-from api.routers.fca import router as fca_router  # noqa: E402
 from api.routers.gleif import router as gleif_router  # noqa: E402
 from api.routers.health import router as health_router  # noqa: E402
 from api.routers.jobs import router as jobs_router  # noqa: E402
-from api.routers.replay import router as replay_router  # noqa: E402
 from api.routers.pipeline import router as pipeline_router  # noqa: E402
 from api.routers.reconciliation import router as reconciliation_router  # noqa: E402
+from api.routers.replay import router as replay_router  # noqa: E402
 from api.routers.scheduler import router as scheduler_router  # noqa: E402
 from api.routers.utilities import router as utilities_router  # noqa: E402
-from api.routers.drr import router as drr_router  # noqa: E402
 
 app.include_router(health_router, prefix="/api")
 app.include_router(jobs_router, prefix="/api")

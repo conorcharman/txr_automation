@@ -42,9 +42,7 @@ logger = logging.getLogger(__name__)
 _DOWNLOAD_CHUNK_BYTES = 8 * 1024 * 1024
 
 # GLEIF ISIN-to-LEI mapping file URL
-_ISIN_MAP_URL = (
-    "https://mapping.gleif.org/api/v2/isin-lei/download"
-)
+_ISIN_MAP_URL = "https://mapping.gleif.org/api/v2/isin-lei/download"
 
 
 @dataclass

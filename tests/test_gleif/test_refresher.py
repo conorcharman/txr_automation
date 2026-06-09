@@ -1,7 +1,7 @@
 """Tests for GLEIF cache refresher (refresher.py)."""
 
 from pathlib import Path
-from unittest.mock import MagicMock, patch, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -9,8 +9,7 @@ from gleif.cache import GleifCacheManager
 from gleif.client import GleifApiClient, GoldenCopyInfo
 from gleif.downloader import GleifDownloadResult
 from gleif.parser import LeiRecord
-from gleif.refresher import GleifRefresher, RefreshResult, _VALID_DELTA_TYPES
-
+from gleif.refresher import _VALID_DELTA_TYPES, GleifRefresher, RefreshResult
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -115,7 +114,9 @@ class TestRunFullRefreshHappyPath:
         ):
             mock_dl = MagicMock()
             mock_dl_cls.return_value = mock_dl
-            mock_dl.download_and_extract.return_value = _make_download_result([csv_path])
+            mock_dl.download_and_extract.return_value = _make_download_result(
+                [csv_path]
+            )
             mock_dl.cleanup_file.return_value = None
 
             result = refresher.run_full_refresh(skip_isin_map=True)
@@ -141,7 +142,9 @@ class TestRunFullRefreshHappyPath:
         with (
             patch("gleif.refresher.GleifDownloader") as mock_dl_cls,
             patch.object(refresher._parser, "parse", return_value=iter(lei_records)),
-            patch.object(refresher._isin_parser, "parse", return_value=iter(isin_pairs)),
+            patch.object(
+                refresher._isin_parser, "parse", return_value=iter(isin_pairs)
+            ),
         ):
             mock_dl = MagicMock()
             mock_dl_cls.return_value = mock_dl
@@ -277,6 +280,7 @@ class TestRunFullRefreshFailure:
 
         # An ERROR entry should exist in gleif_sync_log
         import sqlite3
+
         conn = sqlite3.connect(cache._db_path)
         rows = conn.execute("SELECT status FROM gleif_sync_log").fetchall()
         conn.close()
@@ -308,7 +312,9 @@ class TestRunDeltaRefresh:
         ):
             mock_dl = MagicMock()
             mock_dl_cls.return_value = mock_dl
-            mock_dl.download_and_extract.return_value = _make_download_result([csv_path])
+            mock_dl.download_and_extract.return_value = _make_download_result(
+                [csv_path]
+            )
             mock_dl.cleanup_file.return_value = None
 
             result = refresher.run_delta_refresh(delta_type)
@@ -328,7 +334,9 @@ class TestRunDeltaRefresh:
         ):
             mock_dl = MagicMock()
             mock_dl_cls.return_value = mock_dl
-            mock_dl.download_and_extract.return_value = _make_download_result([csv_path])
+            mock_dl.download_and_extract.return_value = _make_download_result(
+                [csv_path]
+            )
             mock_dl.cleanup_file.return_value = None
 
             refresher.run_delta_refresh("24h")
@@ -364,7 +372,9 @@ class TestRunDeltaRefresh:
         ):
             mock_dl = MagicMock()
             mock_dl_cls.return_value = mock_dl
-            mock_dl.download_and_extract.return_value = _make_download_result([csv_path])
+            mock_dl.download_and_extract.return_value = _make_download_result(
+                [csv_path]
+            )
             mock_dl.cleanup_file.return_value = None
 
             refresher.run_delta_refresh()
@@ -384,12 +394,15 @@ class TestRunDeltaRefresh:
         ):
             mock_dl = MagicMock()
             mock_dl_cls.return_value = mock_dl
-            mock_dl.download_and_extract.return_value = _make_download_result([csv_path])
+            mock_dl.download_and_extract.return_value = _make_download_result(
+                [csv_path]
+            )
             mock_dl.cleanup_file.return_value = None
 
             refresher.run_delta_refresh("24h")
 
         import sqlite3
+
         conn = sqlite3.connect(cache._db_path)
         rows = conn.execute(
             "SELECT sync_type, status FROM gleif_sync_log WHERE sync_type='DELTA'"

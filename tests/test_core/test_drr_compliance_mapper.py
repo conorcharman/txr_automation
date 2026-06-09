@@ -133,10 +133,12 @@ class TestCheckTransaction:
         assert report.overall_status == RuleStatus.FAIL
 
     def test_valid_concat_buyer_passes(self) -> None:
-        report = check_transaction(**_base_params(
-            buyer_id="GBNJSMITH#1980-01-01#M",
-            buyer_id_type="CONCAT",
-        ))
+        report = check_transaction(
+            **_base_params(
+                buyer_id="GBNJSMITH#1980-01-01#M",
+                buyer_id_type="CONCAT",
+            )
+        )
         buyer = next(r for r in report.results if r.rule_name == "BuyerSeller_Buyer")
         assert buyer.status == RuleStatus.PASS
 
@@ -146,7 +148,9 @@ class TestCheckTransaction:
         assert buyer.status == RuleStatus.WARNING
 
     def test_nidn_id_type_presence_check(self) -> None:
-        report = check_transaction(**_base_params(buyer_id="GB1234567", buyer_id_type="NIDN"))
+        report = check_transaction(
+            **_base_params(buyer_id="GB1234567", buyer_id_type="NIDN")
+        )
         buyer = next(r for r in report.results if r.rule_name == "BuyerSeller_Buyer")
         assert buyer.status == RuleStatus.PASS
 
@@ -161,7 +165,9 @@ class TestCheckTransaction:
         assert dt.status == RuleStatus.FAIL
 
     def test_datetime_with_z_suffix_passes(self) -> None:
-        report = check_transaction(**_base_params(trading_date_time="2024-01-15T09:30:00Z"))
+        report = check_transaction(
+            **_base_params(trading_date_time="2024-01-15T09:30:00Z")
+        )
         dt = next(r for r in report.results if r.rule_name == "TradingDateTime")
         assert dt.status == RuleStatus.PASS
 
@@ -197,12 +203,16 @@ class TestCheckTransaction:
 
     def test_invalid_isin_fails(self) -> None:
         report = check_transaction(**_base_params(isin="NOTANISIN"))
-        isin = next(r for r in report.results if r.rule_name == "InstrumentIdentificationCode")
+        isin = next(
+            r for r in report.results if r.rule_name == "InstrumentIdentificationCode"
+        )
         assert isin.status == RuleStatus.FAIL
 
     def test_valid_isin_passes(self) -> None:
         report = check_transaction(**_base_params(isin="GB0001234567"))
-        isin = next(r for r in report.results if r.rule_name == "InstrumentIdentificationCode")
+        isin = next(
+            r for r in report.results if r.rule_name == "InstrumentIdentificationCode"
+        )
         assert isin.status == RuleStatus.PASS
 
     def test_isin_none_excluded_from_results(self) -> None:
@@ -212,7 +222,9 @@ class TestCheckTransaction:
 
     def test_missing_investment_decision_maker_is_warning(self) -> None:
         report = check_transaction(**_base_params(investment_decision_maker=None))
-        idm = next(r for r in report.results if r.rule_name == "InvestmentDecisionWithinFirm")
+        idm = next(
+            r for r in report.results if r.rule_name == "InvestmentDecisionWithinFirm"
+        )
         assert idm.status == RuleStatus.WARNING
 
     def test_net_amount_none_excludes_price_rule(self) -> None:
@@ -247,7 +259,9 @@ class TestComplianceReportAggregation:
         assert report.overall_status == RuleStatus.PASS
 
     def test_fail_dominates_warning(self) -> None:
-        report = self._make_report([RuleStatus.FAIL, RuleStatus.WARNING, RuleStatus.PASS])
+        report = self._make_report(
+            [RuleStatus.FAIL, RuleStatus.WARNING, RuleStatus.PASS]
+        )
         assert report.overall_status == RuleStatus.FAIL
 
     def test_warning_dominates_pass(self) -> None:

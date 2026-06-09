@@ -147,7 +147,6 @@ class JobService:
 
         await db.commit()
 
-
     async def delete_completed_jobs(self, db: AsyncSession) -> int:
         """Delete all jobs that are in a terminal state.
 
@@ -162,9 +161,7 @@ class JobService:
             The number of rows deleted.
         """
         result = await db.execute(
-            delete(Job).where(
-                Job.status.in_(["success", "failed", "cancelled"])
-            )
+            delete(Job).where(Job.status.in_(["success", "failed", "cancelled"]))
         )
         await db.commit()
         return result.rowcount

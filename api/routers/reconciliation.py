@@ -99,9 +99,7 @@ async def list_reconciliations(
     return [_to_response(r) for r in recs]
 
 
-@router.post(
-    "/reconciliations", response_model=ReconciliationResponse, status_code=201
-)
+@router.post("/reconciliations", response_model=ReconciliationResponse, status_code=201)
 async def create_reconciliation(
     body: ReconciliationCreate,
     db: AsyncSession = Depends(get_db),
@@ -146,9 +144,7 @@ async def create_reconciliation(
     return _to_response(rec)
 
 
-@router.get(
-    "/reconciliations/{rec_id}", response_model=ReconciliationResponse
-)
+@router.get("/reconciliations/{rec_id}", response_model=ReconciliationResponse)
 async def get_reconciliation(
     rec_id: str,
     db: AsyncSession = Depends(get_db),
@@ -160,9 +156,7 @@ async def get_reconciliation(
     return _to_response(rec)
 
 
-@router.put(
-    "/reconciliations/{rec_id}", response_model=ReconciliationResponse
-)
+@router.put("/reconciliations/{rec_id}", response_model=ReconciliationResponse)
 async def update_reconciliation(
     rec_id: str,
     body: ReconciliationUpdate,
@@ -191,9 +185,7 @@ async def update_reconciliation(
                 detail=f"Invalid reconciliation scripts: {sorted(invalid)}.",
             )
 
-    updated = await reconciliation_service.update_reconciliation(
-        db, rec, **updates
-    )
+    updated = await reconciliation_service.update_reconciliation(db, rec, **updates)
     return _to_response(updated)
 
 

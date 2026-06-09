@@ -44,10 +44,10 @@ from typing import List, Optional
 
 from .cache import FirdsCacheManager
 
-
 # ---------------------------------------------------------------------------
 # Reason codes
 # ---------------------------------------------------------------------------
+
 
 class ReportabilityReason:
     """String constants for reportability decision reasons."""

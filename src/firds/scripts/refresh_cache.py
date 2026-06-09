@@ -32,6 +32,7 @@ from typing import Any, Callable, Dict, Optional
 
 try:
     import yaml
+
     _YAML_AVAILABLE = True
 except ImportError:
     _YAML_AVAILABLE = False
@@ -61,8 +62,8 @@ def _parse_args() -> argparse.Namespace:
         choices=["full"],
         required=True,
         help="Type of refresh: 'full' rebuilds the cache from in-scope FULINS files "
-             "(C = Collective Investment Vehicles, D = Debt, E = Equities) and FULCAN "
-             "cancellation files.  Run weekly on Saturdays.",
+        "(C = Collective Investment Vehicles, D = Debt, E = Equities) and FULCAN "
+        "cancellation files.  Run weekly on Saturdays.",
     )
     parser.add_argument(
         "--date",
@@ -70,7 +71,7 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         metavar="YYYY-MM-DD",
         help="Publication date for the full refresh (must be a Saturday). "
-             "Defaults to the most recent Saturday.",
+        "Defaults to the most recent Saturday.",
     )
     parser.add_argument(
         "--db",
@@ -85,7 +86,7 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         metavar="PATH",
         help="Directory for temporary ZIP/XML files during download. "
-             "Defaults to a system temp directory that is removed after completion.",
+        "Defaults to a system temp directory that is removed after completion.",
     )
     parser.add_argument(
         "--config",
@@ -93,8 +94,8 @@ def _parse_args() -> argparse.Namespace:
         default=None,
         metavar="PATH",
         help="Path to a YAML config file. Defaults to config/local/firds_config.yaml "
-             "if that file exists. Sets defaults for --db and --staging-dir; "
-             "explicit CLI flags take precedence.",
+        "if that file exists. Sets defaults for --db and --staging-dir; "
+        "explicit CLI flags take precedence.",
     )
     parser.add_argument(
         "--log-level",
@@ -129,7 +130,9 @@ def _load_yaml_config(config_path: Path) -> Dict[str, Any]:
         Parsed configuration dictionary, or an empty dict if loading fails.
     """
     if not _YAML_AVAILABLE:
-        print("WARNING: PyYAML not installed — --config flag ignored. Run: pip install pyyaml")
+        print(
+            "WARNING: PyYAML not installed — --config flag ignored. Run: pip install pyyaml"
+        )
         return {}
     if not config_path.exists():
         print(f"WARNING: Config file not found: {config_path}")
@@ -150,16 +153,22 @@ def main() -> None:
 
     # --- Resolve config file: explicit flag > auto-discovered default ---
     _DEFAULT_CONFIG = _REPO_ROOT / "config" / "local" / "firds_config.yaml"
-    config_path: Optional[Path] = args.config or (_DEFAULT_CONFIG if _DEFAULT_CONFIG.exists() else None)
+    config_path: Optional[Path] = args.config or (
+        _DEFAULT_CONFIG if _DEFAULT_CONFIG.exists() else None
+    )
 
     cfg: Dict[str, Any] = {}
     if config_path:
         if config_path != args.config:  # auto-discovered, not user-supplied
-            logging.getLogger(__name__).info("Using auto-discovered config: %s", config_path)
+            logging.getLogger(__name__).info(
+                "Using auto-discovered config: %s", config_path
+            )
         cfg = _load_yaml_config(config_path)
 
     db_path: Path = args.db
-    if db_path == _REPO_ROOT / "data" / "firds_cache.db" and cfg.get("database", {}).get("path"):
+    if db_path == _REPO_ROOT / "data" / "firds_cache.db" and cfg.get(
+        "database", {}
+    ).get("path"):
         db_path = Path(cfg["database"]["path"])
         if not db_path.is_absolute():
             db_path = _REPO_ROOT / db_path
@@ -178,7 +187,7 @@ def main() -> None:
     redis_url = os.environ.get("REDIS_URL")
     progress_tracker: Optional[ProgressTracker] = None
     progress_callback: Optional[Callable[[str, int], None]] = None
-    
+
     if job_id:
         progress_tracker = ProgressTracker(
             job_id=job_id,
@@ -198,13 +207,15 @@ def main() -> None:
     target = args.date or _most_recent_saturday()
     _print_banner(f"FIRDS Full Refresh  |  target date: {target}  |  DB: {db_path}")
     result = refresher.run_full_refresh(target_date=target)
-    
+
     # Signal completion if progress tracker is active
     if progress_tracker:
         progress_tracker.complete()
 
     _print_separator()
-    status = "OK" if result.files_failed == 0 else f"FAILED ({result.files_failed} error(s))"
+    status = (
+        "OK" if result.files_failed == 0 else f"FAILED ({result.files_failed} error(s))"
+    )
     print(
         f"  Result   : {status}\n"
         f"  Processed: {result.files_processed} file(s)\n"
