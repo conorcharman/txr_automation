@@ -35,7 +35,8 @@ def extract_rows(query: str | None = None) -> list[dict[str, object]]:
     Raises:
         RuntimeError: If the ODBC connection string is missing.
         ImportError: If pyodbc is not installed.
-        TimeoutError: If the query takes longer than 30 minutes to complete.
+        TimeoutError: If the connection or query takes longer than 30 minutes.
+            The timeout is enforced at the connection level via ``pyodbc.connect(timeout=…)``.
     """
     import pyodbc  # Imported lazily so the API/tests run without the driver.
 
@@ -57,8 +58,6 @@ def extract_rows(query: str | None = None) -> list[dict[str, object]]:
             timeout=timeout_seconds,
         ) as conn:
             with conn.cursor() as cursor:
-                # Set query timeout on the cursor as well
-                cursor.timeout = timeout_seconds
                 cursor.execute(sql)
 
                 # Map driver column order to canonical names. The outer SELECT *
