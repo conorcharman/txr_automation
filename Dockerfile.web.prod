@@ -1,0 +1,58 @@
+# =============================================================================
+# Dockerfile.web.prod — Multi-stage build for React SPA + Nginx (Production Only)
+# =============================================================================
+# This Dockerfile is used exclusively for production deployments.
+# For development, run the React frontend natively:
+#   cd web && npm run dev
+# The frontend will be served at http://localhost:5173 with instant hot-reload.
+#
+# Production builds leverage this image to create an optimized Nginx-served bundle.
+
+# -----------------------------------------------------------------------------
+# Stage 1: builder — Node 20, build the Vite/React app
+# -----------------------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Inject Zscaler CA certificate so npm can verify TLS through the corporate proxy.
+# NODE_EXTRA_CA_CERTS tells Node.js to trust this cert without needing system CA tools.
+COPY zscaler-ca.crt /tmp/zscaler-ca.crt
+ENV NODE_EXTRA_CA_CERTS=/tmp/zscaler-ca.crt
+
+# Copy Socket proxy .npmrc so npm routes through the corporate proxy.
+# Disable strict-ssl for the container build — the Alpine CA store doesn't
+# include the Socket proxy cert, but the proxy itself is trusted internally.
+COPY .npmrc /root/.npmrc
+RUN echo "strict-ssl=false" >> /root/.npmrc
+
+# Copy package manifests first for better layer caching.
+COPY web/package*.json ./
+
+# Install all dependencies including devDependencies (needed for tsc and vite).
+RUN npm install --include=dev
+
+# Copy the rest of the frontend source
+COPY web/ ./
+
+# Build the production bundle
+RUN npm run build
+
+# -----------------------------------------------------------------------------
+# Stage 2: final — Nginx serves the built SPA
+# -----------------------------------------------------------------------------
+FROM nginx:alpine AS final
+
+# Remove default Nginx static assets
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copy built assets from builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Inject custom Nginx config (handles SPA routing + API proxy + WebSockets)
+COPY nginx.conf /etc/nginx/nginx.conf
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]
+

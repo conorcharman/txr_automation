@@ -182,16 +182,17 @@ The simplest way is to use **Docker Compose** for backend services and run the f
 
 ### Option A: Docker Compose (Recommended) + Local Frontend
 
-This setup runs PostgreSQL, Redis, Celery worker, and beat scheduler in Docker, whilst you run the React dev server locally.
+This setup runs PostgreSQL, Redis, Celery worker, and beat scheduler in Docker, whilst you run the React dev server locally for instant hot-reload development.
 
 **Terminal 1: Start Docker Services**
 
 ```powershell
 # Make sure Docker Desktop is running
-# Start all backend services
+# Start all backend services (no web container)
 docker compose up
 
 # You should see output from redis, db, api, worker, and beat services
+# The web container has been removed — the frontend runs locally via npm
 ```
 
 **Terminal 2: Start React Frontend Dev Server**
@@ -214,6 +215,12 @@ VITE v5.x.x  ready in x ms
 
 ➜  Local:   http://localhost:5173/
 ```
+
+> **💡 Frontend Development Tip**
+>
+> Save a file in the `web/` directory and your browser updates instantly — no rebuild required.
+> Vite's hot-reload development server runs natively on port 5173, giving you the fastest feedback loop for frontend changes.
+
 
 **Terminal 3 (Optional): Run Python Scripts/Tests**
 

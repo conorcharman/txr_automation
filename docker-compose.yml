@@ -106,20 +106,6 @@ services:
     networks:
       - txr-network
 
-  # ---------------------------------------------------------------------------
-  # Web — React SPA served by Nginx (proxies /api to backend)
-  # ---------------------------------------------------------------------------
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile.web
-    restart: unless-stopped
-    ports:
-      - "5173:80"
-    depends_on:
-      - api
-    networks:
-      - txr-network
 
 networks:
   txr-network:
