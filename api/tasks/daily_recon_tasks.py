@@ -24,6 +24,10 @@ from api.tasks.celery_app import celery_app
 
 logger = logging.getLogger(__name__)
 
+# Batch size for revalidation — process rows in chunks of 200 to avoid
+# memory overload and asyncpg's 32767 parameter limit on selectin() queries.
+_REVALIDATE_BATCH_SIZE = 200
+
 
 async def _is_cancel_requested(run_id: str, redis_client: object) -> bool:
     """Check if a cancellation has been requested for this run via Redis flag.
@@ -143,8 +147,13 @@ async def _persist_async(
 async def _revalidate_async(run_id: str, redis_client: object) -> tuple[int, int]:
     """Re-validate an existing run by re-running validation on stored rows.
 
-    Loads all rows + cells from Postgres, re-runs validate_batch() on the
-    original_value data, clears old issues, persists new ones.
+    Uses batched keyset pagination to avoid O(n²) offset scans and memory overload.
+    Processes rows in chunks of 200 using row_index-based keyset pagination.
+    For each batch:
+    1. Load rows + cells + issues via selectinload (no cartesian explosion)
+    2. Re-run validation
+    3. Diff against stored state — only write changes
+    4. Commit batch (safe to retry from last successful batch on failure)
 
     Args:
         run_id: The parent ReconRun UUID string.
@@ -153,9 +162,9 @@ async def _revalidate_async(run_id: str, redis_client: object) -> tuple[int, int
     Returns:
         Tuple of (total_rows, error_rows).
     """
-    from sqlalchemy import delete, select
+    from sqlalchemy import select
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
-    from sqlalchemy.orm import joinedload
+    from sqlalchemy.orm import selectinload
 
     from api.models.daily_recon import (
         ReconCell,
@@ -168,110 +177,168 @@ async def _revalidate_async(run_id: str, redis_client: object) -> tuple[int, int
     engine = create_async_engine(settings.database_url, echo=False)
     session_factory = async_sessionmaker(engine, expire_on_commit=False)
 
+    total_rows = 0
     error_row_count = 0
+    last_row_index = -1  # Keyset pagination marker; start from row_index > -1
+
     try:
-        async with session_factory() as session:
-            # Load all rows for this run with their cells eagerly (avoid N+1)
-            logger.info(f"[Revalidate {run_id}] Loading rows and cells from database...")
+        # Check cancellation before starting
+        if await _is_cancel_requested(run_id, redis_client):
+            logger.info(f"[Revalidate {run_id}] Cancellation requested, aborting.")
+            raise CancellationRequested(f"Revalidation of run {run_id} was cancelled by user.")
 
-            # Check cancellation before starting
-            if await _is_cancel_requested(run_id, redis_client):
-                logger.info(f"[Revalidate {run_id}] Cancellation requested, aborting.")
-                raise CancellationRequested(f"Revalidation of run {run_id} was cancelled by user.")
-
-            result = await session.execute(
-                select(ReconRow)
-                .where(ReconRow.run_id == UUID(run_id))
-                .options(joinedload(ReconRow.cells))
+        # Process rows in batches using keyset pagination (WHERE row_index > last_row_index)
+        batch_number = 0
+        while True:
+            logger.info(
+                f"[Revalidate {run_id}] Processing batch {batch_number} "
+                f"(from row_index > {last_row_index})..."
             )
-            rows = list(result.unique().scalars().all())
-            logger.info(f"[Revalidate {run_id}] Loaded {len(rows)} rows.")
 
-            # Build raw string dicts from original_value
-            logger.info(f"[Revalidate {run_id}] Building validation batch from original values...")
-            raw_batch: list[dict[str, str | None]] = []
-            for row in rows:
-                row_dict: dict[str, str | None] = {}
-                for cell in row.cells:
-                    row_dict[cell.column_name] = cell.original_value
-                raw_batch.append(row_dict)
-            logger.info(f"[Revalidate {run_id}] Built batch with {len(raw_batch)} rows.")
-
-            # Re-run validation
-            logger.info(f"[Revalidate {run_id}] Running validation engine...")
-            validation = validate_batch(raw_batch)
-            logger.info(f"[Revalidate {run_id}] Validation complete.")
-
-            # Check cancellation before persisting
+            # Check cancellation at batch boundary
             if await _is_cancel_requested(run_id, redis_client):
-                logger.info(f"[Revalidate {run_id}] Cancellation requested during persistence phase, aborting.")
+                logger.info(f"[Revalidate {run_id}] Cancellation requested at batch {batch_number}, aborting.")
                 raise CancellationRequested(f"Revalidation of run {run_id} was cancelled by user.")
 
-            # Delete old issues in bulk for all cells in this run
-            logger.info(f"[Revalidate {run_id}] Clearing old validation issues...")
-            all_cell_ids = [cell.id for row in rows for cell in row.cells]
-            if all_cell_ids:
-                await session.execute(
-                    delete(ReconCellIssue).where(ReconCellIssue.cell_id.in_(all_cell_ids))
+            try:
+                async with session_factory() as session:
+                    # Load one batch of rows using keyset pagination (WHERE row_index > last).
+                    # selectinload avoids cartesian product: issues fetched in separate batched INs.
+                    result = await session.execute(
+                        select(ReconRow)
+                        .where(ReconRow.run_id == UUID(run_id))
+                        .where(ReconRow.row_index > last_row_index)
+                        .order_by(ReconRow.row_index)
+                        .limit(_REVALIDATE_BATCH_SIZE)
+                        .options(
+                            selectinload(ReconRow.cells).selectinload(ReconCell.issues)
+                        )
+                    )
+                    rows = list(result.unique().scalars().all())
+                    if not rows:
+                        break
+
+                    logger.info(
+                        f"[Revalidate {run_id}] Loaded batch {batch_number} of {len(rows)} rows "
+                        f"(row_index {rows[0].row_index}..{rows[-1].row_index})."
+                    )
+
+                    # Build raw validation batch from original_value
+                    raw_batch: list[dict[str, str | None]] = []
+                    for row in rows:
+                        row_dict: dict[str, str | None] = {}
+                        for cell in row.cells:
+                            row_dict[cell.column_name] = cell.original_value
+                        raw_batch.append(row_dict)
+
+                    # Re-run validation on this batch
+                    logger.info(f"[Revalidate {run_id}] Validating batch {batch_number} ({len(raw_batch)} rows)...")
+                    validation = validate_batch(raw_batch)
+
+                    # Diff and update rows/cells/issues
+                    batch_errors = 0
+                    for row, cell_results in zip(rows, validation):
+                        results_by_col = {c.column_name: c for c in cell_results}
+                        new_row_error = any(c.is_errored for c in cell_results)
+
+                        # Only update row.has_error if it changed
+                        if row.has_error != new_row_error:
+                            row.has_error = new_row_error
+
+                        if new_row_error:
+                            batch_errors += 1
+
+                        # Diff each cell
+                        for cell in row.cells:
+                            result = results_by_col.get(cell.column_name)
+                            new_is_errored = bool(result and result.is_errored)
+                            new_suggested = result.suggested_fix if result else None
+
+                            # Only update if state changed
+                            if cell.is_errored != new_is_errored:
+                                cell.is_errored = new_is_errored
+                            if cell.suggested_fix != new_suggested:
+                                cell.suggested_fix = new_suggested
+
+                            # Diff issues: handle multiple issues with same rule_id gracefully
+                            # Index all existing issues (rule_id may appear multiple times if malformed)
+                            existing_by_rule: dict[str, list[ReconCellIssue]] = {}
+                            for issue in cell.issues:
+                                if issue.rule_id not in existing_by_rule:
+                                    existing_by_rule[issue.rule_id] = []
+                                existing_by_rule[issue.rule_id].append(issue)
+
+                            new_issues = result.issues if result else []
+                            new_rule_ids = {issue.rule_id for issue in new_issues}
+
+                            # Delete issues that are no longer in results
+                            for rule_id, issues in existing_by_rule.items():
+                                if rule_id not in new_rule_ids:
+                                    for issue in issues:
+                                        session.delete(issue)
+
+                            # Add/update issues that are in results
+                            for new_issue in new_issues:
+                                if new_issue.rule_id in existing_by_rule:
+                                    # Assume ≤1 issue per rule_id; update the first (canonical)
+                                    existing = existing_by_rule[new_issue.rule_id][0]
+                                    if existing.message != new_issue.message:
+                                        existing.message = new_issue.message
+                                    if existing.suggested_fix != new_issue.suggested_fix:
+                                        existing.suggested_fix = new_issue.suggested_fix
+                                else:
+                                    # New issue — add it
+                                    session.add(
+                                        ReconCellIssue(
+                                            cell_id=cell.id,
+                                            rule_id=new_issue.rule_id,
+                                            message=new_issue.message,
+                                            suggested_fix=new_issue.suggested_fix,
+                                        )
+                                    )
+
+                    # Commit this batch
+                    await session.commit()
+                    logger.info(
+                        f"[Revalidate {run_id}] Batch {batch_number} complete: {len(rows)} rows, "
+                        f"{batch_errors} with errors."
+                    )
+
+                    total_rows += len(rows)
+                    error_row_count += batch_errors
+                    last_row_index = rows[-1].row_index
+                    batch_number += 1
+
+            except Exception as batch_exc:  # noqa: BLE001
+                # Batch-level error: log and roll back this batch, leave run status at "running"
+                # so a retry sees the same incomplete state and can resume
+                logger.error(
+                    f"[Revalidate {run_id}] Batch {batch_number} failed (rows from row_index > {last_row_index}): {batch_exc}",
+                    exc_info=True,
                 )
-            logger.info(f"[Revalidate {run_id}] Cleared issues for {len(all_cell_ids)} cells.")
+                # Re-raise to let the outer task catch and mark the run as failed
+                raise
 
-            # Update cells with new validation results
-            logger.info(f"[Revalidate {run_id}] Updating cells with new validation results...")
-            for row_idx, (row, cell_results) in enumerate(zip(rows, validation)):
-                # Check cancellation every 100 rows during update
-                if row_idx % 100 == 0 and row_idx > 0:
-                    if await _is_cancel_requested(run_id, redis_client):
-                        logger.info(f"[Revalidate {run_id}] Cancellation requested at row {row_idx}, aborting.")
-                        raise CancellationRequested(f"Revalidation of run {run_id} was cancelled by user.")
-
-                results_by_col = {c.column_name: c for c in cell_results}
-                row_has_error = any(c.is_errored for c in cell_results)
-                if row_has_error:
-                    error_row_count += 1
-
-                for cell in row.cells:
-                    result = results_by_col.get(cell.column_name)
-                    is_errored = bool(result and result.is_errored)
-                    suggested = result.suggested_fix if result else None
-
-                    # Update cell
-                    cell.is_errored = is_errored
-                    cell.suggested_fix = suggested
-
-                    # Add new issues
-                    if result and result.issues:
-                        for issue in result.issues:
-                            session.add(
-                                ReconCellIssue(
-                                    cell_id=cell.id,
-                                    rule_id=issue.rule_id,
-                                    message=issue.message,
-                                    suggested_fix=issue.suggested_fix,
-                                )
-                            )
-
-                # Update row
-                row.has_error = row_has_error
-                if row_idx % 100 == 0 and row_idx > 0:
-                    logger.info(f"[Revalidate {run_id}] Processed {row_idx}/{len(rows)} rows...")
-
-            logger.info(f"[Revalidate {run_id}] Updated {len(rows)} rows and created new issues.")
-
-            # Update run aggregates
-            logger.info(f"[Revalidate {run_id}] Updating run aggregates and committing...")
+        # Update run aggregates and status in final transaction
+        logger.info(f"[Revalidate {run_id}] All batches complete. Updating run aggregates...")
+        async with session_factory() as session:
             run = await session.get(ReconRun, UUID(run_id))
             if run is not None:
-                run.row_count = len(rows)
+                run.row_count = total_rows
                 run.error_row_count = error_row_count
                 run.status = "validated"
+                await session.commit()
+            else:
+                logger.error(f"[Revalidate {run_id}] ReconRun not found when updating aggregates")
 
-            await session.commit()
-            logger.info(f"[Revalidate {run_id}] Revalidation complete: {len(rows)} rows, {error_row_count} with errors.")
+        logger.info(
+            f"[Revalidate {run_id}] Revalidation complete: {total_rows} rows, {error_row_count} with errors."
+        )
+
     finally:
         await engine.dispose()
 
-    return len(rows), error_row_count
+    return total_rows, error_row_count
 
 
 async def _update_run_status_async(run_id: str, status: str) -> None:
