@@ -47,6 +47,7 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
         Control to the running application.
     """
     # Import models here to register their metadata with Base before create_all.
+    import api.models.daily_recon  # noqa: F401
     import api.models.drr_submission  # noqa: F401
     import api.models.job  # noqa: F401
     import api.models.pipeline  # noqa: F401
@@ -96,6 +97,7 @@ app.add_middleware(
 # ── Routers ────────────────────────────────────────────────────────────────
 from api.routers.accuracy import router as accuracy_router  # noqa: E402
 from api.routers.configs import router as configs_router  # noqa: E402
+from api.routers.daily_recon import router as daily_recon_router  # noqa: E402
 from api.routers.dashboard import router as dashboard_router  # noqa: E402
 from api.routers.drr import router as drr_router  # noqa: E402
 from api.routers.fca import router as fca_router  # noqa: E402
@@ -125,3 +127,4 @@ app.include_router(pipeline_router, prefix="/api")
 app.include_router(reconciliation_router, prefix="/api")
 app.include_router(scheduler_router, prefix="/api")
 app.include_router(drr_router, prefix="/api")
+app.include_router(daily_recon_router, prefix="/api")

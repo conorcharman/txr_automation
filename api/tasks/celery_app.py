@@ -102,6 +102,7 @@ celery_app.conf.update(
         "api.tasks.scheduler_tasks",
         "api.tasks.pipeline_tasks",
         "api.tasks.reconciliation_tasks",
+        "api.tasks.daily_recon_tasks",
     ],
     # Celery beat periodic tasks.
     beat_schedule={

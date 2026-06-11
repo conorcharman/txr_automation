@@ -696,3 +696,68 @@ export interface DRRCdmReportResponse {
   failed: number;
   warnings: number;
 }
+
+// ---------------------------------------------------------------------------
+// Daily Reconciliation
+// ---------------------------------------------------------------------------
+
+export interface CellIssue {
+  ruleId: string;
+  message: string;
+  suggestedFix: string | null;
+}
+
+export interface DailyReconCell {
+  id: number;
+  columnName: string;
+  originalValue: string | null;
+  suggestedFix: string | null;
+  correctedValue: string | null;
+  isErrored: boolean;
+  issues: CellIssue[];
+}
+
+export interface DailyReconRow {
+  id: string;
+  rowIndex: number;
+  tradeRef: string | null;
+  hasError: boolean;
+  approved: boolean;
+  approvedAt: string | null;
+  cells: DailyReconCell[];
+}
+
+export interface DailyReconRun {
+  id: string;
+  jobId: string | null;
+  sourceQuery: string;
+  rowCount: number;
+  errorRowCount: number;
+  status: "pending" | "running" | "validated" | "exported" | "failed";
+  createdAt: string | null;
+  updatedAt: string | null;
+  rows?: DailyReconRow[];
+}
+
+export interface DailyReconTriggerRequest {
+  sourceQuery?: string | null;
+  jobId?: string | null;
+}
+
+export interface CellCorrectionRequest {
+  correctedValue: string;
+}
+
+export interface PaginatedDailyReconRuns {
+  data: DailyReconRun[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+export interface PaginatedDailyReconRows {
+  data: DailyReconRow[];
+  total: number;
+  limit: number;
+  offset: number;
+}
