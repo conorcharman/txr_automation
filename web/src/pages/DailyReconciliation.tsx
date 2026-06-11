@@ -1,15 +1,9 @@
-import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
   Plus,
-  Download,
   AlertCircle,
-  CheckCircle2,
-  ChevronDown,
-  ChevronUp,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -23,33 +17,16 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog";
-import {
   Alert,
   AlertTitle,
   AlertDescription,
 } from "@/components/ui/alert";
 import {
   listRuns,
-  getRun,
-  approveRow,
-  unapproveRow,
-  applyCorrection,
-  acceptSuggestion,
-  exportRun,
   triggerRun,
 } from "@/api/dailyRecon";
 import type {
   DailyReconRun,
-  DailyReconRow,
-  DailyReconCell,
-  CellIssue,
 } from "@/types";
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -115,7 +92,7 @@ function RunList({ onSelectRun }: RunListProps) {
               <button
                 key={run.id}
                 onClick={() => onSelectRun(run)}
-                className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors text-left"
+                className="w-full flex items-center justify-between p-3 rounded-lg border hover:bg-accent transition-colors text-left cursor-pointer"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
@@ -153,484 +130,11 @@ function RunList({ onSelectRun }: RunListProps) {
 }
 
 // ────────────────────────────────────────────────────────────────────────────
-// Cell Error Detail Modal
-// ────────────────────────────────────────────────────────────────────────────
-
-interface CellDetailModalProps {
-  cell: DailyReconCell | null;
-  onClose: () => void;
-  onAcceptSuggestion?: () => void;
-  onCorrectionApplied?: () => void;
-}
-
-function CellDetailModal({
-  cell,
-  onClose,
-  onAcceptSuggestion,
-  onCorrectionApplied,
-}: CellDetailModalProps) {
-  const [correctedValue, setCorrectedValue] = useState(cell?.correctedValue || "");
-  const queryClient = useQueryClient();
-
-  const correctionMutation = useMutation({
-    mutationFn: (value: string) =>
-      applyCorrection(cell!.id, { correctedValue: value }),
-    onSuccess: () => {
-      toast.success("Correction applied");
-      queryClient.invalidateQueries({ queryKey: ["daily-recon-run"] });
-      onCorrectionApplied?.();
-    },
-    onError: (err) => toast.error(String(err)),
-  });
-
-  const acceptMutation = useMutation({
-    mutationFn: () => acceptSuggestion(cell!.id),
-    onSuccess: () => {
-      toast.success("Suggestion accepted");
-      queryClient.invalidateQueries({ queryKey: ["daily-recon-run"] });
-      onAcceptSuggestion?.();
-    },
-    onError: (err) => toast.error(String(err)),
-  });
-
-  if (!cell) return null;
-
-  return (
-    <Dialog open={!!cell} onOpenChange={onClose}>
-      <DialogContent className="max-w-xl">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {cell.isErrored ? (
-              <AlertCircle className="h-5 w-5 text-destructive" />
-            ) : (
-              <CheckCircle2 className="h-5 w-5 text-green-600" />
-            )}
-            {cell.columnName}
-          </DialogTitle>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          {/* Original Value */}
-          <div>
-            <label className="text-sm font-medium">Original Value</label>
-            <div className="mt-1 p-2 bg-muted rounded text-sm font-mono">
-              {cell.originalValue || "(empty)"}
-            </div>
-          </div>
-
-          {/* Issues */}
-          {cell.issues && cell.issues.length > 0 && (
-            <div>
-              <label className="text-sm font-medium">Validation Issues</label>
-              <div className="mt-1 space-y-2">
-                {cell.issues.map((issue: CellIssue, idx: number) => (
-                  <div key={idx} className="p-2 bg-destructive/10 rounded text-sm">
-                    <div className="font-medium text-destructive">
-                      {issue.ruleId}
-                    </div>
-                    <div className="mt-1 text-foreground">
-                      {issue.message}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Suggested Fix */}
-          {cell.suggestedFix && (
-            <div>
-              <label className="text-sm font-medium">Suggested Fix</label>
-              <div className="mt-1 p-2 bg-blue-50 rounded text-sm font-mono flex items-center justify-between">
-                <span>{cell.suggestedFix}</span>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => acceptMutation.mutate()}
-                  disabled={acceptMutation.isPending}
-                >
-                  Accept
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {/* Manual Correction */}
-          <div>
-            <label className="text-sm font-medium">Manual Correction</label>
-            <div className="mt-1 flex gap-2">
-              <input
-                type="text"
-                value={correctedValue}
-                onChange={(e) => setCorrectedValue(e.target.value)}
-                placeholder="Enter corrected value..."
-                className="flex-1 px-3 py-2 border rounded text-sm"
-              />
-              <Button
-                onClick={() => correctionMutation.mutate(correctedValue)}
-                disabled={correctionMutation.isPending}
-              >
-                Apply
-              </Button>
-            </div>
-          </div>
-
-          {/* Corrected Value Display */}
-          {cell.correctedValue && (
-            <div>
-              <label className="text-sm font-medium text-green-600">
-                Corrected Value
-              </label>
-              <div className="mt-1 p-2 bg-green-50 rounded text-sm font-mono">
-                {cell.correctedValue}
-              </div>
-            </div>
-          )}
-        </div>
-
-        <DialogFooter>
-          <DialogClose asChild>
-            <Button variant="outline">Close</Button>
-          </DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// Row Inspector
-// ────────────────────────────────────────────────────────────────────────────
-
-interface RowInspectorProps {
-  row: DailyReconRow;
-  onApprovalChange: () => void;
-}
-
-function RowInspector({ row, onApprovalChange }: RowInspectorProps) {
-  const [expanded, setExpanded] = useState(false);
-  const [selectedCell, setSelectedCell] = useState<DailyReconCell | null>(null);
-  const [showAllCells, setShowAllCells] = useState(false);
-  const queryClient = useQueryClient();
-
-  const approveMutation = useMutation({
-    mutationFn: () =>
-      row.approved ? unapproveRow(row.id) : approveRow(row.id),
-    onSuccess: () => {
-      toast.success(
-        row.approved ? "Row unmarked for approval" : "Row approved"
-      );
-      queryClient.invalidateQueries({ queryKey: ["daily-recon-run"] });
-      onApprovalChange();
-    },
-    onError: (err) => toast.error(String(err)),
-  });
-
-  const errorCells = row.cells.filter((c) => c.isErrored);
-  const displayCells = showAllCells ? row.cells : errorCells;
-
-  return (
-    <div className="border rounded-lg mb-2">
-      <button
-        onClick={() => setExpanded(!expanded)}
-        className="w-full flex items-center justify-between p-3 hover:bg-accent transition-colors cursor-pointer"
-      >
-        <div className="flex items-center gap-3 flex-1 text-left">
-          {expanded ? (
-            <ChevronUp className="h-4 w-4 text-muted-foreground" />
-          ) : (
-            <ChevronDown className="h-4 w-4 text-muted-foreground" />
-          )}
-
-          <div className="flex-1">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-xs text-muted-foreground uppercase tracking-wide">
-                Trade Ref
-              </span>
-              <span className="font-medium font-mono text-sm">
-                {row.tradeRef || `Row ${row.rowIndex}`}
-              </span>
-              {row.hasError ? (
-                <Badge variant="destructive" className="gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  {errorCells.length} error{errorCells.length !== 1 ? "s" : ""}
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="gap-1 text-green-600 border-green-300">
-                  <CheckCircle2 className="h-3 w-3" />
-                  Clean
-                </Badge>
-              )}
-              {row.approved && (
-                <Badge variant="outline" className="gap-1 text-blue-600 border-blue-300">
-                  Approved
-                </Badge>
-              )}
-            </div>
-          </div>
-
-          <Button
-            variant={row.approved ? "secondary" : "outline"}
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              approveMutation.mutate();
-            }}
-            disabled={approveMutation.isPending}
-          >
-            {row.approved ? "Unapprove" : "Approve"}
-          </Button>
-        </div>
-      </button>
-
-      {expanded && (
-        <div className="px-3 pb-3 bg-muted/30 border-t">
-          {/* Sub-header: column count + toggle */}
-          <div className="flex items-center justify-between py-2">
-            <span className="text-xs text-muted-foreground">
-              {row.cells.length} columns
-              {errorCells.length > 0
-                ? ` · ${errorCells.length} with errors`
-                : " · no errors"}
-            </span>
-            {row.cells.length > 0 && (
-              <button
-                onClick={() => setShowAllCells(!showAllCells)}
-                className="text-xs text-primary hover:underline cursor-pointer"
-              >
-                {showAllCells ? "Show errors only" : "Show all columns"}
-              </button>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 gap-1">
-            {displayCells.length === 0 && !showAllCells && (
-              <p className="text-xs text-muted-foreground py-3 text-center">
-                No validation errors — row is clean ✓
-              </p>
-            )}
-            {displayCells.map((cell) => (
-              <button
-                key={cell.id}
-                onClick={() => setSelectedCell(cell)}
-                className={`text-left p-2 rounded border transition-colors cursor-pointer ${
-                  cell.isErrored
-                    ? "bg-destructive/5 border-destructive/20 hover:bg-destructive/10"
-                    : "bg-background border-border hover:bg-accent"
-                }`}
-              >
-                <div className="flex items-center justify-between gap-4">
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-1.5">
-                      {cell.isErrored && (
-                        <AlertCircle className="h-3 w-3 text-destructive shrink-0" />
-                      )}
-                      <span className="font-medium text-xs uppercase tracking-wide text-muted-foreground">
-                        {cell.columnName}
-                      </span>
-                    </div>
-                    <div className="text-sm font-mono mt-0.5 truncate">
-                      {cell.correctedValue ? (
-                        <span className="text-green-700">{cell.correctedValue}</span>
-                      ) : cell.originalValue ? (
-                        <span className={cell.isErrored ? "text-destructive" : ""}>
-                          {cell.originalValue}
-                        </span>
-                      ) : (
-                        <span className="italic text-muted-foreground">(empty)</span>
-                      )}
-                    </div>
-                    {cell.suggestedFix && (
-                      <div className="text-xs text-blue-600 mt-0.5">
-                        → Suggested: {cell.suggestedFix}
-                      </div>
-                    )}
-                  </div>
-                  <Eye className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
-
-      <CellDetailModal
-        cell={selectedCell}
-        onClose={() => setSelectedCell(null)}
-        onCorrectionApplied={() => setSelectedCell(null)}
-        onAcceptSuggestion={() => setSelectedCell(null)}
-      />
-    </div>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// Run Detail View
-// ────────────────────────────────────────────────────────────────────────────
-
-interface RunDetailProps {
-  runId: string;
-  onBack: () => void;
-}
-
-function RunDetail({ runId, onBack }: RunDetailProps) {
-  const [showErrorsOnly, setShowErrorsOnly] = useState(false);
-
-  const { data: run, isLoading, error } = useQuery({
-    queryKey: ["daily-recon-run", runId],
-    queryFn: () => getRun(runId),
-    refetchInterval: 5000,
-  });
-
-  const exportMutation = useMutation({
-    mutationFn: () => exportRun(runId),
-    onSuccess: (blob) => {
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = `daily-recon-${runId}.csv`;
-      link.click();
-      window.URL.revokeObjectURL(url);
-      toast.success("CSV exported");
-    },
-    onError: (err) => toast.error(String(err)),
-  });
-
-  if (isLoading) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle>Loading...</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error || !run) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <p className="text-destructive">{String(error) || "Run not found"}</p>
-          <Button onClick={onBack} className="mt-4">
-            Back to Runs
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const rows = run.rows || [];
-  const displayRows = showErrorsOnly ? rows.filter((r) => r.hasError) : rows;
-  const approvedCount = rows.filter((r) => r.approved).length;
-
-  return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>Run Details</CardTitle>
-              <CardDescription>{run.id}</CardDescription>
-            </div>
-            <Button variant="outline" onClick={onBack}>
-              Back to Runs
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-muted-foreground">Status</div>
-              <Badge className="mt-1">{run.status}</Badge>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Total Rows</div>
-              <div className="text-2xl font-bold mt-1">{run.rowCount}</div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Error Rows</div>
-              <div className="text-2xl font-bold text-destructive mt-1">
-                {run.errorRowCount}
-              </div>
-            </div>
-            <div>
-              <div className="text-sm text-muted-foreground">Approved</div>
-              <div className="text-2xl font-bold text-green-600 mt-1">
-                {approvedCount}
-              </div>
-            </div>
-          </div>
-
-          {run.status === "validated" && (
-            <Button
-              onClick={() => exportMutation.mutate()}
-              disabled={exportMutation.isPending || approvedCount === 0}
-              className="gap-2 w-full"
-            >
-              <Download className="h-4 w-4" />
-              Export {approvedCount > 0 ? `${approvedCount} Approved Rows` : "(No approved rows)"}
-            </Button>
-          )}
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Rows</CardTitle>
-            <button
-              onClick={() => setShowErrorsOnly(!showErrorsOnly)}
-              className="flex items-center gap-2 px-3 py-1 text-sm rounded border hover:bg-accent transition-colors"
-            >
-              {showErrorsOnly ? (
-                <>
-                  <EyeOff className="h-4 w-4" />
-                  Showing errors only
-                </>
-              ) : (
-                <>
-                  <Eye className="h-4 w-4" />
-                  Show all
-                </>
-              )}
-            </button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-1 max-h-150 overflow-y-auto">
-            {displayRows.length === 0 ? (
-              <p className="text-sm text-muted-foreground p-3">
-                No rows {showErrorsOnly ? "with errors" : ""}
-              </p>
-            ) : (
-              displayRows.map((row) => (
-                <RowInspector
-                  key={row.id}
-                  row={row}
-                  onApprovalChange={() => {
-                    // Trigger refetch
-                  }}
-                />
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-}
-
-// ────────────────────────────────────────────────────────────────────────────
 // Main Page
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function DailyReconciliationPage() {
-  const [selectedRunId, setSelectedRunId] = useState<string | null>(null);
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   const triggerMutation = useMutation({
@@ -638,19 +142,10 @@ export default function DailyReconciliationPage() {
     onSuccess: (run) => {
       toast.success("Reconciliation run started");
       queryClient.invalidateQueries({ queryKey: ["daily-recon-runs"] });
-      setSelectedRunId(run.id);
+      navigate(`/daily-recon/${run.id}`);
     },
     onError: (err) => toast.error(String(err)),
   });
-
-  if (selectedRunId) {
-    return (
-      <RunDetail
-        runId={selectedRunId}
-        onBack={() => setSelectedRunId(null)}
-      />
-    );
-  }
 
   return (
     <div className="space-y-4">
@@ -671,8 +166,7 @@ export default function DailyReconciliationPage() {
         </Button>
       </div>
 
-      <RunList onSelectRun={(run) => setSelectedRunId(run.id)} />
+      <RunList onSelectRun={(run) => navigate(`/daily-recon/${run.id}`)} />
     </div>
   );
 }
-
