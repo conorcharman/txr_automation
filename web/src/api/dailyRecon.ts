@@ -61,6 +61,38 @@ export async function triggerRun(
   return response.json();
 }
 
+/**
+ * Re-run validation on an existing run (no SQL re-extraction).
+ */
+export async function revalidateRun(runId: string): Promise<DailyReconRun> {
+  const response = await fetch(`${API_BASE}/runs/${runId}/revalidate`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error(`Failed to revalidate run: ${response.statusText}`);
+  return response.json();
+}
+
+/**
+ * Request cancellation of an in-progress revalidation.
+ */
+export async function cancelRevalidationRun(runId: string): Promise<DailyReconRun> {
+  const response = await fetch(`${API_BASE}/runs/${runId}/cancel-revalidation`, {
+    method: "POST",
+  });
+  if (!response.ok) throw new Error(`Failed to cancel revalidation: ${response.statusText}`);
+  return response.json();
+}
+
+/**
+ * Delete a reconciliation run and all its rows/cells/issues.
+ */
+export async function deleteRun(runId: string): Promise<void> {
+  const response = await fetch(`${API_BASE}/runs/${runId}`, {
+    method: "DELETE",
+  });
+  if (!response.ok) throw new Error(`Failed to delete run: ${response.statusText}`);
+}
+
 // ──────────────────────────────────────────────────────────────────────────
 // Rows
 // ──────────────────────────────────────────────────────────────────────────

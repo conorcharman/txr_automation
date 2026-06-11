@@ -9,6 +9,9 @@ import {
   ChevronUp,
   Eye,
   EyeOff,
+  RotateCw,
+  X,
+  Trash2,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -36,6 +39,9 @@ import {
   applyCorrection,
   acceptSuggestion,
   exportRun,
+  revalidateRun,
+  cancelRevalidationRun,
+  deleteRun,
 } from "@/api/dailyRecon";
 import type {
   DailyReconRow,
@@ -67,9 +73,9 @@ function CellDetailModal({
   const correctionMutation = useMutation({
     mutationFn: (value: string) =>
       applyCorrection(cell!.id, { correctedValue: value }),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Correction applied");
-      queryClient.invalidateQueries({ queryKey: ["daily-recon-run"] });
+      await queryClient.invalidateQueries({ queryKey: ["daily-recon-run"] });
       onCorrectionApplied?.();
     },
     onError: (err) => toast.error(String(err)),
@@ -77,9 +83,9 @@ function CellDetailModal({
 
   const acceptMutation = useMutation({
     mutationFn: () => acceptSuggestion(cell!.id),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success("Suggestion accepted");
-      queryClient.invalidateQueries({ queryKey: ["daily-recon-run"] });
+      await queryClient.invalidateQueries({ queryKey: ["daily-recon-run"] });
       onAcceptSuggestion?.();
     },
     onError: (err) => toast.error(String(err)),
@@ -208,11 +214,11 @@ function RowInspector({ row, onApprovalChange }: RowInspectorProps) {
   const approveMutation = useMutation({
     mutationFn: () =>
       row.approved ? unapproveRow(row.id) : approveRow(row.id),
-    onSuccess: () => {
+    onSuccess: async () => {
       toast.success(
         row.approved ? "Row unmarked for approval" : "Row approved"
       );
-      queryClient.invalidateQueries({ queryKey: ["daily-recon-run"] });
+      await queryClient.invalidateQueries({ queryKey: ["daily-recon-run"] });
       onApprovalChange();
     },
     onError: (err) => toast.error(String(err)),
@@ -364,11 +370,40 @@ export default function DailyReconciliationDetail() {
   const { runId } = useParams<{ runId: string }>();
   const navigate = useNavigate();
   const [showErrorsOnly, setShowErrorsOnly] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const queryClient = useQueryClient();
 
   const { data: run, isLoading, error } = useQuery({
     queryKey: ["daily-recon-run", runId],
     queryFn: () => getRun(runId!),
     refetchInterval: 5000,
+  });
+
+  const revalidateMutation = useMutation({
+    mutationFn: () => revalidateRun(runId!),
+    onSuccess: async () => {
+      toast.success("Revalidation started");
+      await queryClient.invalidateQueries({ queryKey: ["daily-recon-run", runId] });
+    },
+    onError: (err) => toast.error(String(err)),
+  });
+
+  const cancelMutation = useMutation({
+    mutationFn: () => cancelRevalidationRun(runId!),
+    onSuccess: () => {
+      toast.success("Cancellation requested");
+      queryClient.invalidateQueries({ queryKey: ["daily-recon-run", runId] });
+    },
+    onError: (err) => toast.error(String(err)),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteRun(runId!),
+    onSuccess: () => {
+      toast.success("Run deleted");
+      navigate("/daily-recon");
+    },
+    onError: (err) => toast.error(String(err)),
   });
 
   const exportMutation = useMutation({
@@ -422,13 +457,61 @@ export default function DailyReconciliationDetail() {
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
-            <div>
+            <div className="flex-1">
               <CardTitle>Run Details</CardTitle>
               <CardDescription>{run.id}</CardDescription>
             </div>
-            <Button variant="outline" onClick={() => navigate(-1)}>
-              Back to Runs
-            </Button>
+            <div className="flex items-center gap-2">
+              {run.status === "running" && (
+                <Badge variant="secondary" className="gap-1 animate-pulse">
+                  <div className="h-2 w-2 rounded-full bg-current" />
+                  Running
+                </Badge>
+              )}
+              {run.status === "cancelled" && (
+                <Badge variant="outline" className="gap-1 text-gray-600 border-gray-300">
+                  <X className="h-3 w-3" />
+                  Cancelled
+                </Badge>
+              )}
+              {run.status === "running" && (
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => cancelMutation.mutate()}
+                  disabled={cancelMutation.isPending}
+                  className="gap-2"
+                >
+                  <X className="h-4 w-4" />
+                  {cancelMutation.isPending ? "Cancelling..." : "Cancel"}
+                </Button>
+              )}
+              {run.status !== "running" && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => revalidateMutation.mutate()}
+                  disabled={revalidateMutation.isPending}
+                  className="gap-2"
+                >
+                  <RotateCw className="h-4 w-4" />
+                  {revalidateMutation.isPending ? "Validating..." : "Re-run Validations"}
+                </Button>
+              )}
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={deleteMutation.isPending || run.status === "running"}
+                className="gap-2"
+              >
+                <Trash2 className="h-4 w-4" />
+                {deleteMutation.isPending ? "Deleting..." : "Delete"}
+              </Button>
+              <Button variant="outline" onClick={() => navigate(-1)}>
+                Back to Runs
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -465,15 +548,50 @@ export default function DailyReconciliationDetail() {
               Export {approvedCount > 0 ? `${approvedCount} Approved Rows` : "(No approved rows)"}
             </Button>
           )}
-        </CardContent>
-      </Card>
+         </CardContent>
+       </Card>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle>Rows</CardTitle>
-            <button
-              onClick={() => setShowErrorsOnly(!showErrorsOnly)}
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-destructive" />
+              Delete Run?
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <p className="text-sm text-muted-foreground">
+              Are you sure you want to delete this run? This will permanently remove all {run.rowCount} rows and all validation issues.
+            </p>
+            <p className="text-sm font-medium text-destructive">
+              This action cannot be undone.
+            </p>
+          </div>
+          <DialogFooter className="gap-2">
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button
+              variant="destructive"
+              onClick={() => {
+                deleteMutation.mutate();
+                setShowDeleteConfirm(false);
+              }}
+              disabled={deleteMutation.isPending}
+            >
+              {deleteMutation.isPending ? "Deleting..." : "Delete Run"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+       <Card>
+         <CardHeader>
+           <div className="flex items-center justify-between">
+             <CardTitle>Rows</CardTitle>
+             <button
+               onClick={() => setShowErrorsOnly(!showErrorsOnly)}
               className="flex items-center gap-2 px-3 py-1 text-sm rounded border hover:bg-accent transition-colors"
             >
               {showErrorsOnly ? (
@@ -513,4 +631,3 @@ export default function DailyReconciliationDetail() {
     </div>
   );
 }
-

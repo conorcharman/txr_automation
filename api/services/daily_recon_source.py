@@ -35,6 +35,7 @@ def extract_rows(query: str | None = None) -> list[dict[str, object]]:
     Raises:
         RuntimeError: If the ODBC connection string is missing.
         ImportError: If pyodbc is not installed.
+        TimeoutError: If the query takes longer than 30 minutes to complete.
     """
     import pyodbc  # Imported lazily so the API/tests run without the driver.
 
@@ -44,26 +45,50 @@ def extract_rows(query: str | None = None) -> list[dict[str, object]]:
     logger.info("Connecting to SQL Server source for daily reconciliation.")
     rows: list[dict[str, object]] = []
 
-    with pyodbc.connect(conn_str, autocommit=True) as conn:
-        with conn.cursor() as cursor:
-            cursor.execute(sql)
+    # Set connection and query timeout to 1800 seconds (30 minutes).
+    # This prevents tasks from hanging indefinitely if the ODBC driver
+    # or SQL Server connection gets stuck. (Issue #4)
+    timeout_seconds = 1800  # 30 minutes
 
-            # Map driver column order to canonical names. The outer SELECT *
-            # surfaces the inner aliases, so prefer matching by name (upper).
-            driver_columns = [col[0] for col in cursor.description]
-            upper_to_canonical = {c.upper(): c for c in COLUMN_NAMES}
+    try:
+        with pyodbc.connect(
+            conn_str,
+            autocommit=True,
+            timeout=timeout_seconds,
+        ) as conn:
+            with conn.cursor() as cursor:
+                # Set query timeout on the cursor as well
+                cursor.timeout = timeout_seconds
+                cursor.execute(sql)
 
-            for record in cursor.fetchall():
-                row: dict[str, object] = {}
-                for idx, driver_col in enumerate(driver_columns):
-                    canonical = upper_to_canonical.get(
-                        driver_col.upper(),
-                        # Fall back to positional mapping if name is unknown.
-                        COLUMN_NAMES[idx] if idx < len(COLUMN_NAMES) else driver_col,
-                    )
-                    row[canonical] = record[idx]
-                rows.append(row)
+                # Map driver column order to canonical names. The outer SELECT *
+                # surfaces the inner aliases, so prefer matching by name (upper).
+                driver_columns = [col[0] for col in cursor.description]
+                upper_to_canonical = {c.upper(): c for c in COLUMN_NAMES}
 
-    logger.info("Extracted %d rows from SQL Server source.", len(rows))
+                for record in cursor.fetchall():
+                    row: dict[str, object] = {}
+                    for idx, driver_col in enumerate(driver_columns):
+                        canonical = upper_to_canonical.get(
+                            driver_col.upper(),
+                            # Fall back to positional mapping if name is unknown.
+                            COLUMN_NAMES[idx] if idx < len(COLUMN_NAMES) else driver_col,
+                        )
+                        row[canonical] = record[idx]
+                    rows.append(row)
+
+        logger.info("Extracted %d rows from SQL Server source.", len(rows))
+    except pyodbc.OperationalError as exc:
+        if "timeout" in str(exc).lower():
+            logger.error(
+                "SQL Server extraction timed out after %d seconds: %s",
+                timeout_seconds,
+                exc,
+            )
+            raise TimeoutError(
+                f"SQL Server extraction exceeded {timeout_seconds}s timeout"
+            ) from exc
+        raise
+
     return rows
 

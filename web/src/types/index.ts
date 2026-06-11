@@ -733,7 +733,7 @@ export interface DailyReconRun {
   sourceQuery: string;
   rowCount: number;
   errorRowCount: number;
-  status: "pending" | "running" | "validated" | "exported" | "failed";
+  status: "pending" | "running" | "validated" | "exported" | "failed" | "cancelled";
   createdAt: string | null;
   updatedAt: string | null;
   rows?: DailyReconRow[];

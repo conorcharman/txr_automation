@@ -139,9 +139,9 @@ export default function DailyReconciliationPage() {
 
   const triggerMutation = useMutation({
     mutationFn: () => triggerRun({}),
-    onSuccess: (run) => {
+    onSuccess: async (run) => {
       toast.success("Reconciliation run started");
-      queryClient.invalidateQueries({ queryKey: ["daily-recon-runs"] });
+      await queryClient.invalidateQueries({ queryKey: ["daily-recon-runs"] });
       navigate(`/daily-recon/${run.id}`);
     },
     onError: (err) => toast.error(String(err)),

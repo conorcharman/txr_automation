@@ -123,6 +123,140 @@ async def trigger_run(
     return RunResponse.model_validate(run)
 
 
+@router.post("/runs/{run_id}/revalidate", response_model=RunResponse, status_code=202)
+async def revalidate_run_endpoint(
+    run_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Re-run validation on an existing run (no SQL re-extraction).
+
+    Loads the stored rows and their original values, re-runs the validation
+    engine against them, clears old issues, and persists new ones. Useful
+    when validation rules have changed.
+
+    Args:
+        run_id: Run UUID.
+        db: Database session.
+
+    Returns:
+        Updated RunResponse.
+
+    Raises:
+        404: If run not found.
+
+    Note:
+        Returns HTTP 202 (Accepted) immediately; actual revalidation happens
+        asynchronously via Celery.
+    """
+    from api.services.job_service import job_service
+    from api.tasks.daily_recon_tasks import revalidate_run
+
+    run = await daily_recon_service.get_run(db, run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    # Create a tracking job
+    job = await job_service.create_job(db, "daily_recon_revalidate", {"run_id": str(run_id)})
+
+    # Update run status to running
+    await daily_recon_service.update_run_status(db, run_id, "running")
+
+    # Dispatch the background revalidation task
+    revalidate_run.delay(str(job.id), str(run_id))
+
+    # Return updated run
+    run = await daily_recon_service.get_run(db, run_id)
+    return RunResponse.model_validate(run)
+
+
+@router.post("/runs/{run_id}/cancel-revalidation", response_model=RunResponse, status_code=200)
+async def cancel_revalidation_endpoint(
+    run_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> dict[str, Any]:
+    """Request cancellation of an in-progress revalidation.
+
+    Sets a cancellation flag in Redis. The revalidate_run task checks this
+    flag periodically and exits cleanly if set.
+
+    Critically, this endpoint immediately updates the ReconRun.status to
+    "cancelled" in the database, rather than waiting for the task to do so.
+    This prevents stuck runs where the task never sees the cancellation flag
+    (e.g., if stuck in I/O) — the UI will immediately show "cancelled" status.
+
+    Args:
+        run_id: Run UUID.
+        db: Database session.
+
+    Returns:
+        Updated RunResponse.
+
+    Raises:
+        404: If run not found.
+
+    Note:
+        Only affects runs with status "running".
+    """
+    import redis as redis_lib
+
+    from api.config import get_settings
+
+    run = await daily_recon_service.get_run(db, run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    # Immediately update DB — don't wait for the task to do it (Issue #2).
+    # This ensures the UI shows "cancelled" immediately, even if the task
+    # never sees the Redis flag (e.g., stuck in I/O).
+    await daily_recon_service.update_run_status(db, run_id, "cancelled")
+
+    # Set cancellation flag in Redis for graceful task shutdown
+    settings = get_settings()
+    redis_client = redis_lib.from_url(settings.redis_url)
+    try:
+        redis_client.set(f"revalidate:{run_id}:cancel", "1", ex=3600)  # Expire after 1 hour
+    except Exception as exc:  # noqa: BLE001
+        raise HTTPException(
+            status_code=500,
+            detail=f"Failed to set cancellation flag: {exc}",
+        )
+
+    # Return updated run with cancelled status
+    run = await daily_recon_service.get_run(db, run_id)
+    return RunResponse.model_validate(run)
+
+
+@router.delete("/runs/{run_id}", status_code=204)
+async def delete_run(
+    run_id: UUID,
+    db: AsyncSession = Depends(get_db),
+) -> None:
+    """Delete a reconciliation run and all cascading rows/cells/issues.
+
+    Removes the run from the database. All nested rows, cells, and issues
+    are cascade-deleted automatically (defined in the ORM model).
+
+    The linked Job record is NOT deleted — this preserves audit history.
+
+    Args:
+        run_id: Run UUID.
+        db: Database session.
+
+    Raises:
+        404: If run not found.
+
+    Note:
+        Returns HTTP 204 No Content on success.
+    """
+    run = await daily_recon_service.get_run(db, run_id)
+    if not run:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+    deleted = await daily_recon_service.delete_run(db, run_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Run not found")
+
+
 # ────────────────────────────────────────────────────────────────────────────
 # Rows Management
 # ────────────────────────────────────────────────────────────────────────────
@@ -368,5 +502,3 @@ async def export_run(
     #  - Stream response
 
     return {"status": "export not yet implemented"}
-
-

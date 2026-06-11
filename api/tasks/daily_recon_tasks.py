@@ -25,6 +25,30 @@ from api.tasks.celery_app import celery_app
 logger = logging.getLogger(__name__)
 
 
+async def _is_cancel_requested(run_id: str, redis_client: object) -> bool:
+    """Check if a cancellation has been requested for this run via Redis flag.
+
+    Args:
+        run_id: The ReconRun UUID string.
+        redis_client: Redis client instance (passed in to avoid creating new connections).
+
+    Returns:
+        True if cancellation flag is set, False otherwise.
+    """
+    try:
+        flag = redis_client.get(f"revalidate:{run_id}:cancel")  # type: ignore
+        return flag is not None
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Failed to check cancellation flag for run %s: %s", run_id, exc)
+        return False
+
+
+class CancellationRequested(Exception):
+    """Raised when a revalidation cancellation is requested."""
+
+    pass
+
+
 async def _persist_async(
     run_id: str,
     rows: list[dict[str, object]],
@@ -116,8 +140,150 @@ async def _persist_async(
     return len(records), error_row_count
 
 
+async def _revalidate_async(run_id: str, redis_client: object) -> tuple[int, int]:
+    """Re-validate an existing run by re-running validation on stored rows.
+
+    Loads all rows + cells from Postgres, re-runs validate_batch() on the
+    original_value data, clears old issues, persists new ones.
+
+    Args:
+        run_id: The parent ReconRun UUID string.
+        redis_client: Redis client instance (passed in to avoid creating new connections).
+
+    Returns:
+        Tuple of (total_rows, error_rows).
+    """
+    from sqlalchemy import delete, select
+    from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+    from sqlalchemy.orm import joinedload
+
+    from api.models.daily_recon import (
+        ReconCell,
+        ReconCellIssue,
+        ReconRow,
+        ReconRun,
+    )
+
+    settings = get_settings()
+    engine = create_async_engine(settings.database_url, echo=False)
+    session_factory = async_sessionmaker(engine, expire_on_commit=False)
+
+    error_row_count = 0
+    try:
+        async with session_factory() as session:
+            # Load all rows for this run with their cells eagerly (avoid N+1)
+            logger.info(f"[Revalidate {run_id}] Loading rows and cells from database...")
+
+            # Check cancellation before starting
+            if await _is_cancel_requested(run_id, redis_client):
+                logger.info(f"[Revalidate {run_id}] Cancellation requested, aborting.")
+                raise CancellationRequested(f"Revalidation of run {run_id} was cancelled by user.")
+
+            result = await session.execute(
+                select(ReconRow)
+                .where(ReconRow.run_id == UUID(run_id))
+                .options(joinedload(ReconRow.cells))
+            )
+            rows = list(result.unique().scalars().all())
+            logger.info(f"[Revalidate {run_id}] Loaded {len(rows)} rows.")
+
+            # Build raw string dicts from original_value
+            logger.info(f"[Revalidate {run_id}] Building validation batch from original values...")
+            raw_batch: list[dict[str, str | None]] = []
+            for row in rows:
+                row_dict: dict[str, str | None] = {}
+                for cell in row.cells:
+                    row_dict[cell.column_name] = cell.original_value
+                raw_batch.append(row_dict)
+            logger.info(f"[Revalidate {run_id}] Built batch with {len(raw_batch)} rows.")
+
+            # Re-run validation
+            logger.info(f"[Revalidate {run_id}] Running validation engine...")
+            validation = validate_batch(raw_batch)
+            logger.info(f"[Revalidate {run_id}] Validation complete.")
+
+            # Check cancellation before persisting
+            if await _is_cancel_requested(run_id, redis_client):
+                logger.info(f"[Revalidate {run_id}] Cancellation requested during persistence phase, aborting.")
+                raise CancellationRequested(f"Revalidation of run {run_id} was cancelled by user.")
+
+            # Delete old issues in bulk for all cells in this run
+            logger.info(f"[Revalidate {run_id}] Clearing old validation issues...")
+            all_cell_ids = [cell.id for row in rows for cell in row.cells]
+            if all_cell_ids:
+                await session.execute(
+                    delete(ReconCellIssue).where(ReconCellIssue.cell_id.in_(all_cell_ids))
+                )
+            logger.info(f"[Revalidate {run_id}] Cleared issues for {len(all_cell_ids)} cells.")
+
+            # Update cells with new validation results
+            logger.info(f"[Revalidate {run_id}] Updating cells with new validation results...")
+            for row_idx, (row, cell_results) in enumerate(zip(rows, validation)):
+                # Check cancellation every 100 rows during update
+                if row_idx % 100 == 0 and row_idx > 0:
+                    if await _is_cancel_requested(run_id, redis_client):
+                        logger.info(f"[Revalidate {run_id}] Cancellation requested at row {row_idx}, aborting.")
+                        raise CancellationRequested(f"Revalidation of run {run_id} was cancelled by user.")
+
+                results_by_col = {c.column_name: c for c in cell_results}
+                row_has_error = any(c.is_errored for c in cell_results)
+                if row_has_error:
+                    error_row_count += 1
+
+                for cell in row.cells:
+                    result = results_by_col.get(cell.column_name)
+                    is_errored = bool(result and result.is_errored)
+                    suggested = result.suggested_fix if result else None
+
+                    # Update cell
+                    cell.is_errored = is_errored
+                    cell.suggested_fix = suggested
+
+                    # Add new issues
+                    if result and result.issues:
+                        for issue in result.issues:
+                            session.add(
+                                ReconCellIssue(
+                                    cell_id=cell.id,
+                                    rule_id=issue.rule_id,
+                                    message=issue.message,
+                                    suggested_fix=issue.suggested_fix,
+                                )
+                            )
+
+                # Update row
+                row.has_error = row_has_error
+                if row_idx % 100 == 0 and row_idx > 0:
+                    logger.info(f"[Revalidate {run_id}] Processed {row_idx}/{len(rows)} rows...")
+
+            logger.info(f"[Revalidate {run_id}] Updated {len(rows)} rows and created new issues.")
+
+            # Update run aggregates
+            logger.info(f"[Revalidate {run_id}] Updating run aggregates and committing...")
+            run = await session.get(ReconRun, UUID(run_id))
+            if run is not None:
+                run.row_count = len(rows)
+                run.error_row_count = error_row_count
+                run.status = "validated"
+
+            await session.commit()
+            logger.info(f"[Revalidate {run_id}] Revalidation complete: {len(rows)} rows, {error_row_count} with errors.")
+    finally:
+        await engine.dispose()
+
+    return len(rows), error_row_count
+
+
 async def _update_run_status_async(run_id: str, status: str) -> None:
-    """Set the run status (used for running/failed transitions)."""
+    """Set the run status (used for running/failed transitions).
+
+    Args:
+        run_id: The ReconRun UUID string.
+        status: New status to set.
+
+    Raises:
+        Exception: If database update fails (caller should catch and log).
+    """
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
     from api.models.daily_recon import ReconRun
@@ -131,6 +297,11 @@ async def _update_run_status_async(run_id: str, status: str) -> None:
             if run is not None:
                 run.status = status
                 await session.commit()
+            else:
+                logger.error(f"ReconRun {run_id} not found when updating status to {status}")
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to update ReconRun {run_id} status to {status}: {exc}")
+        raise
     finally:
         await engine.dispose()
 
@@ -140,7 +311,16 @@ async def _update_job_status_async(
     status: str,
     error_message: str | None = None,
 ) -> None:
-    """Update the linked job's status."""
+    """Update the linked job's status.
+
+    Args:
+        job_id: The Job UUID string.
+        status: New status to set.
+        error_message: Optional error message for failed status.
+
+    Raises:
+        Exception: If database update fails (caller should catch and log).
+    """
     from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
     from api.services.job_service import job_service
@@ -153,6 +333,9 @@ async def _update_job_status_async(
             await job_service.update_status(
                 session, job_id, status, error_message=error_message
             )
+    except Exception as exc:  # noqa: BLE001
+        logger.error(f"Failed to update Job {job_id} status to {status}: {exc}")
+        raise
     finally:
         await engine.dispose()
 
@@ -186,10 +369,29 @@ def run_daily_recon(
 
     _publish({"type": "status", "data": "running"})
     _publish({"type": "progress", "data": 5})
-    asyncio.run(_update_job_status_async(job_id, "running"))
-    asyncio.run(_update_run_status_async(run_id, "running"))
 
     try:
+        asyncio.run(_update_job_status_async(job_id, "running"))
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Failed to update job status to running on startup: %s", exc)
+
+    try:
+        asyncio.run(_update_run_status_async(run_id, "running"))
+    except Exception as exc:  # noqa: BLE001
+        logger.error("Failed to update run status to running on startup: %s", exc)
+
+    try:
+        # Check cancellation before starting extraction (Issue #3)
+        if asyncio.run(_is_cancel_requested(run_id, redis_client)):
+            _publish({"type": "log", "data": "Cancellation requested before extraction started."})
+            _publish({"type": "status", "data": "cancelled"})
+            try:
+                asyncio.run(_update_run_status_async(run_id, "cancelled"))
+                asyncio.run(_update_job_status_async(job_id, "cancelled"))
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Failed to update status to cancelled: %s", exc)
+            return {"status": "cancelled"}
+
         # Import here so the API process can run without pyodbc installed.
         from api.services.daily_recon_source import extract_rows
 
@@ -197,6 +399,17 @@ def run_daily_recon(
         rows = extract_rows(query)
         _publish({"type": "log", "data": f"Extracted {len(rows)} rows."})
         _publish({"type": "progress", "data": 50})
+
+        # Check cancellation after extraction (Issue #3)
+        if asyncio.run(_is_cancel_requested(run_id, redis_client)):
+            _publish({"type": "log", "data": "Cancellation requested after extraction."})
+            _publish({"type": "status", "data": "cancelled"})
+            try:
+                asyncio.run(_update_run_status_async(run_id, "cancelled"))
+                asyncio.run(_update_job_status_async(job_id, "cancelled"))
+            except Exception as exc:  # noqa: BLE001
+                logger.error("Failed to update status to cancelled: %s", exc)
+            return {"status": "cancelled"}
 
         total, errors = asyncio.run(_persist_async(run_id, rows))
         _publish(
@@ -207,7 +420,11 @@ def run_daily_recon(
         )
         _publish({"type": "progress", "data": 100})
         _publish({"type": "status", "data": "success"})
-        asyncio.run(_update_job_status_async(job_id, "success"))
+
+        try:
+            asyncio.run(_update_job_status_async(job_id, "success"))
+        except Exception as exc:  # noqa: BLE001
+            logger.error("Failed to update job status to success: %s", exc)
 
         return {"status": "success", "rowCount": total, "errorRowCount": errors}
 
@@ -217,7 +434,95 @@ def run_daily_recon(
         _publish({"type": "log", "data": error_msg})
         _publish({"type": "status", "data": "failed"})
         _publish({"type": "progress", "data": 100})
-        asyncio.run(_update_run_status_async(run_id, "failed"))
-        asyncio.run(_update_job_status_async(job_id, "failed", error_message=error_msg))
+
+        try:
+            asyncio.run(_update_run_status_async(run_id, "failed"))
+        except Exception as update_exc:  # noqa: BLE001
+            logger.error("Failed to update run status to failed: %s", update_exc)
+
+        try:
+            asyncio.run(_update_job_status_async(job_id, "failed", error_message=error_msg))
+        except Exception as update_exc:  # noqa: BLE001
+            logger.error("Failed to update job status to failed: %s", update_exc)
+
         return {"status": "failed", "error": str(exc)}
 
+
+@celery_app.task(bind=True, name="api.tasks.daily_recon_tasks.revalidate_run")
+def revalidate_run(
+    self: Task,
+    job_id: str,
+    run_id: str,
+) -> dict[str, object]:
+    """Re-validate an existing run (no SQL extraction).
+
+    Args:
+        job_id: UUID string of the parent job.
+        run_id: UUID string of the ReconRun row.
+
+    Returns:
+        Dict with ``status``, ``rowCount``, and ``errorRowCount``.
+    """
+    settings = get_settings()
+    redis_client = redis_lib.from_url(settings.redis_url)
+    channel = f"job:{job_id}:logs"
+
+    def _publish(message: dict) -> None:
+        try:
+            redis_client.publish(channel, json.dumps(message))
+        except Exception as exc:  # noqa: BLE001
+            logger.warning("Redis publish failed for job %s: %s", job_id, exc)
+
+    _publish({"type": "status", "data": "running"})
+    _publish({"type": "progress", "data": 10})
+    _publish({"type": "log", "data": f"Starting re-validation of run {run_id}..."})
+    asyncio.run(_update_job_status_async(job_id, "running"))
+    asyncio.run(_update_run_status_async(run_id, "running"))
+
+    try:
+        _publish({"type": "log", "data": "Re-running validation on stored rows..."})
+        logger.info(f"Revalidate task started for run {run_id}, job {job_id}")
+        total, errors = asyncio.run(_revalidate_async(run_id, redis_client))
+        _publish(
+            {
+                "type": "log",
+                "data": f"✓ Re-validation complete: {total} rows, {errors} with errors.",
+            }
+        )
+        _publish({"type": "progress", "data": 100})
+        _publish({"type": "status", "data": "success"})
+        asyncio.run(_update_job_status_async(job_id, "success"))
+        logger.info(f"Revalidate task succeeded for run {run_id}: {total} rows, {errors} errors")
+
+        return {"status": "success", "rowCount": total, "errorRowCount": errors}
+
+    except CancellationRequested as exc:
+        # User requested cancellation
+        error_msg = str(exc)
+        logger.info(f"Revalidate task cancelled for run {run_id}: {error_msg}")
+        _publish({"type": "log", "data": "✓ Revalidation cancelled by user."})
+        _publish({"type": "status", "data": "cancelled"})
+        _publish({"type": "progress", "data": 100})
+        asyncio.run(_update_run_status_async(run_id, "cancelled"))
+        asyncio.run(_update_job_status_async(job_id, "cancelled"))
+
+        # Clean up the cancellation flag from Redis
+        settings = get_settings()
+        redis_client = redis_lib.from_url(settings.redis_url)
+        try:
+            redis_client.delete(f"revalidate:{run_id}:cancel")
+        except Exception as e:  # noqa: BLE001
+            logger.warning(f"Failed to delete cancellation flag: {e}")
+
+        return {"status": "cancelled", "error": error_msg}
+
+    except Exception as exc:  # noqa: BLE001
+        error_msg = f"Re-validation failed: {exc}"
+        logger.exception(error_msg)
+        _publish({"type": "log", "data": error_msg})
+        _publish({"type": "status", "data": "failed"})
+        _publish({"type": "progress", "data": 100})
+        asyncio.run(_update_run_status_async(run_id, "failed"))
+        asyncio.run(_update_job_status_async(job_id, "failed", error_message=error_msg))
+        logger.error(f"Revalidate task failed for run {run_id}: {error_msg}")
+        return {"status": "failed", "error": str(exc)}

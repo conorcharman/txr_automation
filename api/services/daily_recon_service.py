@@ -282,6 +282,27 @@ class DailyReconService:
         await db.refresh(row)
         return row
 
+    async def delete_run(
+        self,
+        db: AsyncSession,
+        run_id: UUID,
+    ) -> bool:
+        """Delete a reconciliation run and all cascading rows/cells/issues.
+
+        Args:
+            db: Async database session.
+            run_id: The run UUID.
+
+        Returns:
+            True if deleted, False if not found.
+        """
+        run = await self.get_run(db, run_id)
+        if run is None:
+            return False
+        await db.delete(run)
+        await db.commit()
+        return True
+
 
 #: Module-level singleton for use in route handlers via dependency injection.
 daily_recon_service = DailyReconService()
