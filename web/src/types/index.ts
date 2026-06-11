@@ -472,9 +472,8 @@ export interface XlsxConverterRequest {
 }
 
 export interface XmlConverterRequest {
-  inputFile?: string;
-  parentDir?: string;
-  outputDir?: string;
+  inputFile: string;
+  outputFile: string;
   logLevel?: string;
 }
 

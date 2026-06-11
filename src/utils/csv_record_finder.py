@@ -120,8 +120,9 @@ def _read_file(
 
             converter = XMLToCSVConverter()
             root, _ = converter._parse_xml_resilient(path)
-            record_tag = converter.detect_record_element(root)
-            rows = [converter.flatten_element(elem) for elem in root.iter(record_tag)]
+            record_tag, container_tag = converter.detect_record_element(root)
+            records = converter._collect_records(root, record_tag, container_tag)
+            rows = [converter.flatten_element(elem) for elem in records]
             if not rows:
                 logger.warning("No records found in XML file '%s'.", path.name)
                 return []

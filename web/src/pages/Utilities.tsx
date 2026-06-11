@@ -294,9 +294,8 @@ const XlsxForm: React.FC = () => {
 // ---------------------------------------------------------------------------
 
 const xmlSchema = z.object({
-  inputFile: z.string().optional(),
-  parentDir: z.string().optional(),
-  outputDir: z.string().optional(),
+  inputFile: z.string().min(1, "Input file path is required"),
+  outputFile: z.string().min(1, "Output file path is required"),
   logLevel: z.string(),
 });
 
@@ -315,8 +314,7 @@ const XmlForm: React.FC = () => {
     resolver: zodResolver(xmlSchema),
     defaultValues: {
       inputFile: "",
-      parentDir: "",
-      outputDir: "",
+      outputFile: "",
       logLevel: "INFO",
     },
   });
@@ -331,9 +329,8 @@ const XmlForm: React.FC = () => {
 
   const onSubmit = (values: XmlFormValues) => {
     mutation.mutate({
-      inputFile: values.inputFile || undefined,
-      parentDir: values.parentDir || undefined,
-      outputDir: values.outputDir || undefined,
+      inputFile: values.inputFile,
+      outputFile: values.outputFile,
       logLevel: values.logLevel,
     });
   };
@@ -356,22 +353,12 @@ const XmlForm: React.FC = () => {
         />
       </Field>
 
-      <Field label="Parent Directory" error={errors.parentDir?.message}>
+      <Field label="Output File" error={errors.outputFile?.message}>
         <PathPickerInput
-          value={watch("parentDir") ?? ""}
-          onChange={(v) => setValue("parentDir", v)}
-          mode="directory"
-          placeholder="/path/to/parent/dir"
-          disabled={isPending}
-        />
-      </Field>
-
-      <Field label="Output Directory" error={errors.outputDir?.message}>
-        <PathPickerInput
-          value={watch("outputDir") ?? ""}
-          onChange={(v) => setValue("outputDir", v)}
-          mode="directory"
-          placeholder="/path/to/output/dir"
+          value={watch("outputFile") ?? ""}
+          onChange={(v) => setValue("outputFile", v)}
+          mode="file"
+          placeholder="/path/to/output.csv"
           disabled={isPending}
         />
       </Field>

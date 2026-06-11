@@ -93,6 +93,9 @@ class XMLToCSVConverter:
     _BARE_AMP_RE: re.Pattern = re.compile(
         r"&(?!(?:[a-zA-Z][a-zA-Z0-9]*|#[0-9]+|#x[0-9a-fA-F]+);)"
     )
+    _ISO_UTC_GT_MS_RE: re.Pattern = re.compile(
+        r"(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3})\d+(Z)"
+    )
 
     # Namespaces commonly found in XSD documents.
     _XSD_NAMESPACES: Tuple[str, ...] = (
@@ -300,48 +303,112 @@ class XMLToCSVConverter:
     # Record-element detection
     # ------------------------------------------------------------------
 
-    def detect_record_element(self, root: ET.Element) -> str:
+    def detect_record_element(self, root: ET.Element) -> Tuple[str, str]:
         """Determine which element tag represents a single record (row).
 
-        Strategy: count all tag occurrences across the entire tree. The
-        record element is the most-frequent tag that (a) appears more
-        than once and (b) has at least one child element (i.e. it is a
-        container, not a leaf).
+        Strategy: for every parent element type, count the total number of
+        its dominant child tag across the whole document AND the number of
+        parent instances.  The ratio — dominant children per parent instance
+        — discriminates genuine list containers from metadata wrappers.
 
-        Falls back to the tag of root's direct children if no qualifying
-        element is found.
+        Example (FCA MiFIR XML):
+          ``FinInstrmRptgTxRpt`` appears once and contains 500 000 ``Tx``
+          children  -> avg 500 000 per instance  (list container)
+          ``SchmeNm`` appears 844 000 times, each with one ``Cd`` child
+          -> avg 1.0 per instance  (not a list)
+
+        The record element is the dominant child of the parent with the
+        highest average dominant-child count per instance, provided that
+        average exceeds 1.0.
+
+        Falls back to the most child-diverse repeating element when no
+        qualifying container is found.
 
         Args:
             root: The root XML element.
 
         Returns:
-            Local tag name of the detected record element.
+            Tuple of (record tag, parent/container tag).
         """
-        tag_counts: Counter = Counter()
-        tag_has_children: set = set()
+        parent_instance_count: Counter = Counter()
+        parent_child_counts: Dict[str, Counter] = {}
+        tag_child_tags: Dict[str, set] = {}
 
         for elem in root.iter():
             local = self._strip_namespace(elem.tag)
-            tag_counts[local] += 1
+            parent_instance_count[local] += 1
+            if local not in parent_child_counts:
+                parent_child_counts[local] = Counter()
+            if local not in tag_child_tags:
+                tag_child_tags[local] = set()
             for child in elem:
-                tag_has_children.add(local)
+                child_local = self._strip_namespace(child.tag)
+                parent_child_counts[local][child_local] += 1
+                tag_child_tags[local].add(child_local)
 
-        # Candidates: appear > 1 time AND have child elements
+        # Build candidates: parent tags whose children are >=80% one tag AND
+        # whose average dominant-child count per parent instance exceeds 1.0.
+        # Sorting by avg_per_instance descending finds the genuine list
+        # wrapper rather than single-child metadata containers.
+        list_candidates: List[tuple] = []
+
+        for parent_tag, child_counter in parent_child_counts.items():
+            total_children = sum(child_counter.values())
+            if total_children == 0:
+                continue
+            most_common_child, most_common_count = child_counter.most_common(1)[0]
+            dominance = most_common_count / total_children
+            if dominance < 0.8:
+                continue
+            p_instances = parent_instance_count[parent_tag]
+            avg_per_instance = most_common_count / p_instances
+            if avg_per_instance > 1.0:
+                list_candidates.append(
+                    (avg_per_instance, most_common_child, parent_tag, most_common_count)
+                )
+
+        # Debug: log all qualifying candidates so detection failures are easy to diagnose.
+        if list_candidates:
+            self.logger.debug("Record element candidates (avg dominant children per parent instance):")
+            for avg, child_tag, parent_tag, child_count in sorted(list_candidates, reverse=True):
+                self.logger.debug(
+                    f"  <{parent_tag}> -> <{child_tag}>  "
+                    f"total={child_count}  "
+                    f"parent_instances={parent_instance_count[parent_tag]}  "
+                    f"avg={avg:.1f}"
+                )
+
+        if list_candidates:
+            _, best_record_tag, best_parent, best_count = max(list_candidates)
+            child_diversity = len(tag_child_tags.get(best_record_tag, set()))
+            self.logger.info(
+                f"Detected record element: <{best_record_tag}> "
+                f"(child of <{best_parent}>, {best_count} occurrences, "
+                f"{child_diversity} unique child tags)"
+            )
+            return best_record_tag, best_parent
+
+        # Fallback: element with the most diverse direct children among
+        # repeating elements.
+        self.logger.debug(
+            "No dominant list container found; falling back to child-diversity heuristic."
+        )
         candidates = {
-            tag: count
-            for tag, count in tag_counts.items()
-            if count > 1 and tag in tag_has_children
+            tag: parent_instance_count[tag]
+            for tag in parent_instance_count
+            if parent_instance_count[tag] > 1 and len(tag_child_tags.get(tag, set())) > 0
         }
 
         if candidates:
-            best = max(candidates, key=lambda t: candidates[t])
+            best = max(candidates, key=lambda t: len(tag_child_tags.get(t, set())))
             self.logger.info(
                 f"Detected record element: <{best}> "
-                f"({candidates[best]} occurrences)"
+                f"({candidates[best]} occurrences, "
+                f"{len(tag_child_tags[best])} unique child tags - fallback heuristic)"
             )
-            return best
+            return best, ""
 
-        # Fallback: use the direct children of root
+        # Last resort: direct children of root
         children = list(root)
         if children:
             fallback = self._strip_namespace(children[0].tag)
@@ -349,10 +416,63 @@ class XMLToCSVConverter:
                 f"No repeating record element found; "
                 f"using root's direct child <{fallback}> as record element."
             )
-            return fallback
+            return fallback, self._strip_namespace(root.tag)
 
-        # Last resort: root itself
-        return self._strip_namespace(root.tag)
+        fallback = self._strip_namespace(root.tag)
+        return fallback, ""
+
+    def _collect_records(
+        self,
+        root: ET.Element,
+        record_tag: str,
+        container_tag: str,
+    ) -> List[ET.Element]:
+        """Collect record elements, preferring direct children of container.
+
+        Args:
+            root: Parsed XML root element.
+            record_tag: Local-name tag to use as row records.
+            container_tag: Expected parent/container local-name tag.
+
+        Returns:
+            List of record elements.
+        """
+        if container_tag:
+            for elem in root.iter():
+                if self._strip_namespace(elem.tag) == container_tag:
+                    return [
+                        child
+                        for child in elem
+                        if self._strip_namespace(child.tag) == record_tag
+                    ]
+
+        # Fallback for unknown container: keep only the shallowest matching
+        # elements to avoid treating nested detail blocks as top-level records.
+        depth_by_id: Dict[int, int] = {id(root): 0}
+        matches: List[ET.Element] = []
+        min_depth: Optional[int] = None
+
+        for elem in root.iter():
+            elem_depth = depth_by_id.get(id(elem), 0)
+            for child in elem:
+                depth_by_id[id(child)] = elem_depth + 1
+
+            if self._strip_namespace(elem.tag) != record_tag:
+                continue
+
+            matches.append(elem)
+            if min_depth is None or elem_depth < min_depth:
+                min_depth = elem_depth
+
+        if min_depth is None:
+            return []
+
+        return [elem for elem in matches if depth_by_id.get(id(elem), 0) == min_depth]
+
+    @classmethod
+    def _normalise_datetime(cls, value: str) -> str:
+        """Normalise UTC datetimes to millisecond precision when needed."""
+        return cls._ISO_UTC_GT_MS_RE.sub(r"\1\2", value)
 
     # ------------------------------------------------------------------
     # Element flattening
@@ -390,6 +510,7 @@ class XMLToCSVConverter:
         children = list(element)
         if not children:
             text = (element.text or "").strip()
+            text = self._normalise_datetime(text)
             if prefix:
                 existing = result.get(prefix, "")
                 if existing:
@@ -415,6 +536,7 @@ class XMLToCSVConverter:
                 if not child_children:
                     # Leaf: just a value
                     text = (child_elem.text or "").strip()
+                    text = self._normalise_datetime(text)
                     result[col_name] = text
                     # Flatten child attributes
                     for attr_name, attr_value in child_elem.attrib.items():
@@ -432,7 +554,8 @@ class XMLToCSVConverter:
                 for child_elem in group:
                     child_children = list(child_elem)
                     if not child_children:
-                        all_values.append((child_elem.text or "").strip())
+                        text = (child_elem.text or "").strip()
+                        all_values.append(self._normalise_datetime(text))
                     else:
                         child_flat = self.flatten_element(child_elem, col_name)
                         # Use first value column as representative
@@ -494,23 +617,10 @@ class XMLToCSVConverter:
             result.schema_fetched = xsd_columns is not None
 
         # Record element detection
-        record_tag = self.detect_record_element(root)
+        record_tag, container_tag = self.detect_record_element(root)
         result.record_element = record_tag
 
-        # Collect all matching record elements (anywhere in tree)
-        ns_variants: List[str] = []
-        for elem in root.iter():
-            if self._strip_namespace(elem.tag) == record_tag:
-                ns_variants.append(elem.tag)
-
-        # Use the first namespace-qualified tag found for findall
-        qualified_tag = ns_variants[0] if ns_variants else record_tag
-
-        # Walk the full tree to find record elements at any depth
-        records: List[ET.Element] = []
-        for elem in root.iter():
-            if self._strip_namespace(elem.tag) == record_tag:
-                records.append(elem)
+        records = self._collect_records(root, record_tag, container_tag)
 
         if not records:
             result.error = f"No <{record_tag}> elements found in {xml_path.name}"
