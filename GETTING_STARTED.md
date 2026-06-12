@@ -172,6 +172,14 @@ API_PORT=8000
 
 # Optional: Set log level
 LOG_LEVEL=INFO
+
+# Figaro database
+DAILY_RECON_SOURCE_ODBC=DRIVER={ODBC Driver 17 for SQL Server}; # This is the actual valuem, not a placeholder
+DAILY_RECON_SERVER=10.62.136.8,50000;
+DAILY_RECON_DATABASE=Figaro;
+DAILY_RECON_UID=wso2_user
+DAILY_RECON_PWD=<Password as seen in Keeper, shared with Satish and Conor>
+DAILY_RECON_TRUST_CERT=yes;
 ```
 
 ---
@@ -180,8 +188,6 @@ LOG_LEVEL=INFO
 
 The simplest way is to use **Docker Compose** for backend services and run the frontend + API locally for development.
 
-### Option A: Docker Compose (Recommended) + Local Frontend
-
 This setup runs PostgreSQL, Redis, Celery worker, and beat scheduler in Docker, whilst you run the React dev server locally for instant hot-reload development.
 
 **Terminal 1: Start Docker Services**
@@ -189,6 +195,7 @@ This setup runs PostgreSQL, Redis, Celery worker, and beat scheduler in Docker, 
 ```powershell
 # Make sure Docker Desktop is running
 # Start all backend services (no web container)
+docker compose build
 docker compose up
 
 # You should see output from redis, db, api, worker, and beat services
@@ -222,46 +229,6 @@ VITE v5.x.x  ready in x ms
 > Vite's hot-reload development server runs natively on port 5173, giving you the fastest feedback loop for frontend changes.
 
 
-**Terminal 3 (Optional): Run Python Scripts/Tests**
-
-```powershell
-# With (venv) active, run tests or scripts
-# Example: Run backend tests
-pytest tests/test_api/ -v
-
-# Example: Run a console script
-validate-buyer --config config/local/buyer_id.yaml
-```
-
-### Option B: Local Full Stack (Without Docker)
-
-If you prefer to run everything locally without Docker:
-
-**Terminal 1: Start Python Backend API**
-
-```powershell
-# With (venv) active, from project root
-# You'll need PostgreSQL and Redis running natively on Windows first
-uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-**Terminal 2: Start React Frontend Dev Server**
-
-```powershell
-cd web
-npm run dev
-```
-
-**Terminal 3: Start Celery Worker**
-
-```powershell
-# With (venv) active
-celery -A api.tasks worker --loglevel=info
-```
-
-This requires you to have installed PostgreSQL 16 and Redis natively on Windows (see **Local Setup** section below).
-
----
 
 ## Accessing the Application
 
@@ -297,48 +264,6 @@ cd web && npm run dev
 ```
 
 ---
-
-## Local Setup (if NOT using Docker)
-
-If you want to run everything locally without Docker, you'll need to install PostgreSQL and Redis natively:
-
-### PostgreSQL 16 (Local Installation)
-
-- Download from [postgresql.org](https://www.postgresql.org/download/windows/)
-- Run installer, remember the superuser password
-- Choose port **5432** (default)
-- Verify: `psql --version`
-- Add to PATH if needed: `C:\Program Files\PostgreSQL\16\bin`
-
-### Redis (Local Installation)
-
-Option 1: **WSL2**
-
-```powershell
-wsl --install
-# Inside WSL terminal:
-sudo apt-get update
-sudo apt-get install redis-server
-redis-server
-```
-
-Option 2: **Memurai (Native Windows)**
-
-- Download [Memurai](https://www.memurai.com/)
-- Install and verify: `redis-cli ping`
-
-### Create Local Database
-
-```powershell
-psql -U postgres -c "CREATE DATABASE txr_automation;"
-```
-
-### Run Database Migrations
-
-```powershell
-# With (venv) active
-alembic upgrade head
-```
 
 ---
 
