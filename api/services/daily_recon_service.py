@@ -182,7 +182,7 @@ class DailyReconService:
             .where(ReconCell.id == cell_id)
             .options(joinedload(ReconCell.issues))
         )
-        return result.scalar_one_or_none()
+        return result.unique().scalar_one_or_none()
 
     async def apply_correction(
         self,

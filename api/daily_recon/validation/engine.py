@@ -2,7 +2,7 @@
 Validation Framework - Engine
 =============================
 
-Batch validation engine: column-major processing, parallel workers,
+Batch validation engine: column-major processing, parallel-ready,
 traceability collection.
 """
 
@@ -11,7 +11,7 @@ from typing import NamedTuple
 
 from ..columns import COLUMN_NAMES
 from .base import RuleResult
-from .registry import rule_registry
+from .registry import RuleRegistry, rule_registry
 
 
 class ValidationIssue(NamedTuple):
@@ -38,6 +38,8 @@ class CellValidationResult:
 def validate_batch(
     batch: list[dict[str, str | None]],
     start_row_index: int = 0,
+    *,
+    registry: RuleRegistry = rule_registry,
 ) -> list[list[CellValidationResult]]:
     """Validate a batch of rows, returning results per row.
 
@@ -47,6 +49,8 @@ def validate_batch(
     Args:
         batch: List of row dicts (source strings, nullable).
         start_row_index: Starting row index (for multi-batch runs).
+        registry: Rule registry (default: module singleton). Use this parameter
+                  to inject a test registry for isolation.
 
     Returns:
         List of result lists: results[row_idx] = list[CellValidationResult]
@@ -59,7 +63,7 @@ def validate_batch(
 
     # Column-major iteration
     for column_name in COLUMN_NAMES:
-        rules = rule_registry.get_rules(column_name)
+        rules = registry.get_rules(column_name)
         if not rules:
             continue
 
@@ -99,5 +103,3 @@ def validate_batch(
             results_by_row[row_idx].append(cell_result)
 
     return results_by_row
-
-
