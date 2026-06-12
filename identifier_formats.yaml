@@ -51,7 +51,7 @@ countries:
     identifiers:
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -76,7 +76,7 @@ countries:
           - "Positions 10-11: Check digits"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -103,7 +103,7 @@ countries:
           - "Position 10: Check digit"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -126,7 +126,7 @@ countries:
           - "Post-13/12/2010: Letter K followed by exactly 8 digits"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -161,7 +161,7 @@ countries:
           - "Minimum 8 digits, can be longer"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -178,7 +178,7 @@ countries:
     identifiers:
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -205,7 +205,7 @@ countries:
           - "No whitespace or other delimiters allowed"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -233,7 +233,7 @@ countries:
           - "Position 11 (C): Checksum digit"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -258,7 +258,7 @@ countries:
           - "Format example for residents: 99111222M"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -287,7 +287,7 @@ countries:
           - "Example: 311280-888Y"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -304,7 +304,7 @@ countries:
     identifiers:
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -330,7 +330,7 @@ countries:
           - "Invalid administrative prefixes not to be used: BG, GB, KN, NK, NT, OO, TN, ZZ"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -354,7 +354,7 @@ countries:
           - "Represents investor account in DSS operated by Central Securities Depository"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -380,7 +380,7 @@ countries:
           - "Permanent identification code for every Croatian citizen and legal person"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -397,7 +397,7 @@ countries:
     identifiers:
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -414,7 +414,7 @@ countries:
     identifiers:
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -440,7 +440,7 @@ countries:
           - "Positions 7-10: Sequential registration identifier digits"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -471,7 +471,7 @@ countries:
           - "Example: RSS MRO 62B25 E205 Y"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -505,7 +505,7 @@ countries:
           - "Number changes with each renewed ID card"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -539,7 +539,7 @@ countries:
           - "Found on passport or national identity card"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -556,7 +556,7 @@ countries:
     identifiers:
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -584,7 +584,7 @@ countries:
           - "Alternative: 11 randomly selected digits with possible hyphen separator"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -623,7 +623,7 @@ countries:
           - "Post-15 November 2019: 2 letters followed by 6 numeric digits"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -659,7 +659,7 @@ countries:
           - "Character O not allowed; digit 0 is allowed"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -685,7 +685,7 @@ countries:
           - "Positions 7-11: Identification number and check digits"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -717,7 +717,7 @@ countries:
           - "Used by investment firms for tax identification of clients"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -763,7 +763,7 @@ countries:
           - "Positions 2-7 (pre-2018) or 3-8 (post-2018): Digits [0-9]"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -807,7 +807,7 @@ countries:
           - "All numeric characters (0-9)"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -838,7 +838,7 @@ countries:
           - "12-digit format used to avoid processing complications with separators"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -874,7 +874,7 @@ countries:
           - "Position 11 (S): Control digit (calculated by special procedure per Regulation Nos. no. 8/99)"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
@@ -911,7 +911,7 @@ countries:
           - "Validity: 10 years"
       - type: "CONCAT"
         format: "CC + YYYYMMDD + NNNNN + SSSSS (20 characters total)"
-        regex: "^[A-Z]{2}\d{8}[A-Z#]{5}[A-Z#]{5}$"
+        regex: "^[A-Z]{2}\\d{8}[A-Z#]{5}[A-Z#]{5}$"
         conditions:
           - "Positions 1-2: Two-letter country code"
           - "Positions 3-10: Date of birth in YYYYMMDD format"
