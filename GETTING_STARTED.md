@@ -290,9 +290,15 @@ docker compose logs redis
 
 **Solution:** Activate virtual environment:
 
+### create this directory if it doesn't exist
+`./data/celery`
+
+#### Then get the virtual environment started
+
 ```powershell
 # Verify (venv) appears at start of terminal prompt
 .\venv\Scripts\Activate.ps1
+
 
 # Reinstall dependencies
 pip install -e .
