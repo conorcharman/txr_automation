@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     secret_key: str = "dev-secret-key"
     version: str = "1.0.0"
     environment: str = "dev"
+    daily_recon_source_url: str = "default" # e.g. "mssql+aioodbc://user:pass@server/db"
 
     def validate_production(self) -> None:
         """Raise if insecure defaults are still in use for production."""

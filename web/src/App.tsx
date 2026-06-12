@@ -14,6 +14,8 @@ import FCA from "@/pages/FCA";
 import Utilities from "@/pages/Utilities";
 import Scheduler from "@/pages/Scheduler";
 import ReconciliationPage from "@/pages/ReconciliationPage";
+import DailyReconciliation from "@/pages/DailyReconciliation";
+import DailyReconciliationDetail from "@/pages/DailyReconciliationDetail";
 import FileBrowser from "@/pages/FileBrowser";
 import DRRCompliance from "@/pages/DRRCompliance";
 import NotFound from "@/pages/NotFound";
@@ -38,6 +40,8 @@ export default function App() {
             <Route path="utilities" element={<Utilities />} />
             <Route path="scheduler" element={<Scheduler />} />
             <Route path="reconciliation" element={<ReconciliationPage />} />
+            <Route path="daily-recon" element={<DailyReconciliation />} />
+            <Route path="daily-recon/:runId" element={<DailyReconciliationDetail />} />
             <Route path="files" element={<FileBrowser />} />
             <Route path="drr" element={<DRRCompliance />} />
             <Route path="jobs" element={<Jobs />} />

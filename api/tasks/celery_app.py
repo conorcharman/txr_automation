@@ -61,12 +61,14 @@ def _cleanup_orphaned_jobs(sender, **kwargs) -> None:  # noqa: ANN001
         from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 
         from api.models.job import Job
+        from api.models.daily_recon import ReconRun
 
         engine = create_async_engine(_settings.database_url, echo=False)
         factory = async_sessionmaker(engine, expire_on_commit=False)
         try:
             async with factory() as session:
-                result = await session.execute(
+                # Reset orphaned Job records
+                job_result = await session.execute(
                     update(Job)
                     .where(Job.status == "running")
                     .values(
@@ -75,11 +77,23 @@ def _cleanup_orphaned_jobs(sender, **kwargs) -> None:  # noqa: ANN001
                         completed_at=datetime.now(tz=timezone.utc),
                     )
                 )
+
+                # Reset orphaned ReconRun records (Issue #1 — without this,
+                # runs stay "running" forever because the UI reads ReconRun.status)
+                recon_result = await session.execute(
+                    update(ReconRun)
+                    .where(ReconRun.status == "running")
+                    .values(status="failed")
+                )
+
                 await session.commit()
-                if result.rowcount:
+
+                if job_result.rowcount or recon_result.rowcount:
                     _log.warning(
-                        "Marked %d orphaned running job(s) as failed on worker startup.",
-                        result.rowcount,
+                        "Marked %d orphaned Job(s) and %d orphaned ReconRun(s) "
+                        "as failed on worker startup.",
+                        job_result.rowcount,
+                        recon_result.rowcount,
                     )
         except Exception as exc:  # noqa: BLE001
             _log.error("Failed to clean up orphaned jobs on startup: %s", exc)
@@ -102,6 +116,7 @@ celery_app.conf.update(
         "api.tasks.scheduler_tasks",
         "api.tasks.pipeline_tasks",
         "api.tasks.reconciliation_tasks",
+        "api.tasks.daily_recon_tasks",
     ],
     # Celery beat periodic tasks.
     beat_schedule={
