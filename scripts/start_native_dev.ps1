@@ -90,7 +90,7 @@ Write-Host "Launching processes..."
 
 Start-NativeWindow "API"    ($Base + @("uvicorn api.main:app --host 0.0.0.0 --port 8000 --reload"))
 Start-NativeWindow "Worker" ($Base + @("celery -A api.tasks.celery_app worker --pool=threads --concurrency=4 --loglevel=info"))
-Start-NativeWindow "Beat"   ($Base + @("celery -A api.tasks.celery_app beat --loglevel=info --schedule data/celerybeat-schedule"))
+Start-NativeWindow "Beat"   ($Base + @("celery -A api.tasks.celery_app beat --loglevel=info --schedule data/celery/celerybeat-schedule"))
 
 $webTmp = Join-Path $env:TEMP "txr_Web.ps1"
 "Set-Location '$(Join-Path $Project 'web')'", "npm run dev" | Set-Content -Path $webTmp -Encoding UTF8

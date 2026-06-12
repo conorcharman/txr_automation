@@ -270,22 +270,7 @@ class XMLToCSVConverter:
             with urllib.request.urlopen(request, timeout=10) as response:
                 xsd_content = response.read()
 
-            xsd_root = ET.fromstring(xsd_content)
-            names: List[str] = []
-            seen: set = set()
-
-            for ns in self._XSD_NAMESPACES:
-                for elem in xsd_root.iter(f"{{{ns}}}element"):
-                    name = elem.get("name")
-                    if name and name not in seen:
-                        seen.add(name)
-                        names.append(name)
-                for attr in xsd_root.iter(f"{{{ns}}}attribute"):
-                    name = attr.get("name")
-                    if name and name not in seen:
-                        seen.add(name)
-                        names.append(name)
-
+            names = self.parse_xsd_columns(xsd_content)
             if names:
                 self.logger.info(f"Fetched {len(names)} column names from schema.")
                 return names
@@ -298,6 +283,213 @@ class XMLToCSVConverter:
                 f"Could not fetch or parse schema (will use data order): {exc}"
             )
             return None
+
+    @classmethod
+    def _find_xsd_namespace(cls, xsd_root: ET.Element) -> str:
+        """Return the XML Schema namespace URI used by an XSD root."""
+        if xsd_root.tag.startswith("{"):
+            root_ns = xsd_root.tag.split("}", 1)[0][1:]
+            if root_ns in cls._XSD_NAMESPACES:
+                return root_ns
+
+        for ns in cls._XSD_NAMESPACES:
+            if xsd_root.tag == f"{{{ns}}}schema":
+                return ns
+
+        for ns in cls._XSD_NAMESPACES:
+            if xsd_root.find(f".//{{{ns}}}element") is not None:
+                return ns
+
+        raise ValueError("Unsupported XSD namespace.")
+
+    @classmethod
+    def _iter_xsd_child_elements(cls, node: ET.Element) -> List[ET.Element]:
+        """Collect nested ``xs:element`` declarations in declaration order."""
+        children: List[ET.Element] = []
+        for child in list(node):
+            local_tag = cls._strip_namespace(child.tag)
+            if local_tag == "element":
+                children.append(child)
+                continue
+            if local_tag in {"complexType", "sequence", "choice", "all"}:
+                children.extend(cls._iter_xsd_child_elements(child))
+        return children
+
+    @classmethod
+    def parse_xsd_structure(cls, xsd_content: str | bytes) -> List[Dict[str, object]]:
+        """Parse an XSD and return flattened field structure metadata."""
+        if isinstance(xsd_content, bytes):
+            content = xsd_content.decode("utf-8", errors="replace")
+        else:
+            content = xsd_content
+
+        if not content.strip():
+            raise ValueError("XSD content is empty.")
+
+        try:
+            xsd_root = ET.fromstring(content)
+        except ET.ParseError as exc:
+            raise ValueError(f"XSD parse error: {exc}") from exc
+
+        xsd_ns = cls._find_xsd_namespace(xsd_root)
+
+        def qname(local: str) -> str:
+            return f"{{{xsd_ns}}}{local}"
+
+        global_elements: Dict[str, ET.Element] = {
+            elem.get("name"): elem
+            for elem in xsd_root.findall(qname("element"))
+            if elem.get("name")
+        }
+        global_complex_types: Dict[str, ET.Element] = {
+            elem.get("name"): elem
+            for elem in xsd_root.findall(qname("complexType"))
+            if elem.get("name")
+        }
+        global_simple_types: Dict[str, ET.Element] = {
+            elem.get("name"): elem
+            for elem in xsd_root.findall(qname("simpleType"))
+            if elem.get("name")
+        }
+
+        structure: List[Dict[str, str]] = []
+        seen_paths: set[str] = set()
+
+        def _normalise_max_occurs(value: str | None) -> str:
+            if not value:
+                return "1"
+            return value
+
+        def _normalise_min_occurs(value: str | None) -> str:
+            if not value:
+                return "1"
+            return value
+
+        def _extract_constraints(simple_type: ET.Element | None) -> Dict[str, object]:
+            if simple_type is None:
+                return {}
+
+            restriction = None
+            for child in list(simple_type):
+                if cls._strip_namespace(child.tag) == "restriction":
+                    restriction = child
+                    break
+
+            if restriction is None:
+                return {}
+
+            constraints: Dict[str, object] = {}
+            enum_values: List[str] = []
+
+            for child in list(restriction):
+                local = cls._strip_namespace(child.tag)
+                value = child.get("value")
+                if not value:
+                    continue
+
+                if local == "enumeration":
+                    enum_values.append(value)
+                    continue
+
+                if local == "pattern":
+                    constraints["pattern"] = value
+                    continue
+
+                if local == "minLength":
+                    constraints["min_length"] = value
+                    continue
+
+                if local == "maxLength":
+                    constraints["max_length"] = value
+                    continue
+
+                if local == "totalDigits":
+                    constraints["total_digits"] = value
+                    continue
+
+                if local == "fractionDigits":
+                    constraints["fraction_digits"] = value
+                    continue
+
+                if local == "minInclusive":
+                    constraints["min_inclusive"] = value
+                    continue
+
+                if local == "maxInclusive":
+                    constraints["max_inclusive"] = value
+                    continue
+
+            if enum_values:
+                constraints["enum_values"] = enum_values
+
+            return constraints
+
+        def walk_element(elem: ET.Element, parent_path: str = "") -> None:
+            raw_name = elem.get("name") or elem.get("ref")
+            if not raw_name:
+                return
+            name = raw_name.split(":")[-1]
+            path = f"{parent_path}_{name}" if parent_path else name
+
+            min_occurs = _normalise_min_occurs(elem.get("minOccurs"))
+            max_occurs = _normalise_max_occurs(elem.get("maxOccurs"))
+            type_name = (elem.get("type") or "").split(":")[-1]
+            simple_type_constraints: Dict[str, object] = {}
+
+            inline_complex = elem.find(qname("complexType"))
+            inline_simple = elem.find(qname("simpleType"))
+            child_elements: List[ET.Element] = []
+            if inline_complex is not None:
+                child_elements = cls._iter_xsd_child_elements(inline_complex)
+            elif type_name and type_name in global_complex_types:
+                child_elements = cls._iter_xsd_child_elements(
+                    global_complex_types[type_name]
+                )
+            elif elem.get("ref"):
+                referenced = global_elements.get(name)
+                if referenced is not None and referenced is not elem:
+                    referenced_inline = referenced.find(qname("complexType"))
+                    if referenced_inline is not None:
+                        child_elements = cls._iter_xsd_child_elements(referenced_inline)
+
+            if inline_simple is not None:
+                simple_type_constraints = _extract_constraints(inline_simple)
+            elif type_name and type_name in global_simple_types:
+                simple_type_constraints = _extract_constraints(global_simple_types[type_name])
+
+            if child_elements:
+                for child in child_elements:
+                    walk_element(child, path)
+                return
+
+            if path in seen_paths:
+                return
+            seen_paths.add(path)
+            structure.append(
+                {
+                    "name": name,
+                    "path": path,
+                    "type_name": type_name,
+                    "min_occurs": min_occurs,
+                    "max_occurs": max_occurs,
+                    "constraints": simple_type_constraints,
+                }
+            )
+
+        top_level_elements = xsd_root.findall(qname("element"))
+        for element in top_level_elements:
+            walk_element(element)
+
+        return structure
+
+    @classmethod
+    def parse_xsd_columns(cls, xsd_content: str | bytes) -> Optional[List[str]]:
+        """Extract flattened column names from XSD content."""
+        structure = cls.parse_xsd_structure(xsd_content)
+        columns = [entry["path"] for entry in structure if entry.get("path")]
+        if not columns:
+            return None
+        return columns
 
     # ------------------------------------------------------------------
     # Record-element detection
@@ -584,6 +776,7 @@ class XMLToCSVConverter:
         xml_path: Path,
         output_path: Path,
         dry_run: bool = False,
+        xsd_content: Optional[str] = None,
     ) -> ConversionResult:
         """Convert a single XML file to CSV.
 
@@ -607,14 +800,28 @@ class XMLToCSVConverter:
             self.logger.error(result.error)
             return result
 
-        # Schema detection
-        schema_url = self.detect_schema_url(root)
-        result.schema_url = schema_url
         xsd_columns: Optional[List[str]] = None
-        if schema_url:
-            self.logger.info(f"Schema link found: {schema_url}")
-            xsd_columns = self.fetch_xsd_columns(schema_url)
-            result.schema_fetched = xsd_columns is not None
+        if xsd_content and xsd_content.strip():
+            result.schema_url = "user-provided"
+            try:
+                xsd_columns = self.parse_xsd_columns(xsd_content)
+                result.schema_fetched = xsd_columns is not None
+                if not xsd_columns:
+                    result.error = "Provided XSD did not produce any schema columns."
+                    self.logger.error(result.error)
+                    return result
+            except ValueError as exc:
+                result.error = f"Invalid provided XSD: {exc}"
+                self.logger.error(result.error)
+                return result
+        else:
+            # Schema detection from XML metadata
+            schema_url = self.detect_schema_url(root)
+            result.schema_url = schema_url
+            if schema_url:
+                self.logger.info(f"Schema link found: {schema_url}")
+                xsd_columns = self.fetch_xsd_columns(schema_url)
+                result.schema_fetched = xsd_columns is not None
 
         # Record element detection
         record_tag, container_tag = self.detect_record_element(root)
@@ -688,6 +895,7 @@ class XMLToCSVConverter:
         output_dir: Path,
         recursive: bool = False,
         dry_run: bool = False,
+        xsd_content: Optional[str] = None,
     ) -> ConversionStats:
         """Convert all XML files in a directory.
 
@@ -716,7 +924,15 @@ class XMLToCSVConverter:
             relative = xml_path.relative_to(input_dir)
             csv_path = output_dir / relative.with_suffix(".csv")
 
-            result = self.convert_file(xml_path, csv_path, dry_run=dry_run)
+            if xsd_content is not None:
+                result = self.convert_file(
+                    xml_path,
+                    csv_path,
+                    dry_run=dry_run,
+                    xsd_content=xsd_content,
+                )
+            else:
+                result = self.convert_file(xml_path, csv_path, dry_run=dry_run)
             if result.success:
                 stats.successful += 1
             else:
@@ -757,6 +973,13 @@ def parse_arguments(argv: Optional[List[str]] = None) -> argparse.Namespace:
         ),
     )
     parser.add_argument(
+        "--xsd-file",
+        help=(
+            "Optional path to a user-provided XSD schema file. "
+            "When set, this schema overrides any schema reference in the XML."
+        ),
+    )
+    parser.add_argument(
         "--recursive",
         action="store_true",
         default=False,
@@ -793,6 +1016,14 @@ def main(argv: Optional[List[str]] = None) -> None:
 
     converter = XMLToCSVConverter()
     input_path = Path(args.input)
+    xsd_content: Optional[str] = None
+
+    if args.xsd_file:
+        xsd_path = Path(args.xsd_file)
+        if not xsd_path.exists() or not xsd_path.is_file():
+            print(f"ERROR: XSD file does not exist: {xsd_path}", file=sys.stderr)
+            sys.exit(1)
+        xsd_content = xsd_path.read_text(encoding="utf-8")
 
     if not input_path.exists():
         print(f"ERROR: Input path does not exist: {input_path}", file=sys.stderr)
@@ -806,7 +1037,12 @@ def main(argv: Optional[List[str]] = None) -> None:
         else:
             csv_path = input_path.with_suffix(".csv")
 
-        result = converter.convert_file(input_path, csv_path, dry_run=args.dry_run)
+        result = converter.convert_file(
+            input_path,
+            csv_path,
+            dry_run=args.dry_run,
+            xsd_content=xsd_content,
+        )
 
         if not result.success:
             print(f"ERROR: {result.error}", file=sys.stderr)
@@ -833,6 +1069,7 @@ def main(argv: Optional[List[str]] = None) -> None:
             output_dir=output_dir,
             recursive=args.recursive,
             dry_run=args.dry_run,
+            xsd_content=xsd_content,
         )
         stats.print_summary()
         sys.exit(0 if stats.failed == 0 else 1)

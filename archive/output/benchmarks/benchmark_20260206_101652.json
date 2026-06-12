@@ -1,0 +1,19 @@
+{
+  "timestamp": "20260206_101652",
+  "datetime": "2026-02-06T10:16:52.279488",
+  "iterations": 3,
+  "results": {
+    "Phase 2 Processor": {
+      "error": "No successful runs"
+    },
+    "Phase 3 Processor": {
+      "error": "No successful runs"
+    },
+    "Phase 3 Final Lookup": {
+      "error": "No successful runs"
+    },
+    "XLSX Converter": {
+      "error": "No successful runs"
+    }
+  }
+}

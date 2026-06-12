@@ -9,6 +9,8 @@ React frontend convention, whilst still accepting snake_case attribute
 names in Python code.
 """
 
+from pydantic import Field
+
 from api.schemas.common import _CamelModel
 
 
@@ -47,12 +49,45 @@ class XmlConverterRequest(_CamelModel):
     Attributes:
         input_file: Path to the input XML file.
         output_file: Path for the output CSV file.
+        xsd_content: Optional user-supplied XSD content. When present, this
+            overrides any schema declaration in the XML.
         log_level: Logging verbosity (default: ``"INFO"``).
     """
 
     input_file: str
     output_file: str
+    xsd_content: str | None = Field(default=None, max_length=5_000_000)
     log_level: str = "INFO"
+
+
+class XsdParseRequest(_CamelModel):
+    """Request body for parsing user-provided XSD content."""
+
+    xsd_content: str = Field(min_length=1, max_length=5_000_000)
+
+
+class XsdColumnEntry(_CamelModel):
+    """Flattened schema field metadata used by the UI preview."""
+
+    name: str
+    path: str
+    type_name: str = ""
+    min_occurs: str = "1"
+    max_occurs: str = "1"
+    constraints: dict[str, str | list[str]] = Field(default_factory=dict)
+    source_kind: str = "element"
+    field_warnings: list[str] = Field(default_factory=list)
+
+
+class XsdParseResponse(_CamelModel):
+    """Response body returned by the XSD parsing endpoint."""
+
+    columns: list[XsdColumnEntry]
+    column_count: int
+    warnings: list[str] = Field(default_factory=list)
+    errors: list[str] = Field(default_factory=list)
+    unsupported_constructs: list[str] = Field(default_factory=list)
+    stats: dict[str, int] = Field(default_factory=dict)
 
 
 class SetupDirectoriesRequest(_CamelModel):

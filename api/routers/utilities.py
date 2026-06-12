@@ -12,18 +12,22 @@ Endpoints:
 
 import logging
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from api.database import get_db
 from api.schemas.jobs import JobResponse
 from api.schemas.utilities import (
     SetupDirectoriesRequest,
+    XsdColumnEntry,
+    XsdParseRequest,
+    XsdParseResponse,
     XlsxConverterRequest,
     XmlConverterRequest,
 )
 from api.services.job_service import job_service
 from api.services.script_runner import script_runner_service
+from api.services.xsd_schema_service import xsd_schema_service
 from api.tasks.script_tasks import run_script
 
 logger = logging.getLogger(__name__)
@@ -99,6 +103,34 @@ async def xml_convert(
     logger.info("Dispatched XML converter task for job %s.", job.id)
 
     return JobResponse.from_orm_job(job)
+
+
+@router.post("/utilities/xsd-parse", response_model=XsdParseResponse)
+async def parse_xsd_schema(body: XsdParseRequest) -> XsdParseResponse:
+    """Parse user-supplied XSD and return flattened column metadata.
+
+    Args:
+        body: Request containing raw XSD text.
+
+    Returns:
+        Flattened field metadata suitable for preview in the frontend.
+
+    Raises:
+        HTTPException: 422 when the supplied XSD cannot be parsed.
+    """
+    try:
+        parsed = xsd_schema_service.parse_schema(body.xsd_content)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    return XsdParseResponse(
+        columns=[XsdColumnEntry(**entry) for entry in parsed.columns],
+        column_count=len(parsed.columns),
+        warnings=parsed.warnings,
+        errors=parsed.errors,
+        unsupported_constructs=parsed.unsupported_constructs,
+        stats=parsed.stats,
+    )
 
 
 @router.post("/utilities/setup-directories", response_model=JobResponse)

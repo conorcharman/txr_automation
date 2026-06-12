@@ -12,6 +12,7 @@ Tests for the domain-specific feature endpoints:
     POST /api/firds/refresh
     POST /api/gleif/refresh
     POST /api/utilities/xlsx-convert
+    POST /api/utilities/xsd-parse
 """
 
 import pytest
@@ -278,3 +279,44 @@ async def test_xml_convert(client: AsyncClient, mocker) -> None:
     assert data["status"] == "pending"
     assert data["scriptName"] == "xml_csv_converter"
     assert "id" in data
+
+
+@pytest.mark.anyio
+async def test_xsd_parse(client: AsyncClient) -> None:
+        """POST /api/utilities/xsd-parse returns flattened schema columns."""
+        xsd_content = """<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">
+    <xs:element name=\"Root\">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name=\"Child\" type=\"xs:string\"/>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
+"""
+
+        response = await client.post(
+                "/api/utilities/xsd-parse",
+                json={"xsdContent": xsd_content},
+        )
+
+        assert response.status_code == 200
+        data = response.json()
+        assert data["columnCount"] >= 1
+        assert isinstance(data["columns"], list)
+        assert isinstance(data["warnings"], list)
+        assert isinstance(data["errors"], list)
+        assert isinstance(data["unsupportedConstructs"], list)
+        assert isinstance(data["stats"], dict)
+
+
+@pytest.mark.anyio
+async def test_xsd_parse_invalid_schema_returns_422(client: AsyncClient) -> None:
+        """POST /api/utilities/xsd-parse rejects malformed XSD content."""
+        response = await client.post(
+                "/api/utilities/xsd-parse",
+                json={"xsdContent": "not xml"},
+        )
+
+        assert response.status_code == 422

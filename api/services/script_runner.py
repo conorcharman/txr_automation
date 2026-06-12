@@ -192,6 +192,21 @@ def _write_temp_yaml(config: dict) -> str:
         return fh.name
 
 
+def _write_temp_text(content: str, suffix: str) -> str:
+    """Write text content to a shared temporary file and return its path."""
+    shared_tmp = Path(get_settings().data_dir) / "tmp"
+    shared_tmp.mkdir(parents=True, exist_ok=True)
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        suffix=suffix,
+        dir=shared_tmp,
+        delete=False,
+        encoding="utf-8",
+    ) as fh:
+        fh.write(content)
+        return fh.name
+
+
 def _resolve_module(script_name: str) -> str:
     """Return the module path for a registered script name.
 
@@ -1051,12 +1066,16 @@ class ScriptRunnerService:
                     "input_file": req.input_file,
                     "output_file": req.output_file,
                 },
+                "xsd_content_provided": bool(req.xsd_content),
                 "processor": {"log_level": req.log_level},
             }
             # xml_csv_converter uses CLI-only args, not --config
             argv = ["--input", req.input_file, "--log-level", req.log_level]
             if req.output_file:
                 argv.extend(["--output-dir", req.output_file])
+            if req.xsd_content:
+                xsd_path = _write_temp_text(req.xsd_content, ".xsd")
+                argv.extend(["--xsd-file", xsd_path])
 
         logger.debug("Built utilities argv %s for script %s.", argv, script_name)
         return module_path, argv, config

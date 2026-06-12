@@ -102,7 +102,7 @@ services:
     depends_on:
       - redis
       - db
-    command: celery -A api.tasks.celery_app beat --loglevel=info --schedule /app/data/celerybeat-schedule
+    command: celery -A api.tasks.celery_app beat --loglevel=info --schedule /app/data/celery/celerybeat-schedule
     networks:
       - txr-network
 

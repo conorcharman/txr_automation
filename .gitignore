@@ -86,12 +86,6 @@ config/local/utils/*.yaml
 config/local*.yaml
 config/environments/local.yaml
 
-# Output files (generated during processing)
-
-data/output/
-*.output.csv
-*_processed.csv
-
 # Temporary files
 tmp/
 temp/
@@ -119,7 +113,8 @@ Thumbs.db
 
 # Celery
 
-data/celerybeat-schedule.*
+celerybeat-schedule
+celerybeat-schedule.*
 
 # Machine-specific corporate proxy config (do not commit)
 zscaler-ca.crt
@@ -129,7 +124,3 @@ pip-trusted-certs.pem
 # Processing data
 
 data/FY*
-
-# Generated data directories
-data/output
-data/celerybeat-schedule.dat

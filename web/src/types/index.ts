@@ -474,7 +474,32 @@ export interface XlsxConverterRequest {
 export interface XmlConverterRequest {
   inputFile: string;
   outputFile: string;
+  xsdContent?: string;
   logLevel?: string;
+}
+
+export interface XsdParseRequest {
+  xsdContent: string;
+}
+
+export interface XsdColumnEntry {
+  name: string;
+  path: string;
+  typeName: string;
+  minOccurs: string;
+  maxOccurs: string;
+  constraints: Record<string, string | string[]>;
+  sourceKind: string;
+  fieldWarnings: string[];
+}
+
+export interface XsdParseResponse {
+  columns: XsdColumnEntry[];
+  columnCount: number;
+  warnings: string[];
+  errors: string[];
+  unsupportedConstructs: string[];
+  stats: Record<string, number>;
 }
 
 export interface SetupDirectoriesRequest {

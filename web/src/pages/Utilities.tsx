@@ -7,11 +7,14 @@ import { toast } from "sonner";
 import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
+import FileUpload from "@/components/FileUpload";
 import { PathPickerInput } from "@/components/PathPickerInput";
 import LastRunBadge from "@/components/LastRunBadge";
+import SchemaPreviewPanel from "@/components/SchemaPreviewPanel";
 import Field from "@/components/Field";
-import { xlsxConvert, xmlConvert, setupDirectories } from "@/api/utilities";
+import { parseXsdSchema, xlsxConvert, xmlConvert, setupDirectories } from "@/api/utilities";
 import { cn } from "@/lib/utils";
+import type { XsdParseResponse } from "@/types";
 
 /* eslint-disable react-hooks/incompatible-library -- Intentional watch subscriptions persist form state safely for this page. */
 
@@ -293,16 +296,46 @@ const XlsxForm: React.FC = () => {
 // XML Converter Form
 // ---------------------------------------------------------------------------
 
-const xmlSchema = z.object({
-  inputFile: z.string().min(1, "Input file path is required"),
-  outputFile: z.string().min(1, "Output file path is required"),
-  logLevel: z.string(),
-});
+const xmlSchema = z
+  .object({
+    inputFile: z.string().min(1, "Input file path is required"),
+    outputFile: z.string().min(1, "Output file path is required"),
+    xsdMode: z.enum(["none", "paste", "upload"]),
+    xsdText: z.string().optional(),
+    logLevel: z.string(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.xsdMode !== "paste") {
+      return;
+    }
+
+    const rawText = (data.xsdText ?? "").trim();
+    if (!rawText) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["xsdText"],
+        message: "XSD text is required in paste mode",
+      });
+      return;
+    }
+
+    if (!rawText.includes("<xs:schema") && !rawText.includes("<xsd:schema")) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["xsdText"],
+        message: "XSD text must contain a schema root element",
+      });
+    }
+  });
 
 type XmlFormValues = z.infer<typeof xmlSchema>;
 
 const XmlForm: React.FC = () => {
   const navigate = useNavigate();
+  const [showSchemaOptions, setShowSchemaOptions] = useState(false);
+  const [selectedXsdFile, setSelectedXsdFile] = useState<File | null>(null);
+  const [uploadedXsdContent, setUploadedXsdContent] = useState<string>("");
+  const [schemaPreview, setSchemaPreview] = useState<XsdParseResponse | null>(null);
 
   const {
     register,
@@ -315,7 +348,23 @@ const XmlForm: React.FC = () => {
     defaultValues: {
       inputFile: "",
       outputFile: "",
+      xsdMode: "none",
+      xsdText: "",
       logLevel: "INFO",
+    },
+  });
+
+  const xsdMode = watch("xsdMode");
+
+  const parseMutation = useMutation({
+    mutationFn: parseXsdSchema,
+    onSuccess: (preview) => {
+      setSchemaPreview(preview);
+      toast.success(`Schema parsed successfully (${preview.columnCount} fields)`);
+    },
+    onError: (err: unknown) => {
+      setSchemaPreview(null);
+      toast.error(err instanceof Error ? err.message : "Failed to parse XSD schema");
     },
   });
 
@@ -328,14 +377,50 @@ const XmlForm: React.FC = () => {
   });
 
   const onSubmit = (values: XmlFormValues) => {
+    const xsdContent =
+      values.xsdMode === "paste"
+        ? (values.xsdText ?? "").trim() || undefined
+        : values.xsdMode === "upload"
+          ? uploadedXsdContent || undefined
+          : undefined;
+
     mutation.mutate({
       inputFile: values.inputFile,
       outputFile: values.outputFile,
+      xsdContent,
       logLevel: values.logLevel,
     });
   };
 
+  const onSelectXsdFile = async (file: File) => {
+    try {
+      const fileText = await file.text();
+      setSelectedXsdFile(file);
+      setUploadedXsdContent(fileText);
+      setSchemaPreview(null);
+    } catch {
+      toast.error("Could not read the selected XSD file");
+    }
+  };
+
+  const parsePreview = () => {
+    const raw =
+      xsdMode === "paste"
+        ? (watch("xsdText") ?? "").trim()
+        : xsdMode === "upload"
+          ? uploadedXsdContent.trim()
+          : "";
+
+    if (!raw) {
+      toast.error("Provide XSD content before parsing");
+      return;
+    }
+
+    parseMutation.mutate({ xsdContent: raw });
+  };
+
   const isPending = mutation.isPending;
+  const parsePending = parseMutation.isPending;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-5 max-w-xl">
@@ -362,6 +447,93 @@ const XmlForm: React.FC = () => {
           disabled={isPending}
         />
       </Field>
+
+      <div className="rounded-lg border border-border">
+        <button
+          type="button"
+          onClick={() => setShowSchemaOptions((prev) => !prev)}
+          className="flex w-full items-center justify-between px-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        >
+          Advanced: Schema Override
+          <span className={cn("transition-transform", showSchemaOptions && "rotate-180")}>▾</span>
+        </button>
+
+        {showSchemaOptions && (
+          <div className="space-y-4 border-t border-border px-4 pb-4 pt-3">
+            <div className="flex flex-wrap gap-4">
+              {([
+                ["none", "None"],
+                ["paste", "Paste XSD"],
+                ["upload", "Upload XSD"],
+              ] as const).map(([value, label]) => (
+                <label key={value} className="flex items-center gap-2 text-sm cursor-pointer">
+                  <input
+                    type="radio"
+                    value={value}
+                    disabled={isPending || parsePending}
+                    {...register("xsdMode")}
+                  />
+                  {label}
+                </label>
+              ))}
+            </div>
+
+            {xsdMode === "paste" && (
+              <Field label="XSD Text" error={errors.xsdText?.message}>
+                <textarea
+                  {...register("xsdText")}
+                  disabled={isPending || parsePending}
+                  rows={10}
+                  className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-50 placeholder:text-muted-foreground"
+                  placeholder="Paste XSD schema text here"
+                />
+              </Field>
+            )}
+
+            {xsdMode === "upload" && (
+              <div className="space-y-2">
+                <FileUpload
+                  onFileSelect={onSelectXsdFile}
+                  accept=".xsd,.xml"
+                  maxSizeMb={5}
+                  label="Drop an XSD file here or click to browse"
+                  disabled={isPending || parsePending}
+                  selectedFile={selectedXsdFile}
+                />
+                {uploadedXsdContent && (
+                  <p className="text-xs text-muted-foreground">Loaded XSD content from selected file.</p>
+                )}
+              </div>
+            )}
+
+            {xsdMode !== "none" && (
+              <div className="space-y-2">
+                <p className="text-xs text-muted-foreground">
+                  Schema override active: XML embedded schema references will be ignored.
+                </p>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={parsePreview}
+                  disabled={isPending || parsePending}
+                >
+                  {parsePending ? "Parsing schema…" : "Parse Schema"}
+                </Button>
+              </div>
+            )}
+
+            {schemaPreview && (
+              <SchemaPreviewPanel
+                columns={schemaPreview.columns}
+                warnings={schemaPreview.warnings}
+                errors={schemaPreview.errors}
+                unsupportedConstructs={schemaPreview.unsupportedConstructs}
+                stats={schemaPreview.stats}
+              />
+            )}
+          </div>
+        )}
+      </div>
 
       <Field label="Log Level" error={errors.logLevel?.message}>
         <select {...register("logLevel")} disabled={isPending} className={selectCls}>

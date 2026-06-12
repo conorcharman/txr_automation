@@ -204,3 +204,87 @@ def test_auth016_mic_identity_mapping(tmp_path: Path) -> None:
     assert len(rows) == 1
     assert rows[0]["New_Buyr_AcctOwnr_Id_MIC"] == "GB01"
     assert rows[0]["New_Sellr_AcctOwnr_Id_MIC"] == "GB02"
+
+
+def test_user_provided_xsd_used_as_source_of_truth(tmp_path: Path) -> None:
+        """User-provided XSD should be parsed and applied instead of XML schema links."""
+        xml_path = tmp_path / "sample.xml"
+        csv_path = tmp_path / "sample.csv"
+        _write_sample_auth016_xml(xml_path)
+
+        xsd_content = """<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">
+    <xs:element name=\"Tx\">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name=\"New\">
+                    <xs:complexType>
+                        <xs:sequence>
+                            <xs:element name=\"TxId\" type=\"xs:string\"/>
+                            <xs:element name=\"Tx\">
+                                <xs:complexType>
+                                    <xs:sequence>
+                                        <xs:element name=\"TradDt\" type=\"xs:string\"/>
+                                    </xs:sequence>
+                                </xs:complexType>
+                            </xs:element>
+                        </xs:sequence>
+                    </xs:complexType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
+"""
+
+        converter = XMLToCSVConverter()
+        result = converter.convert_file(xml_path, csv_path, xsd_content=xsd_content)
+
+        assert result.success
+        assert result.schema_url == "user-provided"
+        assert result.schema_fetched is True
+
+
+def test_invalid_user_provided_xsd_returns_error(tmp_path: Path) -> None:
+        """Invalid user-provided XSD should fail conversion with a clear error."""
+        xml_path = tmp_path / "sample.xml"
+        csv_path = tmp_path / "sample.csv"
+        _write_sample_auth016_xml(xml_path)
+
+        converter = XMLToCSVConverter()
+        result = converter.convert_file(xml_path, csv_path, xsd_content="not xml")
+
+        assert result.success is False
+        assert result.error is not None
+        assert "Invalid provided XSD" in result.error
+
+
+def test_parse_xsd_structure_extracts_restriction_constraints() -> None:
+        """XSD parser should expose restriction constraints for diagnostics and preview."""
+        xsd_content = """<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+<xs:schema xmlns:xs=\"http://www.w3.org/2001/XMLSchema\">
+    <xs:element name=\"Root\">
+        <xs:complexType>
+            <xs:sequence>
+                <xs:element name=\"Code\">
+                    <xs:simpleType>
+                        <xs:restriction base=\"xs:string\">
+                            <xs:pattern value=\"[A-Z]{2}\"/>
+                            <xs:minLength value=\"2\"/>
+                            <xs:maxLength value=\"2\"/>
+                        </xs:restriction>
+                    </xs:simpleType>
+                </xs:element>
+            </xs:sequence>
+        </xs:complexType>
+    </xs:element>
+</xs:schema>
+"""
+
+        structure = XMLToCSVConverter.parse_xsd_structure(xsd_content)
+
+        assert len(structure) == 1
+        constraints = structure[0]["constraints"]
+        assert constraints["pattern"] == "[A-Z]{2}"
+        assert constraints["min_length"] == "2"
+        assert constraints["max_length"] == "2"
