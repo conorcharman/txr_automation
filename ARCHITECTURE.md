@@ -50,59 +50,59 @@ The system validates and corrects transaction reporting data for regulatory comp
 ### 1.2 High-Level Architecture
 
 ```
-┌───────────────────────────────────────────────────────────────┐
-│                   Frontend Layer (React 19)                   │
-│  • Dashboard (job monitoring, results viewing)                │
-│  • Accuracy Tester (interactive validation interface)         │
-│  • Job Scheduler (schedule batch processing)                  │
-│  • Settings & Configuration                                   │
-│  • Real-time updates via WebSocket                            │
-└─────────────────────────┬─────────────────────────────────────┘
-                          │ REST API + WebSocket
-                          ↓
-┌───────────────────────────────────────────────────────────────┐
-│              API Layer (FastAPI + Uvicorn)                    │
-│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐        │
-│  │   Routers    │  │  Services    │  │  Schemas     │        │
-│  │ • accuracy   │  │ • Celery     │  │ • Validation │        │
-│  │ • dashboard  │  │   tasks      │  │ • Response   │        │
-│  │ • scheduler  │  │ • Config     │  │   models     │        │
-│  │ • firds      │  │ • Database   │  │ • Job models │        │
-│  │ • gleif      │  │   queries    │  └──────────────┘        │
-│  │ • jobs       │  │ • Validation │                           │
-│  │ • pipeline   │  │   logic      │                           │
-│  └──────────────┘  └──────────────┘                           │
-└─────────────────────────┬─────────────────────────────────────┘
-                          ↓
-┌───────────────────────────────────────────────────────────────┐
-│            Data & Processing Layer (Python)                   │
-│  ┌──────────────────┐  ┌──────────────────┐                  │
-│  │ accuracy_testing │  │  Job Queue &     │                  │
-│  │  • Processor     │  │  Result Store    │                  │
-│  │  • Validators    │  │  • Celery tasks  │                  │
-│  │  • Logic checks  │  │  • Redis broker  │                  │
-│  └────────┬─────────┘  └──────┬───────────┘                  │
-│           │                    │                              │
-│  ┌────────┴────────────────────┴──────────────┐              │
-│  │          Core Engine (txr_core)            │              │
-│  │  ┌──────────────────────────────────────┐  │              │
-│  │  │ ID Validation | Regulatory Data      │  │              │
-│  │  │ • Format checking | • FIRDS caching  │  │              │
-│  │  │ • Logic validators| • GLEIF caching  │  │              │
-│  │  │ • DM validation  | • API clients     │  │              │
-│  │  │ • Pricing logic  │                   │  │              │
-│  │  └──────────────────────────────────────┘  │              │
-│  └─────────────────────────────────────────────┘              │
-└────────────────────────┬──────────────────────────────────────┘
-                         ↓
-┌───────────────────────────────────────────────────────────────┐
-│              Infrastructure & Persistence                      │
-│  • PostgreSQL (job history, saved configs, audit trail)       │
-│  • Redis (Celery broker, WebSocket pub/sub)                   │
-│  • SQLite (FIRDS cache, GLEIF cache)                          │
-│  • CSV files (input/output, reference data)                   │
-│  • Logs (JSON structured logging)                             │
-└───────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────┐
+│                   Frontend Layer (React 19)              │
+│  • Dashboard (job monitoring, results viewing)           │
+│  • Accuracy Tester (interactive validation interface)    │
+│  • Job Scheduler (schedule batch processing)             │
+│  • Settings & Configuration                              │
+│  • Real-time updates via WebSocket                       │
+└────────────────────────────┬─────────────────────────────┘
+                             │ REST API + WebSocket
+                             ↓
+┌──────────────────────────────────────────────────────────┐
+│              API Layer (FastAPI + Uvicorn)               │
+│   ┌──────────────┐  ┌──────────────┐  ┌──────────────┐   │
+│   │   Routers    │  │  Services    │  │  Schemas     │   │
+│   │ • accuracy   │  │ • Celery     │  │ • Validation │   │
+│   │ • dashboard  │  │   tasks      │  │ • Response   │   │
+│   │ • scheduler  │  │ • Config     │  │   models     │   │
+│   │ • firds      │  │ • Database   │  │ • Job models │   │
+│   │ • gleif      │  │   queries    │  └──────────────┘   │
+│   │ • jobs       │  │ • Validation │                     │
+│   │ • pipeline   │  │   logic      │                     │
+│   └──────────────┘  └──────────────┘                     │
+└────────────────────────────┬─────────────────────────────┘
+                             ↓
+┌──────────────────────────────────────────────────────────┐
+│            Data & Processing Layer (Python)              │
+│      ┌──────────────────┐      ┌──────────────────┐      │
+│      │ accuracy_testing │      │  Job Queue &     │      │
+│      │  • Processor     │      │  Result Store    │      │
+│      │  • Validators    │      │  • Celery tasks  │      │
+│      │  • Logic checks  │      │  • Redis broker  │      │
+│      └────────┬─────────┘      └────────┬─────────┘      │
+│               │                         │                │
+│      ┌────────┴─────────────────────────┴─────────┐      │
+│      │          Core Engine (txr_core)            │      │
+│      │  ┌──────────────────────────────────────┐  │      │
+│      │  │ ID Validation     | Regulatory Data  │  │      │
+│      │  │ • Format checking | • FIRDS caching  │  │      │
+│      │  │ • Logic validators| • GLEIF caching  │  │      │
+│      │  │ • DM validation   | • API clients    │  │      │
+│      │  │ • Pricing logic   │                  │  │      │
+│      │  └──────────────────────────────────────┘  │      │
+│      └────────────────────────────────────────────┘      │
+└─────────────────────────────┬────────────────────────────┘
+                              ↓
+┌──────────────────────────────────────────────────────────┐
+│              Infrastructure & Persistence                │
+│  • PostgreSQL (job history, saved configs, audit trail)  │
+│  • Redis (Celery broker, WebSocket pub/sub)              │
+│  • SQLite (FIRDS cache, GLEIF cache)                     │
+│  • CSV files (input/output, reference data)              │
+│  • Logs (JSON structured logging)                        │
+└──────────────────────────────────────────────────────────┘
 ```
 
 ---
@@ -539,28 +539,28 @@ export TXR_BATCH_SIZE="200"
 └────────┬─────────┘
          │
          ↓
-┌──────────────────────────────────────┐
-│ Load Records                          │
-│ • Parse CSV                           │
-│ • Create DecisionMakerRecord objects  │
-└────────┬─────────────────────────────┘
+┌────────────────────────────────────────┐
+│ Load Records                           │
+│ • Parse CSV                            │
+│ • Create DecisionMakerRecord objects   │
+└────────┬───────────────────────────────┘
          │
          ↓
-┌──────────────────────────────────────┐
-│ Classify IDs                          │
-│ • Determine party code type (LEI/etc) │
-│ • Determine DM code type              │
-└────────┬─────────────────────────────┘
+┌────────────────────────────────────────┐
+│ Classify IDs                           │
+│ • Determine party code type (LEI/etc)  │
+│ • Determine DM code type               │
+└────────┬───────────────────────────────┘
          │
          ↓
-┌──────────────────────────────────────┐
-│ Validation Rules                      │
-│ IF service_level == "D":              │
-│   • DM code must be populated         │
-│   • DM code ≠ party code              │
-│   • Correction: LEI from branch lookup│
-│ ELSE: No validation required          │
-└────────┬─────────────────────────────┘
+┌────────────────────────────────────────┐
+│ Validation Rules                       │
+│ IF service_level == "D":               │
+│   • DM code must be populated          │
+│   • DM code ≠ party code               │
+│   • Correction: LEI from branch lookup │
+│ ELSE: No validation required           │
+└────────┬───────────────────────────────┘
          │
          ↓
 ┌──────────────────┐
