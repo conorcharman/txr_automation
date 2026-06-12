@@ -14,7 +14,37 @@ This project runs behind a corporate SSL-inspection proxy. **Before proceeding, 
 2. **`zscaler-ca.crt`** — Zscaler/corporate SSL certificate for Docker builds
 3. **`pip-trusted-certs.pem`** — Corporate certificate bundle for Python pip
 
-**Copy these files to the project root** (same directory as `docker-compose.yml`):
+**Copy these files to the project root** (same directory as `docker-compose.yml`).
+
+### Configure pip for the Corporate Proxy
+
+pip will fail to connect to PyPI without the corporate proxy configured. Run the following two commands
+once after creating your virtual environment — you only need to do this once per machine:
+
+```powershell
+# Set the corporate proxy (required — without this, connections to PyPI will be reset)
+pip config set global.proxy https://soc-fg.core2-dev.ajbbuild.uk:443
+
+# Set the corporate SSL certificate bundle (required — without this, SSL verification will fail)
+pip config set global.cert C:\path\to\txr_automation\pip-trusted-certs.pem
+```
+
+Replace `C:\path\to\txr_automation` with the actual path where you cloned the repository, e.g.:
+
+```powershell
+pip config set global.cert C:\Users\sselva\AJ_Bell_Projects\Hackathon\txr_automation\pip-trusted-certs.pem
+```
+
+You can verify the settings were applied:
+
+```powershell
+pip config list
+# Expected output:
+# global.cert='C:\...\pip-trusted-certs.pem'
+# global.proxy='https://soc-fg.core2-dev.ajbbuild.uk:443'
+```
+
+After configuring these settings, `pip install` commands will work without any extra flags.
 
 ---
 
@@ -250,6 +280,21 @@ cd web && npm run dev
 ---
 
 ## Common Issues & Troubleshooting
+
+### Issue: `pip install` fails with `ConnectionResetError(10054)` or "Max retries exceeded"
+
+This means pip is trying to connect to PyPI directly without going through the corporate proxy.
+
+**Solution:** Configure the corporate proxy and certificate for pip (see **⚠️ Corporate Network Setup** above):
+
+```powershell
+pip config set global.proxy https://soc-fg.core2-dev.ajbbuild.uk:443
+pip config set global.cert C:\path\to\txr_automation\pip-trusted-certs.pem
+```
+
+Then retry `pip install -e .`.
+
+---
 
 ### Issue: "python: command not found"
 
