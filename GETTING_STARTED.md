@@ -16,23 +16,6 @@ This project runs behind a corporate SSL-inspection proxy. **Before proceeding, 
 
 **Copy these files to the project root** (same directory as `docker-compose.yml`):
 
-```powershell
-# Example: After receiving files from Matt W
-Copy-Item ".\Downloads\.npmrc" .
-Copy-Item ".\Downloads\zscaler-ca.crt" .
-Copy-Item ".\Downloads\pip-trusted-certs.pem" .
-```
-
-Additionally, **configure Docker Desktop proxy:**
-
-1. Open Docker Desktop → Settings → Resources → Proxies
-2. Enable **Manual proxy configuration**
-3. Set:
-   - **Web Server (HTTP):** `https://soc-fg.core2-dev.ajbbuild.uk:443`
-   - **Secure Web Server (HTTPS):** `https://soc-fg.core2-dev.ajbbuild.uk:443`
-   - **Bypass proxy for:** `localhost,127.0.0.1,.local`
-4. Click **Apply & Restart**
-
 ---
 
 ## Prerequisites
@@ -98,6 +81,8 @@ git clone https://github.com/conorcharman/txr_automation.git
 cd txr_automation
 ```
 
+The checkout the "hackathon" branch
+
 ### Step 2: Create Python Virtual Environment
 
 Use Python's built-in `venv` (no Conda needed):
@@ -108,9 +93,6 @@ python -m venv venv
 
 # Activate it (Windows PowerShell)
 .\venv\Scripts\Activate.ps1
-
-# Activate it (Windows Command Prompt)
-.\venv\Scripts\activate.bat
 
 # You should see (venv) at the start of your terminal prompt
 ```
